@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<CodeAnalysisRuleSet>..\Rosylnator.ruleset</CodeAnalysisRuleSet>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<Authors>Panoramic Data Limited</Authors>
+		<Copyright>Copyright © Panoramic Data Limited 2019</Copyright>
+		<Description>LogicMonitor Datamart</Description>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageTags>LogicMonitor Datamart</PackageTags>
+		<PackageReleaseNotes>Implemented hourly data aggregrations.</PackageReleaseNotes>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="AutoMapper" Version="8.0.0" />
+		<PackageReference Include="EFCore.BulkExtensions" Version="2.4.6" />
+		<PackageReference Include="Humanizer.Core" Version="2.6.2" />
+		<PackageReference Include="LogicMonitor.Api" Version="2.118.1" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="2.2.4" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="2.2.4" />
+		<PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.2">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="2.2.0" />
+	</ItemGroup>
+</Project>

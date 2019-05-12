@@ -1,0 +1,4 @@
+﻿{
+	"DatabaseServer": "localhost",
+	"DatabaseName": "LogicMonitorDatamart"
+}
