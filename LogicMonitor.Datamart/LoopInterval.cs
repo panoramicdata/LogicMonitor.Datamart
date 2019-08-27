@@ -52,7 +52,8 @@ namespace LogicMonitor.Datamart
 #pragma warning disable CA1031 // Do not catch general exception types - We're specifically catching everything here
 				catch (Exception ex)
 				{
-					Logger.LogError(ex, $"An unexpected error occurred during the LoopInterval: {ex.Message}");
+					// This shouldn't generally happen so if it does, dump the entire exception ex which will include inner exceptions
+					Logger.LogError(ex, $"An unexpected error occurred during the LoopInterval: {ex}");
 				}
 #pragma warning restore CA1031 // Do not catch general exception types
 
