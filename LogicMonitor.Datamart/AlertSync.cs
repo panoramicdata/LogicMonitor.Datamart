@@ -88,7 +88,6 @@ namespace LogicMonitor.Datamart
 			{
 				using (var memoryCache = new MemoryCache(new MemoryCacheOptions()))
 				{
-
 					foreach (var deviceId in databaseDeviceIds)
 					{
 						using (var context = new Context(_datamartClient.DbContextOptions))
@@ -293,7 +292,7 @@ namespace LogicMonitor.Datamart
 		private async Task<int> GetMonitorObjectGroupIdAsync(MemoryCache cache, Context monitorObjectGroupContext, Alert networkAlert, int index)
 		{
 			var key = $"{networkAlert.MonitorObjectType}:{networkAlert.MonitorObjectGroups[index].FullPath}";
-			var result = await cache.GetOrCreateAsync(key, async entry =>
+			var result = await cache.GetOrCreateAsync(key, async _ =>
 			{
 				var databaseEntry = await monitorObjectGroupContext.MonitorObjectGroups.SingleOrDefaultAsync(g => g.MonitoredObjectType == networkAlert.MonitorObjectType && g.FullPath == networkAlert.MonitorObjectGroups[index].FullPath).ConfigureAwait(false);
 				if (databaseEntry == null)
