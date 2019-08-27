@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
-using System.Globalization;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -18,8 +17,8 @@ namespace LogicMonitor.Datamart.Test
 		public async void GetLogs()
 		{
 			_logger.LogInformation("Getting logs...");
-			//var startDateTimeUtc = DateTimeOffset.UtcNow.AddDays(-1);
-			var startDateTimeUtc = DateTimeOffset.ParseExact("2019-04-01", "yyyy-MM-dd", CultureInfo.InvariantCulture).UtcDateTime;
+			var startDateTimeUtc = DateTimeOffset.UtcNow.AddDays(-7);
+			//var startDateTimeUtc = DateTimeOffset.ParseExact("2019-04-01", "yyyy-MM-dd", CultureInfo.InvariantCulture).UtcDateTime;
 
 			await new LogSync(
 					DatamartClient,

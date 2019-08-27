@@ -27,11 +27,11 @@ namespace LogicMonitor.Datamart.Test
 		}
 
 		[Fact]
-		public async void Get1HourOfAlerts()
+		public async void Get24HoursOfAlerts()
 		{
 			_logger.LogInformation("Getting alerts...");
-			//var startDateTimeUtc = DateTime.UtcNow.AddHours(-1);
-			var startDateTimeUtc = DateTime.UtcNow.AddDays(-30);
+			var startDateTimeUtc = DateTime.UtcNow.AddHours(-24);
+			//var startDateTimeUtc = DateTime.UtcNow.AddDays(-30);
 
 			var updatedAlertStats = await new AlertSync(
 					DatamartClient,

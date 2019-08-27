@@ -15,7 +15,7 @@ namespace LogicMonitor.Datamart.Test
 		 => _logger = ITestOutputHelper.BuildLoggerFor<AlertTests>();
 
 		[Fact]
-		public async void Get1HourOfData()
+		public async void Get12HoursOfData()
 		{
 			_logger.LogInformation("Getting data...");
 			var startDateTimeUtc = DateTimeOffset.UtcNow.AddHours(-12);

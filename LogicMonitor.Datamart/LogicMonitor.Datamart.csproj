@@ -14,15 +14,15 @@
 
 	<ItemGroup>
 		<PackageReference Include="AutoMapper" Version="8.0.0" />
-		<PackageReference Include="EFCore.BulkExtensions" Version="2.4.6" />
+		<PackageReference Include="EFCore.BulkExtensions" Version="2.6.0" />
 		<PackageReference Include="Humanizer.Core" Version="2.6.2" />
-		<PackageReference Include="LogicMonitor.Api" Version="2.118.1" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="2.2.4" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="2.2.4" />
-		<PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.2">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-		</PackageReference>
+		<PackageReference Include="LogicMonitor.Api" Version="2.124.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="2.2.6" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="2.2.6" />
 		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="2.2.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Update="Nerdbank.GitVersioning" Version="3.0.25" />
 	</ItemGroup>
 </Project>
