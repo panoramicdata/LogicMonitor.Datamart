@@ -73,6 +73,8 @@ namespace LogicMonitor.Datamart
 
 				var stopwatch = new Stopwatch();
 
+				var deviceDataSourceInstanceNumber = 1;
+
 				// Get data for each instance
 				try
 				{
@@ -171,7 +173,7 @@ namespace LogicMonitor.Datamart
 							deviceDataSourceInstance.LastMeasurementUpdatedTimeSeconds = lateArrivingDataWindowStartSeconds;
 							await context.SaveChangesAsync().ConfigureAwait(false);
 						}
-						Logger.LogInformation($"Loaded {totalRowsLoadedFromApi} data entries in {stopwatch.Elapsed.TotalSeconds:N1}s for DeviceDataSourceInstance {instanceLogId} from {initialDataWindowStartUtc.UtcDateTime} to {utcNow.UtcDateTime} - data window: {(utcNow - initialDataWindowStartUtc).Humanize(maxUnit: TimeUnit.Day, minUnit: TimeUnit.Minute, precision: 7)}");
+						Logger.LogInformation($"Loaded {totalRowsLoadedFromApi} data entries in {stopwatch.Elapsed.TotalSeconds:N1}s for DeviceDataSourceInstance {instanceLogId} ({deviceDataSourceInstanceNumber++}/{deviceDataSourceInstances.Count}) from {initialDataWindowStartUtc.UtcDateTime} to {utcNow.UtcDateTime} - data window: {(utcNow - initialDataWindowStartUtc).Humanize(maxUnit: TimeUnit.Day, minUnit: TimeUnit.Minute, precision: 7)}");
 
 						await PerformAggregationsAsync(deviceDataSourceInstance.Id).ConfigureAwait(false);
 					}
