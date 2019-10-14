@@ -16,7 +16,7 @@
 		<PackageReference Include="AutoMapper" Version="8.0.0" />
 		<PackageReference Include="EFCore.BulkExtensions" Version="2.6.0" />
 		<PackageReference Include="Humanizer.Core" Version="2.6.2" />
-		<PackageReference Include="LogicMonitor.Api" Version="2.124.0" />
+		<PackageReference Include="LogicMonitor.Api" Version="2.126.3" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="2.2.6" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="2.2.6" />
 		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="2.2.0" />
