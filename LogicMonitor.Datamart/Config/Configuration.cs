@@ -32,7 +32,6 @@ namespace LogicMonitor.Datamart.Models
 		/// </summary>
 		public int LateArrivingDataWindowHours { get; set; }
 
-
 		public void Validate()
 		{
 			if (string.IsNullOrWhiteSpace(Name))
