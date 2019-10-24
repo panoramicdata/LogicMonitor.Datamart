@@ -4,6 +4,7 @@ using LogicMonitor.Api.Alerts;
 using LogicMonitor.Api.Collectors;
 using LogicMonitor.Api.Devices;
 using LogicMonitor.Api.Filters;
+using LogicMonitor.Api.LogicModules;
 using LogicMonitor.Api.Websites;
 using LogicMonitor.Datamart.Extensions;
 using LogicMonitor.Datamart.Models;
@@ -31,32 +32,32 @@ namespace LogicMonitor.Datamart
 
 		public DbContextOptions<Context> DbContextOptions { get; }
 		public DatabaseType DatabaseType { get; }
-
+		private readonly string _logicMonitorSubdomain;
 		private readonly ILoggerFactory _loggerFactory;
 		private readonly ILogger _logger;
 		private readonly Dictionary<string, List<DataSourceDataPointModel>> _dataSourceSpecifications;
 
 		public DatamartClient(
-			string subDomain,
-			string accessId,
-			string accessKey,
+			string logicMonitorSubDomain,
+			string logicMonitorAccessId,
+			string logicMonitorAccessKey,
 			DatabaseType databaseType,
-			string serverName,
+			string databaseServerName,
 			string databaseName,
 			Dictionary<string, List<DataSourceDataPointModel>> dataSourceSpecifications,
 			ILoggerFactory loggerFactory,
 			bool enableSensitiveDatabaseLogging = false
-			) : base(subDomain, accessId, accessKey, loggerFactory.CreateLogger<DatamartClient>())
+			) : base(logicMonitorSubDomain, logicMonitorAccessId, logicMonitorAccessKey, loggerFactory.CreateLogger<DatamartClient>())
 		{
 			var dbContextOptionsBuilder = new DbContextOptionsBuilder<Context>();
-
+			_logicMonitorSubdomain = logicMonitorSubDomain;
 			switch (databaseType)
 			{
 				case DatabaseType.SqlServer:
 					dbContextOptionsBuilder
 						.UseSqlServer(new DbConnectionStringBuilder
 						{
-							ConnectionString = $"server={serverName};database={databaseName};Trusted_Connection=True;Application Name=LogicMonitor.Datamart"
+							ConnectionString = $"server={databaseServerName};database={databaseName};Trusted_Connection=True;Application Name=LogicMonitor.Datamart"
 						}.ConnectionString,
 						opts => opts.CommandTimeout((int)TimeSpan.FromMinutes(10).TotalSeconds)
 						);
@@ -291,6 +292,14 @@ namespace LogicMonitor.Datamart
 			return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
 		}
 
+		/// <summary>
+		/// Add or Update the Database using the items already retreived from the LogicMonitor API
+		/// </summary>
+		/// <typeparam name="TApi">The LogicMonitor API type</typeparam>
+		/// <typeparam name="TStore">The Database StoreItem type</typeparam>
+		/// <param name="action"></param>
+		/// <param name="cancellationToken"></param>
+		/// <returns></returns>
 		public async Task AddOrUpdate<TApi, TStore>(
 			Func<Context, DbSet<TStore>> action,
 			CancellationToken cancellationToken)
@@ -299,20 +308,116 @@ namespace LogicMonitor.Datamart
 		{
 			using (var context = new Context(DbContextOptions))
 			{
+				// Get the right DbSet from the context
 				var dbSet = action(context);
-				var apiItems = await GetAllAsync<TApi>(cancellationToken: cancellationToken).ConfigureAwait(false);
+
+				// Fetch the items from the LogicMonitor API
+				var apiItems = await GetAllAsync<TApi>(cancellationToken: cancellationToken)
+					.ConfigureAwait(false);
 				_logger.LogInformation($"{typeof(TApi).Name}: Loaded {apiItems.Count} items.");
+
+				// Add/update all the items
 				foreach (var item in apiItems)
 				{
 					dbSet.AddOrUpdateIdentifiedItem(item, _logger);
 				}
+
+				// Calculate and log the stats
 				var added = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Added);
 				var modified = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Modified);
 				var total = context.ChangeTracker.Entries().Count();
-				_logger.LogInformation($"{typeof(TApi).Name}: Total {total}; Added {added}; Modified {modified}.");
 				var affectedRowCount = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+				_logger.LogInformation($"{typeof(TApi).Name}: Total {total}; Added {added}; Modified {modified}.");
 
-				// Special for DataPoints
+				// For DataPoints, the information from LogicMonitor is present on the DataSources.
+				// So, after fetching the DataSources, we should also update the DataPoints in the database
+				if (typeof(TStore) == typeof(DataSourceStoreItem))
+				{
+					await UpdateDataPointsAsync(context, apiItems.Cast<DataSource>().ToList());
+				}
+			}
+		}
+
+		/// <summary>
+		/// Update Datapoints, given a list of DataSources just retrieved from the LogicMonitor API
+		/// </summary>
+		/// <param name="context">The database context</param>
+		/// <param name="apiDataSources">The list of API DataSources</param>
+		/// <returns></returns>
+		private async Task UpdateDataPointsAsync(Context context, List<DataSource> apiDataSources)
+		{
+			// Update the nominated DataSources' DataPoints only for those reference in the config
+			foreach (var configDataSourceSpecification in _dataSourceSpecifications)
+			{
+				// The DataSource name from the config
+				var dataSourceName = configDataSourceSpecification.Key;
+
+				// The DataSource from the API
+				var apiDataSource = apiDataSources
+					.SingleOrDefault(ds => ds.Name == dataSourceName);
+				if (apiDataSource == null)
+				{
+					// May not happen if the config references a non-existent DataSource
+					_logger.LogError($"For LogicMonitor instance {_logicMonitorSubdomain}, expected to find LogicMonitor API DataSourceDataStoreItem for {dataSourceName}, but it was missing.");
+					continue;
+				}
+
+				// The DataSource from the database
+				var databaseDataSource = await context
+					.DataSources
+					.SingleOrDefaultAsync(ds => ds.Name == dataSourceName);
+				if (apiDataSource == null)
+				{
+					// Should not happen, as we have only just updated the database with DataSources
+					_logger.LogError($"For LogicMonitor instance {_logicMonitorSubdomain}, expected to find Database DataSourceDataStoreItem for {dataSourceName}, but it was missing.");
+					continue;
+				}
+				// We have a matching DataSource from both the API and the database.
+
+				// Consider each DataPoint in the config
+				foreach (var configDataPoint in configDataSourceSpecification.Value)
+				{
+					// Is it present in the API DataSource
+					var apiDataPoint = apiDataSource
+						.DataSourceDataPoints
+						.SingleOrDefault(dp => dp.Name == configDataPoint.Name);
+					if (apiDataPoint == null)
+					{
+						_logger.LogError($"For LogicMonitor instance {_logicMonitorSubdomain}, for {dataSourceName}, could not find configured datapoint {configDataPoint.Name}.");
+						continue;
+					}
+
+					// Is it in the database?
+					var databaseDataSourceDataPointModel = await context
+						.DataSourceDataPoints
+						.SingleOrDefaultAsync(dsdp => dsdp.DataSource.Name == apiDataSource.Name && dsdp.Name == configDataPoint.Name);
+					if (databaseDataSourceDataPointModel == null)
+					{
+						// No. Add it to the database
+						var dataSourceDataPointStoreItem = context.DataSourceDataPoints.Add(new DataSourceDataPointStoreItem
+						{
+							DataSource = databaseDataSource,
+							Name = apiDataPoint.Name,
+							Description = apiDataPoint.Description,
+							Id = apiDataPoint.Id,
+							MeasurementUnit = configDataPoint.MeasurementUnit
+						});
+
+						_logger.LogInformation($"For LogicMonitor instance {_logicMonitorSubdomain}, for {dataSourceName}, added datapoint {configDataPoint.Name} to database.");
+						await context
+							.SaveChangesAsync()
+							.ConfigureAwait(false);
+					}
+					// Update the measurement unit?
+					else if (databaseDataSourceDataPointModel.MeasurementUnit != configDataPoint.MeasurementUnit)
+					{
+						// Yes
+						databaseDataSourceDataPointModel.MeasurementUnit = configDataPoint.MeasurementUnit;
+						await context
+							.SaveChangesAsync()
+							.ConfigureAwait(false);
+					}
+				}
 			}
 		}
 
