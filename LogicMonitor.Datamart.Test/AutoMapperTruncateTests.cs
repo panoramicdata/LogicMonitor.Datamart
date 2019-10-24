@@ -2,14 +2,20 @@
 using LogicMonitor.Api.Alerts;
 using LogicMonitor.Datamart.Models;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace LogicMonitor.Datamart.Test
 {
-	public class AutoMapperTruncateTests
+	public class AutoMapperTruncateTests : TestWithOutput
 	{
-		public AutoMapperTruncateTests()
+		public AutoMapperTruncateTests(ITestOutputHelper iTestOutputHelper)
+		 : base(iTestOutputHelper)
 		{
-			Mapper.Initialize(cfg => cfg.AddProfiles(typeof(DatamartClient).Assembly));
+		}
+
+		[Fact]
+		public void Test()
+		{
 			Mapper.Configuration.AssertConfigurationIsValid();
 		}
 

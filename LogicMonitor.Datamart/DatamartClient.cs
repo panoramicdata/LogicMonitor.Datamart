@@ -172,7 +172,7 @@ namespace LogicMonitor.Datamart
 					throw new NotSupportedException("Only SQL Server types support SQL queries.");
 				}
 				return await Task.FromResult(GetDbSet<T>(context)
-					.FromSql(sql)
+					.FromSqlRaw(sql)
 					.ToList()).ConfigureAwait(false);
 			}
 		}

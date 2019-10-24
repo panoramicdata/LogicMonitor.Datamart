@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>netstandard2.0</TargetFramework>
+		<TargetFramework>netstandard2.1</TargetFramework>
 		<CodeAnalysisRuleSet>..\Rosylnator.ruleset</CodeAnalysisRuleSet>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<Authors>Panoramic Data Limited</Authors>
@@ -13,18 +13,18 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="AutoMapper" Version="8.0.0" />
-		<PackageReference Include="EFCore.BulkExtensions" Version="2.6.0" />
-		<PackageReference Include="Humanizer.Core" Version="2.6.2" />
+		<PackageReference Include="AutoMapper" Version="8.1.1" />
+		<PackageReference Include="EFCore.BulkExtensions" Version="3.0.0" />
+		<PackageReference Include="Humanizer.Core" Version="2.7.9" />
 		<PackageReference Include="LogicMonitor.Api" Version="2.126.6" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="2.2.6" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="2.2.6" />
-		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="2.2.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="3.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="3.0.0" />
 		<PackageReference Include="Nerdbank.GitVersioning" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Update="Nerdbank.GitVersioning" Version="3.0.25">
+	  <PackageReference Update="Nerdbank.GitVersioning" Version="3.0.26">
 	    <PrivateAssets>all</PrivateAssets>
 	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	  </PackageReference>

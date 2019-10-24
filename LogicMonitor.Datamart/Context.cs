@@ -75,7 +75,7 @@ namespace LogicMonitor.Datamart
 			alerts.HasIndex(a => a.EndOnSeconds);
 
 			alerts
-				.ForSqlServerHasIndex(a => new
+				.HasIndex(a => new
 				{
 					a.StartOnSeconds,
 					a.EndOnSeconds,
@@ -92,7 +92,7 @@ namespace LogicMonitor.Datamart
 					a.MonitorObjectGroup8Id,
 					a.MonitorObjectGroup9Id,
 				})
-				.ForSqlServerInclude(a => new
+				.IncludeProperties(a => new
 				{
 					a.Id,
 					a.Severity,
