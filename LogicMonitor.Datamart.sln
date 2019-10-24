@@ -20,6 +20,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		version.json = version.json
 	EndProjectSection
 	ProjectSection(FolderGlobals) = preProject
+		F_5_4Projects_4LogicMonitor_1DataMart_4version_1json__JsonSchema = 
 		f_5_4code_4LogicMonitor_1Datamart_4version_1json__JsonSchema = 
 	EndProjectSection
 EndProject

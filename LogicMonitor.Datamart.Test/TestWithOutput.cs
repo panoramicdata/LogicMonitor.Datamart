@@ -1,11 +1,13 @@
 ﻿using Divergic.Logging.Xunit;
 using LogicMonitor.Datamart.Logging;
+using LogicMonitor.Datamart.Models;
 using LogicMonitor.Datamart.Test.Config;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -16,6 +18,25 @@ namespace LogicMonitor.Datamart.Test
 {
 	public class TestWithOutput
 	{
+		protected static Dictionary<string, List<DataSourceDataPointModel>> DataSourceSpecifications = new Dictionary<string, List<DataSourceDataPointModel>>
+		{
+			{ "WinCPU",
+				new List<DataSourceDataPointModel>
+				{
+					new DataSourceDataPointModel
+						{
+							Name = "CPUBusyPercent",
+							MeasurementUnit = "%"
+						},
+					new DataSourceDataPointModel
+						{
+							Name= "ProcessorQueueLength",
+							MeasurementUnit = "count"
+						}
+				}
+			}
+		};
+
 		protected TestWithOutput(ITestOutputHelper iTestOutputHelper)
 		{
 			ITestOutputHelper = iTestOutputHelper;
@@ -33,6 +54,7 @@ namespace LogicMonitor.Datamart.Test
 				DatabaseType.SqlServer,
 				configuration.DatabaseServer,
 				configuration.DatabaseName,
+				DataSourceSpecifications,
 				loggerFactory);
 
 			DatamartClient.EnsureDatabaseCreatedAndSchemaUpdatedAsync().GetAwaiter().GetResult();

@@ -20,16 +20,16 @@ namespace LogicMonitor.Datamart
 	internal class DimensionSync : LoopInterval
 	{
 		private readonly DatamartClient _datamartClient;
-		private readonly List<string> _dataSourceNames;
+		private readonly Dictionary<string, List<DataSourceDataPointModel>> _dataSourceSpecifications;
 
 		public DimensionSync(
 			DatamartClient datamartClient,
-			List<string> dataSourceNames,
+			Dictionary<string, List<DataSourceDataPointModel>> dataSourceSpecifications,
 			ILogger<DimensionSync> logger)
 			: base(nameof(DimensionSync), logger)
 		{
 			_datamartClient = datamartClient;
-			_dataSourceNames = dataSourceNames;
+			_dataSourceSpecifications = dataSourceSpecifications;
 		}
 
 		public override async Task ExecuteAsync(CancellationToken cancellationToken)
@@ -50,9 +50,9 @@ namespace LogicMonitor.Datamart
 			await _datamartClient.AddOrUpdate<Website, WebsiteStoreItem>(context => context.Websites, cancellationToken).ConfigureAwait(false);
 
 			// Process each DataSource
-			foreach (var dataSourceName in _dataSourceNames)
+			foreach (var dataSourceSpecification in _dataSourceSpecifications)
 			{
-				await SyncDeviceDataSourcesAndInstancesAsync(dataSourceName, cancellationToken).ConfigureAwait(false);
+				await SyncDeviceDataSourcesAndInstancesAsync(dataSourceSpecification.Key, cancellationToken).ConfigureAwait(false);
 			}
 		}
 

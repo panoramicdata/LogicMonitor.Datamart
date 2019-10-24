@@ -34,6 +34,7 @@ namespace LogicMonitor.Datamart
 
 		private readonly ILoggerFactory _loggerFactory;
 		private readonly ILogger _logger;
+		private readonly Dictionary<string, List<DataSourceDataPointModel>> _dataSourceSpecifications;
 
 		public DatamartClient(
 			string subDomain,
@@ -42,6 +43,7 @@ namespace LogicMonitor.Datamart
 			DatabaseType databaseType,
 			string serverName,
 			string databaseName,
+			Dictionary<string, List<DataSourceDataPointModel>> dataSourceSpecifications,
 			ILoggerFactory loggerFactory,
 			bool enableSensitiveDatabaseLogging = false
 			) : base(subDomain, accessId, accessKey, loggerFactory.CreateLogger<DatamartClient>())
@@ -78,6 +80,7 @@ namespace LogicMonitor.Datamart
 			_loggerFactory = loggerFactory;
 			_logger = loggerFactory.CreateLogger<DatamartClient>();
 			DatabaseType = databaseType;
+			_dataSourceSpecifications = dataSourceSpecifications;
 		}
 
 		public async Task<bool> IsDatabaseCreatedAsync()
@@ -241,31 +244,56 @@ namespace LogicMonitor.Datamart
 			}
 		}
 
-		public Task SyncDimensionsAsync(int desiredMaxIntervalMinutes, List<string> dataSourceNames, CancellationToken cancellationToken)
+		public Task SyncDimensionsAsync(
+			int desiredMaxIntervalMinutes,
+			CancellationToken cancellationToken)
 		{
-			var sync = new DimensionSync(this, dataSourceNames, _loggerFactory.CreateLogger<DimensionSync>());
+			var sync = new DimensionSync(
+				this,
+				_dataSourceSpecifications,
+				_loggerFactory.CreateLogger<DimensionSync>());
 			return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
 		}
 
-		public Task SyncDataAsync(int desiredMaxIntervalMinutes, DateTimeOffset startDateTimeUtc, int lateArrivingDataWindowHours, Dictionary<string, List<string>> dataSourceSpecifications, CancellationToken cancellationToken)
+		public Task SyncDataAsync(
+			int desiredMaxIntervalMinutes,
+			DateTimeOffset startDateTimeUtc,
+			int lateArrivingDataWindowHours,
+			CancellationToken cancellationToken)
 		{
-			var sync = new DataSync(this, dataSourceSpecifications, startDateTimeUtc, lateArrivingDataWindowHours, _loggerFactory.CreateLogger<DataSync>());
+			var sync = new DataSync(
+				this,
+				_dataSourceSpecifications,
+				startDateTimeUtc,
+				lateArrivingDataWindowHours,
+				_loggerFactory.CreateLogger<DataSync>());
 			return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
 		}
 
-		public Task SyncAlertsAsync(int desiredMaxIntervalMinutes, DateTimeOffset startDateTimeUtc, CancellationToken cancellationToken)
+		public Task SyncAlertsAsync(
+			int desiredMaxIntervalMinutes,
+			DateTimeOffset startDateTimeUtc,
+			CancellationToken cancellationToken)
 		{
 			var sync = new AlertSync(this, startDateTimeUtc, _loggerFactory.CreateLogger<AlertSync>());
 			return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
 		}
 
-		public Task SyncAuditLogAsync(int desiredMaxIntervalMinutes, DateTimeOffset startDateTimeUtc, CancellationToken cancellationToken)
+		public Task SyncAuditLogAsync(
+			int desiredMaxIntervalMinutes,
+			DateTimeOffset startDateTimeUtc,
+			CancellationToken cancellationToken)
 		{
-			var sync = new LogSync(this, startDateTimeUtc, _loggerFactory.CreateLogger<LogSync>());
+			var sync = new LogSync(
+				this,
+				startDateTimeUtc,
+				_loggerFactory.CreateLogger<LogSync>());
 			return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
 		}
 
-		public async Task AddOrUpdate<TApi, TStore>(Func<Context, DbSet<TStore>> action, CancellationToken cancellationToken)
+		public async Task AddOrUpdate<TApi, TStore>(
+			Func<Context, DbSet<TStore>> action,
+			CancellationToken cancellationToken)
 			where TApi : IdentifiedItem, IHasEndpoint, new()
 			where TStore : IdentifiedStoreItem
 		{
@@ -283,6 +311,8 @@ namespace LogicMonitor.Datamart
 				var total = context.ChangeTracker.Entries().Count();
 				_logger.LogInformation($"{typeof(TApi).Name}: Total {total}; Added {added}; Modified {modified}.");
 				var affectedRowCount = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+				// Special for DataPoints
 			}
 		}
 

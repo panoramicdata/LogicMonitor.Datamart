@@ -15,13 +15,13 @@ namespace LogicMonitor.Datamart
 	internal class DataSync : LoopInterval
 	{
 		private readonly DatamartClient _datamartClient;
-		private readonly Dictionary<string, List<string>> _dataSourceSpecifications;
+		private readonly Dictionary<string, List<DataSourceDataPointModel>> _dataSourceSpecifications;
 		private readonly int _lateArrivingDataWindowHours;
 		private readonly DateTimeOffset _startDateTimeUtc;
 
 		public DataSync(
 			DatamartClient datamartClient,
-			Dictionary<string, List<string>> dataSourceSpecifications,
+			Dictionary<string, List<DataSourceDataPointModel>> dataSourceSpecifications,
 			DateTimeOffset startDateTimeUtc,
 			int lateArrivingDataWindowHours,
 			ILogger<DataSync> logger)
@@ -130,16 +130,16 @@ namespace LogicMonitor.Datamart
 									totalRowsLoadedFromApi += rowsRetrieved;
 
 									// Add data to the context for each of the dataPointNames
-									foreach (var dataPointName in _dataSourceSpecifications[dataSourceName])
+									foreach (var dataPointModel in _dataSourceSpecifications[dataSourceName])
 									{
-										var dataPointIndex = rawData.DataPoints.FindIndex(dpName => dpName == dataPointName);
+										var dataPointIndex = rawData.DataPoints.FindIndex(dpName => dpName == dataPointModel.Name);
 										var data = rawData.UtcTimeStamps.Zip(
 											rawData.Values.Select(v => v[dataPointIndex]),
 											(timeStampMs, value)
 												=> new DeviceDataSourceInstanceDataStoreItem
 												{
 													DateTime = DateTimeOffset.FromUnixTimeMilliseconds(timeStampMs).UtcDateTime,
-													DataPointName = dataPointName,
+													DataPointName = dataPointModel.Name,
 													Value = value,
 													DeviceDataSourceInstanceId = deviceDataSourceInstance.Id
 												})

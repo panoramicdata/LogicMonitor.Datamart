@@ -21,6 +21,9 @@ namespace LogicMonitor.Datamart.Mapping
 				.ForMember(
 					dest => dest.DeviceDataSources,
 					opts => opts.Ignore())
+				.ForMember(
+					dest => dest.DataPoints,
+					opts => opts.Ignore())
 				;
 			CreateMap<DataSourceStoreItem, DataSource>()
 				.ForMember(

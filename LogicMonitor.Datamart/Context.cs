@@ -24,6 +24,7 @@ namespace LogicMonitor.Datamart
 		public DbSet<CollectorGroupStoreItem> CollectorGroups { get; set; }
 		public DbSet<ConfigSourceStoreItem> ConfigSources { get; set; }
 		public DbSet<DataSourceStoreItem> DataSources { get; set; }
+		public DbSet<DataSourceDataPointStoreItem> DataSourceDataPoints { get; set; }
 		public DbSet<DeviceDataSourceStoreItem> DeviceDataSources { get; set; }
 		public DbSet<DeviceDataSourceInstanceStoreItem> DeviceDataSourceInstances { get; set; }
 		public DbSet<DeviceDataSourceInstanceDataStoreItem> DeviceDataSourceInstanceData { get; set; }

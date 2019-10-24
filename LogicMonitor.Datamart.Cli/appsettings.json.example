@@ -1,4 +1,30 @@
 ﻿{
-	"DatabaseServer": "localhost",
-	"DatabaseName": "LogicMonitorDatamart"
+	"Configuration": {
+		"DatabaseServer": ".",
+		"DatabaseName": "LogicMonitorDatamart",
+		"LogicMonitorCredentials": {
+			"Account": "xxxxxxxxxxx",
+			"AccessId": "xxxxxxxxxxxxxxxxxxxxx",
+			"AccessKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+		},
+		"StartDate": "2019-10-01",
+		"SyncDimensions": false,
+		"SyncAlerts": false,
+		"SyncMeasures": true,
+		"DataSources": [
+			{
+				"Name": "WinCPU",
+				"DataPoints": [
+					{
+						"DataPointName": "CPUBusyPercent",
+						"MeasurementUnit": "%"
+					},
+					{
+						"DataPointName": "ProcessorQueueLength",
+						"MeasurementUnit": "count"
+					}
+				]
+			}
+		]
+	}
 }

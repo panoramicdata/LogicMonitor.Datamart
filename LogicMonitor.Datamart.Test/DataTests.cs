@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using LogicMonitor.Datamart.Models;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using Xunit;
@@ -23,7 +24,7 @@ namespace LogicMonitor.Datamart.Test
 			const int lateArrivingDataWindowHours = 2;
 			await new DataSync(
 					DatamartClient,
-					new Dictionary<string, List<string>> { { "WinCPU", new List<string> { "CPUBusyPercent", "ProcessorQueueLength" } } },
+					DataSourceSpecifications,
 					startDateTimeUtc,
 					lateArrivingDataWindowHours,
 					ITestOutputHelper.BuildLoggerFor<DataSync>())

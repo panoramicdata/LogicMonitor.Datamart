@@ -19,7 +19,7 @@ namespace LogicMonitor.Datamart.Test
 
 			await new DimensionSync(
 					DatamartClient,
-					new List<string> { "WinCPU" },
+					DataSourceSpecifications,
 					ITestOutputHelper.BuildLoggerFor<DimensionSync>())
 				.ExecuteAsync(default)
 				.ConfigureAwait(false);
