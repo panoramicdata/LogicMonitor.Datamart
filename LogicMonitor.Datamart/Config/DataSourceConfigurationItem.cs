@@ -1,7 +1,7 @@
 ﻿using LogicMonitor.Datamart.Exceptions;
 using System.Collections.Generic;
 
-namespace LogicMonitor.Datamart.Models
+namespace LogicMonitor.Datamart.Config
 {
 	public class DataSourceConfigurationItem
 	{

@@ -1,4 +1,5 @@
-﻿using LogicMonitor.Datamart.Models;
+﻿using LogicMonitor.Datamart.Config;
+using LogicMonitor.Datamart.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;

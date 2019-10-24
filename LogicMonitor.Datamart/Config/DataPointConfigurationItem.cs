@@ -1,6 +1,6 @@
 ﻿using LogicMonitor.Datamart.Exceptions;
 
-namespace LogicMonitor.Datamart.Models
+namespace LogicMonitor.Datamart.Config
 {
 	/// <summary>
 	/// The configuration specification for a DataPoint

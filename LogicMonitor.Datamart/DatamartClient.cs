@@ -6,6 +6,7 @@ using LogicMonitor.Api.Devices;
 using LogicMonitor.Api.Filters;
 using LogicMonitor.Api.LogicModules;
 using LogicMonitor.Api.Websites;
+using LogicMonitor.Datamart.Config;
 using LogicMonitor.Datamart.Extensions;
 using LogicMonitor.Datamart.Models;
 using Microsoft.EntityFrameworkCore;

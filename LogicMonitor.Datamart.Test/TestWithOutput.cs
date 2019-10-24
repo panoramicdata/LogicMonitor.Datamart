@@ -1,6 +1,6 @@
 ﻿using Divergic.Logging.Xunit;
+using LogicMonitor.Datamart.Config;
 using LogicMonitor.Datamart.Logging;
-using LogicMonitor.Datamart.Models;
 using LogicMonitor.Datamart.Test.Config;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
