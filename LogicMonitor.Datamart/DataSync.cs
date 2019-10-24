@@ -205,7 +205,7 @@ namespace LogicMonitor.Datamart
 				try
 				{
 					// Insert rows from StartDate to EndHour
-					var rowsAffected = await context.Database.ExecuteSqlCommandAsync($@"
+					var rowsAffected = await context.Database.ExecuteSqlRawAsync($@"
 begin transaction;
 
 insert into DeviceDataSourceInstanceAggregatedData

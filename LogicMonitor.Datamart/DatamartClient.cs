@@ -25,7 +25,7 @@ namespace LogicMonitor.Datamart
 		static DatamartClient()
 		{
 			// AutoMapper - Add all in from the DatamartClient assembly
-			Mapper.Initialize(cfg => cfg.AddProfiles(typeof(DatamartClient).Assembly));
+			Mapper.Initialize(cfg => cfg.AddMaps(typeof(DatamartClient).Assembly));
 			Mapper.Configuration.AssertConfigurationIsValid();
 		}
 

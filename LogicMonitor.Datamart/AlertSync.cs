@@ -38,7 +38,7 @@ namespace LogicMonitor.Datamart
 				// Truncate the table
 				await context
 					.Database
-					.ExecuteSqlCommandAsync("TRUNCATE TABLE [Alerts]", cancellationToken)
+					.ExecuteSqlRawAsync("TRUNCATE TABLE [Alerts]", cancellationToken)
 					.ConfigureAwait(false);
 			}
 		}
@@ -361,7 +361,7 @@ namespace LogicMonitor.Datamart
 				var sql = "ALTER INDEX IX_Alerts_" + column + " ON [Alerts] " + indexAction;
 				await context
 			  .Database
-			  .ExecuteSqlCommandAsync(sql)
+			  .ExecuteSqlRawAsync(sql)
 #pragma warning restore EF1000 // Possible SQL injection vulnerability.
 			  .ConfigureAwait(false);
 			}
