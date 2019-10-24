@@ -109,7 +109,7 @@ namespace LogicMonitor.Datamart
 			deviceDataSourceInstanceData.HasIndex(d => d.DateTime);
 
 			var deviceDataSourceInstanceAggregatedData = modelBuilder.Entity<DeviceDataSourceInstanceAggregatedDataStoreItem>();
-			deviceDataSourceInstanceAggregatedData.HasIndex(d => new { d.DeviceDataSourceInstanceId, d.DataPointName, d.Hour });
+			deviceDataSourceInstanceAggregatedData.HasIndex(d => new { d.DeviceDataSourceInstanceId, d.DataPointId, d.Hour });
 
 			// Relational stuff
 			modelBuilder.Entity<DeviceDataSourceInstanceAggregatedDataStoreItem>()

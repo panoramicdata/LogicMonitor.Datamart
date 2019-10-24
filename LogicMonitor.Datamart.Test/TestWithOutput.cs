@@ -16,26 +16,53 @@ using Xunit.Abstractions;
 
 namespace LogicMonitor.Datamart.Test
 {
-	public class TestWithOutput
+	public abstract class TestWithOutput
 	{
-		protected static Dictionary<string, List<DataSourceDataPointModel>> DataSourceSpecifications = new Dictionary<string, List<DataSourceDataPointModel>>
+		protected static DateTimeOffset TwelveHouseAgo = DateTimeOffset.UtcNow.AddHours(-12);
+
+		protected static Configuration Configuration = new Configuration
 		{
-			{ "WinCPU",
-				new List<DataSourceDataPointModel>
-				{
-					new DataSourceDataPointModel
-						{
-							Name = "CPUBusyPercent",
-							MeasurementUnit = "%"
-						},
-					new DataSourceDataPointModel
-						{
-							Name= "ProcessorQueueLength",
-							MeasurementUnit = "count"
-						}
+			Name = "Test",
+			AggregationDurationMinutes = 15,
+			LateArrivingDataWindowHours = 2,
+			StartDateTimeUtc = new DateTimeOffset(
+				TwelveHouseAgo.Year,
+				TwelveHouseAgo.Month,
+				TwelveHouseAgo.Day,
+				TwelveHouseAgo.Hour,
+				0,
+				0,
+				TimeSpan.Zero).UtcDateTime,
+
+			DataSources = new List<DataSourceConfigurationItem>
+			{
+				new DataSourceConfigurationItem{
+					Name = "WinCPU",
+					AggregationDurationMinutes = 60,
+					DataPoints = new List<DataPointConfigurationItem>
+					{
+						new DataPointConfigurationItem
+							{
+								Name = "CPUBusyPercent",
+								MeasurementUnit = "%",
+							},
+						new DataPointConfigurationItem
+							{
+								Name= "ProcessorQueueLength",
+								MeasurementUnit = "count"
+							}
+					}
 				}
 			}
 		};
+
+		/// <summary>
+		/// Static constructor
+		/// </summary>
+		static TestWithOutput()
+		{
+			Configuration.Validate();
+		}
 
 		protected TestWithOutput(ITestOutputHelper iTestOutputHelper)
 		{
@@ -54,7 +81,7 @@ namespace LogicMonitor.Datamart.Test
 				DatabaseType.SqlServer,
 				configuration.DatabaseServer,
 				configuration.DatabaseName,
-				DataSourceSpecifications,
+				Configuration,
 				loggerFactory);
 
 			DatamartClient.EnsureDatabaseCreatedAndSchemaUpdatedAsync().GetAwaiter().GetResult();
@@ -62,22 +89,22 @@ namespace LogicMonitor.Datamart.Test
 			Stopwatch = Stopwatch.StartNew();
 		}
 
-		protected static Configuration LoadConfiguration(string jsonFilePath)
+		protected static TestConfiguration LoadConfiguration(string jsonFilePath)
 		{
 			var location = typeof(TestWithOutput).GetTypeInfo().Assembly.Location;
 			var dirPath = Path.Combine(Path.GetDirectoryName(location), "../../..");
 
-			Configuration configuration;
+			TestConfiguration configuration;
 			var configurationRoot = new ConfigurationBuilder()
 				.SetBasePath(dirPath)
 				.AddJsonFile(jsonFilePath, false, false)
 				.Build();
 			var services = new ServiceCollection();
 			services.AddOptions();
-			services.Configure<Configuration>(configurationRoot);
+			services.Configure<TestConfiguration>(configurationRoot);
 			using (var sp = services.BuildServiceProvider())
 			{
-				var options = sp.GetService<IOptions<Configuration>>();
+				var options = sp.GetService<IOptions<TestConfiguration>>();
 				configuration = options.Value;
 			}
 

@@ -1,10 +1,7 @@
-﻿using Humanizer;
-using Humanizer.Localisation;
-using LogicMonitor.Datamart.Models;
+﻿using LogicMonitor.Datamart.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -14,36 +11,50 @@ namespace LogicMonitor.Datamart
 {
 	internal class DataSync : LoopInterval
 	{
+		private static readonly TimeSpan EightHours = TimeSpan.FromHours(8);
+		private static readonly TimeSpan OneSecond = TimeSpan.FromSeconds(1);
+
 		private readonly DatamartClient _datamartClient;
-		private readonly Dictionary<string, List<DataSourceDataPointModel>> _dataSourceSpecifications;
-		private readonly int _lateArrivingDataWindowHours;
-		private readonly DateTimeOffset _startDateTimeUtc;
+		private readonly Configuration _configuration;
 
 		public DataSync(
 			DatamartClient datamartClient,
-			Dictionary<string, List<DataSourceDataPointModel>> dataSourceSpecifications,
-			DateTimeOffset startDateTimeUtc,
-			int lateArrivingDataWindowHours,
+			Configuration configuration,
 			ILogger<DataSync> logger)
 			: base(nameof(DataSync), logger)
 		{
 			_datamartClient = datamartClient;
-			_dataSourceSpecifications = dataSourceSpecifications;
-			_lateArrivingDataWindowHours = lateArrivingDataWindowHours;
-			_startDateTimeUtc = startDateTimeUtc;
+			_configuration = configuration;
 		}
 
 		public override async Task ExecuteAsync(CancellationToken cancellationToken)
 		{
+			var configurationLevelAggregationDuration = TimeSpan.FromMinutes(_configuration.AggregationDurationMinutes);
+
 			using (var context = new Context(_datamartClient.DbContextOptions))
 			{
 				// Use the database as a reference for what should be loaded in to ensure referential integrity between the data and the DeviceDataSourceInstance
 
-				var deviceDataSourceNames = _dataSourceSpecifications.Keys.ToList();
-				var matchingDatabaseDataSources = await context.DataSources.Where(ds => deviceDataSourceNames.Contains(ds.Name)).ToListAsync().ConfigureAwait(false);
-				var dataSourceIds = matchingDatabaseDataSources.Select(ds => ds.Id).ToList();
+				// Get the configured DataSource names
+				var deviceDataSourceNames = _configuration.DataSources
+					.Select(dsci => dsci.Name)
+					.ToList();
 
-				var deviceDataSourceInstances = await context.DeviceDataSourceInstances
+				// Get the database DataSources for those names
+				var matchingDatabaseDataSources = await context
+					.DataSources
+					.Where(ds => deviceDataSourceNames.Contains(ds.Name))
+					.ToListAsync()
+					.ConfigureAwait(false);
+
+				// Get the LogicMonitor Ids for those DataSources
+				var dataSourceIds = matchingDatabaseDataSources
+					.Select(ds => ds.Id)
+					.ToList();
+
+				// Get the database instances for those datasources
+				var databaseDeviceDataSourceInstances = await context
+					.DeviceDataSourceInstances
 					.Where(ddsi =>
 						ddsi.DataSourceId.HasValue
 						&& dataSourceIds.Contains(ddsi.DataSourceId.Value)
@@ -51,86 +62,113 @@ namespace LogicMonitor.Datamart
 					.ToListAsync()
 					.ConfigureAwait(false);
 
-				//var endDateTimeUtc = DateTime.UtcNow;
-
-				if (deviceDataSourceInstances.Count == 0)
+				// If there aren't any, log and return
+				if (databaseDeviceDataSourceInstances.Count == 0)
 				{
 					Logger.LogWarning($"Found no DeviceDataSourceInstances in the databases for DeviceDataSource names {string.Join(", ", deviceDataSourceNames)}. Check dimensions have been synced.");
 					return;
 				}
+				// We have the database deviceDataSourceInstances for the configured DataSources
 
 				// Clear out the PortalClient Cache, otherwise we remember all the datavalues for no reason
 				_datamartClient.ClearCache();
 				var oldCacheState = _datamartClient.UseCache;
 				_datamartClient.UseCache = false;
 
-				// This is the most recent point in time we should retrieve data to
+				// To ignore a period of uncertainty whether the Collector has been
+				// able to publish its measurement data to the LogicMonitor API,
+				// we consider "now" to be X hours ago.
+				// This is "B" in the diagram below.
 				var utcNow = DateTimeOffset.UtcNow;
-
-				// Configure the LateArrivingDataWindow
-				var lateArrivingDataWindowStart = utcNow.AddHours(-_lateArrivingDataWindowHours);
+				var lateArrivingDataWindowStart = utcNow.AddHours(-_configuration.LateArrivingDataWindowHours);
 				var lateArrivingDataWindowStartSeconds = lateArrivingDataWindowStart.ToUnixTimeSeconds();
 
 				var stopwatch = new Stopwatch();
 
-				var deviceDataSourceInstanceNumber = 1;
-
 				// Get data for each instance
 				try
 				{
-					foreach (var deviceDataSourceInstance in deviceDataSourceInstances)
+					foreach (var databaseDeviceDataSourceInstance in databaseDeviceDataSourceInstances)
 					{
 						stopwatch.Restart();
 						var totalRowsLoadedFromApi = 0;
 
 						var dataSourceName = matchingDatabaseDataSources
-							.Single(ds => ds.Id == deviceDataSourceInstance.DataSourceId)
+							.Single(ds => ds.Id == databaseDeviceDataSourceInstance.DataSourceId)
 							.Name;
 
-						// Load the last time we got measurement for this DeviceDataSourceInstance and add a second to start after the last retrieved value
-						var lastUpdatedDateTimeUtc = DateTimeOffset.FromUnixTimeSeconds(deviceDataSourceInstance.LastMeasurementUpdatedTimeSeconds + 1).UtcDateTime;
+						var dataSourceConfigurationItem = _configuration
+							.DataSources
+							.SingleOrDefault(dsci => dsci.Name == dataSourceName);
 
-						// Loop until 0 rows retrieved
-						var rowsRetrieved = 0;
+						// Determine the aggregation duration at the datasource level
+						var dataSourceAggregationDuration = dataSourceConfigurationItem?.AggregationDurationMinutes != null
+							? TimeSpan.FromMinutes(dataSourceConfigurationItem.AggregationDurationMinutes.Value)
+							: configurationLevelAggregationDuration;
 
-						var dataWindowStartUtc = lastUpdatedDateTimeUtc > _startDateTimeUtc ? lastUpdatedDateTimeUtc : _startDateTimeUtc;
-						// Save the date for logging
-						var initialDataWindowStartUtc = dataWindowStartUtc;
-						DateTimeOffset endDateTimeUtc;
+						// A: The last time we got measurement up to for this DeviceDataSourceInstance
+						var lastUpdatedDateTimeUtc = DateTimeOffset
+							.FromUnixTimeSeconds(databaseDeviceDataSourceInstance.LastMeasurementUpdatedTimeSeconds);
 
-						var instanceLogId = $"{deviceDataSourceInstance.DeviceDisplayName}:{deviceDataSourceInstance.Id}";
-						Logger.LogDebug($"Loading data for DeviceDataSourceInstance {instanceLogId} from {initialDataWindowStartUtc.UtcDateTime} to {utcNow.UtcDateTime} - data window: {(utcNow - initialDataWindowStartUtc).Humanize(maxUnit: TimeUnit.Day, minUnit: TimeUnit.Minute, precision: 7)}");
-
-						do
+						// If we have never fetched data, determine the minimum data fetch date
+						if (lastUpdatedDateTimeUtc < _configuration.StartDateTimeUtc)
 						{
-							// Use a new context each time so we don't accumulate too much EF tracking data
-							using (var dataContext = new Context(_datamartClient.DbContextOptions))
+							lastUpdatedDateTimeUtc = _configuration.StartDateTimeUtc;
+						}
+						var timeCursor = lastUpdatedDateTimeUtc;
+						// A is now calculated
+
+						// .........---------|----:----:-|-----
+						//                   A           B
+						// A is where we have data in the database up to
+						// B is where we want to fetch it up to
+						// The maximum data that can be retrieved from LM at once with full resolution is 8 hours
+						// We fetch the data in blocks of no more than 8 hours.
+
+						// Determine the last datetimeoffset we want to get data up to
+						var blockIndex = 0;
+						var instanceLogId = $"{databaseDeviceDataSourceInstance.DeviceDisplayName}:{databaseDeviceDataSourceInstance.Id}";
+						while (timeCursor < lateArrivingDataWindowStart)
+						{
+							var blockStart = timeCursor;
+							while (timeCursor - blockStart < EightHours)
 							{
-								const int maxWindowDurationHours = 8;
-
-								var maxWindowEndUtc = dataWindowStartUtc.AddHours(maxWindowDurationHours);
-								// Get the least of the max window and now
-								endDateTimeUtc = maxWindowEndUtc > utcNow ? utcNow : maxWindowEndUtc;
-
-								Logger.LogTrace($"Loading data from {dataWindowStartUtc.UtcDateTime} to {endDateTimeUtc.UtcDateTime} - duration {endDateTimeUtc - dataWindowStartUtc}");
-
-								var rawData = await _datamartClient.GetRawDataSetAsync(
-									deviceDataSourceInstance.DeviceId.Value,
-									deviceDataSourceInstance.DeviceDataSourceId,
-									deviceDataSourceInstance.Id,
-									dataWindowStartUtc.UtcDateTime,
-									endDateTimeUtc.UtcDateTime,
-									cancellationToken
-									).ConfigureAwait(false);
-
-								rowsRetrieved = rawData.UtcTimeStamps?.Count ?? 0;
-								Logger.LogDebug($"Loaded {rowsRetrieved} entries for DeviceDataSourceInstance {instanceLogId}.");
-								if (rowsRetrieved > 0)
+								if (timeCursor + dataSourceAggregationDuration >= lateArrivingDataWindowStart)
 								{
-									totalRowsLoadedFromApi += rowsRetrieved;
+									break;
+								}
+								timeCursor += dataSourceAggregationDuration;
+							}
+							// We have a block of time to fetch, starting at blockStart and ending at timeCursor.
 
+							// Is the block zero length?
+							if (timeCursor == blockStart)
+							{
+								break;
+							}
+
+							var blockEnd = timeCursor;
+
+							// Fetch the data and loop
+							var rawData = await _datamartClient.GetRawDataSetAsync(
+								databaseDeviceDataSourceInstance.DeviceId.Value,
+								databaseDeviceDataSourceInstance.DeviceDataSourceId,
+								databaseDeviceDataSourceInstance.Id,
+								blockStart.UtcDateTime + OneSecond,
+								blockEnd.UtcDateTime,
+								cancellationToken
+								).ConfigureAwait(false);
+
+							var rowsRetrieved = rawData.UtcTimeStamps?.Count ?? 0;
+							Logger.LogDebug($"Loaded {rowsRetrieved} entries for DeviceDataSourceInstance {instanceLogId}.");
+							if (rowsRetrieved > 0)
+							{
+								totalRowsLoadedFromApi += rowsRetrieved;
+
+								using (var dataContext = new Context(_datamartClient.DbContextOptions))
+								{
 									// Add data to the context for each of the dataPointNames
-									foreach (var dataPointModel in _dataSourceSpecifications[dataSourceName])
+									foreach (var dataPointModel in dataSourceConfigurationItem.DataPoints)
 									{
 										var dataPointIndex = rawData.DataPoints.FindIndex(dpName => dpName == dataPointModel.Name);
 										var data = rawData.UtcTimeStamps.Zip(
@@ -141,41 +179,51 @@ namespace LogicMonitor.Datamart
 													DateTime = DateTimeOffset.FromUnixTimeMilliseconds(timeStampMs).UtcDateTime,
 													DataPointName = dataPointModel.Name,
 													Value = value,
-													DeviceDataSourceInstanceId = deviceDataSourceInstance.Id
+													DeviceDataSourceInstanceId = databaseDeviceDataSourceInstance.Id
 												})
 												.ToList();
+										// Data:                   :-------------------------------:
+										// Data fetched is a block :---.---.---.---.---.---.---.---:
+										//... where the maximum size is 8 hours, with an integer number data aggregation chunks
+										// We need to aggregate this in blocks of aggregationDuration
 
-										dataContext.DeviceDataSourceInstanceData.AddRange(data);
+										var databaseDataPoint = await dataContext
+											.DataSourceDataPoints
+											.SingleOrDefaultAsync(dp => dp.Name == dataPointModel.Name && dp.DataSource.Id == databaseDeviceDataSourceInstance.DataSourceId)
+											.ConfigureAwait(false);
+
+										// Aggregate it in blocks of DataAggregationDuration
+										var aggregationTimeCursor = blockStart;
+										aggregationTimeCursor += dataSourceAggregationDuration;
+										var deviceDataSourceInstanceAggregatedDataStoreItems = data
+											.GroupBy(d => ((int)(d.DateTime - blockStart).TotalSeconds) / ((int)dataSourceAggregationDuration.TotalSeconds))
+											.Select(chunkedData => new DeviceDataSourceInstanceAggregatedDataStoreItem
+											{
+												DeviceDataSourceInstanceId = databaseDeviceDataSourceInstance.Id,
+												DataPointId = databaseDataPoint.DatamartId,
+												Hour = (blockStart + TimeSpan.FromSeconds(chunkedData.Key * dataSourceAggregationDuration.TotalSeconds)).UtcDateTime,
+												DataCount = chunkedData.Count(d => d.Value != null),
+												NoDataCount = chunkedData.Count(d => d.Value == null),
+												Sum = chunkedData.Sum(d => d.Value ?? 0),
+												SumSquared = chunkedData.Sum(d => Math.Pow(d.Value ?? 0, 2)),
+												Max = chunkedData.Max(d => d.Value),
+												Min = chunkedData.Min(d => d.Value)
+											})
+											.ToList();
+										dataContext.DeviceDataSourceInstanceAggregatedData.AddRange(deviceDataSourceInstanceAggregatedDataStoreItems);
+										// Increment the blockIndex
+										blockIndex++;
 									}
-
-									// Save the data rows
-									// TODO - This should be a bulk insert to avoid the tracking and checking for updating timestamps
-									await dataContext.SaveChangesAsync().ConfigureAwait(false);
-
-									// Update lastUpdatedDateTimeUtc and save it for this DeviceDataSourceInstance
-									deviceDataSourceInstance.LastMeasurementUpdatedTimeSeconds = rawData.UtcTimeStamps.Max() / 1000;
-									await context.SaveChangesAsync().ConfigureAwait(false);
+									databaseDeviceDataSourceInstance.LastAggregationHourWrittenUtc = databaseDeviceDataSourceInstance.LastAggregationHourWrittenUtc = blockEnd.UtcDateTime;
+									await dataContext
+										.SaveChangesAsync()
+										.ConfigureAwait(false);
 								}
-								else
-								{
-									// No data
-								}
-
-								// Move to next time window
-								dataWindowStartUtc = dataWindowStartUtc.AddHours(maxWindowDurationHours).AddSeconds(1);
 							}
-						} while (endDateTimeUtc < utcNow);
 
-						// We've reached the end of the data so take the most recent of 7 days ago and the last measurement. This way we won't keep looking for very old data for instances we haven't seen anything
-						if (deviceDataSourceInstance.LastMeasurementUpdatedTimeSeconds < lateArrivingDataWindowStartSeconds)
-						{
-							Logger.LogDebug($"Didn't see anything newer than the configured LateArrivingDataWindow ({_lateArrivingDataWindowHours} hours); updating to {lateArrivingDataWindowStart.UtcDateTime} ({lateArrivingDataWindowStartSeconds})");
-							deviceDataSourceInstance.LastMeasurementUpdatedTimeSeconds = lateArrivingDataWindowStartSeconds;
-							await context.SaveChangesAsync().ConfigureAwait(false);
+							// Move onto the next block
+							timeCursor += EightHours;
 						}
-						Logger.LogInformation($"Loaded {totalRowsLoadedFromApi} data entries in {stopwatch.Elapsed.TotalSeconds:N1}s for DeviceDataSourceInstance {instanceLogId} ({deviceDataSourceInstanceNumber++}/{deviceDataSourceInstances.Count}) from {initialDataWindowStartUtc.UtcDateTime} to {utcNow.UtcDateTime} - data window: {(utcNow - initialDataWindowStartUtc).Humanize(maxUnit: TimeUnit.Day, minUnit: TimeUnit.Minute, precision: 7)}");
-
-						await PerformAggregationsAsync(deviceDataSourceInstance.Id).ConfigureAwait(false);
 					}
 				}
 				finally
@@ -185,66 +233,66 @@ namespace LogicMonitor.Datamart
 			}
 		}
 
-		private async Task PerformAggregationsAsync(int deviceDataSourceInstanceId)
-		{
-			using (var context = new Context(_datamartClient.DbContextOptions))
-			{
-				// Get deviceDataSourceInstance row
-				var ddsi = context.DeviceDataSourceInstances.SingleOrDefault(i => i.Id == deviceDataSourceInstanceId);
+		//		private async Task PerformAggregationsAsync(int deviceDataSourceInstanceId)
+		//		{
+		//			using (var context = new Context(_datamartClient.DbContextOptions))
+		//			{
+		//				// Get deviceDataSourceInstance row
+		//				var ddsi = context.DeviceDataSourceInstances.SingleOrDefault(i => i.Id == deviceDataSourceInstanceId);
 
-				// StartHour = Find out which aggregated hour we last wrote and add an hour, or start at the configure beginning
-				var startHour = ddsi.LastAggregationHourWrittenUtc.HasValue
-					? new DateTimeOffset(ddsi.LastAggregationHourWrittenUtc.Value, TimeSpan.Zero).AddHours(1)
-					: _startDateTimeUtc.UtcDateTime;
+		//				// StartHour = Find out which aggregated hour we last wrote and add an hour, or start at the configure beginning
+		//				var startHour = ddsi.LastAggregationHourWrittenUtc.HasValue
+		//					? new DateTimeOffset(ddsi.LastAggregationHourWrittenUtc.Value, TimeSpan.Zero).AddHours(1)
+		//					: _startDateTimeUtc.UtcDateTime;
 
-				// EndHour = The one prior to the last hour we wrote source data
-				var endHour = DateTimeOffset.FromUnixTimeSeconds(ddsi.LastMeasurementUpdatedTimeSeconds);
-				// Move to the start of the end hour
-				endHour = new DateTimeOffset(endHour.Year, endHour.Month, endHour.Day, endHour.Hour, 0, 0, TimeSpan.Zero);
+		//				// EndHour = The one prior to the last hour we wrote source data
+		//				var endHour = DateTimeOffset.FromUnixTimeSeconds(ddsi.LastMeasurementUpdatedTimeSeconds);
+		//				// Move to the start of the end hour
+		//				endHour = new DateTimeOffset(endHour.Year, endHour.Month, endHour.Day, endHour.Hour, 0, 0, TimeSpan.Zero);
 
-				try
-				{
-					// Insert rows from StartDate to EndHour
-					var rowsAffected = await context.Database.ExecuteSqlRawAsync($@"
-begin transaction;
+		//				try
+		//				{
+		//					// Insert rows from StartDate to EndHour
+		//					var rowsAffected = await context.Database.ExecuteSqlRawAsync($@"
+		//begin transaction;
 
-insert into DeviceDataSourceInstanceAggregatedData
-(Hour, DeviceDataSourceInstanceId, DataPointName, Min, Max, Sum, SumSquared, DataCount, NoDataCount)
-select
-dateadd(hour, datediff(hour, 0, DateTime), 0) as [Hour],
-DeviceDataSourceInstanceId,
-DataPointName,
-min(Value) as [Min],
-max(Value) as [Max],
-sum(Value) as [Sum],
-sum(POWER(Value, 2)) as SumSquared,
-sum(case when Value is not null then 1 else 0 end) [DataCount],
-sum(case when Value is null then 1 else 0 end) [NoDataCount]
-from DeviceDataSourceInstanceData
-where [DateTime] >= {startHour.UtcDateTime} and [DateTime] < {endHour.UtcDateTime} and DeviceDataSourceInstanceId = {deviceDataSourceInstanceId}
-group by
-DeviceDataSourceInstanceId,
-DataPointName,
-dateadd(hour, datediff(hour, 0, DateTime), 0);
+		//insert into DeviceDataSourceInstanceAggregatedData
+		//(Hour, DeviceDataSourceInstanceId, DataPointName, Min, Max, Sum, SumSquared, DataCount, NoDataCount)
+		//select
+		//dateadd(hour, datediff(hour, 0, DateTime), 0) as [Hour],
+		//DeviceDataSourceInstanceId,
+		//DataPointName,
+		//min(Value) as [Min],
+		//max(Value) as [Max],
+		//sum(Value) as [Sum],
+		//sum(POWER(Value, 2)) as SumSquared,
+		//sum(case when Value is not null then 1 else 0 end) [DataCount],
+		//sum(case when Value is null then 1 else 0 end) [NoDataCount]
+		//from DeviceDataSourceInstanceData
+		//where [DateTime] >= {startHour.UtcDateTime} and [DateTime] < {endHour.UtcDateTime} and DeviceDataSourceInstanceId = {deviceDataSourceInstanceId}
+		//group by
+		//DeviceDataSourceInstanceId,
+		//DataPointName,
+		//dateadd(hour, datediff(hour, 0, DateTime), 0);
 
-update DeviceDataSourceInstances set LastAggregationHourWrittenUtc =
-(
-	select max(Hour) from DeviceDataSourceInstanceAggregatedData
-	where DeviceDataSourceInstanceId = {deviceDataSourceInstanceId}
-)
-where Id = {deviceDataSourceInstanceId};
+		//update DeviceDataSourceInstances set LastAggregationHourWrittenUtc =
+		//(
+		//	select max(Hour) from DeviceDataSourceInstanceAggregatedData
+		//	where DeviceDataSourceInstanceId = {deviceDataSourceInstanceId}
+		//)
+		//where Id = {deviceDataSourceInstanceId};
 
-commit;
-")
-						.ConfigureAwait(false);
-				}
-#pragma warning disable CA1031 // Do not catch general exception types
-				catch (Exception ex)
-				{
-					Logger.LogError(ex, $"A problem occurred while writing aggregated data for DeviceDataSourceInstance#{deviceDataSourceInstanceId} ex.Message");
-				}
-#pragma warning restore CA1031 // Do not catch general exception types
-			}
-		}
+		//commit;
+		//")
+		//						.ConfigureAwait(false);
+		//				}
+		//#pragma warning disable CA1031 // Do not catch general exception types
+		//				catch (Exception ex)
+		//				{
+		//					Logger.LogError(ex, $"A problem occurred while writing aggregated data for DeviceDataSourceInstance#{deviceDataSourceInstanceId} ex.Message");
+		//				}
+		//#pragma warning restore CA1031 // Do not catch general exception types
+		//			}
+		//		}
 	}
 }

@@ -10,7 +10,6 @@ using LogicMonitor.Datamart.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,16 +19,16 @@ namespace LogicMonitor.Datamart
 	internal class DimensionSync : LoopInterval
 	{
 		private readonly DatamartClient _datamartClient;
-		private readonly Dictionary<string, List<DataSourceDataPointModel>> _dataSourceSpecifications;
+		private readonly Configuration _configuration;
 
 		public DimensionSync(
 			DatamartClient datamartClient,
-			Dictionary<string, List<DataSourceDataPointModel>> dataSourceSpecifications,
+			Configuration configuration,
 			ILogger<DimensionSync> logger)
 			: base(nameof(DimensionSync), logger)
 		{
 			_datamartClient = datamartClient;
-			_dataSourceSpecifications = dataSourceSpecifications;
+			_configuration = configuration;
 		}
 
 		public override async Task ExecuteAsync(CancellationToken cancellationToken)
@@ -50,14 +49,15 @@ namespace LogicMonitor.Datamart
 			await _datamartClient.AddOrUpdate<Website, WebsiteStoreItem>(context => context.Websites, cancellationToken).ConfigureAwait(false);
 
 			// Process each DataSource
-			foreach (var dataSourceSpecification in _dataSourceSpecifications)
+			foreach (var dataSourceSpecification in _configuration.DataSources)
 			{
-				await SyncDeviceDataSourcesAndInstancesAsync(dataSourceSpecification.Key, cancellationToken).ConfigureAwait(false);
+				await SyncDeviceDataSourcesAndInstancesAsync(dataSourceSpecification, cancellationToken).ConfigureAwait(false);
 			}
 		}
 
-		private async Task SyncDeviceDataSourcesAndInstancesAsync(string dataSourceName, CancellationToken cancellationToken)
+		private async Task SyncDeviceDataSourcesAndInstancesAsync(DataSourceConfigurationItem dataSourceSpecification, CancellationToken cancellationToken)
 		{
+			var dataSourceName = dataSourceSpecification.Name;
 			Logger.LogDebug($"Syncing {dataSourceName}");
 
 			// Get the DataSource

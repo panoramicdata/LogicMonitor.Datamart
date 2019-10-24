@@ -16,7 +16,9 @@ namespace LogicMonitor.Datamart.Models
 
 		public int DeviceDataSourceInstanceId { get; set; }
 
-		public string DataPointName { get; set; }
+		public DataSourceDataPointStoreItem DataPoint { get; set; }
+
+		public int DataPointId { get; set; }
 
 		public double? Min { get; set; }
 

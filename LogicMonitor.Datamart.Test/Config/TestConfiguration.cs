@@ -5,7 +5,7 @@
 	/// Application configuration, loaded from an appsettings.json file upon execution
 	/// You can modify/extend this class and provide your own settings
 	/// </summary>
-	public class Configuration
+	public class TestConfiguration
 #pragma warning restore CA1812 // Avoid uninstantiated internal classes - End
 	{
 		/// <summary>

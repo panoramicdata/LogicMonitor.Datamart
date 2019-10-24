@@ -25,8 +25,6 @@ namespace LogicMonitor.Datamart.Models
 		//public List<Property> SystemProperties { get; set; }
 		//public List<Property> AutoProperties { get; set; }
 		public int? DataSourceId { get; set; }
-		public string DataSourceName { get; set; }
-		public string DataSourceType { get; set; }
 		public string DeviceDisplayName { get; set; }
 		public int DeviceDataSourceId { get; set; }
 		public int? DeviceId { get; set; }

@@ -35,7 +35,7 @@ namespace LogicMonitor.Datamart
 		private readonly string _logicMonitorSubdomain;
 		private readonly ILoggerFactory _loggerFactory;
 		private readonly ILogger _logger;
-		private readonly Dictionary<string, List<DataSourceDataPointModel>> _dataSourceSpecifications;
+		private readonly Configuration _configuration;
 
 		public DatamartClient(
 			string logicMonitorSubDomain,
@@ -44,7 +44,7 @@ namespace LogicMonitor.Datamart
 			DatabaseType databaseType,
 			string databaseServerName,
 			string databaseName,
-			Dictionary<string, List<DataSourceDataPointModel>> dataSourceSpecifications,
+			Configuration configuration,
 			ILoggerFactory loggerFactory,
 			bool enableSensitiveDatabaseLogging = false
 			) : base(logicMonitorSubDomain, logicMonitorAccessId, logicMonitorAccessKey, loggerFactory.CreateLogger<DatamartClient>())
@@ -81,7 +81,10 @@ namespace LogicMonitor.Datamart
 			_loggerFactory = loggerFactory;
 			_logger = loggerFactory.CreateLogger<DatamartClient>();
 			DatabaseType = databaseType;
-			_dataSourceSpecifications = dataSourceSpecifications;
+
+			// Store and validate configuration
+			_configuration = configuration;
+			_configuration.Validate();
 		}
 
 		public async Task<bool> IsDatabaseCreatedAsync()
@@ -251,22 +254,18 @@ namespace LogicMonitor.Datamart
 		{
 			var sync = new DimensionSync(
 				this,
-				_dataSourceSpecifications,
+				_configuration,
 				_loggerFactory.CreateLogger<DimensionSync>());
 			return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
 		}
 
 		public Task SyncDataAsync(
 			int desiredMaxIntervalMinutes,
-			DateTimeOffset startDateTimeUtc,
-			int lateArrivingDataWindowHours,
 			CancellationToken cancellationToken)
 		{
 			var sync = new DataSync(
 				this,
-				_dataSourceSpecifications,
-				startDateTimeUtc,
-				lateArrivingDataWindowHours,
+				_configuration,
 				_loggerFactory.CreateLogger<DataSync>());
 			return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
 		}
@@ -347,10 +346,10 @@ namespace LogicMonitor.Datamart
 		private async Task UpdateDataPointsAsync(Context context, List<DataSource> apiDataSources)
 		{
 			// Update the nominated DataSources' DataPoints only for those reference in the config
-			foreach (var configDataSourceSpecification in _dataSourceSpecifications)
+			foreach (var configDataSourceSpecification in _configuration.DataSources)
 			{
 				// The DataSource name from the config
-				var dataSourceName = configDataSourceSpecification.Key;
+				var dataSourceName = configDataSourceSpecification.Name;
 
 				// The DataSource from the API
 				var apiDataSource = apiDataSources
@@ -375,7 +374,7 @@ namespace LogicMonitor.Datamart
 				// We have a matching DataSource from both the API and the database.
 
 				// Consider each DataPoint in the config
-				foreach (var configDataPoint in configDataSourceSpecification.Value)
+				foreach (var configDataPoint in configDataSourceSpecification.DataPoints)
 				{
 					// Is it present in the API DataSource
 					var apiDataPoint = apiDataSource

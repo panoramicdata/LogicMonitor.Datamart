@@ -1,4 +1,6 @@
-﻿namespace LogicMonitor.Datamart.Models
+﻿using System.Collections.Generic;
+
+namespace LogicMonitor.Datamart.Models
 {
 	public class DataSourceDataPointStoreItem : IdentifiedStoreItem
 	{
@@ -7,6 +9,8 @@
 		public DataSourceStoreItem DataSource { get; set; }
 		public int DataSourceId { get; set; }
 #pragma warning restore CA2227 // Collection properties should be read only
+
+		public List<DeviceDataSourceInstanceAggregatedDataStoreItem> DeviceDataSourceInstanceAggregatedDataStoreItems { get; set; }
 
 		// Database properties
 		public string Name { get; set; }
