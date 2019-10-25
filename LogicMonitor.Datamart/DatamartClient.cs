@@ -34,6 +34,8 @@ namespace LogicMonitor.Datamart
 		public DbContextOptions<Context> DbContextOptions { get; }
 		public DatabaseType DatabaseType => _configuration.DatabaseType;
 
+		public const string LogicMonitorCredentialNullMessage = "Either the configuration or some aspect of the LogicMonitorCredential is null";
+
 		private readonly ILoggerFactory _loggerFactory;
 		private readonly ILogger _logger;
 		private readonly Configuration _configuration;
@@ -41,7 +43,11 @@ namespace LogicMonitor.Datamart
 		public DatamartClient(
 			Configuration configuration,
 			ILoggerFactory loggerFactory
-			) : base(configuration.LogicMonitorCredential.Subdomain, configuration.LogicMonitorCredential.AccessId, configuration.LogicMonitorCredential.AccessKey, loggerFactory.CreateLogger<DatamartClient>())
+			) : base(
+				configuration?.LogicMonitorCredential?.Subdomain ?? throw new ArgumentNullException(nameof(configuration), LogicMonitorCredentialNullMessage),
+				configuration?.LogicMonitorCredential?.AccessId ?? throw new ArgumentNullException(nameof(configuration), LogicMonitorCredentialNullMessage),
+				configuration?.LogicMonitorCredential?.AccessKey ?? throw new ArgumentNullException(nameof(configuration), LogicMonitorCredentialNullMessage),
+				loggerFactory.CreateLogger<DatamartClient>())
 		{
 			// Store and validate configuration
 			_configuration = configuration;
