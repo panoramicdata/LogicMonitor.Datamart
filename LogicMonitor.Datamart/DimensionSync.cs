@@ -52,7 +52,14 @@ namespace LogicMonitor.Datamart
 			// Process each DataSource
 			foreach (var dataSourceSpecification in _configuration.DataSources)
 			{
-				await SyncDeviceDataSourcesAndInstancesAsync(dataSourceSpecification, cancellationToken).ConfigureAwait(false);
+				try
+				{
+					await SyncDeviceDataSourcesAndInstancesAsync(dataSourceSpecification, cancellationToken).ConfigureAwait(false);
+				}
+				catch(Exception e)
+				{
+					Logger.LogWarning(e.Message, e);
+				}
 			}
 		}
 
@@ -106,14 +113,14 @@ namespace LogicMonitor.Datamart
 
 					// Fetch the DeviceDataSourceInstances
 					var deviceDataSourceInstances = await _datamartClient
-						.GetDeviceDataSourceInstancesPageAsync(
+						.GetAllDeviceDataSourceInstancesAsync(
 							device.Id,
 							deviceDataSource.Id,
-							new Filter<DeviceDataSourceInstance> { Skip = 0, Take = 300 },
+							null,
 							cancellationToken)
 						.ConfigureAwait(false);
 
-					foreach (var deviceDataSourceInstance in deviceDataSourceInstances.Items)
+					foreach (var deviceDataSourceInstance in deviceDataSourceInstances)
 					{
 						Logger.LogDebug($"Device {device.DisplayName}, Instance: {deviceDataSourceInstance.Name}");
 
