@@ -30,6 +30,7 @@ namespace LogicMonitor.Datamart
 
 		public override async Task ExecuteAsync(CancellationToken cancellationToken)
 		{
+			Logger.LogInformation($"Data sync started");
 			var configurationLevelAggregationDuration = TimeSpan.FromMinutes(_configuration.AggregationDurationMinutes);
 
 			using (var context = new Context(_datamartClient.DbContextOptions))
@@ -37,6 +38,7 @@ namespace LogicMonitor.Datamart
 				// Use the database as a reference for what should be loaded in to ensure referential integrity between the data and the DeviceDataSourceInstance
 
 				// Get the configured DataSource names
+				Logger.LogInformation($"Getting reference data");
 				var deviceDataSourceNames = _configuration.DataSources
 					.Select(dsci => dsci.Name)
 					.ToList();
@@ -89,8 +91,10 @@ namespace LogicMonitor.Datamart
 				// Get data for each instance
 				try
 				{
+					Logger.LogInformation($"Syncing each DeviceDataSourceInstance...");
 					foreach (var databaseDeviceDataSourceInstance in databaseDeviceDataSourceInstances)
 					{
+						Logger.LogInformation($"Syncing data for device: {databaseDeviceDataSourceInstance.DeviceId}, dataSource {databaseDeviceDataSourceInstance.DataSourceId}, instance {databaseDeviceDataSourceInstance.DisplayName}");
 						stopwatch.Restart();
 						var totalRowsLoadedFromApi = 0;
 
@@ -226,6 +230,7 @@ namespace LogicMonitor.Datamart
 							timeCursor += EightHours;
 						}
 					}
+					Logger.LogInformation($"Syncing data complete.");
 				}
 				finally
 				{
@@ -233,67 +238,5 @@ namespace LogicMonitor.Datamart
 				}
 			}
 		}
-
-		//		private async Task PerformAggregationsAsync(int deviceDataSourceInstanceId)
-		//		{
-		//			using (var context = new Context(_datamartClient.DbContextOptions))
-		//			{
-		//				// Get deviceDataSourceInstance row
-		//				var ddsi = context.DeviceDataSourceInstances.SingleOrDefault(i => i.Id == deviceDataSourceInstanceId);
-
-		//				// StartHour = Find out which aggregated hour we last wrote and add an hour, or start at the configure beginning
-		//				var startHour = ddsi.LastAggregationHourWrittenUtc.HasValue
-		//					? new DateTimeOffset(ddsi.LastAggregationHourWrittenUtc.Value, TimeSpan.Zero).AddHours(1)
-		//					: _startDateTimeUtc.UtcDateTime;
-
-		//				// EndHour = The one prior to the last hour we wrote source data
-		//				var endHour = DateTimeOffset.FromUnixTimeSeconds(ddsi.LastMeasurementUpdatedTimeSeconds);
-		//				// Move to the start of the end hour
-		//				endHour = new DateTimeOffset(endHour.Year, endHour.Month, endHour.Day, endHour.Hour, 0, 0, TimeSpan.Zero);
-
-		//				try
-		//				{
-		//					// Insert rows from StartDate to EndHour
-		//					var rowsAffected = await context.Database.ExecuteSqlRawAsync($@"
-		//begin transaction;
-
-		//insert into DeviceDataSourceInstanceAggregatedData
-		//(Hour, DeviceDataSourceInstanceId, DataPointName, Min, Max, Sum, SumSquared, DataCount, NoDataCount)
-		//select
-		//dateadd(hour, datediff(hour, 0, DateTime), 0) as [Hour],
-		//DeviceDataSourceInstanceId,
-		//DataPointName,
-		//min(Value) as [Min],
-		//max(Value) as [Max],
-		//sum(Value) as [Sum],
-		//sum(POWER(Value, 2)) as SumSquared,
-		//sum(case when Value is not null then 1 else 0 end) [DataCount],
-		//sum(case when Value is null then 1 else 0 end) [NoDataCount]
-		//from DeviceDataSourceInstanceData
-		//where [DateTime] >= {startHour.UtcDateTime} and [DateTime] < {endHour.UtcDateTime} and DeviceDataSourceInstanceId = {deviceDataSourceInstanceId}
-		//group by
-		//DeviceDataSourceInstanceId,
-		//DataPointName,
-		//dateadd(hour, datediff(hour, 0, DateTime), 0);
-
-		//update DeviceDataSourceInstances set LastAggregationHourWrittenUtc =
-		//(
-		//	select max(Hour) from DeviceDataSourceInstanceAggregatedData
-		//	where DeviceDataSourceInstanceId = {deviceDataSourceInstanceId}
-		//)
-		//where Id = {deviceDataSourceInstanceId};
-
-		//commit;
-		//")
-		//						.ConfigureAwait(false);
-		//				}
-		//#pragma warning disable CA1031 // Do not catch general exception types
-		//				catch (Exception ex)
-		//				{
-		//					Logger.LogError(ex, $"A problem occurred while writing aggregated data for DeviceDataSourceInstance#{deviceDataSourceInstanceId} ex.Message");
-		//				}
-		//#pragma warning restore CA1031 // Do not catch general exception types
-		//			}
-		//		}
 	}
 }

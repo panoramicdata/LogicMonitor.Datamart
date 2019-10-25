@@ -69,6 +69,11 @@ namespace LogicMonitor.Datamart.Config
 				throw new ConfigurationException("StartDateTime should always be on a UTC DateTime hour boundary.");
 			}
 
+			if (DateTimeOffset.UtcNow < StartDateTimeUtc)
+			{
+				throw new ConfigurationException("StartDateTime should not be in the future.");
+			}
+
 			if (LateArrivingDataWindowHours <= 0)
 			{
 				throw new ConfigurationException("LateArrivingDataWindowHours should be a positive integer.");
