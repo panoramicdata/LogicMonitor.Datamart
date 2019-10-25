@@ -79,7 +79,7 @@ namespace LogicMonitor.Datamart.Config
 				throw new ConfigurationException("LogicMonitor credential not set.");
 			}
 
-			if (DatabaseType == DatabaseType.None)
+			if (DatabaseType == DatabaseType.Unknown)
 			{
 				throw new ConfigurationException("DatabaseType not set.");
 			}

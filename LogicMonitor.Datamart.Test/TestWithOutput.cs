@@ -56,14 +56,6 @@ namespace LogicMonitor.Datamart.Test
 			}
 		};
 
-		/// <summary>
-		/// Static constructor
-		/// </summary>
-		static TestWithOutput()
-		{
-			Configuration.Validate();
-		}
-
 		protected TestWithOutput(ITestOutputHelper iTestOutputHelper)
 		{
 			ITestOutputHelper = iTestOutputHelper;
@@ -80,6 +72,9 @@ namespace LogicMonitor.Datamart.Test
 				AccessKey = logicMonitorCredentials.AccessKey,
 			};
 			Configuration.DatabaseType = DatabaseType.SqlServer;
+			Configuration.DatabaseServerName = ".";
+			Configuration.DatabaseName = "LogicMonitor.Datamart.Test";
+
 			DatamartClient = new DatamartClient(
 				Configuration,
 				loggerFactory);

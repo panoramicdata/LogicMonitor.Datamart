@@ -43,6 +43,10 @@ namespace LogicMonitor.Datamart
 			ILoggerFactory loggerFactory
 			) : base(configuration.LogicMonitorCredential.Subdomain, configuration.LogicMonitorCredential.AccessId, configuration.LogicMonitorCredential.AccessKey, loggerFactory.CreateLogger<DatamartClient>())
 		{
+			// Store and validate configuration
+			_configuration = configuration;
+			_configuration.Validate();
+
 			var dbContextOptionsBuilder = new DbContextOptionsBuilder<Context>();
 			switch (configuration.DatabaseType)
 			{
@@ -73,10 +77,6 @@ namespace LogicMonitor.Datamart
 
 			_loggerFactory = loggerFactory;
 			_logger = loggerFactory.CreateLogger<DatamartClient>();
-
-			// Store and validate configuration
-			_configuration = configuration;
-			_configuration.Validate();
 		}
 
 		public async Task<bool> IsDatabaseCreatedAsync()

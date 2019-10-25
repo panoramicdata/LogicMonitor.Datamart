@@ -6,6 +6,11 @@ namespace LogicMonitor.Datamart
 	public enum DatabaseType
 	{
 		/// <summary>
+		/// Not yet set
+		/// </summary>
+		Unknown,
+
+		/// <summary>
 		/// None
 		/// </summary>
 		None,
