@@ -85,6 +85,24 @@ namespace LogicMonitor.Datamart
 			_logger = loggerFactory.CreateLogger<DatamartClient>();
 		}
 
+		public async Task<AggregatedDataResult> GetAggregatedDataAfterIdAsync(int id)
+		{
+			using (var context = new Context(DbContextOptions))
+			{
+				var values = await context
+					.DeviceDataSourceInstanceAggregatedData
+					.Where(ad => ad.Id > id)
+					.ToListAsync()
+					.ConfigureAwait(false);
+
+				return new AggregatedDataResult
+				{
+					Values = values,
+					LastId = values.Max(v => v.Id)
+				};
+			}
+		}
+
 		public async Task<bool> IsDatabaseCreatedAsync()
 		{
 			using (var context = new Context(DbContextOptions))
