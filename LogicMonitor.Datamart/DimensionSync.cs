@@ -25,8 +25,8 @@ namespace LogicMonitor.Datamart
 		public DimensionSync(
 			DatamartClient datamartClient,
 			Configuration configuration,
-			ILogger<DimensionSync> logger)
-			: base(nameof(DimensionSync), logger)
+			ILoggerFactory loggerFactory)
+			: base(nameof(DimensionSync), loggerFactory)
 		{
 			_datamartClient = datamartClient;
 			_configuration = configuration;

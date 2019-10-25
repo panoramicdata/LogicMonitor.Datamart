@@ -32,6 +32,31 @@ namespace LogicMonitor.Datamart.Config
 		/// </summary>
 		public int LateArrivingDataWindowHours { get; set; }
 
+		/// <summary>
+		/// The LogicMonitor credential
+		/// </summary>
+		public LogicMonitorCredential LogicMonitorCredential { get; set; }
+
+		/// <summary>
+		/// The Database type
+		/// </summary>
+		public DatabaseType DatabaseType { get; set; }
+
+		/// <summary>
+		/// The Database server name
+		/// </summary>
+		public string DatabaseServerName { get; set; }
+
+		/// <summary>
+		/// The Database name
+		/// </summary>
+		public string DatabaseName { get; set; }
+
+		/// <summary>
+		/// Whether to enable sensitive data logging.
+		/// </summary>
+		public bool EnableSensitiveDatabaseLogging { get; set; }
+
 		public void Validate()
 		{
 			if (string.IsNullOrWhiteSpace(Name))

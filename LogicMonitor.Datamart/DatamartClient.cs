@@ -32,48 +32,40 @@ namespace LogicMonitor.Datamart
 		}
 
 		public DbContextOptions<Context> DbContextOptions { get; }
-		public DatabaseType DatabaseType { get; }
-		private readonly string _logicMonitorSubdomain;
+		public DatabaseType DatabaseType => _configuration.DatabaseType;
+
 		private readonly ILoggerFactory _loggerFactory;
 		private readonly ILogger _logger;
 		private readonly Configuration _configuration;
 
 		public DatamartClient(
-			string logicMonitorSubDomain,
-			string logicMonitorAccessId,
-			string logicMonitorAccessKey,
-			DatabaseType databaseType,
-			string databaseServerName,
-			string databaseName,
 			Configuration configuration,
-			ILoggerFactory loggerFactory,
-			bool enableSensitiveDatabaseLogging = false
-			) : base(logicMonitorSubDomain, logicMonitorAccessId, logicMonitorAccessKey, loggerFactory.CreateLogger<DatamartClient>())
+			ILoggerFactory loggerFactory
+			) : base(configuration.LogicMonitorCredential.Subdomain, configuration.LogicMonitorCredential.AccessId, configuration.LogicMonitorCredential.AccessKey, loggerFactory.CreateLogger<DatamartClient>())
 		{
 			var dbContextOptionsBuilder = new DbContextOptionsBuilder<Context>();
-			_logicMonitorSubdomain = logicMonitorSubDomain;
-			switch (databaseType)
+			switch (configuration.DatabaseType)
 			{
 				case DatabaseType.SqlServer:
 					dbContextOptionsBuilder
 						.UseSqlServer(new DbConnectionStringBuilder
 						{
-							ConnectionString = $"server={databaseServerName};database={databaseName};Trusted_Connection=True;Application Name=LogicMonitor.Datamart"
+							ConnectionString = $"server={configuration.DatabaseServerName};database={configuration.DatabaseName};Trusted_Connection=True;Application Name=LogicMonitor.Datamart"
 						}.ConnectionString,
 						opts => opts.CommandTimeout((int)TimeSpan.FromMinutes(10).TotalSeconds)
 						);
 					break;
 				case DatabaseType.InMemory:
 					dbContextOptionsBuilder
-						.UseInMemoryDatabase(databaseName: databaseName);
+						.UseInMemoryDatabase(databaseName: configuration.DatabaseName);
 					break;
 				case DatabaseType.None:
 					break;
 				default:
-					throw new NotSupportedException($"Database type {databaseType} not supported");
+					throw new NotSupportedException($"Database type {configuration.DatabaseType} not supported");
 			}
 
-			if (enableSensitiveDatabaseLogging)
+			if (configuration.EnableSensitiveDatabaseLogging)
 			{
 				dbContextOptionsBuilder.EnableSensitiveDataLogging();
 			}
@@ -81,7 +73,6 @@ namespace LogicMonitor.Datamart
 
 			_loggerFactory = loggerFactory;
 			_logger = loggerFactory.CreateLogger<DatamartClient>();
-			DatabaseType = databaseType;
 
 			// Store and validate configuration
 			_configuration = configuration;
@@ -115,7 +106,7 @@ namespace LogicMonitor.Datamart
 		{
 			using (var context = new Context(DbContextOptions))
 			{
-				_logger.LogInformation("Applying migrations as appropriate...");
+				_logger.LogInformation($"Applying migrations as appropriate to database...");
 				await context.Database.MigrateAsync().ConfigureAwait(false);
 				_logger.LogInformation("Migrations up to date.");
 			}
@@ -256,7 +247,7 @@ namespace LogicMonitor.Datamart
 			var sync = new DimensionSync(
 				this,
 				_configuration,
-				_loggerFactory.CreateLogger<DimensionSync>());
+				_loggerFactory);
 			return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
 		}
 
@@ -267,7 +258,7 @@ namespace LogicMonitor.Datamart
 			var sync = new DataSync(
 				this,
 				_configuration,
-				_loggerFactory.CreateLogger<DataSync>());
+				_loggerFactory);
 			return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
 		}
 
@@ -276,7 +267,7 @@ namespace LogicMonitor.Datamart
 			DateTimeOffset startDateTimeUtc,
 			CancellationToken cancellationToken)
 		{
-			var sync = new AlertSync(this, startDateTimeUtc, _loggerFactory.CreateLogger<AlertSync>());
+			var sync = new AlertSync(this, startDateTimeUtc, _loggerFactory);
 			return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
 		}
 
@@ -288,7 +279,7 @@ namespace LogicMonitor.Datamart
 			var sync = new LogSync(
 				this,
 				startDateTimeUtc,
-				_loggerFactory.CreateLogger<LogSync>());
+				_loggerFactory);
 			return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
 		}
 
@@ -358,7 +349,7 @@ namespace LogicMonitor.Datamart
 				if (apiDataSource == null)
 				{
 					// May not happen if the config references a non-existent DataSource
-					_logger.LogError($"For LogicMonitor instance {_logicMonitorSubdomain}, expected to find LogicMonitor API DataSourceDataStoreItem for {dataSourceName}, but it was missing.");
+					_logger.LogError($"For LogicMonitor instance {_configuration.LogicMonitorCredential.Subdomain}, expected to find LogicMonitor API DataSourceDataStoreItem for {dataSourceName}, but it was missing.");
 					continue;
 				}
 
@@ -369,7 +360,7 @@ namespace LogicMonitor.Datamart
 				if (apiDataSource == null)
 				{
 					// Should not happen, as we have only just updated the database with DataSources
-					_logger.LogError($"For LogicMonitor instance {_logicMonitorSubdomain}, expected to find Database DataSourceDataStoreItem for {dataSourceName}, but it was missing.");
+					_logger.LogError($"For LogicMonitor instance {_configuration.LogicMonitorCredential.Subdomain}, expected to find Database DataSourceDataStoreItem for {dataSourceName}, but it was missing.");
 					continue;
 				}
 				// We have a matching DataSource from both the API and the database.
@@ -383,7 +374,7 @@ namespace LogicMonitor.Datamart
 						.SingleOrDefault(dp => dp.Name == configDataPoint.Name);
 					if (apiDataPoint == null)
 					{
-						_logger.LogError($"For LogicMonitor instance {_logicMonitorSubdomain}, for {dataSourceName}, could not find configured datapoint {configDataPoint.Name}.");
+						_logger.LogError($"For LogicMonitor instance {_configuration.LogicMonitorCredential.Subdomain}, for {dataSourceName}, could not find configured datapoint {configDataPoint.Name}.");
 						continue;
 					}
 
@@ -403,7 +394,7 @@ namespace LogicMonitor.Datamart
 							MeasurementUnit = configDataPoint.MeasurementUnit
 						});
 
-						_logger.LogInformation($"For LogicMonitor instance {_logicMonitorSubdomain}, for {dataSourceName}, added datapoint {configDataPoint.Name} to database.");
+						_logger.LogInformation($"For LogicMonitor instance {_configuration.LogicMonitorCredential.Subdomain}, for {dataSourceName}, added datapoint {configDataPoint.Name} to database.");
 						await context
 							.SaveChangesAsync()
 							.ConfigureAwait(false);

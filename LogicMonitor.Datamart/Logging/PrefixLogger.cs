@@ -8,10 +8,12 @@ namespace LogicMonitor.Datamart.Logging
 		private readonly string _prefix;
 		private readonly ILogger _logger;
 
-		public PrefixLogger(string prefix, ILogger logger)
+		public PrefixLogger(string prefix, ILoggerFactory loggerFactory, string categoryName = null)
 		{
 			_prefix = prefix ?? throw new ArgumentNullException(nameof(prefix));
-			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
+			_logger = categoryName != null
+				? loggerFactory.CreateLogger(categoryName)
+				: loggerFactory?.CreateLogger<PrefixLogger>() ?? throw new ArgumentNullException(nameof(loggerFactory));
 		}
 
 		public IDisposable BeginScope<TState>(TState state) => _logger.BeginScope(state);

@@ -67,26 +67,28 @@ namespace LogicMonitor.Datamart.Test
 		protected TestWithOutput(ITestOutputHelper iTestOutputHelper)
 		{
 			ITestOutputHelper = iTestOutputHelper;
-			Logger = iTestOutputHelper.BuildLogger();
 			var nowUtc = DateTimeOffset.UtcNow;
 			StartEpoch = nowUtc.AddDays(-30).ToUnixTimeSeconds();
 			EndEpoch = nowUtc.ToUnixTimeSeconds();
 			var configuration = LoadConfiguration("appsettings.json");
 			var logicMonitorCredentials = configuration.LogicMonitorCredentials;
 			var loggerFactory = new PrefixLoggerFactory(logicMonitorCredentials.Account, LogFactory.Create(iTestOutputHelper));
+			Configuration.LogicMonitorCredential = new LogicMonitorCredential
+			{
+				Subdomain = logicMonitorCredentials.Account,
+				AccessId = logicMonitorCredentials.AccessId,
+				AccessKey = logicMonitorCredentials.AccessKey,
+			};
+			Configuration.DatabaseType = DatabaseType.SqlServer;
 			DatamartClient = new DatamartClient(
-				logicMonitorCredentials.Account,
-				logicMonitorCredentials.AccessId,
-				logicMonitorCredentials.AccessKey,
-				DatabaseType.SqlServer,
-				configuration.DatabaseServer,
-				configuration.DatabaseName,
 				Configuration,
 				loggerFactory);
 
 			DatamartClient.EnsureDatabaseCreatedAndSchemaUpdatedAsync().GetAwaiter().GetResult();
 
 			Stopwatch = Stopwatch.StartNew();
+
+			LoggerFactory = LogFactory.Create(iTestOutputHelper);
 		}
 
 		protected static TestConfiguration LoadConfiguration(string jsonFilePath)
@@ -111,14 +113,16 @@ namespace LogicMonitor.Datamart.Test
 			return configuration;
 		}
 
-		protected ILogger Logger { get; }
-
 		protected ITestOutputHelper ITestOutputHelper { get; }
 
 		private Stopwatch Stopwatch { get; }
 
+		public ILoggerFactory LoggerFactory { get; }
+
 		protected long StartEpoch { get; }
+
 		protected long EndEpoch { get; }
+
 		protected DatamartClient DatamartClient { get; }
 
 		protected void AssertIsFast(int durationSeconds) => Assert.InRange(Stopwatch.ElapsedMilliseconds, 0, durationSeconds * 1000);

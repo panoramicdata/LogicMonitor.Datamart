@@ -21,8 +21,8 @@ namespace LogicMonitor.Datamart
 		public DataSync(
 			DatamartClient datamartClient,
 			Configuration configuration,
-			ILogger<DataSync> logger)
-			: base(nameof(DataSync), logger)
+			ILoggerFactory loggerFactory)
+			: base(nameof(DataSync), loggerFactory)
 		{
 			_datamartClient = datamartClient;
 			_configuration = configuration;

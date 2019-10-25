@@ -18,7 +18,7 @@ namespace LogicMonitor.Datamart.Logging
 			=> _loggerFactory.AddProvider(provider);
 
 		public ILogger CreateLogger(string categoryName)
-			=> new PrefixLogger(_prefix, _loggerFactory.CreateLogger(categoryName));
+			=> new PrefixLogger(_prefix, _loggerFactory, categoryName);
 
 		protected virtual void Dispose(bool disposing)
 		{

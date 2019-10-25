@@ -14,10 +14,10 @@ namespace LogicMonitor.Datamart
 		private readonly string _name;
 		public ILogger Logger { get; }
 
-		protected LoopInterval(string name, ILogger logger)
+		protected LoopInterval(string name, ILoggerFactory loggerFactory)
 		{
 			_name = name;
-			Logger = new PrefixLogger(name, logger);
+			Logger = new PrefixLogger(name, loggerFactory);
 		}
 
 		public abstract Task ExecuteAsync(CancellationToken cancellationToken);

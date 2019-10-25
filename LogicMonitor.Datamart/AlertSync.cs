@@ -24,8 +24,8 @@ namespace LogicMonitor.Datamart
 		public AlertSync(
 			DatamartClient datamartClient,
 			DateTimeOffset startDateTimeUtc,
-			ILogger<AlertSync> logger)
-			: base(nameof(AlertSync), logger)
+			ILoggerFactory loggerFactory)
+			: base(nameof(AlertSync), loggerFactory)
 		{
 			_datamartClient = datamartClient;
 			_startDateTimeUtc = startDateTimeUtc;

@@ -1,6 +1,5 @@
 using LogicMonitor.Api.Devices;
 using LogicMonitor.Datamart.Models;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using Xunit;
@@ -10,15 +9,13 @@ namespace LogicMonitor.Datamart.Test
 {
 	public class AlertTests : TestWithOutput
 	{
-		private readonly ILogger _logger;
-
 		public AlertTests(ITestOutputHelper iTestOutputHelper) : base(iTestOutputHelper)
-			=> _logger = ITestOutputHelper.BuildLoggerFor<AlertTests>();
+		{
+		}
 
 		[Fact]
 		public async void UpdateDevices()
 		{
-			_logger.LogInformation("Getting device dimensions...");
 			var utcNow = DateTime.UtcNow;
 
 			await DatamartClient
@@ -29,26 +26,22 @@ namespace LogicMonitor.Datamart.Test
 		[Fact]
 		public async void Get24HoursOfAlerts()
 		{
-			_logger.LogInformation("Getting alerts...");
 			var startDateTimeUtc = DateTime.UtcNow.AddHours(-24);
 			//var startDateTimeUtc = DateTime.UtcNow.AddDays(-30);
 
 			var updatedAlertStats = await new AlertSync(
 					DatamartClient,
 					startDateTimeUtc,
-					ITestOutputHelper.BuildLoggerFor<AlertSync>())
+					LoggerFactory)
 				.DifferentialLoopTaskAsync(default)
 				.ConfigureAwait(false);
 
 			Assert.NotNull(updatedAlertStats);
-			_logger.LogInformation($"New    : {updatedAlertStats.New}");
-			_logger.LogInformation($"Updated: {updatedAlertStats.Updated}");
 		}
 
 		[Fact]
 		public async void GetCachedAlertsAsync()
 		{
-			_logger.LogInformation("Getting alerts...");
 			var startDateTimeUtc = DateTimeOffset.UtcNow.AddDays(-10);
 			var endDateTimeUtc = DateTimeOffset.UtcNow.AddDays(-5);
 			var result = await DatamartClient.GetCachedAlertsAsync(
