@@ -74,6 +74,26 @@ namespace LogicMonitor.Datamart.Config
 				throw new ConfigurationException("LateArrivingDataWindowHours should be a positive integer.");
 			}
 
+			if (LogicMonitorCredential == null)
+			{
+				throw new ConfigurationException("LogicMonitor credential not set.");
+			}
+
+			if (DatabaseType == DatabaseType.None)
+			{
+				throw new ConfigurationException("DatabaseType not set.");
+			}
+
+			if (string.IsNullOrWhiteSpace(DatabaseServerName))
+			{
+				throw new ConfigurationException("DatabaseServerName not set.");
+			}
+
+			if (string.IsNullOrWhiteSpace(DatabaseName))
+			{
+				throw new ConfigurationException("DatabaseName not set.");
+			}
+
 			ValidateAggegationDuration(AggregationDurationMinutes, "configuration", Name);
 
 			foreach (var dataSource in DataSources)
