@@ -94,7 +94,7 @@ namespace LogicMonitor.Datamart
 					.Include(ad => ad.DeviceDataSourceInstance)
 					.Include(ad => ad.DataPoint)
 					.Where(ad => ad.Id > id)
-					.OrderBy(ad => ad.Id)
+					//.OrderBy(ad => ad.Id) // TODO - prove that this reliably brings back records in order.
 					.Take(batchSize)
 					.ToListAsync()
 					.ConfigureAwait(false);
