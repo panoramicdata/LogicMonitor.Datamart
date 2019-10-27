@@ -85,13 +85,17 @@ namespace LogicMonitor.Datamart
 			_logger = loggerFactory.CreateLogger<DatamartClient>();
 		}
 
-		public async Task<AggregatedDataResult> GetAggregatedDataAfterIdAsync(int id)
+		public async Task<AggregatedDataResult> GetAggregatedDataAfterIdAsync(int id, int batchSize)
 		{
 			using (var context = new Context(DbContextOptions))
 			{
 				var values = await context
 					.DeviceDataSourceInstanceAggregatedData
+					.Include(ad => ad.DeviceDataSourceInstance)
+					.Include(ad => ad.DataPoint)
 					.Where(ad => ad.Id > id)
+					.OrderBy(ad => ad.Id)
+					.Take(batchSize)
 					.ToListAsync()
 					.ConfigureAwait(false);
 
