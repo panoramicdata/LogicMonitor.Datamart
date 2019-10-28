@@ -91,11 +91,24 @@ namespace LogicMonitor.Datamart
 			{
 				var values = await context
 					.DeviceDataSourceInstanceAggregatedData
-					.Include(ad => ad.DeviceDataSourceInstance)
-					.Include(ad => ad.DataPoint)
 					.Where(ad => ad.Id > id)
 					//.OrderBy(ad => ad.Id) // TODO - prove that this reliably brings back records in order.
 					.Take(batchSize)
+					.Select(v => new DeviceDataSourceInstanceAggregatedData
+					{
+						Id = v.Id,
+						DataCount = v.DataCount,
+						DataPointName = v.DataPoint.Name,
+						DataPointMeasurementUnit = v.DataPoint.MeasurementUnit,
+						DataSourceName = v.DeviceDataSourceInstance.DeviceDataSource.DataSource.Name,
+						DeviceDisplayName = v.DeviceDataSourceInstance.Device.Name,
+						Hour = v.Hour,
+						Max = v.Max,
+						Min = v.Min,
+						NoDataCount = v.NoDataCount,
+						Sum = v.Sum,
+						SumSquared = v.SumSquared
+					})
 					.ToListAsync()
 					.ConfigureAwait(false);
 
