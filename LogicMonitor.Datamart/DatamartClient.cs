@@ -102,7 +102,7 @@ namespace LogicMonitor.Datamart
 						DataPointMeasurementUnit = v.DataPoint.MeasurementUnit,
 						DataSourceName = v.DeviceDataSourceInstance.DeviceDataSource.DataSource.Name,
 						DeviceDisplayName = v.DeviceDataSourceInstance.Device.Name,
-						Hour = v.Hour,
+						AggregationPeriodStart = v.Hour,
 						Max = v.Max,
 						Min = v.Min,
 						NoDataCount = v.NoDataCount,

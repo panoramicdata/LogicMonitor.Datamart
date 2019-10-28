@@ -2,10 +2,11 @@
 
 namespace LogicMonitor.Datamart.Models
 {
-
 	public class DeviceDataSourceInstanceAggregatedData
 	{
-		public DateTime Hour { get; set; }
+		public int Id { get; set; }
+
+		public DateTime AggregationPeriodStart { get; set; }
 
 		public string DeviceDisplayName { get; set; }
 
@@ -26,6 +27,5 @@ namespace LogicMonitor.Datamart.Models
 		public int DataCount { get; set; }
 
 		public int NoDataCount { get; set; }
-		public int Id { get; internal set; }
 	}
 }
