@@ -13,8 +13,6 @@ namespace LogicMonitor.Datamart
 {
 	internal class DataSync : LoopInterval
 	{
-		private const int BatchSize = 5;
-
 		private static readonly TimeSpan EightHours = TimeSpan.FromHours(8);
 		private static readonly TimeSpan OneSecond = TimeSpan.FromSeconds(1);
 
@@ -149,7 +147,7 @@ namespace LogicMonitor.Datamart
 
 				foreach (var databaseDeviceDataSourceInstanceGroupBatch in databaseDeviceDataSourceInstanceGroup
 					.Select((item, itemIndex) => (item, itemIndex))
-					.GroupBy(x => x.itemIndex / BatchSize))
+					.GroupBy(x => x.itemIndex / configuration.BatchSize))
 				{
 					var batchIndex = databaseDeviceDataSourceInstanceGroupBatch.Key;
 
@@ -223,89 +221,83 @@ namespace LogicMonitor.Datamart
 
 							var rowsRetrieved = instancesFetchDataResponse.InstanceFetchDataResponses.Sum(r => r.Timestamps.Length);
 							logger.LogDebug($"Loaded {rowsRetrieved} entries.");
-							//if (rowsRetrieved > 0)
+							totalRowsLoadedFromApi += rowsRetrieved;
+
+							// Create a new DbContext to clear out tracked objects
+							using (var dataContext = new Context(datamartClient.DbContextOptions))
 							{
-								totalRowsLoadedFromApi += rowsRetrieved;
-
-								// Create a new DbContext to clear out tracked objects
-								using (var dataContext = new Context(datamartClient.DbContextOptions))
+								// Iterate over the retrieved DeviceDataSourceInstances
+								foreach (var instanceFetchDataResponse in instancesFetchDataResponse.InstanceFetchDataResponses)
 								{
-									// Iterate over the retrieved DeviceDataSourceInstances
-									foreach (var instanceFetchDataResponse in instancesFetchDataResponse.InstanceFetchDataResponses)
+									// Get the configuration for this DataSourceName
+									var dataSourceConfigurationItem = configuration.DataSources.SingleOrDefault(dsci => dsci.Name == instanceFetchDataResponse.DataSourceName);
+
+									var deviceDataSourceInstanceIdAsInt = int.Parse(instanceFetchDataResponse.DeviceDataSourceInstanceId);
+
+									if (instanceFetchDataResponse.Timestamps.Length > 0)
 									{
-										// Get the configuration for this DataSourceName
-										var dataSourceConfigurationItem = configuration.DataSources.SingleOrDefault(dsci => dsci.Name == instanceFetchDataResponse.DataSourceName);
-
-										var deviceDataSourceInstanceIdAsInt = int.Parse(instanceFetchDataResponse.DeviceDataSourceInstanceId);
-
-										if (instanceFetchDataResponse.Timestamps.Length > 0)
+										// Process only the configured DataPoints to retrieve
+										// Add data to the context for each of the dataPointNames
+										foreach (var dataPointModel in dataSourceConfigurationItem.DataPoints)
 										{
-											// Process only the configured DataPoints to retrieve
-											// Add data to the context for each of the dataPointNames
-											foreach (var dataPointModel in dataSourceConfigurationItem.DataPoints)
-											{
-												// Get the index into the timestamps and values
-												var dataPointIndex = Array.FindIndex(instanceFetchDataResponse.DataPoints, dpName => dpName == dataPointModel.Name);
+											// Get the index into the timestamps and values
+											var dataPointIndex = Array.FindIndex(instanceFetchDataResponse.DataPoints, dpName => dpName == dataPointModel.Name);
 
-												var data = instanceFetchDataResponse.Timestamps.Zip(
-													instanceFetchDataResponse.DataValues.Select(v => v[dataPointIndex]),
-													(timeStampMs, value)
-														=> new DeviceDataSourceInstanceDataStoreItem
-														{
-															DateTime = DateTimeOffset.FromUnixTimeMilliseconds(timeStampMs).UtcDateTime,
-															DataPointName = dataPointModel.Name,
-															Value = (double?)(value.ToString() == "No Data" ? null : value), // TODO - Is this right?
-															DeviceDataSourceInstanceId = deviceDataSourceInstanceIdAsInt
-														})
-														.ToList();
-												// Data:                   :-------------------------------:
-												// Data fetched is a block :---.---.---.---.---.---.---.---:
-												//... where the maximum size is 8 hours, with an integer number data aggregation chunks
-												// We need to aggregate this in blocks of aggregationDuration
-
-												var databaseDataPoint = await dataContext
-													.DataSourceDataPoints
-													.SingleOrDefaultAsync(dp => dp.Name == dataPointModel.Name && dp.DataSource.Name == instanceFetchDataResponse.DataSourceName)
-													.ConfigureAwait(false);
-
-												// Aggregate it in blocks of DataAggregationDuration
-												var aggregationTimeCursor = blockStart;
-												aggregationTimeCursor += dataSourceAggregationDuration;
-												var deviceDataSourceInstanceAggregatedDataStoreItems = data
-													.GroupBy(d => ((int)(d.DateTime - blockStart).TotalSeconds) / ((int)dataSourceAggregationDuration.TotalSeconds))
-													.Select(chunkedData => new DeviceDataSourceInstanceAggregatedDataStoreItem
+											var data = instanceFetchDataResponse.Timestamps.Zip(
+												instanceFetchDataResponse.DataValues.Select(v => v[dataPointIndex]),
+												(timeStampMs, value)
+													=> new DeviceDataSourceInstanceDataStoreItem
 													{
-														DeviceDataSourceInstanceId = deviceDataSourceInstanceIdAsInt,
-														DataPointId = databaseDataPoint.DatamartId,
-														Hour = (blockStart + TimeSpan.FromSeconds(chunkedData.Key * dataSourceAggregationDuration.TotalSeconds)).UtcDateTime,
-														DataCount = chunkedData.Count(d => d.Value != null),
-														NoDataCount = chunkedData.Count(d => d.Value == null),
-														Sum = chunkedData.Sum(d => d.Value ?? 0),
-														SumSquared = chunkedData.Sum(d => d.Value == null ? 0 : d.Value * d.Value),
-														Max = chunkedData.Max(d => d.Value),
-														Min = chunkedData.Min(d => d.Value)
+														DateTime = DateTimeOffset.FromUnixTimeMilliseconds(timeStampMs).UtcDateTime,
+														DataPointName = dataPointModel.Name,
+														Value = (double?)(value.ToString() == "No Data" ? null : value), // TODO - Is this right?
+															DeviceDataSourceInstanceId = deviceDataSourceInstanceIdAsInt
 													})
 													.ToList();
-												dataContext.DeviceDataSourceInstanceAggregatedData.AddRange(deviceDataSourceInstanceAggregatedDataStoreItems);
-												// Increment the blockIndex
-												blockIndex++;
-											}
+											// Data:                   :-------------------------------:
+											// Data fetched is a block :---.---.---.---.---.---.---.---:
+											//... where the maximum size is 8 hours, with an integer number data aggregation chunks
+											// We need to aggregate this in blocks of aggregationDuration
+
+											var databaseDataPoint = await dataContext
+												.DataSourceDataPoints
+												.SingleOrDefaultAsync(dp => dp.Name == dataPointModel.Name && dp.DataSource.Name == instanceFetchDataResponse.DataSourceName)
+												.ConfigureAwait(false);
+
+											// Aggregate it in blocks of DataAggregationDuration
+											var aggregationTimeCursor = blockStart;
+											aggregationTimeCursor += dataSourceAggregationDuration;
+											var deviceDataSourceInstanceAggregatedDataStoreItems = data
+												.GroupBy(d => ((int)(d.DateTime - blockStart).TotalSeconds) / ((int)dataSourceAggregationDuration.TotalSeconds))
+												.Select(chunkedData => new DeviceDataSourceInstanceAggregatedDataStoreItem
+												{
+													DeviceDataSourceInstanceId = deviceDataSourceInstanceIdAsInt,
+													DataPointId = databaseDataPoint.DatamartId,
+													Hour = (blockStart + TimeSpan.FromSeconds(chunkedData.Key * dataSourceAggregationDuration.TotalSeconds)).UtcDateTime,
+													DataCount = chunkedData.Count(d => d.Value != null),
+													NoDataCount = chunkedData.Count(d => d.Value == null),
+													Sum = chunkedData.Sum(d => d.Value ?? 0),
+													SumSquared = chunkedData.Sum(d => d.Value == null ? 0 : d.Value * d.Value),
+													Max = chunkedData.Max(d => d.Value),
+													Min = chunkedData.Min(d => d.Value)
+												})
+												.ToList();
+											dataContext.DeviceDataSourceInstanceAggregatedData.AddRange(deviceDataSourceInstanceAggregatedDataStoreItems);
+											// Increment the blockIndex
+											blockIndex++;
 										}
-
-										// We always want to write something out about where we've attempted to get data until
-
-										var databaseDeviceDataSourceInstance = await dataContext.DeviceDataSourceInstances.SingleAsync(ddi => ddi.Id == deviceDataSourceInstanceIdAsInt);
-
-										databaseDeviceDataSourceInstance.LastAggregationHourWrittenUtc = databaseDeviceDataSourceInstance.LastAggregationHourWrittenUtc = blockEnd.UtcDateTime;
-										await dataContext
-											.SaveChangesAsync()
-											.ConfigureAwait(false);
 									}
+
+									// We always want to write something out about where we've attempted to get data until
+
+									var databaseDeviceDataSourceInstance = await dataContext.DeviceDataSourceInstances.SingleAsync(ddi => ddi.Id == deviceDataSourceInstanceIdAsInt);
+
+									databaseDeviceDataSourceInstance.LastAggregationHourWrittenUtc = databaseDeviceDataSourceInstance.LastAggregationHourWrittenUtc = blockEnd.UtcDateTime;
+									await dataContext
+										.SaveChangesAsync()
+										.ConfigureAwait(false);
 								}
 							}
-
-							// Move onto the next block
-							//timeCursor += EightHours;
 						}
 					}
 					catch (Exception e)
