@@ -10,11 +10,11 @@ namespace LogicMonitor.Datamart.Config
 		/// </summary>
 		public string Name { get; set; }
 
-		/// <summary>
-		/// The aggregation duration override in minutes
-		/// Can be overridden at the lower level
-		/// </summary>
-		public int? AggregationDurationMinutes { get; set; }
+		///// <summary>
+		///// The aggregation duration override in minutes
+		///// Can be overridden at the lower level
+		///// </summary>
+		//public int? AggregationDurationMinutes { get; set; }
 
 		/// <summary>
 		/// The list of DataPoints which we are interested in for this DataSource
