@@ -251,7 +251,7 @@ namespace LogicMonitor.Datamart
 														DateTime = DateTimeOffset.FromUnixTimeMilliseconds(timeStampMs).UtcDateTime,
 														DataPointName = dataPointModel.Name,
 														Value = (double?)(value.ToString() == "No Data" ? null : value), // TODO - Is this right?
-															DeviceDataSourceInstanceId = deviceDataSourceInstanceIdAsInt
+														DeviceDataSourceInstanceId = deviceDataSourceInstanceIdAsInt
 													})
 													.ToList();
 											// Data:                   :-------------------------------:
@@ -302,7 +302,7 @@ namespace LogicMonitor.Datamart
 					}
 					catch (Exception e)
 					{
-						logger.LogWarning(e, $"{rangeDescription} failed due to {e.Message}");
+						logger.LogError(e, $"{rangeDescription} failed due to {e}");
 					}
 				}
 			}
