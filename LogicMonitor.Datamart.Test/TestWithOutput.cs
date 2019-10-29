@@ -18,18 +18,18 @@ namespace LogicMonitor.Datamart.Test
 {
 	public abstract class TestWithOutput
 	{
-		protected static DateTimeOffset TwelveHouseAgo = DateTimeOffset.UtcNow.AddHours(-12);
+		protected static DateTimeOffset TwelveHoursAgo = DateTimeOffset.UtcNow.AddHours(-12);
 
 		protected static Configuration Configuration = new Configuration
 		{
 			Name = "Test",
-			AggregationDurationMinutes = 15,
+			AggregationDurationMinutes = 60,
 			LateArrivingDataWindowHours = 2,
 			StartDateTimeUtc = new DateTimeOffset(
-				TwelveHouseAgo.Year,
-				TwelveHouseAgo.Month,
-				TwelveHouseAgo.Day,
-				TwelveHouseAgo.Hour,
+				TwelveHoursAgo.Year,
+				TwelveHoursAgo.Month,
+				TwelveHoursAgo.Day,
+				TwelveHoursAgo.Hour,
 				0,
 				0,
 				TimeSpan.Zero).UtcDateTime,

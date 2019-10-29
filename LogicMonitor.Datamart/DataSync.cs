@@ -82,11 +82,9 @@ namespace LogicMonitor.Datamart
 				var oldCacheState = _datamartClient.UseCache;
 				_datamartClient.UseCache = false;
 
-				const bool oldMethod = true;
-
 				try
 				{
-					if (oldMethod)
+					if (false)
 					{
 						await OldMethod(
 							_datamartClient,
