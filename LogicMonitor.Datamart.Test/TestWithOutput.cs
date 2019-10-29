@@ -38,7 +38,7 @@ namespace LogicMonitor.Datamart.Test
 			{
 				new DataSourceConfigurationItem{
 					Name = "WinCPU",
-					AggregationDurationMinutes = 60,
+					//AggregationDurationMinutes = 60,
 					DataPoints = new List<DataPointConfigurationItem>
 					{
 						new DataPointConfigurationItem

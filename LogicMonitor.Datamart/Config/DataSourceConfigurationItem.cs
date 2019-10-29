@@ -28,10 +28,10 @@ namespace LogicMonitor.Datamart.Config
 				throw new ConfigurationException("Name missing on configured DataSource.");
 			}
 
-			if (AggregationDurationMinutes != null)
-			{
-				Configuration.ValidateAggegationDuration(AggregationDurationMinutes.Value, "dataSource", Name);
-			}
+			//if (AggregationDurationMinutes != null)
+			//{
+			//	Configuration.ValidateAggegationDuration(AggregationDurationMinutes.Value, "dataSource", Name);
+			//}
 
 			if (DataPoints == null || DataPoints.Count == 0)
 			{
