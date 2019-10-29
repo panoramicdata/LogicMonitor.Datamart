@@ -47,7 +47,7 @@ namespace LogicMonitor.Datamart
 				configuration?.LogicMonitorCredential?.Subdomain ?? throw new ArgumentNullException(nameof(configuration), LogicMonitorCredentialNullMessage),
 				configuration?.LogicMonitorCredential?.AccessId ?? throw new ArgumentNullException(nameof(configuration), LogicMonitorCredentialNullMessage),
 				configuration?.LogicMonitorCredential?.AccessKey ?? throw new ArgumentNullException(nameof(configuration), LogicMonitorCredentialNullMessage),
-				loggerFactory.CreateLogger<DatamartClient>())
+				loggerFactory.CreateLogger<PortalClient>())
 		{
 			// Store and validate configuration
 			_configuration = configuration;
