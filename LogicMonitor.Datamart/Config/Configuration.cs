@@ -57,6 +57,8 @@ namespace LogicMonitor.Datamart.Config
 		/// </summary>
 		public bool EnableSensitiveDatabaseLogging { get; set; }
 
+		public int BatchSize { get; set; } = 100;
+
 		public void Validate()
 		{
 			if (string.IsNullOrWhiteSpace(Name))
@@ -97,6 +99,11 @@ namespace LogicMonitor.Datamart.Config
 			if (string.IsNullOrWhiteSpace(DatabaseName))
 			{
 				throw new ConfigurationException("DatabaseName not set.");
+			}
+
+			if (BatchSize < 1 || BatchSize > 100)
+			{
+				throw new ConfigurationException("BatchSize should be in the range 1..100");
 			}
 
 			ValidateAggegationDuration(AggregationDurationMinutes, "configuration", Name);
