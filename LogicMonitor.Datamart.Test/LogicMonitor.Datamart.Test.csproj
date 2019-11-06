@@ -8,6 +8,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Divergic.Logging.Xunit" Version="3.1.0" />
+		<PackageReference Include="FluentAssertions" Version="5.9.0" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="3.0.0" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.3.0" />
