@@ -16,7 +16,7 @@ namespace LogicMonitor.Datamart
 	{
 		// Do not exceed 100 for BatchSize as limited by the LogicMonitor DataFetch endpoint
 #if DEBUG
-		private const int BatchSize = 100;
+		private const int BatchSize = 5;
 #else
 		private const int BatchSize = 100;
 #endif
