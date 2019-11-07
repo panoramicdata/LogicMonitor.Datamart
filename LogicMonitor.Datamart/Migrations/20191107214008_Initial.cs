@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace LogicMonitor.Datamart.Migrations
@@ -12,7 +13,7 @@ namespace LogicMonitor.Datamart.Migrations
                 columns: table => new
                 {
                     DatamartId = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
                     DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
                     Id = table.Column<int>(nullable: false),
@@ -39,7 +40,7 @@ namespace LogicMonitor.Datamart.Migrations
                 columns: table => new
                 {
                     DatamartId = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
                     DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
                     Id = table.Column<int>(nullable: false),
@@ -59,21 +60,24 @@ namespace LogicMonitor.Datamart.Migrations
                 columns: table => new
                 {
                     DatamartId = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
                     DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
                     Id = table.Column<int>(nullable: false),
                     Name = table.Column<string>(nullable: true),
                     Description = table.Column<string>(nullable: true)
                 },
-                constraints: table => table.PrimaryKey("PK_ConfigSources", x => x.DatamartId));
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ConfigSources", x => x.DatamartId);
+                });
 
             migrationBuilder.CreateTable(
                 name: "DataSources",
                 columns: table => new
                 {
                     DatamartId = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
                     DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
                     Id = table.Column<int>(nullable: false),
@@ -91,7 +95,7 @@ namespace LogicMonitor.Datamart.Migrations
                 columns: table => new
                 {
                     DatamartId = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
                     DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
                     Id = table.Column<int>(nullable: false),
@@ -135,14 +139,17 @@ namespace LogicMonitor.Datamart.Migrations
                     SdtStatus = table.Column<int>(nullable: false),
                     UserPermission = table.Column<int>(nullable: false)
                 },
-                constraints: table => table.PrimaryKey("PK_DeviceGroups", x => x.DatamartId));
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DeviceGroups", x => x.DatamartId);
+                });
 
             migrationBuilder.CreateTable(
                 name: "Devices",
                 columns: table => new
                 {
                     DatamartId = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
                     DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
                     Id = table.Column<int>(nullable: false),
@@ -202,7 +209,7 @@ namespace LogicMonitor.Datamart.Migrations
                 columns: table => new
                 {
                     DatamartId = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
                     DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
                     Id = table.Column<int>(nullable: false),
@@ -213,28 +220,34 @@ namespace LogicMonitor.Datamart.Migrations
                     ThrottlingAlertCount = table.Column<int>(nullable: false),
                     InAlerting = table.Column<bool>(nullable: false)
                 },
-                constraints: table => table.PrimaryKey("PK_EscalationChains", x => x.DatamartId));
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EscalationChains", x => x.DatamartId);
+                });
 
             migrationBuilder.CreateTable(
                 name: "EventSources",
                 columns: table => new
                 {
                     DatamartId = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
                     DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
                     Id = table.Column<int>(nullable: false),
                     Name = table.Column<string>(nullable: true),
                     Description = table.Column<string>(nullable: true)
                 },
-                constraints: table => table.PrimaryKey("PK_EventSources", x => x.DatamartId));
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EventSources", x => x.DatamartId);
+                });
 
             migrationBuilder.CreateTable(
                 name: "LogItems",
                 columns: table => new
                 {
                     DatamartId = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
                     DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
                     Id = table.Column<string>(maxLength: 50, nullable: true),
@@ -244,27 +257,33 @@ namespace LogicMonitor.Datamart.Migrations
                     Description = table.Column<string>(nullable: true),
                     IpAddress = table.Column<string>(maxLength: 200, nullable: true)
                 },
-                constraints: table => table.PrimaryKey("PK_LogItems", x => x.DatamartId));
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_LogItems", x => x.DatamartId);
+                });
 
             migrationBuilder.CreateTable(
                 name: "MonitorObjectGroups",
                 columns: table => new
                 {
                     DatamartId = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
                     DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
                     FullPath = table.Column<string>(maxLength: 200, nullable: true),
                     MonitoredObjectType = table.Column<int>(nullable: false)
                 },
-                constraints: table => table.PrimaryKey("PK_MonitorObjectGroups", x => x.DatamartId));
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MonitorObjectGroups", x => x.DatamartId);
+                });
 
             migrationBuilder.CreateTable(
                 name: "WebsiteGroups",
                 columns: table => new
                 {
                     DatamartId = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
                     DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
                     Id = table.Column<int>(nullable: false),
@@ -296,7 +315,7 @@ namespace LogicMonitor.Datamart.Migrations
                 columns: table => new
                 {
                     DatamartId = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
                     DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
                     Id = table.Column<int>(nullable: false),
@@ -378,7 +397,7 @@ namespace LogicMonitor.Datamart.Migrations
                 columns: table => new
                 {
                     DatamartId = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
                     DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
                     Id = table.Column<int>(nullable: false),
@@ -403,7 +422,7 @@ namespace LogicMonitor.Datamart.Migrations
                 columns: table => new
                 {
                     DatamartId = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
                     DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
                     Id = table.Column<int>(nullable: false),
@@ -447,7 +466,7 @@ namespace LogicMonitor.Datamart.Migrations
                 columns: table => new
                 {
                     DatamartId = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
                     DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
                     Id = table.Column<string>(maxLength: 20, nullable: true),
@@ -578,7 +597,7 @@ namespace LogicMonitor.Datamart.Migrations
                 columns: table => new
                 {
                     DatamartId = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
                     DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
                     Id = table.Column<int>(nullable: false),
@@ -634,7 +653,7 @@ namespace LogicMonitor.Datamart.Migrations
                 columns: table => new
                 {
                     DatamartId = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
                     DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
                     Id = table.Column<int>(nullable: false),
@@ -642,8 +661,6 @@ namespace LogicMonitor.Datamart.Migrations
                     AlertStatus = table.Column<int>(nullable: false),
                     AlertStatusPriority = table.Column<int>(nullable: false),
                     DataSourceId = table.Column<int>(nullable: true),
-                    DataSourceName = table.Column<string>(nullable: true),
-                    DataSourceType = table.Column<string>(nullable: true),
                     DeviceDisplayName = table.Column<string>(nullable: true),
                     DeviceDataSourceId = table.Column<int>(nullable: false),
                     DeviceId = table.Column<int>(nullable: true),
@@ -681,44 +698,11 @@ namespace LogicMonitor.Datamart.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "DeviceDataSourceInstanceAggregatedData",
-                columns: table => new
-                {
-                    Id = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Hour = table.Column<DateTime>(nullable: false),
-                    DeviceDataSourceInstanceId = table.Column<int>(nullable: false),
-                    DataPointId = table.Column<int>(nullable: false),
-                    Min = table.Column<double>(nullable: true),
-                    Max = table.Column<double>(nullable: true),
-                    Sum = table.Column<double>(nullable: true),
-                    SumSquared = table.Column<double>(nullable: true),
-                    DataCount = table.Column<int>(nullable: false),
-                    NoDataCount = table.Column<int>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_DeviceDataSourceInstanceAggregatedData", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_DeviceDataSourceInstanceAggregatedData_DataSourceDataPoints_DataPointId",
-                        column: x => x.DataPointId,
-                        principalTable: "DataSourceDataPoints",
-                        principalColumn: "DatamartId",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_DeviceDataSourceInstanceAggregatedData_DeviceDataSourceInstances_DeviceDataSourceInstanceId",
-                        column: x => x.DeviceDataSourceInstanceId,
-                        principalTable: "DeviceDataSourceInstances",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "DeviceDataSourceInstanceData",
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     DateTime = table.Column<DateTime>(nullable: false),
                     DeviceDataSourceInstanceId = table.Column<int>(nullable: false),
                     DataPointName = table.Column<string>(nullable: true),
@@ -892,16 +876,6 @@ namespace LogicMonitor.Datamart.Migrations
                 column: "DataSourceId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_DeviceDataSourceInstanceAggregatedData_DataPointId",
-                table: "DeviceDataSourceInstanceAggregatedData",
-                column: "DataPointId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_DeviceDataSourceInstanceAggregatedData_DeviceDataSourceInstanceId_DataPointId_Hour",
-                table: "DeviceDataSourceInstanceAggregatedData",
-                columns: new[] { "DeviceDataSourceInstanceId", "DataPointId", "Hour" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_DeviceDataSourceInstanceData_DateTime",
                 table: "DeviceDataSourceInstanceData",
                 column: "DateTime");
@@ -949,7 +923,7 @@ namespace LogicMonitor.Datamart.Migrations
                 name: "ConfigSources");
 
             migrationBuilder.DropTable(
-                name: "DeviceDataSourceInstanceAggregatedData");
+                name: "DataSourceDataPoints");
 
             migrationBuilder.DropTable(
                 name: "DeviceDataSourceInstanceData");
@@ -977,9 +951,6 @@ namespace LogicMonitor.Datamart.Migrations
 
             migrationBuilder.DropTable(
                 name: "CollectorGroups");
-
-            migrationBuilder.DropTable(
-                name: "DataSourceDataPoints");
 
             migrationBuilder.DropTable(
                 name: "DeviceDataSourceInstances");

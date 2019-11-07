@@ -24,13 +24,6 @@ namespace LogicMonitor.Datamart
 {
 	public class DatamartClient : PortalClient
 	{
-		static DatamartClient()
-		{
-			// AutoMapper - Add all in from the DatamartClient assembly
-			Mapper.Initialize(cfg => cfg.AddMaps(typeof(DatamartClient).Assembly));
-			Mapper.Configuration.AssertConfigurationIsValid();
-		}
-
 		public DbContextOptions<Context> DbContextOptions { get; }
 		public DatabaseType DatabaseType => _configuration.DatabaseType;
 
@@ -39,6 +32,9 @@ namespace LogicMonitor.Datamart
 		private readonly ILoggerFactory _loggerFactory;
 		private readonly ILogger _logger;
 		private readonly Configuration _configuration;
+		private static readonly MapperConfiguration _mapperConfig = new MapperConfiguration(cfg => cfg.AddMaps(typeof(DatamartClient).Assembly));
+
+		public static IMapper Mapper = new Mapper(_mapperConfig);
 
 		public DatamartClient(
 			Configuration configuration,
@@ -52,6 +48,9 @@ namespace LogicMonitor.Datamart
 			// Store and validate configuration
 			_configuration = configuration;
 			_configuration.Validate();
+
+			// Check AutoMapper
+			_mapperConfig.AssertConfigurationIsValid();
 
 			var dbContextOptionsBuilder = new DbContextOptionsBuilder<Context>();
 			switch (configuration.DatabaseType)
@@ -193,7 +192,7 @@ namespace LogicMonitor.Datamart
 							.ConfigureAwait(false);
 						return deviceStoreItem == null
 							? null
-							: Mapper.Map<DeviceStoreItem, Device>(deviceStoreItem) as TApi;
+							: DatamartClient.Mapper.Map<DeviceStoreItem, Device>(deviceStoreItem) as TApi;
 					default:
 						throw new NotSupportedException();
 				}
@@ -214,7 +213,7 @@ namespace LogicMonitor.Datamart
 							.ToListAsync(cancellationToken)
 							.ConfigureAwait(false);
 						return alertStoreItems
-							.Select(a => Mapper.Map<AlertStoreItem, Alert>(a) as TApi)
+							.Select(a => DatamartClient.Mapper.Map<AlertStoreItem, Alert>(a) as TApi)
 							.ToList();
 					case nameof(CollectorGroup):
 						var collectorGroupStoreItems = await context
@@ -222,7 +221,7 @@ namespace LogicMonitor.Datamart
 							.ToListAsync(cancellationToken)
 							.ConfigureAwait(false);
 						return collectorGroupStoreItems
-							.Select(cg => Mapper.Map<CollectorGroupStoreItem, CollectorGroup>(cg) as TApi)
+							.Select(cg => DatamartClient.Mapper.Map<CollectorGroupStoreItem, CollectorGroup>(cg) as TApi)
 							.ToList();
 					case nameof(DeviceGroup):
 						var deviceGroupStoreItems = await context
@@ -230,7 +229,7 @@ namespace LogicMonitor.Datamart
 							.ToListAsync(cancellationToken)
 							.ConfigureAwait(false);
 						return deviceGroupStoreItems
-							.Select(dg => Mapper.Map<DeviceGroupStoreItem, DeviceGroup>(dg) as TApi)
+							.Select(dg => DatamartClient.Mapper.Map<DeviceGroupStoreItem, DeviceGroup>(dg) as TApi)
 							.ToList();
 					case nameof(WebsiteGroup):
 						var websiteGroupStoreItems = await context
@@ -238,7 +237,7 @@ namespace LogicMonitor.Datamart
 							.ToListAsync(cancellationToken)
 							.ConfigureAwait(false);
 						return websiteGroupStoreItems
-							.Select(wg => Mapper.Map<WebsiteGroupStoreItem, WebsiteGroup>(wg) as TApi)
+							.Select(wg => DatamartClient.Mapper.Map<WebsiteGroupStoreItem, WebsiteGroup>(wg) as TApi)
 							.ToList();
 					default:
 						throw new NotSupportedException($"{className} not supported.  Add it to GetAllCachedAsync<T>().");
@@ -595,7 +594,7 @@ namespace LogicMonitor.Datamart
 				}
 
 				return (await queryable.ToListAsync().ConfigureAwait(false))
-					.Select(Mapper.Map<AlertStoreItem, Alert>)
+					.Select(DatamartClient.Mapper.Map<AlertStoreItem, Alert>)
 					.ToList();
 			}
 		}

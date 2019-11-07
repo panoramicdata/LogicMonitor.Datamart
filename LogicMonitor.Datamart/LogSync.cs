@@ -105,7 +105,7 @@ namespace LogicMonitor.Datamart
 					var dataProcessingStopwatch = Stopwatch.StartNew();
 					var sqlSave = new Stopwatch();
 
-					context.LogItems.AddRange(apiEntriesThisTime.Select(Mapper.Map<LogItem, LogStoreItem>));
+					context.LogItems.AddRange(apiEntriesThisTime.Select(DatamartClient.Mapper.Map<LogItem, LogStoreItem>));
 
 					await context
 						.SaveChangesAsync()

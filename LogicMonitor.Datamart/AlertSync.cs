@@ -1,4 +1,3 @@
-using AutoMapper;
 using EFCore.BulkExtensions;
 using LogicMonitor.Api.Alerts;
 using LogicMonitor.Api.Filters;
@@ -154,7 +153,7 @@ namespace LogicMonitor.Datamart
 									if (databaseAlert == null)
 									{
 										// No.  We will bulk insert
-										var newStoreItem = Mapper.Map<Alert, AlertStoreItem>(networkAlert);
+										var newStoreItem = DatamartClient.Mapper.Map<Alert, AlertStoreItem>(networkAlert);
 										var utcNow = DateTimeOffset.UtcNow;
 										newStoreItem.DatamartCreatedUtc = utcNow.UtcDateTime;
 										newStoreItem.DatamartLastModifiedUtc = utcNow.UtcDateTime;

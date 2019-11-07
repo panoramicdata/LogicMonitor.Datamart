@@ -107,7 +107,7 @@ namespace LogicMonitor.Datamart
 					if (databaseDeviceDataSource == null)
 					{
 						// Add it to the database
-						context.DeviceDataSources.Add(Mapper.Map<DeviceDataSourceStoreItem>(deviceDataSource));
+						context.DeviceDataSources.Add(DatamartClient.Mapper.Map<DeviceDataSourceStoreItem>(deviceDataSource));
 					}
 					// It is now in the database context
 
@@ -132,7 +132,7 @@ namespace LogicMonitor.Datamart
 						if (databaseDeviceDataSourceInstance == null)
 						{
 							// Add it to the database
-							context.DeviceDataSourceInstances.Add(Mapper.Map<DeviceDataSourceInstanceStoreItem>(deviceDataSourceInstance));
+							context.DeviceDataSourceInstances.Add(DatamartClient.Mapper.Map<DeviceDataSourceInstanceStoreItem>(deviceDataSourceInstance));
 						}
 						// It is now in the database context
 					}
