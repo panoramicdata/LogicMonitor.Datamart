@@ -14,10 +14,7 @@ namespace LogicMonitor.Datamart.Test
 		}
 
 		[Fact]
-		public void Test()
-		{
-			Mapper.Configuration.AssertConfigurationIsValid();
-		}
+		public void Test() => Mapper.Configuration.AssertConfigurationIsValid();
 
 		[Fact]
 		public void ResolveAndTruncate_LongValue_TruncatedValue()

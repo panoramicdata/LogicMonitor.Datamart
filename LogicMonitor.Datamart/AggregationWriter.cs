@@ -1,10 +1,11 @@
 ﻿using LogicMonitor.Datamart.Models;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -67,7 +68,9 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 			{
 				var tableName = GetTableName(start);
 				var tableCreationSql = "DROP TABLE [" + tableName + "]";
-				await dbContext.Database.ExecuteSqlRawAsync(tableCreationSql).ConfigureAwait(false);
+#pragma warning disable EF1000 // Possible SQL injection vulnerability. - No externally provided data
+				await dbContext.Database.ExecuteSqlCommandAsync(tableCreationSql).ConfigureAwait(false);
+#pragma warning restore EF1000 // Possible SQL injection vulnerability.
 			}
 		}
 
@@ -115,6 +118,11 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 		{
 			var tableName = await EnsureTableExistsAsync(sqlConnection, key);
 
+			var aggregationCount = aggregations.Count();
+
+			var stopwatch = Stopwatch.StartNew();
+			logger.LogTrace($"Preparing DataTable for {aggregationCount} aggregations...");
+
 			// Prep the data into a DataTable, setting initial structure from the database
 			var table = new DataTable();
 			using (var adapter = new SqlDataAdapter($"SELECT TOP 0 * FROM {tableName}", sqlConnection))
@@ -140,20 +148,31 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 			}
 
 			var lastAggregationHourWrittenUtc = aggregations.Max(a => a.PeriodEnd);
+			logger.LogTrace($"Preparing DataTable for {aggregationCount} aggregations complete after {stopwatch.ElapsedMilliseconds:N0}ms.");
+			stopwatch.Restart();
 
 			using (var transaction = sqlConnection.BeginTransaction())
 			{
+				stopwatch.Restart();
+				logger.LogTrace($"Bulk writing {aggregationCount} aggregations...");
 				// Write out the data as part of a transaction
 				using (var bulk = new SqlBulkCopy(sqlConnection, SqlBulkCopyOptions.Default, transaction))
 				{
 					bulk.DestinationTableName = tableName;
 					await bulk.WriteToServerAsync(table).ConfigureAwait(false);
 				}
+				logger.LogTrace($"Bulk writing {aggregationCount} aggregations complete after {stopwatch.ElapsedMilliseconds:N0}ms.");
 
+				stopwatch.Restart();
+				logger.LogTrace($"Setting progress for DDSI {deviceDataSourceInstanceId} to {lastAggregationHourWrittenUtc}...");
 				// Update the progress as part of a transaction
 				await WriteProgressBoundaryAsync(sqlConnection, deviceDataSourceInstanceId, lastAggregationHourWrittenUtc, transaction);
+				logger.LogTrace($"Setting progress for DDSI {deviceDataSourceInstanceId} to {lastAggregationHourWrittenUtc} complete after {stopwatch.ElapsedMilliseconds:N0}ms.");
 
-				await transaction.CommitAsync().ConfigureAwait(false);
+				stopwatch.Restart();
+				logger.LogTrace("Committing transaction...");
+				transaction.Commit();
+				logger.LogTrace($"Committing transaction complete after {stopwatch.ElapsedMilliseconds:N0}ms");
 			}
 		}
 

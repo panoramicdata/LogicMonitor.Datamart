@@ -74,7 +74,7 @@ namespace LogicMonitor.Datamart
 			alerts.HasIndex(a => a.EndOnSeconds);
 
 			alerts
-				.HasIndex(a => new
+				.ForSqlServerHasIndex(a => new
 				{
 					a.StartOnSeconds,
 					a.EndOnSeconds,
@@ -91,7 +91,7 @@ namespace LogicMonitor.Datamart
 					a.MonitorObjectGroup8Id,
 					a.MonitorObjectGroup9Id,
 				})
-				.IncludeProperties(a => new
+				.ForSqlServerInclude(a => new
 				{
 					a.Id,
 					a.Severity,
@@ -106,7 +106,6 @@ namespace LogicMonitor.Datamart
 			var deviceDataSourceInstanceData = modelBuilder.Entity<DeviceDataSourceInstanceDataStoreItem>();
 			deviceDataSourceInstanceData.HasIndex(d => new { d.DeviceDataSourceInstanceId, d.DataPointName });
 			deviceDataSourceInstanceData.HasIndex(d => d.DateTime);
-
 
 			// Relational stuff
 			modelBuilder.Entity<DeviceDataSourceInstanceDataStoreItem>()
