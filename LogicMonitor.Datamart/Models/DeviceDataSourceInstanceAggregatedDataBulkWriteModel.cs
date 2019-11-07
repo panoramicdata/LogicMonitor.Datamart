@@ -2,19 +2,19 @@
 
 namespace LogicMonitor.Datamart.Models
 {
-	public class DeviceDataSourceInstanceAggregatedData
+	public class DeviceDataSourceInstanceAggregatedDataBulkWriteModel
 	{
 		public int Id { get; set; }
 
-		public DateTime AggregationPeriodStart { get; set; }
+		public DateTime PeriodStart { get; set; }
 
-		public string DeviceDisplayName { get; set; }
+		public DateTime PeriodEnd { get; set; }
 
-		public string DataSourceName { get; set; }
+		public int DeviceDataSourceInstanceId { get; set; }
 
-		public string DataPointName { get; set; }
+		public DataSourceDataPointStoreItem DataPoint { get; set; }
 
-		public string DataPointMeasurementUnit { get; set; }
+		public int DataPointId { get; set; }
 
 		public double? Min { get; set; }
 

@@ -85,41 +85,7 @@ namespace LogicMonitor.Datamart
 			_logger = loggerFactory.CreateLogger<DatamartClient>();
 		}
 
-		public async Task<AggregatedDataResult> GetAggregatedDataAfterIdAsync(int id, int batchSize)
-		{
-			using (var context = new Context(DbContextOptions))
-			{
-				var values = await context
-					.DeviceDataSourceInstanceAggregatedData
-					.Where(ad => ad.Id > id)
-					//.OrderBy(ad => ad.Id) // TODO - prove that this reliably brings back records in order.
-					.Take(batchSize)
-					.Select(v => new DeviceDataSourceInstanceAggregatedData
-					{
-						Id = v.Id,
-						DataCount = v.DataCount,
-						DataPointName = v.DataPoint.Name,
-						DataPointMeasurementUnit = v.DataPoint.MeasurementUnit,
-						DataSourceName = v.DeviceDataSourceInstance.DeviceDataSource.DataSource.Name,
-						DeviceDisplayName = v.DeviceDataSourceInstance.Device.Name,
-						AggregationPeriodStart = v.Hour,
-						Max = v.Max,
-						Min = v.Min,
-						NoDataCount = v.NoDataCount,
-						Sum = v.Sum,
-						SumSquared = v.SumSquared
-					})
-					.ToListAsync()
-					.ConfigureAwait(false);
-
-				return new AggregatedDataResult
-				{
-					Values = values,
-					LastId = values.Max(v => v.Id)
-				};
-			}
-		}
-
+		
 		public async Task<bool> IsDatabaseCreatedAsync()
 		{
 			using (var context = new Context(DbContextOptions))

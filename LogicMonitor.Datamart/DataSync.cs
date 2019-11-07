@@ -14,10 +14,14 @@ namespace LogicMonitor.Datamart
 {
 	internal class DataSync : LoopInterval
 	{
-		private const int BatchSize = 5;
+		// Do not exceed 100 for BatchSize as limited by the LogicMonitor DataFetch endpoint
+#if DEBUG
+		private const int BatchSize = 100;
+#else
+		private const int BatchSize = 100;
+#endif
 
 		private static readonly TimeSpan EightHours = TimeSpan.FromHours(8);
-		private static readonly TimeSpan OneSecond = TimeSpan.FromSeconds(1);
 
 		private readonly DatamartClient _datamartClient;
 		private readonly Configuration _configuration;
@@ -34,7 +38,7 @@ namespace LogicMonitor.Datamart
 
 		public override async Task ExecuteAsync(CancellationToken cancellationToken)
 		{
-			Logger.LogInformation($"Data sync started");
+			Logger.LogInformation("Data sync started...");
 			var configurationLevelAggregationDuration = TimeSpan.FromMinutes(_configuration.AggregationDurationMinutes);
 
 			using (var context = new Context(_datamartClient.DbContextOptions))
@@ -42,7 +46,7 @@ namespace LogicMonitor.Datamart
 				// Use the database as a reference for what should be loaded in to ensure referential integrity between the data and the DeviceDataSourceInstance
 
 				// Get the configured DataSource names
-				Logger.LogInformation($"Getting reference data");
+				Logger.LogInformation("Getting reference data...");
 				var deviceDataSourceNames = _configuration.DataSources
 					.Select(dsci => dsci.Name)
 					.ToList();
@@ -66,6 +70,8 @@ namespace LogicMonitor.Datamart
 						ddsi.DataSourceId.HasValue
 						&& dataSourceIds.Contains(ddsi.DataSourceId.Value)
 					)
+					// To make debugging a little more deterministic, order by the Device and then its instances
+					.OrderBy(ddsi => ddsi.DeviceId).ThenBy(ddsi => ddsi.Id)
 					.ToListAsync()
 					.ConfigureAwait(false);
 
@@ -84,12 +90,11 @@ namespace LogicMonitor.Datamart
 
 				try
 				{
-					await NewMethod(
+					await GetAndWriteAggregations(
 						_datamartClient,
 						_configuration,
 						Logger,
 						databaseDeviceDataSourceInstances,
-						matchingDatabaseDataSources,
 						configurationLevelAggregationDuration,
 						cancellationToken)
 						.ConfigureAwait(false);
@@ -101,12 +106,11 @@ namespace LogicMonitor.Datamart
 			}
 		}
 
-		private async Task NewMethod(
+		private async Task GetAndWriteAggregations(
 			DatamartClient datamartClient,
 			Configuration configuration,
 			ILogger logger,
 			List<DeviceDataSourceInstanceStoreItem> databaseDeviceDataSourceInstances,
-			List<DataSourceStoreItem> matchingDatabaseDataSources,
 			TimeSpan configurationLevelAggregationDuration,
 			CancellationToken cancellationToken)
 		{
@@ -117,7 +121,7 @@ namespace LogicMonitor.Datamart
 			var utcNow = DateTimeOffset.UtcNow;
 			var lateArrivingDataWindowStart = utcNow.AddHours(-configuration.LateArrivingDataWindowHours);
 
-			var aggregationsToWrite = new List<DeviceDataSourceInstanceAggregatedDataStoreItem>();
+			var aggregationsToWrite = new List<DeviceDataSourceInstanceAggregatedDataBulkWriteModel>();
 
 			var stopwatch = new Stopwatch();
 
@@ -125,7 +129,7 @@ namespace LogicMonitor.Datamart
 			var dataSourceAggregationDuration = configurationLevelAggregationDuration;
 
 			// Get data for each instance
-			logger.LogInformation("Syncing each DeviceDataSourceInstance...");
+			logger.LogInformation($"Syncing {databaseDeviceDataSourceInstances.Count} DeviceDataSourceInstances...");
 			foreach (var databaseDeviceDataSourceInstanceGroup in
 					databaseDeviceDataSourceInstances
 					.GroupBy(ddsi => ddsi.LastAggregationHourWrittenUtc ?? DateTime.MinValue)
@@ -145,21 +149,13 @@ namespace LogicMonitor.Datamart
 						.Select(t => t.item.Id)
 						.ToList();
 
-					var rangeDescription = $"Syncing data for {databaseDeviceDataSourceInstanceGroup.Count()} instances for time range starting {databaseDeviceDataSourceInstanceGroup.Key:yyyy-MM-dd HH:mm:ss}: {string.Join(",", instanceIdList)} batch {batchIndex + 1}...";
-					logger.LogInformation(rangeDescription);
+					var rangeDescription = $"Batch {batchIndex + 1}: {instanceIdList.Count} instances starting {databaseDeviceDataSourceInstanceGroup.Key:yyyy-MM-dd HH:mm:ss}: {string.Join(",", instanceIdList)}...";
+					logger.LogDebug(rangeDescription);
 
 					try
 					{
 						stopwatch.Restart();
 						var totalRowsLoadedFromApi = 0;
-
-						//var dataSourceName = matchingDatabaseDataSources
-						//	.Single(ds => ds.Id == databaseDeviceDataSourceInstance.DataSourceId)
-						//	.Name;
-
-						//var dataSourceConfigurationItem = configuration
-						//	.DataSources
-						//	.SingleOrDefault(dsci => dsci.Name == dataSourceName);
 
 						// A: The last time we got measurement up to for this DeviceDataSourceInstance
 						var lastUpdatedDateTimeUtc = lastAggregationHourWrittenUtc;
@@ -197,6 +193,11 @@ namespace LogicMonitor.Datamart
 							// Is the block zero length?
 							if (timeCursor == blockStart)
 							{
+								// If we've genuinely done nothing, then log it so terminating after this is shown to be intentional
+								if (blockIndex == 0)
+								{
+									logger.LogDebug("Nothing to do.");
+								}
 								break;
 							}
 
@@ -265,17 +266,22 @@ namespace LogicMonitor.Datamart
 												aggregationTimeCursor += dataSourceAggregationDuration;
 												var deviceDataSourceInstanceAggregatedDataStoreItems = data
 													.GroupBy(d => ((int)(d.DateTime - blockStart).TotalSeconds) / ((int)dataSourceAggregationDuration.TotalSeconds))
-													.Select(chunkedData => new DeviceDataSourceInstanceAggregatedDataStoreItem
+													.Select(chunkedData =>
 													{
-														DeviceDataSourceInstanceId = deviceDataSourceInstanceIdAsInt,
-														DataPointId = databaseDataPoint.DatamartId,
-														Hour = (blockStart + TimeSpan.FromSeconds(chunkedData.Key * dataSourceAggregationDuration.TotalSeconds)).UtcDateTime,
-														DataCount = chunkedData.Count(d => d.Value != null),
-														NoDataCount = chunkedData.Count(d => d.Value == null),
-														Sum = chunkedData.Sum(d => d.Value ?? 0),
-														SumSquared = chunkedData.Sum(d => d.Value == null ? 0 : d.Value * d.Value),
-														Max = chunkedData.Max(d => d.Value),
-														Min = chunkedData.Min(d => d.Value)
+														var periodStart = (blockStart + TimeSpan.FromSeconds(chunkedData.Key * dataSourceAggregationDuration.TotalSeconds)).UtcDateTime;
+														return new DeviceDataSourceInstanceAggregatedDataBulkWriteModel
+														{
+															DeviceDataSourceInstanceId = deviceDataSourceInstanceIdAsInt,
+															DataPointId = databaseDataPoint.DatamartId,
+															PeriodStart = periodStart,
+															PeriodEnd = periodStart.Add(dataSourceAggregationDuration),
+															DataCount = chunkedData.Count(d => d.Value != null),
+															NoDataCount = chunkedData.Count(d => d.Value == null),
+															Sum = chunkedData.Sum(d => d.Value ?? 0),
+															SumSquared = chunkedData.Sum(d => d.Value == null ? 0 : d.Value * d.Value),
+															Max = chunkedData.Max(d => d.Value),
+															Min = chunkedData.Min(d => d.Value)
+														};
 													})
 													.ToList();
 												aggregationsToWrite.AddRange(deviceDataSourceInstanceAggregatedDataStoreItems);
@@ -288,24 +294,26 @@ namespace LogicMonitor.Datamart
 
 										// TODO write out aggregationsToWrite using bulk write in a transaction with the progress on day boundaries
 
-										foreach (var blockToWrite in aggregationsToWrite.GroupBy(a => a.Hour.Date))
+										if (aggregationsToWrite.Count > 0)
 										{
-											await AggregationWriter.WriteAggregations(
+											foreach (var blockToWrite in aggregationsToWrite.GroupBy(a => a.PeriodStart.Date))
+											{
+												await AggregationWriter.WriteAggregations(
+													sqlConnection,
+													deviceDataSourceInstanceIdAsInt,
+													blockToWrite.Key,
+													blockToWrite,
+													logger);
+											}
+										}
+										else
+										{
+											await AggregationWriter.WriteProgressBoundaryAsync(
 												sqlConnection,
 												deviceDataSourceInstanceIdAsInt,
-												blockToWrite.Key,
-												blockEnd,
-												blockToWrite,
-												logger);
+												blockEnd.UtcDateTime,
+												null);
 										}
-
-										//var databaseDeviceDataSourceInstance = await dataContext.DeviceDataSourceInstances.SingleAsync(ddi => ddi.Id == deviceDataSourceInstanceIdAsInt);
-
-										//databaseDeviceDataSourceInstance.LastAggregationHourWrittenUtc = databaseDeviceDataSourceInstance.LastAggregationHourWrittenUtc = blockEnd.UtcDateTime;
-										//await dataContext
-										//	.SaveChangesAsync()
-										//	.ConfigureAwait(false);
-
 									}
 								}
 							}
@@ -317,7 +325,7 @@ namespace LogicMonitor.Datamart
 					}
 				}
 			}
-			logger.LogInformation("Syncing data complete.");
+			logger.LogInformation($"Syncing data complete.");
 		}
 	}
 }

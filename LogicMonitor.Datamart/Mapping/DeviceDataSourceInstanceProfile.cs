@@ -31,9 +31,6 @@ namespace LogicMonitor.Datamart.Mapping
 					dest => dest.Device,
 					opts => opts.Ignore())
 				.ForMember(
-					dest => dest.AggregatedDataMeasures,
-					opts => opts.Ignore())
-				.ForMember(
 					dest => dest.LastAggregationHourWrittenUtc,
 					opts => opts.Ignore())
 				;

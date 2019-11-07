@@ -28,7 +28,6 @@ namespace LogicMonitor.Datamart
 		public DbSet<DeviceDataSourceStoreItem> DeviceDataSources { get; set; }
 		public DbSet<DeviceDataSourceInstanceStoreItem> DeviceDataSourceInstances { get; set; }
 		public DbSet<DeviceDataSourceInstanceDataStoreItem> DeviceDataSourceInstanceData { get; set; }
-		public DbSet<DeviceDataSourceInstanceAggregatedDataStoreItem> DeviceDataSourceInstanceAggregatedData { get; set; }
 		public DbSet<EscalationChainStoreItem> EscalationChains { get; set; }
 		public DbSet<EventSourceStoreItem> EventSources { get; set; }
 		public DbSet<DeviceStoreItem> Devices { get; set; }
@@ -108,17 +107,8 @@ namespace LogicMonitor.Datamart
 			deviceDataSourceInstanceData.HasIndex(d => new { d.DeviceDataSourceInstanceId, d.DataPointName });
 			deviceDataSourceInstanceData.HasIndex(d => d.DateTime);
 
-			var deviceDataSourceInstanceAggregatedData = modelBuilder.Entity<DeviceDataSourceInstanceAggregatedDataStoreItem>();
-			deviceDataSourceInstanceAggregatedData.HasIndex(d => new { d.DeviceDataSourceInstanceId, d.DataPointId, d.Hour });
 
 			// Relational stuff
-			modelBuilder.Entity<DeviceDataSourceInstanceAggregatedDataStoreItem>()
-				.HasOne(data => data.DeviceDataSourceInstance)
-				.WithMany(ddsi => ddsi.AggregatedDataMeasures)
-				.HasForeignKey(data => data.DeviceDataSourceInstanceId)
-				.HasPrincipalKey(ddsi => ddsi.Id)
-				.OnDelete(DeleteBehavior.Restrict);
-
 			modelBuilder.Entity<DeviceDataSourceInstanceDataStoreItem>()
 				.HasOne(data => data.DeviceDataSourceInstance)
 				.WithMany(ddsi => ddsi.DataMeasures)

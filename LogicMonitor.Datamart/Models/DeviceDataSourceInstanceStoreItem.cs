@@ -8,7 +8,6 @@ namespace LogicMonitor.Datamart.Models
 	{
 #pragma warning disable CA2227 // Collection properties should be read only
 		// Navigation properties
-		public List<DeviceDataSourceInstanceAggregatedDataStoreItem> AggregatedDataMeasures { get; set; }
 		public List<DeviceDataSourceInstanceDataStoreItem> DataMeasures { get; set; }
 
 		public DeviceDataSourceStoreItem DeviceDataSource { get; set; }

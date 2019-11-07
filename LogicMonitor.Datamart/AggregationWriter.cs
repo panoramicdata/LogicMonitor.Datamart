@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace LogicMonitor.Datamart
@@ -109,8 +110,7 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 			SqlConnection sqlConnection,
 			int deviceDataSourceInstanceId,
 			DateTimeOffset key,
-			DateTimeOffset periodEnd,
-			IEnumerable<DeviceDataSourceInstanceAggregatedDataStoreItem> aggregations,
+			IEnumerable<DeviceDataSourceInstanceAggregatedDataBulkWriteModel> aggregations,
 			ILogger logger)
 		{
 			var tableName = await EnsureTableExistsAsync(sqlConnection, key);
@@ -126,8 +126,8 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 			foreach (var aggregation in aggregations)
 			{
 				var row = table.NewRow();
-				row["PeriodStart"] = aggregation.Hour;
-				row["PeriodEnd"] = periodEnd.UtcDateTime;
+				row["PeriodStart"] = aggregation.PeriodStart;
+				row["PeriodEnd"] = aggregation.PeriodEnd;
 				row["DeviceDataSourceInstanceId"] = aggregation.DeviceDataSourceInstanceId;
 				row["DataPointId"] = aggregation.DataPointId;
 				row["Min"] = aggregation.Min;
@@ -139,24 +139,32 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 				table.Rows.Add(row);
 			}
 
+			var lastAggregationHourWrittenUtc = aggregations.Max(a => a.PeriodEnd);
+
 			using (var transaction = sqlConnection.BeginTransaction())
 			{
-				// Write out the data and progress within a transaction
-
-				var bulkCopyOptions = new SqlBulkCopyOptions();
-				using (var bulk = new SqlBulkCopy(sqlConnection, bulkCopyOptions, transaction))
+				// Write out the data as part of a transaction
+				using (var bulk = new SqlBulkCopy(sqlConnection, SqlBulkCopyOptions.Default, transaction))
 				{
 					bulk.DestinationTableName = tableName;
 					await bulk.WriteToServerAsync(table).ConfigureAwait(false);
 				}
-				var sql = $"update DeviceDataSourceInstances set LastAggregationHourWrittenUtc=@LastAggregationHourWrittenUtc where id=@Id";
-				using (var command = new SqlCommand(sql, sqlConnection, transaction))
-				{
-					command.Parameters.AddWithValue("@LastAggregationHourWrittenUtc", periodEnd.UtcDateTime);
-					command.Parameters.AddWithValue("@Id", deviceDataSourceInstanceId);
-					await command.ExecuteNonQueryAsync().ConfigureAwait(false);
-				}
+
+				// Update the progress as part of a transaction
+				await WriteProgressBoundaryAsync(sqlConnection, deviceDataSourceInstanceId, lastAggregationHourWrittenUtc, transaction);
+
 				await transaction.CommitAsync().ConfigureAwait(false);
+			}
+		}
+
+		internal static async Task WriteProgressBoundaryAsync(SqlConnection sqlConnection, int deviceDataSourceInstanceId, DateTime lastAggregationHourWrittenUtc, SqlTransaction transaction)
+		{
+			const string sql = "update DeviceDataSourceInstances set LastAggregationHourWrittenUtc=@LastAggregationHourWrittenUtc where id=@Id";
+			using (var command = new SqlCommand(sql, sqlConnection, transaction))
+			{
+				command.Parameters.AddWithValue("@LastAggregationHourWrittenUtc", lastAggregationHourWrittenUtc);
+				command.Parameters.AddWithValue("@Id", deviceDataSourceInstanceId);
+				await command.ExecuteNonQueryAsync().ConfigureAwait(false);
 			}
 		}
 	}

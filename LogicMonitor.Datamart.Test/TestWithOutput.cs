@@ -23,7 +23,7 @@ namespace LogicMonitor.Datamart.Test
 		protected static Configuration Configuration = new Configuration
 		{
 			Name = "Test",
-			AggregationDurationMinutes = 60,
+			AggregationDurationMinutes = 15,
 			LateArrivingDataWindowHours = 2,
 			StartDateTimeUtc = new DateTimeOffset(
 				TwelveHoursAgo.Year,
