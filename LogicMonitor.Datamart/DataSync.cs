@@ -158,6 +158,16 @@ namespace LogicMonitor.Datamart
 						{
 							lastUpdatedDateTimeUtc = configuration.StartDateTimeUtc.UtcDateTime;
 						}
+
+						// Due to limitations on the DataFetch Logicmonitor.Api endpoint, we can only go back a max of 24 hours
+						// If lastUpdatedDateTimeUtc < 23 hours ago then set to 23 hours ago
+						const int MaxHoursBack = 23;
+						if (lastUpdatedDateTimeUtc < DateTimeOffset.UtcNow.AddHours(-MaxHoursBack))
+						{
+							lastUpdatedDateTimeUtc = DateTimeOffset.UtcNow.AddHours(-MaxHoursBack);
+							logger.LogDebug($"lastUpdatedDateTimeUtc is more than {MaxHoursBack} hours ago so setting to {lastUpdatedDateTimeUtc}.");
+						}
+
 						var timeCursor = lastUpdatedDateTimeUtc;
 						// A is now calculated
 
