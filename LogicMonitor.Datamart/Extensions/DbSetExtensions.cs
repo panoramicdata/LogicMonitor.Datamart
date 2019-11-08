@@ -36,7 +36,7 @@ namespace LogicMonitor.Datamart.Extensions
 					logger.LogTrace($"Updating existing {typeof(TStore).Name} with id {storeItem.Id} ({storeItem.DatamartId})");
 				}
 				// Map from data onto the existing storeItem which EF internal tracker will work out whether anything changed
-				storeItem = DatamartClient.Mapper.Map(data, storeItem);
+				storeItem = DatamartClient.MapperInstance.Map(data, storeItem);
 				return;
 			}
 			if (logger?.IsEnabled(LogLevel.Trace) == true)
@@ -44,7 +44,7 @@ namespace LogicMonitor.Datamart.Extensions
 				logger.LogTrace($"Adding new {typeof(TStore).Name} with id {data.Id}");
 			}
 
-			dbSet.Add(DatamartClient.Mapper.Map<TApi, TStore>(data));
+			dbSet.Add(DatamartClient.MapperInstance.Map<TApi, TStore>(data));
 		}
 
 		public static async Task AddOrUpdateAlertRangeSavingChanges(this DbSet<AlertStoreItem> dbSet, List<Alert> items)
@@ -62,7 +62,7 @@ namespace LogicMonitor.Datamart.Extensions
 		{
 			var context = dbSet.GetContext();
 			var storeItem = dbSet.AsQueryable().Where(si => si.Id == data.Id).FirstOrDefault();
-			var mappedStoreItem = DatamartClient.Mapper.Map<Alert, AlertStoreItem>(data);
+			var mappedStoreItem = DatamartClient.MapperInstance.Map<Alert, AlertStoreItem>(data);
 
 			if (storeItem != null)
 			{
@@ -88,7 +88,7 @@ namespace LogicMonitor.Datamart.Extensions
 			var context = dbSet.GetContext();
 			var ids = context.Model.FindEntityType(typeof(TStore)).FindPrimaryKey().Properties.Select(x => x.Name);
 			var t = typeof(TStore);
-			var keyObject = key.Compile()(DatamartClient.Mapper.Map<TApi, TStore>(data));
+			var keyObject = key.Compile()(DatamartClient.MapperInstance.Map<TApi, TStore>(data));
 			var keyFields = keyObject.GetType().GetProperties().Select(p => t.GetProperty(p.Name)).ToArray();
 			if (keyFields == null)
 			{
@@ -121,7 +121,7 @@ namespace LogicMonitor.Datamart.Extensions
 					return;
 				}
 			}
-			dbSet.Add(DatamartClient.Mapper.Map<TApi, TStore>(data));
+			dbSet.Add(DatamartClient.MapperInstance.Map<TApi, TStore>(data));
 		}
 	}
 

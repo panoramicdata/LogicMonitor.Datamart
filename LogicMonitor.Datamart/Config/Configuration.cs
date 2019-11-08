@@ -57,7 +57,12 @@ namespace LogicMonitor.Datamart.Config
 		/// </summary>
 		public bool EnableSensitiveDatabaseLogging { get; set; }
 
-		public int BatchSize { get; set; } = 100;
+		public int DeviceDataSourceInstanceBatchSize { get; set; } = 100;
+
+		/// <summary>
+		/// The number of aggregation day tables to retain prior to today
+		/// </summary>
+		public int CountAggregationDaysToRetain { get; set; } = 5;
 
 		public void Validate()
 		{
@@ -101,8 +106,9 @@ namespace LogicMonitor.Datamart.Config
 				throw new ConfigurationException("DatabaseName not set.");
 			}
 
-			if (BatchSize < 1 || BatchSize > 100)
+			if (DeviceDataSourceInstanceBatchSize < 1 || DeviceDataSourceInstanceBatchSize > 100)
 			{
+				// Do not exceed 100 for BatchSize as limited by the LogicMonitor DataFetch endpoint
 				throw new ConfigurationException("BatchSize should be in the range 1..100");
 			}
 

@@ -16,6 +16,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,17 +25,19 @@ namespace LogicMonitor.Datamart
 {
 	public class DatamartClient : PortalClient
 	{
-		public DbContextOptions<Context> DbContextOptions { get; }
-		public DatabaseType DatabaseType => _configuration.DatabaseType;
+		internal DbContextOptions<Context> DbContextOptions { get; }
 
-		public const string LogicMonitorCredentialNullMessage = "Either the configuration or some aspect of the LogicMonitorCredential is null";
+		internal DatabaseType DatabaseType => _configuration.DatabaseType;
+
+		internal const string LogicMonitorCredentialNullMessage = "Either the configuration or some aspect of the LogicMonitorCredential is null";
 
 		private readonly ILoggerFactory _loggerFactory;
 		private readonly ILogger _logger;
+
 		private readonly Configuration _configuration;
 		private static readonly MapperConfiguration _mapperConfig = new MapperConfiguration(cfg => cfg.AddMaps(typeof(DatamartClient).Assembly));
 
-		public static IMapper Mapper = new Mapper(_mapperConfig);
+		internal static IMapper MapperInstance = new Mapper(_mapperConfig);
 
 		public DatamartClient(
 			Configuration configuration,
@@ -192,7 +195,7 @@ namespace LogicMonitor.Datamart
 							.ConfigureAwait(false);
 						return deviceStoreItem == null
 							? null
-							: DatamartClient.Mapper.Map<DeviceStoreItem, Device>(deviceStoreItem) as TApi;
+							: DatamartClient.MapperInstance.Map<DeviceStoreItem, Device>(deviceStoreItem) as TApi;
 					default:
 						throw new NotSupportedException();
 				}
@@ -213,7 +216,7 @@ namespace LogicMonitor.Datamart
 							.ToListAsync(cancellationToken)
 							.ConfigureAwait(false);
 						return alertStoreItems
-							.Select(a => DatamartClient.Mapper.Map<AlertStoreItem, Alert>(a) as TApi)
+							.Select(a => DatamartClient.MapperInstance.Map<AlertStoreItem, Alert>(a) as TApi)
 							.ToList();
 					case nameof(CollectorGroup):
 						var collectorGroupStoreItems = await context
@@ -221,7 +224,7 @@ namespace LogicMonitor.Datamart
 							.ToListAsync(cancellationToken)
 							.ConfigureAwait(false);
 						return collectorGroupStoreItems
-							.Select(cg => DatamartClient.Mapper.Map<CollectorGroupStoreItem, CollectorGroup>(cg) as TApi)
+							.Select(cg => DatamartClient.MapperInstance.Map<CollectorGroupStoreItem, CollectorGroup>(cg) as TApi)
 							.ToList();
 					case nameof(DeviceGroup):
 						var deviceGroupStoreItems = await context
@@ -229,7 +232,7 @@ namespace LogicMonitor.Datamart
 							.ToListAsync(cancellationToken)
 							.ConfigureAwait(false);
 						return deviceGroupStoreItems
-							.Select(dg => DatamartClient.Mapper.Map<DeviceGroupStoreItem, DeviceGroup>(dg) as TApi)
+							.Select(dg => DatamartClient.MapperInstance.Map<DeviceGroupStoreItem, DeviceGroup>(dg) as TApi)
 							.ToList();
 					case nameof(WebsiteGroup):
 						var websiteGroupStoreItems = await context
@@ -237,7 +240,7 @@ namespace LogicMonitor.Datamart
 							.ToListAsync(cancellationToken)
 							.ConfigureAwait(false);
 						return websiteGroupStoreItems
-							.Select(wg => DatamartClient.Mapper.Map<WebsiteGroupStoreItem, WebsiteGroup>(wg) as TApi)
+							.Select(wg => DatamartClient.MapperInstance.Map<WebsiteGroupStoreItem, WebsiteGroup>(wg) as TApi)
 							.ToList();
 					default:
 						throw new NotSupportedException($"{className} not supported.  Add it to GetAllCachedAsync<T>().");
@@ -296,7 +299,7 @@ namespace LogicMonitor.Datamart
 		/// <param name="action"></param>
 		/// <param name="cancellationToken"></param>
 		/// <returns></returns>
-		public async Task AddOrUpdate<TApi, TStore>(
+		internal async Task AddOrUpdate<TApi, TStore>(
 			Func<Context, DbSet<TStore>> action,
 			CancellationToken cancellationToken)
 			where TApi : IdentifiedItem, IHasEndpoint, new()
@@ -594,7 +597,7 @@ namespace LogicMonitor.Datamart
 				}
 
 				return (await queryable.ToListAsync().ConfigureAwait(false))
-					.Select(DatamartClient.Mapper.Map<AlertStoreItem, Alert>)
+					.Select(DatamartClient.MapperInstance.Map<AlertStoreItem, Alert>)
 					.ToList();
 			}
 		}
@@ -631,5 +634,26 @@ namespace LogicMonitor.Datamart
 					.Select(wg => wg.Id)
 					.ToListAsync()
 					.ConfigureAwait(false);
+
+		internal Task<List<string>> GetAggregationTablesAsync()
+				 => AggregationWriter.GetTablesAsync(DbContextOptions);
+
+		internal Task DropAggregationTableAsync(DateTimeOffset testAggregationPeriod)
+			=> AggregationWriter.DropTableAsync(DbContextOptions, testAggregationPeriod, _logger);
+
+		internal Task AgeAggregationTablesAsync()
+			=> AggregationWriter.PerformAgingAsync(DbContextOptions, _configuration.CountAggregationDaysToRetain, _logger);
+
+		internal async Task<string> EnsureTableExistsAsync(DateTimeOffset testAggregationPeriod)
+		{
+			using (var context = new Context(DbContextOptions))
+			using (var sqlConnection = new SqlConnection(context.Database.GetDbConnection().ConnectionString))
+			{
+				await sqlConnection.OpenAsync();
+				var tableName = await AggregationWriter.EnsureTableExistsAsync(sqlConnection, testAggregationPeriod);
+				sqlConnection.Close();
+				return tableName;
+			}
+		}
 	}
 }

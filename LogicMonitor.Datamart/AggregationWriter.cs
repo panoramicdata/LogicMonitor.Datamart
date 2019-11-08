@@ -57,7 +57,10 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 		/// <summary>
 		/// Drop an aggregation table for a given period
 		/// </summary>
-		internal static async Task DropTableAsync(DbContextOptions<Context> dbContextOptions, DateTimeOffset start)
+		internal static async Task DropTableAsync(
+			DbContextOptions<Context> dbContextOptions,
+			DateTimeOffset start,
+			ILogger logger)
 		{
 			if (dbContextOptions == null)
 			{
@@ -67,6 +70,7 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 			using (var dbContext = new Context(dbContextOptions))
 			{
 				var tableName = GetTableName(start);
+				logger.LogDebug($"Dropping table {tableName}");
 				var tableCreationSql = "DROP TABLE [" + tableName + "]";
 #pragma warning disable EF1000 // Possible SQL injection vulnerability. - No externally provided data
 				await dbContext.Database.ExecuteSqlCommandAsync(tableCreationSql).ConfigureAwait(false);
@@ -185,6 +189,40 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 				command.Parameters.AddWithValue("@Id", deviceDataSourceInstanceId);
 				await command.ExecuteNonQueryAsync().ConfigureAwait(false);
 			}
+		}
+
+		internal static async Task PerformAgingAsync(
+			DbContextOptions<Context> dbContextOptions,
+			int countAggregationDaysToRetain,
+			ILogger logger)
+		{
+			var existingTables = await GetTablesAsync(dbContextOptions).ConfigureAwait(false);
+
+			// Determine which tables require aging
+			var tablesToRemove = DetermineTablesToAge(existingTables, countAggregationDaysToRetain);
+			if (tablesToRemove.Count > 0)
+			{
+				using (var context = new Context(dbContextOptions))
+				using (var sqlConnection = new SqlConnection(context.Database.GetDbConnection().ConnectionString))
+				{
+					await sqlConnection.OpenAsync();
+					using (var command = new SqlCommand(string.Empty, sqlConnection))
+					{
+						foreach (var tableName in tablesToRemove)
+						{
+							logger.LogInformation($"Aging out table {tableName}");
+							command.CommandText = "drop table " + tableName;
+							await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+						}
+					}
+				}
+			}
+		}
+
+		internal static List<string> DetermineTablesToAge(List<string> existingTables, int countAggregationDaysToRetain)
+		{
+			var ageBoundary = DateTimeOffset.UtcNow.Date.AddDays(-countAggregationDaysToRetain).ToString("yyyyMMdd");
+			return existingTables.Where(t => string.CompareOrdinal(t, TableNamePrefix.Length + 1, ageBoundary, 0, 8) < 0).ToList();
 		}
 	}
 }

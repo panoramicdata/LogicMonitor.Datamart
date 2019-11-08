@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace LogicMonitor.Datamart
 {
+	// This is internal, we don't want to expose the EfContext outside the client
 	public class Context : DbContext
 	{
 		public Context()

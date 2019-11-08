@@ -74,7 +74,6 @@ namespace LogicMonitor.Datamart.Test
 			Configuration.DatabaseType = DatabaseType.SqlServer;
 			Configuration.DatabaseServerName = configuration.DatabaseServer;
 			Configuration.DatabaseName = configuration.DatabaseName;
-
 			DatamartClient = new DatamartClient(
 				Configuration,
 				loggerFactory);

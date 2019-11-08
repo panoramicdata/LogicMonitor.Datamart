@@ -14,13 +14,6 @@ namespace LogicMonitor.Datamart
 {
 	internal class DataSync : LoopInterval
 	{
-		// Do not exceed 100 for BatchSize as limited by the LogicMonitor DataFetch endpoint
-#if DEBUG
-		private const int BatchSize = 5;
-#else
-		private const int BatchSize = 100;
-#endif
-
 		private static readonly TimeSpan EightHours = TimeSpan.FromHours(8);
 
 		private readonly DatamartClient _datamartClient;
@@ -141,7 +134,7 @@ namespace LogicMonitor.Datamart
 
 				foreach (var databaseDeviceDataSourceInstanceGroupBatch in databaseDeviceDataSourceInstanceGroup
 					.Select((item, itemIndex) => (item, itemIndex))
-					.GroupBy(x => x.itemIndex / BatchSize))
+					.GroupBy(x => x.itemIndex / _configuration.DeviceDataSourceInstanceBatchSize))
 				{
 					var batchIndex = databaseDeviceDataSourceInstanceGroupBatch.Key;
 
