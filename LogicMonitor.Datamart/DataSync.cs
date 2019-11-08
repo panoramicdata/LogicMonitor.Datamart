@@ -170,7 +170,7 @@ namespace LogicMonitor.Datamart
 							while (lastUpdatedDateTimeUtc < hoursAgo23)
 							{
 								// Increment by the aggregation duration until we're within the window
-								lastUpdatedDateTimeUtc.Add(dataSourceAggregationDuration);
+								lastUpdatedDateTimeUtc = lastUpdatedDateTimeUtc.Add(dataSourceAggregationDuration);
 							}
 							logger.LogDebug($"lastUpdatedDateTimeUtc {originalLastUpdatedDateTimeUtc} is more than {MaxHoursBack} hours ago so setting to {lastUpdatedDateTimeUtc}.");
 						}
