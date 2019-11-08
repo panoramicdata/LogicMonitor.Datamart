@@ -314,7 +314,7 @@ namespace LogicMonitor.Datamart
 					}
 					catch (Exception e)
 					{
-						logger.LogWarning(e, $"{rangeDescription} failed due to {e.Message}");
+						logger.LogWarning(e, $"{rangeDescription} failed due to {e}");
 					}
 				}
 			}
