@@ -9,7 +9,7 @@
 		<Description>LogicMonitor Datamart</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor Datamart</PackageTags>
-		<PackageReleaseNotes>Added progress to data logging.</PackageReleaseNotes>
+		<PackageReleaseNotes>Fix for aggregation boundary.</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>

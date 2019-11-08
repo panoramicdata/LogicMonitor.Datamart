@@ -164,8 +164,15 @@ namespace LogicMonitor.Datamart
 						const int MaxHoursBack = 23;
 						if (lastUpdatedDateTimeUtc < DateTimeOffset.UtcNow.AddHours(-MaxHoursBack))
 						{
-							lastUpdatedDateTimeUtc = DateTimeOffset.UtcNow.AddHours(-MaxHoursBack);
-							logger.LogDebug($"lastUpdatedDateTimeUtc is more than {MaxHoursBack} hours ago so setting to {lastUpdatedDateTimeUtc}.");
+							var originalLastUpdatedDateTimeUtc = lastUpdatedDateTimeUtc;
+							var hoursAgo23 = DateTimeOffset.UtcNow.AddHours(-MaxHoursBack);
+							lastUpdatedDateTimeUtc = DateTimeOffset.UtcNow.Date.AddHours(-MaxHoursBack);
+							while (lastUpdatedDateTimeUtc < hoursAgo23)
+							{
+								// Increment by the aggregation duration until we're within the window
+								lastUpdatedDateTimeUtc.Add(dataSourceAggregationDuration);
+							}
+							logger.LogDebug($"lastUpdatedDateTimeUtc {originalLastUpdatedDateTimeUtc} is more than {MaxHoursBack} hours ago so setting to {lastUpdatedDateTimeUtc}.");
 						}
 
 						var timeCursor = lastUpdatedDateTimeUtc;
