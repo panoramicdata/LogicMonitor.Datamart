@@ -13,8 +13,10 @@ namespace LogicMonitor.Datamart.Test
 		[Fact]
 		public async void AgeData()
 		{
+			// Age - retaining 5 days
 			await new DataAging(
 					DatamartClient,
+					5,
 					LoggerFactory)
 				.ExecuteAsync(default)
 				.ConfigureAwait(false);

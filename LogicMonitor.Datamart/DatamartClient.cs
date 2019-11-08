@@ -291,6 +291,18 @@ namespace LogicMonitor.Datamart
 			return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
 		}
 
+		public Task PerformDataAgingAsync(
+		int desiredMaxIntervalMinutes,
+		int CountAggregationDaysToRetain,
+		CancellationToken cancellationToken)
+		{
+			var sync = new DataAging(
+				this,
+				CountAggregationDaysToRetain,
+				_loggerFactory);
+			return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
+		}
+
 		/// <summary>
 		/// Add or Update the Database using the items already retreived from the LogicMonitor API
 		/// </summary>
@@ -641,8 +653,8 @@ namespace LogicMonitor.Datamart
 		internal Task DropAggregationTableAsync(DateTimeOffset testAggregationPeriod)
 			=> AggregationWriter.DropTableAsync(DbContextOptions, testAggregationPeriod, _logger);
 
-		internal Task AgeAggregationTablesAsync()
-			=> AggregationWriter.PerformAgingAsync(DbContextOptions, _configuration.CountAggregationDaysToRetain, _logger);
+		internal Task AgeAggregationTablesAsync(int countAggregationDaysToRetain)
+			=> AggregationWriter.PerformAgingAsync(DbContextOptions, countAggregationDaysToRetain, _logger);
 
 		internal async Task<string> EnsureTableExistsAsync(DateTimeOffset testAggregationPeriod)
 		{

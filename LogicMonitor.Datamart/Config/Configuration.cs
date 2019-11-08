@@ -59,11 +59,6 @@ namespace LogicMonitor.Datamart.Config
 
 		public int DeviceDataSourceInstanceBatchSize { get; set; } = 100;
 
-		/// <summary>
-		/// The number of aggregation day tables to retain prior to today
-		/// </summary>
-		public int CountAggregationDaysToRetain { get; set; } = 5;
-
 		public void Validate()
 		{
 			if (string.IsNullOrWhiteSpace(Name))
