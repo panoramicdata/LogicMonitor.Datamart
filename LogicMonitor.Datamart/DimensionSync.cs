@@ -1,8 +1,6 @@
-﻿using AutoMapper;
-using LogicMonitor.Api.Alerts;
+﻿using LogicMonitor.Api.Alerts;
 using LogicMonitor.Api.Collectors;
 using LogicMonitor.Api.Devices;
-using LogicMonitor.Api.Filters;
 using LogicMonitor.Api.LogicModules;
 using LogicMonitor.Api.Settings;
 using LogicMonitor.Api.Websites;
@@ -56,7 +54,17 @@ namespace LogicMonitor.Datamart
 				{
 					await SyncDeviceDataSourcesAndInstancesAsync(dataSourceSpecification, cancellationToken).ConfigureAwait(false);
 				}
-				catch(Exception e)
+				catch (Exception e) when (e is OperationCanceledException || e is TaskCanceledException)
+				{
+					if (cancellationToken.IsCancellationRequested)
+					{
+						// We're done, dont' loop any more
+						return;
+					}
+					// If it was anything else then re-throw
+					throw;
+				}
+				catch (Exception e)
 				{
 					Logger.LogWarning(e.Message, e);
 				}
