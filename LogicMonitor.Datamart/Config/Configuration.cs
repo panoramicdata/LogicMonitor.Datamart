@@ -59,6 +59,8 @@ namespace LogicMonitor.Datamart.Config
 
 		public int DeviceDataSourceInstanceBatchSize { get; set; } = 100;
 
+		public List<string> DeviceProperties { get; set; } = new List<string>();
+
 		public void Validate()
 		{
 			if (string.IsNullOrWhiteSpace(Name))

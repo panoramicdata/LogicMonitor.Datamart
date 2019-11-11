@@ -24,6 +24,21 @@ namespace LogicMonitor.Datamart.Mapping
 				.ForMember(
 					dest => dest.LastAlertClosedTimeSeconds,
 					opts => opts.Ignore())
+				.ForMember(
+					dest => dest.Property1,
+					opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 1)))
+				.ForMember(
+					dest => dest.Property2,
+					opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 2)))
+				.ForMember(
+					dest => dest.Property3,
+					opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 3)))
+				.ForMember(
+					dest => dest.Property4,
+					opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 4)))
+				.ForMember(
+					dest => dest.Property5,
+					opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 5)))
 				;
 
 			CreateMap<DeviceStoreItem, Device>()

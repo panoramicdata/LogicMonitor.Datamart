@@ -1,4 +1,3 @@
-using AutoMapper;
 using LogicMonitor.Api;
 using LogicMonitor.Api.Alerts;
 using LogicMonitor.Datamart.Models;
@@ -31,6 +30,7 @@ namespace LogicMonitor.Datamart.Extensions
 			var storeItem = dbSet.FirstOrDefault(si => si.Id == data.Id);
 			if (storeItem != null)
 			{
+				// Update an existing entry
 				if (logger?.IsEnabled(LogLevel.Trace) == true)
 				{
 					logger.LogTrace($"Updating existing {typeof(TStore).Name} with id {storeItem.Id} ({storeItem.DatamartId})");
@@ -44,6 +44,7 @@ namespace LogicMonitor.Datamart.Extensions
 				logger.LogTrace($"Adding new {typeof(TStore).Name} with id {data.Id}");
 			}
 
+			// Add a new entry
 			dbSet.Add(DatamartClient.MapperInstance.Map<TApi, TStore>(data));
 		}
 

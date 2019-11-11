@@ -57,7 +57,12 @@ namespace LogicMonitor.Datamart.Models
 		public long? UpdatedOnSeconds { get; set; }
 		public UserPermission UserPermission { get; set; }
 		public long LastAlertClosedTimeSeconds { get; set; }
-
+		// These properties are used for storing extra bits in
+		public string Property1 { get; set; }
+		public string Property2 { get; set; }
+		public string Property3 { get; set; }
+		public string Property4 { get; set; }
+		public string Property5 { get; set; }
 		//public List<DevicePropertyStoreItem> SystemProperties { get; set; }
 		//public List<DevicePropertyStoreItem> CustomProperties { get; set; }
 

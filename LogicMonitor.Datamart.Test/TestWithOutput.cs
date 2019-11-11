@@ -34,6 +34,8 @@ namespace LogicMonitor.Datamart.Test
 				0,
 				TimeSpan.Zero).UtcDateTime,
 
+			DeviceProperties = new List<string> { "fix.url", "ReportMagic", "location", "customer.code" },
+
 			DataSources = new List<DataSourceConfigurationItem>
 			{
 				new DataSourceConfigurationItem{

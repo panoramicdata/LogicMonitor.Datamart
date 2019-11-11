@@ -8,6 +8,7 @@ using LogicMonitor.Api.LogicModules;
 using LogicMonitor.Api.Websites;
 using LogicMonitor.Datamart.Config;
 using LogicMonitor.Datamart.Extensions;
+using LogicMonitor.Datamart.Mapping;
 using LogicMonitor.Datamart.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -51,6 +52,9 @@ namespace LogicMonitor.Datamart
 			// Store and validate configuration
 			_configuration = configuration;
 			_configuration.Validate();
+
+			// Set up the AutoMapper CustomPropertyFetcher
+			CustomPropertyHandler.Configure(_configuration.DeviceProperties);
 
 			// Check AutoMapper
 			_mapperConfig.AssertConfigurationIsValid();
