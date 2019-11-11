@@ -257,9 +257,9 @@ namespace LogicMonitor.Datamart
 												}
 
 												// Validate the result is good to zip up
-												if (instanceFetchDataResponse.Timestamps.Length != instanceFetchDataResponse.DataPoints.Length)
+												if (instanceFetchDataResponse.Timestamps.Length != instanceFetchDataResponse.DataValues.Length)
 												{
-													logger.LogError($"Expected count of TimeStamps ({instanceFetchDataResponse.Timestamps.Length}) and count of DataPoints ({instanceFetchDataResponse.DataPoints.Length}) to match.");
+													logger.LogError($"Expected count of {nameof(instanceFetchDataResponse.Timestamps)} ({instanceFetchDataResponse.Timestamps.Length}) and count of {nameof(instanceFetchDataResponse.DataValues)} ({instanceFetchDataResponse.DataValues.Length}) to match.");
 													// We've logged, try the next DataPoint
 													continue;
 												}
