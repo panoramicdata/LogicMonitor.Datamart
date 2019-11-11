@@ -9,7 +9,7 @@
 		<Description>LogicMonitor Datamart</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor Datamart</PackageTags>
-		<PackageReleaseNotes>Updated to write nulls correctly.</PackageReleaseNotes>
+		<PackageReleaseNotes>Fixed issue where configured datapoint name does not appear in the results.</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>

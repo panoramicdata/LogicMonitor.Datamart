@@ -250,6 +250,20 @@ namespace LogicMonitor.Datamart
 												// Get the index into the timestamps and values
 												var dataPointIndex = Array.FindIndex(instanceFetchDataResponse.DataPoints, dpName => dpName == dataPointModel.Name);
 
+												if (dataPointIndex == -1)
+												{
+													// We have a datapoint in our configuration that isn't being returned for this DataSource, therefore we cant write it out
+													continue;
+												}
+
+												// Validate the result is good to zip up
+												if (instanceFetchDataResponse.Timestamps.Length != instanceFetchDataResponse.DataPoints.Length)
+												{
+													logger.LogError($"Expected count of TimeStamps ({instanceFetchDataResponse.Timestamps.Length}) and count of DataPoints ({instanceFetchDataResponse.DataPoints.Length}) to match.");
+													// We've logged, try the next DataPoint
+													continue;
+												}
+
 												var data = instanceFetchDataResponse.Timestamps.Zip(
 													instanceFetchDataResponse.DataValues.Select(v => v[dataPointIndex]),
 													(timeStampMs, value)
