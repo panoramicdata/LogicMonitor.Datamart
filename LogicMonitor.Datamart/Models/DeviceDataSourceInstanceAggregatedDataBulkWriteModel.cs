@@ -20,9 +20,9 @@ namespace LogicMonitor.Datamart.Models
 
 		public double? Max { get; set; }
 
-		public double? Sum { get; set; }
+		public double Sum { get; set; }
 
-		public double? SumSquared { get; set; }
+		public double SumSquared { get; set; }
 
 		public int DataCount { get; set; }
 

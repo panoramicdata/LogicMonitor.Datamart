@@ -9,7 +9,7 @@
 		<Description>LogicMonitor Datamart</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor Datamart</PackageTags>
-		<PackageReleaseNotes>Fix for aggregation boundary.</PackageReleaseNotes>
+		<PackageReleaseNotes>Updated to write nulls correctly.</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>

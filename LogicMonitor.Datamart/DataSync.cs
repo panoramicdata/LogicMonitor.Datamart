@@ -288,7 +288,7 @@ namespace LogicMonitor.Datamart
 															DataCount = chunkedData.Count(d => d.Value != null),
 															NoDataCount = chunkedData.Count(d => d.Value == null),
 															Sum = chunkedData.Sum(d => d.Value ?? 0),
-															SumSquared = chunkedData.Sum(d => d.Value == null ? 0 : d.Value * d.Value),
+															SumSquared = chunkedData.Sum(d => d.Value == null ? 0 : d.Value.Value * d.Value.Value),
 															Max = chunkedData.Max(d => d.Value),
 															Min = chunkedData.Min(d => d.Value)
 														};
