@@ -271,7 +271,7 @@ namespace LogicMonitor.Datamart
 														{
 															DateTime = DateTimeOffset.FromUnixTimeMilliseconds(timeStampMs).UtcDateTime,
 															DataPointName = dataPointModel.Name,
-															Value = (double?)(value.ToString() == "No Data" ? null : value), // TODO - Is this right?
+															Value = (double?)(value is string ? null : value),
 															DeviceDataSourceInstanceId = deviceDataSourceInstanceIdAsInt
 														})
 														.ToList();

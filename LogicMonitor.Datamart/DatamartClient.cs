@@ -373,7 +373,7 @@ namespace LogicMonitor.Datamart
 				if (apiDataSource == null)
 				{
 					// May not happen if the config references a non-existent DataSource
-					_logger.LogError($"For LogicMonitor instance {_configuration.LogicMonitorCredential.Subdomain}, expected to find LogicMonitor API DataSourceDataStoreItem for {dataSourceName}, but it was missing.");
+					_logger.LogError($"For LogicMonitor instance {_configuration.LogicMonitorCredential.Subdomain}, expected to find LogicMonitor API DataSource called '{dataSourceName}', but it was missing.");
 					continue;
 				}
 
@@ -384,7 +384,7 @@ namespace LogicMonitor.Datamart
 				if (apiDataSource == null)
 				{
 					// Should not happen, as we have only just updated the database with DataSources
-					_logger.LogError($"For LogicMonitor instance {_configuration.LogicMonitorCredential.Subdomain}, expected to find Database DataSourceDataStoreItem for {dataSourceName}, but it was missing.");
+					_logger.LogError($"For LogicMonitor instance {_configuration.LogicMonitorCredential.Subdomain}, expected to find Database DataSource called '{dataSourceName}', but it was missing.");
 					continue;
 				}
 				// We have a matching DataSource from both the API and the database.
@@ -398,7 +398,10 @@ namespace LogicMonitor.Datamart
 						.SingleOrDefault(dp => dp.Name == configDataPoint.Name);
 					if (apiDataPoint == null)
 					{
-						_logger.LogError($"For LogicMonitor instance {_configuration.LogicMonitorCredential.Subdomain}, for {dataSourceName}, could not find configured datapoint {configDataPoint.Name}.");
+						_logger.LogError(
+							$"For LogicMonitor instance '{_configuration.LogicMonitorCredential.Subdomain}', DataSource '{dataSourceName}': " +
+							$"could not find configured DataPoint '{configDataPoint.Name}'. " +
+							$"Available DataPoints: {string.Join(", ", apiDataSource.DataSourceDataPoints.Select(dp => dp.Name).OrderBy(dp => dp))}");
 						continue;
 					}
 
