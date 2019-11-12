@@ -9,7 +9,8 @@
 		<Description>LogicMonitor Datamart</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor Datamart</PackageTags>
-		<PackageReleaseNotes>Fixed issue where configured datapoint name does not appear in the results.</PackageReleaseNotes>
+		<PackageReleaseNotes>AggregationDurationMinutes has a default of 60. DataSources defaults to an empty list.
+		</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>

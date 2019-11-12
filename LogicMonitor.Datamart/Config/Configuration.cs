@@ -14,13 +14,13 @@ namespace LogicMonitor.Datamart.Config
 		/// <summary>
 		/// The DataSources
 		/// </summary>
-		public List<DataSourceConfigurationItem> DataSources { get; set; }
+		public List<DataSourceConfigurationItem> DataSources { get; set; } = new List<DataSourceConfigurationItem>();
 
 		/// <summary>
 		/// The aggregation duration override in minutes
 		/// If not present, the duration from the parent DataSourceConfigurationItem is used.
 		/// </summary>
-		public int AggregationDurationMinutes { get; set; }
+		public int AggregationDurationMinutes { get; set; } = 60;
 
 		/// <summary>
 		/// Don't fetch any data before this date
