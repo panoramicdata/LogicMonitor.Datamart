@@ -9,7 +9,9 @@
 		<Description>LogicMonitor Datamart</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor Datamart</PackageTags>
-		<PackageReleaseNotes>AggregationDurationMinutes has a default of 60. DataSources defaults to an empty list.
+		<PackageReleaseNotes>
+			LateArrivingDataWindowHours defaults to 2
+			LogicMonitor.Api updated to 2.127.3
 		</PackageReleaseNotes>
 	</PropertyGroup>
 

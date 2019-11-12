@@ -30,7 +30,7 @@ namespace LogicMonitor.Datamart.Config
 		/// <summary>
 		/// The time to permit late arriving data to arrive
 		/// </summary>
-		public int LateArrivingDataWindowHours { get; set; }
+		public int LateArrivingDataWindowHours { get; set; } = 2;
 
 		/// <summary>
 		/// The LogicMonitor credential
