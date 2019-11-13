@@ -329,7 +329,7 @@ namespace LogicMonitor.Datamart
 				// Fetch the items from the LogicMonitor API
 				var apiItems = await GetAllAsync<TApi>(cancellationToken: cancellationToken)
 					.ConfigureAwait(false);
-				_logger.LogInformation($"{typeof(TApi).Name}: Loaded {apiItems.Count} items.");
+				_logger.LogDebug($"{typeof(TApi).Name}: Loaded {apiItems.Count} items.");
 
 				// Add/update all the items
 				foreach (var item in apiItems)
