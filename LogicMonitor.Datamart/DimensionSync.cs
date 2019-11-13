@@ -74,7 +74,6 @@ namespace LogicMonitor.Datamart
 		private async Task SyncDeviceDataSourcesAndInstancesAsync(DataSourceConfigurationItem dataSourceSpecification, CancellationToken cancellationToken)
 		{
 			var dataSourceName = dataSourceSpecification.Name;
-			Logger.LogDebug($"Syncing {dataSourceName}");
 
 			// Get the DataSource
 			var dataSource = await _datamartClient.GetByNameAsync<DataSource>(dataSourceName, cancellationToken).ConfigureAwait(false);
@@ -87,7 +86,7 @@ namespace LogicMonitor.Datamart
 			// Get the Devices that match the appliesTo function on the DataSource
 			var appliesToMatches = await _datamartClient.GetAppliesToAsync(dataSource.AppliesTo, cancellationToken).ConfigureAwait(false);
 
-			Logger.LogInformation($"Syncing {dataSourceName} instances for {appliesToMatches.Count} devices");
+			Logger.LogDebug($"Syncing {dataSourceName} instances for {appliesToMatches.Count} devices");
 
 			using (var context = new Context(_datamartClient.DbContextOptions))
 			{
