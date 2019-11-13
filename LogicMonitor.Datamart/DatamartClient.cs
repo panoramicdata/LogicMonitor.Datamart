@@ -317,6 +317,7 @@ namespace LogicMonitor.Datamart
 		/// <returns></returns>
 		internal async Task AddOrUpdate<TApi, TStore>(
 			Func<Context, DbSet<TStore>> action,
+			ILogger logger,
 			CancellationToken cancellationToken)
 			where TApi : IdentifiedItem, IHasEndpoint, new()
 			where TStore : IdentifiedStoreItem
@@ -329,12 +330,12 @@ namespace LogicMonitor.Datamart
 				// Fetch the items from the LogicMonitor API
 				var apiItems = await GetAllAsync<TApi>(cancellationToken: cancellationToken)
 					.ConfigureAwait(false);
-				_logger.LogDebug($"{typeof(TApi).Name}: Loaded {apiItems.Count} items.");
+				logger.LogDebug($"{typeof(TApi).Name}: Loaded {apiItems.Count} items.");
 
 				// Add/update all the items
 				foreach (var item in apiItems)
 				{
-					dbSet.AddOrUpdateIdentifiedItem(item, _logger);
+					dbSet.AddOrUpdateIdentifiedItem(item, logger);
 				}
 
 				// Calculate and log the stats
@@ -342,7 +343,7 @@ namespace LogicMonitor.Datamart
 				var modified = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Modified);
 				var total = context.ChangeTracker.Entries().Count();
 				var affectedRowCount = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-				_logger.LogInformation($"{typeof(TApi).Name}: Total {total}; Added {added}; Modified {modified}.");
+				logger.LogInformation($"{typeof(TApi).Name}: Total {total}; Added {added}; Modified {modified}.");
 
 				// For DataPoints, the information from LogicMonitor is present on the DataSources.
 				// So, after fetching the DataSources, we should also update the DataPoints in the database

@@ -33,19 +33,19 @@ namespace LogicMonitor.Datamart
 		public override async Task ExecuteAsync(CancellationToken cancellationToken)
 		{
 			// Top level
-			await _datamartClient.AddOrUpdate<AlertRule, AlertRuleStoreItem>(context => context.AlertRules, cancellationToken).ConfigureAwait(false);
-			await _datamartClient.AddOrUpdate<DataSource, DataSourceStoreItem>(context => context.DataSources, cancellationToken).ConfigureAwait(false);
-			await _datamartClient.AddOrUpdate<DeviceGroup, DeviceGroupStoreItem>(context => context.DeviceGroups, cancellationToken).ConfigureAwait(false);
-			await _datamartClient.AddOrUpdate<CollectorGroup, CollectorGroupStoreItem>(context => context.CollectorGroups, cancellationToken).ConfigureAwait(false);
-			await _datamartClient.AddOrUpdate<ConfigSource, ConfigSourceStoreItem>(context => context.ConfigSources, cancellationToken).ConfigureAwait(false);
-			await _datamartClient.AddOrUpdate<EscalationChain, EscalationChainStoreItem>(context => context.EscalationChains, cancellationToken).ConfigureAwait(false);
-			await _datamartClient.AddOrUpdate<EventSource, EventSourceStoreItem>(context => context.EventSources, cancellationToken).ConfigureAwait(false);
-			await _datamartClient.AddOrUpdate<WebsiteGroup, WebsiteGroupStoreItem>(context => context.WebsiteGroups, cancellationToken).ConfigureAwait(false);
+			await _datamartClient.AddOrUpdate<AlertRule, AlertRuleStoreItem>(context => context.AlertRules, Logger, cancellationToken).ConfigureAwait(false);
+			await _datamartClient.AddOrUpdate<DataSource, DataSourceStoreItem>(context => context.DataSources, Logger, cancellationToken).ConfigureAwait(false);
+			await _datamartClient.AddOrUpdate<DeviceGroup, DeviceGroupStoreItem>(context => context.DeviceGroups, Logger, cancellationToken).ConfigureAwait(false);
+			await _datamartClient.AddOrUpdate<CollectorGroup, CollectorGroupStoreItem>(context => context.CollectorGroups, Logger, cancellationToken).ConfigureAwait(false);
+			await _datamartClient.AddOrUpdate<ConfigSource, ConfigSourceStoreItem>(context => context.ConfigSources, Logger, cancellationToken).ConfigureAwait(false);
+			await _datamartClient.AddOrUpdate<EscalationChain, EscalationChainStoreItem>(context => context.EscalationChains, Logger, cancellationToken).ConfigureAwait(false);
+			await _datamartClient.AddOrUpdate<EventSource, EventSourceStoreItem>(context => context.EventSources, Logger, cancellationToken).ConfigureAwait(false);
+			await _datamartClient.AddOrUpdate<WebsiteGroup, WebsiteGroupStoreItem>(context => context.WebsiteGroups, Logger, cancellationToken).ConfigureAwait(false);
 
 			// Second level
-			await _datamartClient.AddOrUpdate<Device, DeviceStoreItem>(context => context.Devices, cancellationToken).ConfigureAwait(false);
-			await _datamartClient.AddOrUpdate<Collector, CollectorStoreItem>(context => context.Collectors, cancellationToken).ConfigureAwait(false);
-			await _datamartClient.AddOrUpdate<Website, WebsiteStoreItem>(context => context.Websites, cancellationToken).ConfigureAwait(false);
+			await _datamartClient.AddOrUpdate<Device, DeviceStoreItem>(context => context.Devices, Logger, cancellationToken).ConfigureAwait(false);
+			await _datamartClient.AddOrUpdate<Collector, CollectorStoreItem>(context => context.Collectors, Logger, cancellationToken).ConfigureAwait(false);
+			await _datamartClient.AddOrUpdate<Website, WebsiteStoreItem>(context => context.Websites, Logger, cancellationToken).ConfigureAwait(false);
 
 			// Process each DataSource
 			foreach (var dataSourceSpecification in _configuration.DataSources)
