@@ -16,6 +16,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="Migrations\20191114131728_AddLastWentMissingUtc.cs" />
+	  <Compile Remove="Migrations\20191114131728_AddLastWentMissingUtc.Designer.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="AutoMapper" Version="8.1.1" />
 		<PackageReference Include="EFCore.BulkExtensions" Version="2.6.3" />
 		<PackageReference Include="Humanizer.Core" Version="2.7.9" />

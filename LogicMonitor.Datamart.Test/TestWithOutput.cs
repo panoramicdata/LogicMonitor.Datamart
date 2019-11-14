@@ -40,7 +40,6 @@ namespace LogicMonitor.Datamart.Test
 			{
 				new DataSourceConfigurationItem{
 					Name = "WinCPU",
-					//AggregationDurationMinutes = 60,
 					DataPoints = new List<DataPointConfigurationItem>
 					{
 						new DataPointConfigurationItem
@@ -53,7 +52,18 @@ namespace LogicMonitor.Datamart.Test
 								Name= "ProcessorQueueLength",
 								MeasurementUnit = "count"
 							}
-					}
+					},
+				},
+				new DataSourceConfigurationItem{
+					Name = "Properties Reveal",
+					DataPoints = new List<DataPointConfigurationItem>
+					{
+						new DataPointConfigurationItem
+							{
+								Name = "datapoint0",
+								MeasurementUnit = "noodles",
+							}
+					},
 				}
 			}
 		};

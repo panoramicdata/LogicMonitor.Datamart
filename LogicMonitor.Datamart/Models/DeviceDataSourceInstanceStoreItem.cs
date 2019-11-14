@@ -50,5 +50,10 @@ namespace LogicMonitor.Datamart.Models
 		/// The last hour for which we have written complete aggregations for this
 		/// </summary>
 		public DateTime? LastAggregationHourWrittenUtc { get; set; }
+
+		/// <summary>
+		/// If present, this is the UTC timestamp when a dimension update query was made to LogicMonitor and this instance was not returned
+		/// </summary>
+		public DateTime? LastWentMissingUtc { get; set; }
 	}
 }

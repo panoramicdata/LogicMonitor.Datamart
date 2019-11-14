@@ -56,11 +56,12 @@ namespace LogicMonitor.Datamart
 					.Select(ds => ds.Id)
 					.ToList();
 
-				// Get the database instances for those datasources
+				// Get the database instances for those DataSources, excluding ones where LastWentMissingUtc is set
 				var databaseDeviceDataSourceInstances = await context
 					.DeviceDataSourceInstances
 					.Where(ddsi =>
-						ddsi.DataSourceId.HasValue
+						ddsi.LastWentMissingUtc == null
+						&& ddsi.DataSourceId.HasValue
 						&& dataSourceIds.Contains(ddsi.DataSourceId.Value)
 					)
 					// To make debugging a little more deterministic, order by the Device and then its instances

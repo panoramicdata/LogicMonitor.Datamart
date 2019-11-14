@@ -33,6 +33,9 @@ namespace LogicMonitor.Datamart.Mapping
 				.ForMember(
 					dest => dest.LastAggregationHourWrittenUtc,
 					opts => opts.Ignore())
+				.ForMember(
+					dest => dest.LastWentMissingUtc,
+					opts => opts.Ignore())
 				;
 		}
 	}

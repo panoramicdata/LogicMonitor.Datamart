@@ -108,6 +108,10 @@ namespace LogicMonitor.Datamart
 			deviceDataSourceInstanceData.HasIndex(d => new { d.DeviceDataSourceInstanceId, d.DataPointName });
 			deviceDataSourceInstanceData.HasIndex(d => d.DateTime);
 
+			// DeviceDataSourceInstance indexes
+			modelBuilder.Entity<DeviceDataSourceInstanceStoreItem>()
+				.HasIndex(ddsi => ddsi.LastWentMissingUtc);
+
 			// Relational stuff
 			modelBuilder.Entity<DeviceDataSourceInstanceDataStoreItem>()
 				.HasOne(data => data.DeviceDataSourceInstance)
