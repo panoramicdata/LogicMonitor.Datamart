@@ -7,10 +7,10 @@ namespace LogicMonitor.Datamart.Models
 {
 	public class DeviceStoreItem : IdentifiedStoreItem
 	{
-#pragma warning disable CA2227 // Collection properties should be read only
 		// Navigation properties
 		public List<DeviceDataSourceInstanceStoreItem> DeviceDataSourceInstances { get; set; }
-#pragma warning restore CA2227 // Collection properties should be read only
+
+		public List<DeviceDataSourceStoreItem> DeviceDataSources { get; set; }
 
 		// Database properties
 		public string Name { get; set; }

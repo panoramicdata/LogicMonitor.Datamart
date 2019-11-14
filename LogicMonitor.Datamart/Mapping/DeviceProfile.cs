@@ -10,6 +10,13 @@ namespace LogicMonitor.Datamart.Mapping
 		{
 			CreateMap<Device, DeviceStoreItem>()
 				.ForMember(
+					dest => dest.DeviceDataSources,
+					opts => opts.Ignore())
+				.ForMember(
+					dest => dest.DeviceDataSourceInstances,
+					opts => opts.Ignore())
+
+				.ForMember(
 					dest => dest.DatamartId,
 					opts => opts.Ignore())
 				.ForMember(
@@ -17,9 +24,6 @@ namespace LogicMonitor.Datamart.Mapping
 					opts => opts.Ignore())
 				.ForMember(
 					dest => dest.DatamartLastModifiedUtc,
-					opts => opts.Ignore())
-				.ForMember(
-					dest => dest.DeviceDataSourceInstances,
 					opts => opts.Ignore())
 				.ForMember(
 					dest => dest.LastAlertClosedTimeSeconds,

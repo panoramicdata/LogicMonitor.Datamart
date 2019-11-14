@@ -22,9 +22,6 @@ namespace LogicMonitor.Datamart.Mapping
 					dest => dest.LastMeasurementUpdatedTimeSeconds,
 					opts => opts.Ignore())
 				.ForMember(
-					dest => dest.DataMeasures,
-					opts => opts.Ignore())
-				.ForMember(
 					dest => dest.DeviceDataSource,
 					opts => opts.Ignore())
 				.ForMember(
@@ -37,6 +34,36 @@ namespace LogicMonitor.Datamart.Mapping
 					dest => dest.LastWentMissingUtc,
 					opts => opts.Ignore())
 				;
+
+			CreateMap<DeviceDataSourceInstanceStoreItem, DeviceDataSourceInstance>()
+				.ForMember(
+					dest => dest.AlertingDisabledOn,
+					opts => opts.Ignore())
+				.ForMember(
+					dest => dest.CustomProperties,
+					opts => opts.Ignore())
+				.ForMember(
+					dest => dest.SystemProperties,
+					opts => opts.Ignore())
+				.ForMember(
+					dest => dest.AutoProperties,
+					opts => opts.Ignore())
+				.ForMember(
+					dest => dest.DataSourceName,
+					opts => opts.Ignore())
+				.ForMember(
+					dest => dest.DataSourceType,
+					opts => opts.Ignore())
+				.ForMember(
+					dest => dest.GroupsDisabledThisSource,
+					opts => opts.Ignore())
+				.ForMember(
+					dest => dest.Name,
+					opts => opts.Ignore())
+				.ForMember(
+					dest => dest.Description,
+					opts => opts.Ignore())
+			;
 		}
 	}
 }

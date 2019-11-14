@@ -18,6 +18,8 @@
 	<ItemGroup>
 	  <Compile Remove="Migrations\20191114131728_AddLastWentMissingUtc.cs" />
 	  <Compile Remove="Migrations\20191114131728_AddLastWentMissingUtc.Designer.cs" />
+	  <Compile Remove="Migrations\20191114144123_RemovedLegacyData.cs" />
+	  <Compile Remove="Migrations\20191114144123_RemovedLegacyData.Designer.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

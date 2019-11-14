@@ -268,7 +268,7 @@ namespace LogicMonitor.Datamart
 												var data = instanceFetchDataResponse.Timestamps.Zip(
 													instanceFetchDataResponse.DataValues.Select(v => v[dataPointIndex]),
 													(timeStampMs, value)
-														=> new DeviceDataSourceInstanceDataStoreItem
+														=> new
 														{
 															DateTime = DateTimeOffset.FromUnixTimeMilliseconds(timeStampMs).UtcDateTime,
 															DataPointName = dataPointModel.Name,

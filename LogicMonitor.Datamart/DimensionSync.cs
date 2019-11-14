@@ -119,17 +119,11 @@ namespace LogicMonitor.Datamart
 						// Add it to the database
 						context.DeviceDataSources.Add(DatamartClient.MapperInstance.Map<DeviceDataSourceStoreItem>(deviceDataSource));
 					}
-					//else
-					// TODO - UPDATE
-					//{
-					//	// Update the existing entry
-					//	deviceDataSource = DatamartClient.MapperInstance.Map(databaseDeviceDataSource, deviceDataSource);
-					//	if (context.ChangeTracker.Entries().Count(e => e.State == EntityState.Modified) > 0)
-					//	{
-					//		// Something changed
-					//		var x = 1;
-					//	}
-					//}
+					else
+					{
+						// Update the existing entry
+						deviceDataSource = DatamartClient.MapperInstance.Map(databaseDeviceDataSource, deviceDataSource);
+					}
 					// It is now in the database context
 
 					// Fetch the DeviceDataSourceInstances
@@ -155,18 +149,13 @@ namespace LogicMonitor.Datamart
 							// Add it to the database
 							context.DeviceDataSourceInstances.Add(DatamartClient.MapperInstance.Map<DeviceDataSourceInstanceStoreItem>(apiDeviceDataSourceInstance));
 						}
-						//else
-						// TODO - UPDATE - including clearing the LastWentMissingUtc field
-						//{
-						//	var deviceDataSourceInstanceToUpdate = deviceDataSourceInstance;
-						//	// Update the existing entry
-						//	deviceDataSourceInstanceToUpdate = DatamartClient.MapperInstance.Map(databaseDeviceDataSourceInstance, deviceDataSourceInstanceToUpdate);
-						//	if (context.ChangeTracker.Entries().Count(e => e.State == EntityState.Modified) > 0)
-						//	{
-						//		// Something changed
-						//		var x = 1;
-						//	}
-						//}
+						else
+						{
+							// Update - including clearing the LastWentMissingUtc field
+							// Update the existing entry using AutoMapper
+							databaseDeviceDataSourceInstance = DatamartClient.MapperInstance.Map(apiDeviceDataSourceInstance, databaseDeviceDataSourceInstance);
+							databaseDeviceDataSourceInstance.LastWentMissingUtc = null;
+						}
 						// It is now in the database context
 					}
 

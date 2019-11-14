@@ -6,10 +6,8 @@ namespace LogicMonitor.Datamart.Models
 {
 	public class WebsiteGroupStoreItem : IdentifiedStoreItem
 	{
-#pragma warning disable CA2227 // Collection properties should be read only
 		// Navigation properties
 		public List<WebsiteStoreItem> Websites { get; set; }
-#pragma warning restore CA2227 // Collection properties should be read only
 
 		// Database properties
 		public string Name { get; set; }
