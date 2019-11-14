@@ -19,9 +19,6 @@ namespace LogicMonitor.Datamart.Mapping
 					dest => dest.DatamartLastModifiedUtc,
 					opts => opts.Ignore())
 				.ForMember(
-					dest => dest.LastMeasurementUpdatedTimeSeconds,
-					opts => opts.Ignore())
-				.ForMember(
 					dest => dest.DeviceDataSource,
 					opts => opts.Ignore())
 				.ForMember(

@@ -30,11 +30,6 @@ namespace LogicMonitor.Datamart.Models
 		public string WildValue2 { get; set; }
 
 		/// <summary>
-		/// The last observed measurement
-		/// </summary>
-		public long LastMeasurementUpdatedTimeSeconds { get; set; }
-
-		/// <summary>
 		/// The last hour for which we have written complete aggregations for this
 		/// </summary>
 		public DateTime? LastAggregationHourWrittenUtc { get; set; }
