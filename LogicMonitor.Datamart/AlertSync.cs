@@ -200,6 +200,7 @@ namespace LogicMonitor.Datamart
 								// If this is the case, give up on that second and move to the next one.
 								if (timeCursor == timeCursorLastTime)
 								{
+									// BUG - There is an issue where if there are more than 300 open alerts, we never get any further, this just loops very slowly, increasing 1 second at a time - all the EndOnSeconds will be 0
 									timeCursor++;
 								}
 
