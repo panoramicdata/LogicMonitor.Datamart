@@ -207,7 +207,7 @@ namespace LogicMonitor.Datamart
 								// If we've genuinely done nothing, then log it so terminating after this is shown to be intentional
 								if (blockIndex == 0)
 								{
-									logger.LogDebug("Nothing to do.");
+									logger.LogDebug($"BlockIndex is 0, nothing to do for batch {batchIndex + 1}.");
 								}
 								break;
 							}
