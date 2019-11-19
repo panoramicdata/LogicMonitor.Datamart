@@ -99,16 +99,16 @@ namespace LogicMonitor.Datamart
 
 							stopwatch.Restart();
 							deviceIndex++;
-							Logger.LogDebug($"Retrieving closed datasource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName}");
+							Logger.LogDebug($"Retrieving datasource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName}");
 
-							// Get the last closed alerts
+							// Get the  alerts
 
 							timeCursor = Math.Max(device.LastAlertClosedTimeSeconds, _startDateTimeUtc.ToUnixTimeSeconds());
 							var timeCursorLastTime = timeCursor;
 							deviceAlertCount = 0;
 							while (timeCursor <= nowSecondsSinceEpoch)
 							{
-								var closedAlertsFilter = new Filter<Alert>
+								var alertFilter = new Filter<Alert>
 								{
 									FilterItems = new List<FilterItem<Alert>>
 							{
@@ -122,11 +122,11 @@ namespace LogicMonitor.Datamart
 									},
 									Take = pageSize
 								};
-								var alertsThisTime = await _datamartClient.GetAllAsync(closedAlertsFilter, $"device/devices/{deviceId}/alerts", cancellationToken).ConfigureAwait(false);
+								var alertsThisTime = await _datamartClient.GetAllAsync(alertFilter, $"device/devices/{deviceId}/alerts", cancellationToken).ConfigureAwait(false);
 
 								deviceAlertCount += alertsThisTime.Count;
 
-								Logger.LogDebug($"Processing closed datasource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName}");
+								Logger.LogDebug($"Processing datasource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName}");
 								var dataProcessingStopwatch = Stopwatch.StartNew();
 
 								// A structure for reducing the alerts that came in so we only have 1 record per Id, the last one is the only one of interest
@@ -178,7 +178,7 @@ namespace LogicMonitor.Datamart
 										updateAlertStats.Updated++;
 									}
 								}
-								var message = $"Processed closed datasource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName}; {reducedAlerts.Count}(of {alertsThisTime.Count}) " +
+								var message = $"Processed datasource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName}; {reducedAlerts.Count}(of {alertsThisTime.Count}) " +
 									$"get({sqlFetch.ElapsedMilliseconds:N0}ms) save({sqlSave.ElapsedMilliseconds:N0}ms) in {dataProcessingStopwatch.ElapsedMilliseconds:N0}ms " +
 									$"from {DateTimeOffset.FromUnixTimeSeconds(timeCursor).UtcDateTime}...)";
 								Logger.LogDebug(message);
@@ -218,7 +218,7 @@ namespace LogicMonitor.Datamart
 								.SaveChangesAsync()
 								.ConfigureAwait(false);
 
-							Logger.LogInformation($"Retrieved closed datasource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName} ({deviceIndex}/{databaseDeviceIds.Count}). Retrieved {deviceAlertCount} in {stopwatch.Elapsed.TotalSeconds:N1}s");
+							Logger.LogInformation($"Retrieved datasource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName} ({deviceIndex}/{databaseDeviceIds.Count}). Retrieved {deviceAlertCount} in {stopwatch.Elapsed.TotalSeconds:N1}s");
 						}
 					}
 				}
