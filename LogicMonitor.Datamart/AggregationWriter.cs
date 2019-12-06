@@ -21,7 +21,7 @@ namespace LogicMonitor.Datamart
 		/// <summary>
 		/// Create a new aggregation table for a new day
 		/// </summary>
-		internal static async Task<string> EnsureTableExistsAsync(SqlConnection sqlConnection, DateTimeOffset start)
+		internal static async Task<string> EnsureTableExistsAsync(SqlConnection sqlConnection, int sqlCommandTimeoutSeconds, DateTimeOffset start)
 		{
 			if (sqlConnection == null)
 			{
@@ -49,6 +49,7 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 
 			using (var command = new SqlCommand(tableCreationSql, sqlConnection))
 			{
+				command.CommandTimeout = sqlCommandTimeoutSeconds;
 				await command.ExecuteNonQueryAsync().ConfigureAwait(false);
 			}
 			return tableName;
@@ -115,12 +116,14 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 
 		internal static async Task WriteAggregations(
 			SqlConnection sqlConnection,
+			int sqlCommandTimeoutSeconds,
+			int sqlBulkCopyTimeoutSeconds,
 			int deviceDataSourceInstanceId,
 			DateTimeOffset key,
 			IEnumerable<DeviceDataSourceInstanceAggregatedDataBulkWriteModel> aggregations,
 			ILogger logger)
 		{
-			var tableName = await EnsureTableExistsAsync(sqlConnection, key);
+			var tableName = await EnsureTableExistsAsync(sqlConnection, sqlCommandTimeoutSeconds, key);
 
 			var aggregationCount = aggregations.Count();
 
@@ -160,17 +163,18 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 				stopwatch.Restart();
 				logger.LogTrace($"Bulk writing {aggregationCount} aggregations...");
 				// Write out the data as part of a transaction
-				using (var bulk = new SqlBulkCopy(sqlConnection, SqlBulkCopyOptions.Default, transaction))
+				using (var bulkCopy = new SqlBulkCopy(sqlConnection, SqlBulkCopyOptions.Default, transaction))
 				{
-					bulk.DestinationTableName = tableName;
-					await bulk.WriteToServerAsync(table).ConfigureAwait(false);
+					bulkCopy.DestinationTableName = tableName;
+					bulkCopy.BulkCopyTimeout = sqlBulkCopyTimeoutSeconds;
+					await bulkCopy.WriteToServerAsync(table).ConfigureAwait(false);
 				}
 				logger.LogTrace($"Bulk writing {aggregationCount} aggregations complete after {stopwatch.ElapsedMilliseconds:N0}ms.");
 
 				stopwatch.Restart();
 				logger.LogTrace($"Setting progress for DDSI {deviceDataSourceInstanceId} to {lastAggregationHourWrittenUtc}...");
 				// Update the progress as part of a transaction
-				await WriteProgressBoundaryAsync(sqlConnection, deviceDataSourceInstanceId, lastAggregationHourWrittenUtc, transaction);
+				await WriteProgressBoundaryAsync(sqlConnection, sqlCommandTimeoutSeconds, deviceDataSourceInstanceId, lastAggregationHourWrittenUtc, transaction);
 				logger.LogTrace($"Setting progress for DDSI {deviceDataSourceInstanceId} to {lastAggregationHourWrittenUtc} complete after {stopwatch.ElapsedMilliseconds:N0}ms.");
 
 				stopwatch.Restart();
@@ -180,11 +184,14 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 			}
 		}
 
-		internal static async Task WriteProgressBoundaryAsync(SqlConnection sqlConnection, int deviceDataSourceInstanceId, DateTime lastAggregationHourWrittenUtc, SqlTransaction transaction)
+		internal static async Task WriteProgressBoundaryAsync(SqlConnection sqlConnection, int sqlCommandTimeoutSeconds, int deviceDataSourceInstanceId, DateTime lastAggregationHourWrittenUtc, SqlTransaction transaction)
 		{
 			const string sql = "update DeviceDataSourceInstances set LastAggregationHourWrittenUtc=@LastAggregationHourWrittenUtc where id=@Id";
 			using (var command = new SqlCommand(sql, sqlConnection, transaction))
 			{
+				// Set the CommandTimeout in seconds - it's important this gets written out, it is in a transction, but we wait a bit longer here.
+				// Normally this defaults to 30s, but we have observed this timing out on heavily loaded disk based systems.
+				command.CommandTimeout = sqlCommandTimeoutSeconds;
 				command.Parameters.AddWithValue("@LastAggregationHourWrittenUtc", lastAggregationHourWrittenUtc);
 				command.Parameters.AddWithValue("@Id", deviceDataSourceInstanceId);
 				await command.ExecuteNonQueryAsync().ConfigureAwait(false);
@@ -193,6 +200,7 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 
 		internal static async Task PerformAgingAsync(
 			DbContextOptions<Context> dbContextOptions,
+			int sqlCommandTimeoutSeconds,
 			int countAggregationDaysToRetain,
 			ILogger logger)
 		{
@@ -208,6 +216,7 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 					await sqlConnection.OpenAsync();
 					using (var command = new SqlCommand(string.Empty, sqlConnection))
 					{
+						command.CommandTimeout = sqlCommandTimeoutSeconds;
 						foreach (var tableName in tablesToRemove)
 						{
 							logger.LogInformation($"Aging out table {tableName}");

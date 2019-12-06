@@ -325,6 +325,8 @@ namespace LogicMonitor.Datamart
 											{
 												await AggregationWriter.WriteAggregations(
 													sqlConnection,
+													configuration.SqlCommandTimeoutSeconds,
+													configuration.SqlBulkCopyTimeoutSeconds,
 													deviceDataSourceInstanceIdAsInt,
 													blockToWrite.Key,
 													blockToWrite,
@@ -335,6 +337,7 @@ namespace LogicMonitor.Datamart
 										{
 											await AggregationWriter.WriteProgressBoundaryAsync(
 												sqlConnection,
+												configuration.SqlCommandTimeoutSeconds,
 												deviceDataSourceInstanceIdAsInt,
 												blockEnd.UtcDateTime,
 												null);

@@ -68,7 +68,7 @@ namespace LogicMonitor.Datamart
 						{
 							ConnectionString = $"server={configuration.DatabaseServerName};database={configuration.DatabaseName};Trusted_Connection=True;Application Name=LogicMonitor.Datamart"
 						}.ConnectionString,
-						opts => opts.CommandTimeout((int)TimeSpan.FromMinutes(10).TotalSeconds)
+						opts => opts.CommandTimeout(configuration.SqlCommandTimeoutSeconds)
 						);
 					break;
 				case DatabaseType.InMemory:
@@ -662,7 +662,7 @@ namespace LogicMonitor.Datamart
 			=> AggregationWriter.DropTableAsync(DbContextOptions, testAggregationPeriod, _logger);
 
 		internal Task AgeAggregationTablesAsync(int countAggregationDaysToRetain)
-			=> AggregationWriter.PerformAgingAsync(DbContextOptions, countAggregationDaysToRetain, _logger);
+			=> AggregationWriter.PerformAgingAsync(DbContextOptions, _configuration.SqlCommandTimeoutSeconds, countAggregationDaysToRetain, _logger);
 
 		internal async Task<string> EnsureTableExistsAsync(DateTimeOffset testAggregationPeriod)
 		{
@@ -670,7 +670,7 @@ namespace LogicMonitor.Datamart
 			using (var sqlConnection = new SqlConnection(context.Database.GetDbConnection().ConnectionString))
 			{
 				await sqlConnection.OpenAsync();
-				var tableName = await AggregationWriter.EnsureTableExistsAsync(sqlConnection, testAggregationPeriod);
+				var tableName = await AggregationWriter.EnsureTableExistsAsync(sqlConnection, _configuration.SqlCommandTimeoutSeconds, testAggregationPeriod);
 				sqlConnection.Close();
 				return tableName;
 			}
