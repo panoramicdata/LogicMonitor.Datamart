@@ -4,14 +4,16 @@ using LogicMonitor.Datamart;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace LogicMonitor.Datamart.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20191114133733_AddLastWentMissingUtc")]
+    partial class AddLastWentMissingUtc
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -493,6 +495,29 @@ namespace LogicMonitor.Datamart.Migrations
                     b.ToTable("DataSources");
                 });
 
+            modelBuilder.Entity("LogicMonitor.Datamart.Models.DeviceDataSourceInstanceDataStoreItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("DataPointName");
+
+                    b.Property<DateTime>("DateTime");
+
+                    b.Property<int>("DeviceDataSourceInstanceId");
+
+                    b.Property<double?>("Value");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DateTime");
+
+                    b.HasIndex("DeviceDataSourceInstanceId", "DataPointName");
+
+                    b.ToTable("DeviceDataSourceInstanceData");
+                });
+
             modelBuilder.Entity("LogicMonitor.Datamart.Models.DeviceDataSourceInstanceStoreItem", b =>
                 {
                     b.Property<int>("DatamartId")
@@ -513,6 +538,8 @@ namespace LogicMonitor.Datamart.Migrations
 
                     b.Property<int>("DeviceDataSourceId");
 
+                    b.Property<string>("DeviceDisplayName");
+
                     b.Property<int?>("DeviceId");
 
                     b.Property<bool>("DisableAlerting");
@@ -528,6 +555,8 @@ namespace LogicMonitor.Datamart.Migrations
                     b.Property<DateTime?>("LastAggregationHourWrittenUtc");
 
                     b.Property<long>("LastCollectedTimeSeconds");
+
+                    b.Property<long>("LastMeasurementUpdatedTimeSeconds");
 
                     b.Property<long>("LastUpdatedTimeSeconds");
 
@@ -562,27 +591,59 @@ namespace LogicMonitor.Datamart.Migrations
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+                    b.Property<int>("AlertStatusPriority");
+
                     b.Property<long>("AssignedOnSeconds");
 
                     b.Property<long>("CreatedOnSeconds");
 
+                    b.Property<string>("DataSourceDescription");
+
+                    b.Property<string>("DataSourceDisplayName");
+
                     b.Property<int>("DataSourceId");
+
+                    b.Property<string>("DataSourceName");
+
+                    b.Property<string>("DataSourceType");
 
                     b.Property<DateTime>("DatamartCreatedUtc");
 
                     b.Property<DateTime>("DatamartLastModifiedUtc");
 
+                    b.Property<string>("Description");
+
+                    b.Property<string>("DeviceDisplayName");
+
                     b.Property<int>("DeviceId");
 
+                    b.Property<string>("DeviceName");
+
+                    b.Property<string>("GroupName");
+
                     b.Property<int>("Id");
+
+                    b.Property<bool>("InstanceAutoGroupEnabled");
+
+                    b.Property<int>("InstanceCount");
+
+                    b.Property<bool>("IsAutoDiscoveryEnabled");
+
+                    b.Property<bool>("IsMonitoringDisabled");
+
+                    b.Property<bool>("IsMultiple");
+
+                    b.Property<int>("MonitoringInstanceCount");
+
+                    b.Property<string>("Name");
+
+                    b.Property<long>("NextAutoDiscoveryOnSeconds");
 
                     b.Property<long>("UpdatedOnSeconds");
 
                     b.HasKey("DatamartId");
 
                     b.HasIndex("DataSourceId");
-
-                    b.HasIndex("DeviceId");
 
                     b.ToTable("DeviceDataSources");
                 });
@@ -1114,6 +1175,15 @@ namespace LogicMonitor.Datamart.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
+            modelBuilder.Entity("LogicMonitor.Datamart.Models.DeviceDataSourceInstanceDataStoreItem", b =>
+                {
+                    b.HasOne("LogicMonitor.Datamart.Models.DeviceDataSourceInstanceStoreItem", "DeviceDataSourceInstance")
+                        .WithMany("DataMeasures")
+                        .HasForeignKey("DeviceDataSourceInstanceId")
+                        .HasPrincipalKey("Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("LogicMonitor.Datamart.Models.DeviceDataSourceInstanceStoreItem", b =>
                 {
                     b.HasOne("LogicMonitor.Datamart.Models.DeviceDataSourceStoreItem", "DeviceDataSource")
@@ -1134,12 +1204,6 @@ namespace LogicMonitor.Datamart.Migrations
                     b.HasOne("LogicMonitor.Datamart.Models.DataSourceStoreItem", "DataSource")
                         .WithMany("DeviceDataSources")
                         .HasForeignKey("DataSourceId")
-                        .HasPrincipalKey("Id")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("LogicMonitor.Datamart.Models.DeviceStoreItem", "Device")
-                        .WithMany("DeviceDataSources")
-                        .HasForeignKey("DeviceId")
                         .HasPrincipalKey("Id")
                         .OnDelete(DeleteBehavior.Restrict);
                 });

@@ -19,7 +19,7 @@ namespace LogicMonitor.Datamart.Test
 			var utcNow = DateTime.UtcNow;
 
 			await DatamartClient
-				.AddOrUpdate<Device, DeviceStoreItem>(context => context.Devices, default)
+				.AddOrUpdate<Device, DeviceStoreItem>(context => context.Devices, LoggerFactory.CreateLogger(nameof(AlertTests)), default)
 				.ConfigureAwait(false);
 		}
 

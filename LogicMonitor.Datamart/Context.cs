@@ -28,7 +28,6 @@ namespace LogicMonitor.Datamart
 		public DbSet<DataSourceDataPointStoreItem> DataSourceDataPoints { get; set; }
 		public DbSet<DeviceDataSourceStoreItem> DeviceDataSources { get; set; }
 		public DbSet<DeviceDataSourceInstanceStoreItem> DeviceDataSourceInstances { get; set; }
-		public DbSet<DeviceDataSourceInstanceDataStoreItem> DeviceDataSourceInstanceData { get; set; }
 		public DbSet<EscalationChainStoreItem> EscalationChains { get; set; }
 		public DbSet<EventSourceStoreItem> EventSources { get; set; }
 		public DbSet<DeviceStoreItem> Devices { get; set; }
@@ -104,18 +103,11 @@ namespace LogicMonitor.Datamart
 				})
 				.HasName($"IX_{nameof(Alerts)}_FasterPercentageAvailability");
 
-			var deviceDataSourceInstanceData = modelBuilder.Entity<DeviceDataSourceInstanceDataStoreItem>();
-			deviceDataSourceInstanceData.HasIndex(d => new { d.DeviceDataSourceInstanceId, d.DataPointName });
-			deviceDataSourceInstanceData.HasIndex(d => d.DateTime);
+			// DeviceDataSourceInstance indexes
+			modelBuilder.Entity<DeviceDataSourceInstanceStoreItem>()
+				.HasIndex(ddsi => ddsi.LastWentMissingUtc);
 
 			// Relational stuff
-			modelBuilder.Entity<DeviceDataSourceInstanceDataStoreItem>()
-				.HasOne(data => data.DeviceDataSourceInstance)
-				.WithMany(ddsi => ddsi.DataMeasures)
-				.HasForeignKey(data => data.DeviceDataSourceInstanceId)
-				.HasPrincipalKey(ddsi => ddsi.Id)
-				.OnDelete(DeleteBehavior.Restrict);
-
 			modelBuilder.Entity<DeviceDataSourceInstanceStoreItem>()
 				.HasOne(ddsi => ddsi.DeviceDataSource)
 				.WithMany(ds => ds.DeviceDataSourceInstances)
@@ -134,6 +126,13 @@ namespace LogicMonitor.Datamart
 				.HasOne(dds => dds.DataSource)
 				.WithMany(d => d.DeviceDataSources)
 				.HasForeignKey(dds => dds.DataSourceId)
+				.HasPrincipalKey(d => d.Id)
+				.OnDelete(DeleteBehavior.Restrict);
+
+			modelBuilder.Entity<DeviceDataSourceStoreItem>()
+				.HasOne(dds => dds.Device)
+				.WithMany(d => d.DeviceDataSources)
+				.HasForeignKey(dds => dds.DeviceId)
 				.HasPrincipalKey(d => d.Id)
 				.OnDelete(DeleteBehavior.Restrict);
 

@@ -4,14 +4,16 @@ using LogicMonitor.Datamart;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace LogicMonitor.Datamart.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20191114144624_RemovedLegacyData")]
+    partial class RemovedLegacyData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -528,6 +530,8 @@ namespace LogicMonitor.Datamart.Migrations
                     b.Property<DateTime?>("LastAggregationHourWrittenUtc");
 
                     b.Property<long>("LastCollectedTimeSeconds");
+
+                    b.Property<long>("LastMeasurementUpdatedTimeSeconds");
 
                     b.Property<long>("LastUpdatedTimeSeconds");
 

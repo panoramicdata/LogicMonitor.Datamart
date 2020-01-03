@@ -53,6 +53,16 @@ namespace LogicMonitor.Datamart.Config
 		public string DatabaseName { get; set; }
 
 		/// <summary>
+		/// The number of seconds to wait for SqlCommands to timeout
+		/// </summary>
+		public int SqlCommandTimeoutSeconds { get; set; } = 600;
+
+		/// <summary>
+		/// The number of seconds to wait for BulkCopy operations to timeout
+		/// </summary>
+		public int SqlBulkCopyTimeoutSeconds { get; set; } = 600;
+
+		/// <summary>
 		/// Whether to enable sensitive data logging.
 		/// </summary>
 		public bool EnableSensitiveDatabaseLogging { get; set; }

@@ -10,10 +10,16 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor Datamart</PackageTags>
 		<PackageReleaseNotes>
-			LateArrivingDataWindowHours defaults to 2
-			LogicMonitor.Api updated to 2.127.3
+			New configuration options SqlCommandTimeoutSeconds and SqlBulkCopyTimeoutSeconds defaulting to 600 seconds (10 minutes)
 		</PackageReleaseNotes>
 	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Remove="Migrations\20191114131728_AddLastWentMissingUtc.cs" />
+	  <Compile Remove="Migrations\20191114131728_AddLastWentMissingUtc.Designer.cs" />
+	  <Compile Remove="Migrations\20191114144123_RemovedLegacyData.cs" />
+	  <Compile Remove="Migrations\20191114144123_RemovedLegacyData.Designer.cs" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="AutoMapper" Version="8.1.1" />

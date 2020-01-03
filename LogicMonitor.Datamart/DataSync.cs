@@ -56,11 +56,12 @@ namespace LogicMonitor.Datamart
 					.Select(ds => ds.Id)
 					.ToList();
 
-				// Get the database instances for those datasources
+				// Get the database instances for those DataSources, excluding ones where LastWentMissingUtc is set
 				var databaseDeviceDataSourceInstances = await context
 					.DeviceDataSourceInstances
 					.Where(ddsi =>
-						ddsi.DataSourceId.HasValue
+						ddsi.LastWentMissingUtc == null
+						&& ddsi.DataSourceId.HasValue
 						&& dataSourceIds.Contains(ddsi.DataSourceId.Value)
 					)
 					// To make debugging a little more deterministic, order by the Device and then its instances
@@ -206,7 +207,7 @@ namespace LogicMonitor.Datamart
 								// If we've genuinely done nothing, then log it so terminating after this is shown to be intentional
 								if (blockIndex == 0)
 								{
-									logger.LogDebug("Nothing to do.");
+									logger.LogDebug($"BlockIndex is 0, nothing to do for batch {batchIndex + 1}.");
 								}
 								break;
 							}
@@ -267,7 +268,7 @@ namespace LogicMonitor.Datamart
 												var data = instanceFetchDataResponse.Timestamps.Zip(
 													instanceFetchDataResponse.DataValues.Select(v => v[dataPointIndex]),
 													(timeStampMs, value)
-														=> new DeviceDataSourceInstanceDataStoreItem
+														=> new
 														{
 															DateTime = DateTimeOffset.FromUnixTimeMilliseconds(timeStampMs).UtcDateTime,
 															DataPointName = dataPointModel.Name,
@@ -324,6 +325,8 @@ namespace LogicMonitor.Datamart
 											{
 												await AggregationWriter.WriteAggregations(
 													sqlConnection,
+													configuration.SqlCommandTimeoutSeconds,
+													configuration.SqlBulkCopyTimeoutSeconds,
 													deviceDataSourceInstanceIdAsInt,
 													blockToWrite.Key,
 													blockToWrite,
@@ -334,6 +337,7 @@ namespace LogicMonitor.Datamart
 										{
 											await AggregationWriter.WriteProgressBoundaryAsync(
 												sqlConnection,
+												configuration.SqlCommandTimeoutSeconds,
 												deviceDataSourceInstanceIdAsInt,
 												blockEnd.UtcDateTime,
 												null);
