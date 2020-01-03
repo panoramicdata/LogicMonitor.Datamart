@@ -91,46 +91,64 @@ namespace LogicMonitor.Datamart
 			_logger = loggerFactory.CreateLogger<DatamartClient>();
 		}
 
-		public async Task<bool> IsDatabaseCreatedAsync()
+		public async Task<bool> IsDatabaseCreatedAsync(CancellationToken cancellationToken = default)
 		{
 			using (var context = new Context(DbContextOptions))
 			{
-				return await context.Database.GetService<IRelationalDatabaseCreator>().ExistsAsync().ConfigureAwait(false);
+				return await context
+					.Database
+					.GetService<IRelationalDatabaseCreator>()
+					.ExistsAsync(cancellationToken)
+					.ConfigureAwait(false);
 			}
 		}
 
-		public async Task<bool> IsDatabaseSchemaUpToDateAsync()
+		public async Task<bool> IsDatabaseSchemaUpToDateAsync(CancellationToken cancellationToken = default)
 		{
 			using (var context = new Context(DbContextOptions))
 			{
-				var exists = await context.Database.GetService<IRelationalDatabaseCreator>().ExistsAsync().ConfigureAwait(false);
+				var exists = await context
+					.Database
+					.GetService<IRelationalDatabaseCreator>()
+					.ExistsAsync(cancellationToken)
+					.ConfigureAwait(false);
 				if (!exists)
 				{
 					return false;
 				}
 
-				var isMigrationNeeded = (await context.Database.GetPendingMigrationsAsync().ConfigureAwait(false)).Any();
-				return !isMigrationNeeded;
+				var pendingMigrations = await context
+					.Database
+					.GetPendingMigrationsAsync(cancellationToken)
+					.ConfigureAwait(false);
+
+				return !pendingMigrations.Any();
 			}
 		}
 
-		public async Task EnsureDatabaseCreatedAndSchemaUpdatedAsync()
+		public async Task EnsureDatabaseCreatedAndSchemaUpdatedAsync(CancellationToken cancellationToken = default)
 		{
 			using (var context = new Context(DbContextOptions))
 			{
 				_logger.LogInformation($"Applying migrations as appropriate to database...");
-				await context.Database.MigrateAsync().ConfigureAwait(false);
+				await context
+					.Database
+					.MigrateAsync(cancellationToken)
+					.ConfigureAwait(false);
 				_logger.LogInformation("Migrations up to date.");
 			}
 		}
 
-		public async Task EnsureDatabaseDeletedAsync()
+		public async Task EnsureDatabaseDeletedAsync(CancellationToken cancellationToken = default)
 		{
 			using (var context = new Context(DbContextOptions))
 			{
 				var dbConnection = context.Database.GetDbConnection();
 				_logger.LogInformation($"Deleting database {dbConnection.Database} on {dbConnection.DataSource}...");
-				await context.Database.EnsureDeletedAsync().ConfigureAwait(false);
+				await context
+					.Database
+					.EnsureDeletedAsync(cancellationToken)
+					.ConfigureAwait(false);
 				_logger.LogInformation($"Deleted database {dbConnection.Database} on {dbConnection.DataSource}...");
 			}
 		}
