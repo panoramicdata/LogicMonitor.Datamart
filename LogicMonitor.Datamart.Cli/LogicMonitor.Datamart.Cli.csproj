@@ -2,17 +2,17 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFramework>netcoreapp2.2</TargetFramework>
+		<TargetFramework>netcoreapp3.1</TargetFramework>
 		<CodeAnalysisRuleSet>..\Rosylnator.ruleset</CodeAnalysisRuleSet>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.2.6">
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="3.1.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.0.0" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="2.2.6" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.0" />
 		<PackageReference Include="Nerdbank.GitVersioning" />
 	</ItemGroup>
 

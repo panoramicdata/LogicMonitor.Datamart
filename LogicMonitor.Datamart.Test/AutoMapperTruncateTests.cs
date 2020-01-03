@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using AutoMapper.Configuration;
 using LogicMonitor.Api.Alerts;
 using LogicMonitor.Datamart.Models;
 using Xunit;
@@ -14,7 +15,12 @@ namespace LogicMonitor.Datamart.Test
 		}
 
 		[Fact]
-		public void Test() => Mapper.Configuration.AssertConfigurationIsValid();
+		public void Test()
+		{
+			var config = new MapperConfigurationExpression();
+			Mapper.Initialize(config);
+			Mapper.Configuration.AssertConfigurationIsValid();
+		}
 
 		[Fact]
 		public void ResolveAndTruncate_LongValue_TruncatedValue()
