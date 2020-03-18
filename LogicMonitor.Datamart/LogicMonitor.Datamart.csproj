@@ -10,7 +10,7 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor Datamart</PackageTags>
 		<PackageReleaseNotes>
-			New configuration options SqlCommandTimeoutSeconds and SqlBulkCopyTimeoutSeconds defaulting to 600 seconds (10 minutes)
+			Updated LogicMonitor.Api nuget package to 132.0
 		</PackageReleaseNotes>
 	</PropertyGroup>
 
