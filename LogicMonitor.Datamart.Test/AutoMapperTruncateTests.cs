@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using LogicMonitor.Api.Alerts;
+using LogicMonitor.Datamart.Mapping;
 using LogicMonitor.Datamart.Models;
 using Xunit;
 using Xunit.Abstractions;
@@ -14,7 +15,26 @@ namespace LogicMonitor.Datamart.Test
 		}
 
 		[Fact]
-		public void Test() => Mapper.Configuration.AssertConfigurationIsValid();
+		public void Test()
+		{
+			Mapper.Initialize(x =>
+			{
+				x.AddProfile<AlertProfile>();
+				x.AddProfile<AlertRuleProfile>();
+				x.AddProfile<CollectorGroupProfile>();
+				x.AddProfile<CollectorProfile>();
+				x.AddProfile<ConfigSourceProfile>();
+				x.AddProfile<DataSourceProfile>();
+				x.AddProfile<DeviceDataSourceInstanceProfile>();
+				x.AddProfile<DeviceDataSourceProfile>();
+				x.AddProfile<DeviceProfile>();
+				x.AddProfile<EscalationChainProfile>();
+				x.AddProfile<EventSourceProfile>();
+				x.AddProfile<WebsiteGroupProfile>();
+				x.AddProfile<WebsiteProfile>();
+			});
+			Mapper.Configuration.AssertConfigurationIsValid();
+		}
 
 		[Fact]
 		public void ResolveAndTruncate_LongValue_TruncatedValue()

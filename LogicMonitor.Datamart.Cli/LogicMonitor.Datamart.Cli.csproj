@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFramework>netcoreapp2.2</TargetFramework>
+		<TargetFramework>netcoreapp3.1</TargetFramework>
 		<CodeAnalysisRuleSet>..\Rosylnator.ruleset</CodeAnalysisRuleSet>
 	</PropertyGroup>
 
@@ -22,7 +22,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Update="Nerdbank.GitVersioning" Version="3.0.26">
+	  <PackageReference Update="Nerdbank.GitVersioning" Version="3.1.71">
 	    <PrivateAssets>all</PrivateAssets>
 	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	  </PackageReference>
