@@ -33,7 +33,7 @@
 		<PackageReference Include="Nerdbank.GitVersioning" />
 	</ItemGroup>
 	<ItemGroup>
-		<None Remove="Icon.png" />
+		<None Include="Icon.png" Pack="true" PackagePath="" />
 	</ItemGroup>
 	<ItemGroup>
 	  <PackageReference Update="Nerdbank.GitVersioning" Version="3.1.71">
