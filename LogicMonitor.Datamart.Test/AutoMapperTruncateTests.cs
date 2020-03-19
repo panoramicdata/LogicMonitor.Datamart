@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using AutoMapper.Configuration;
 using LogicMonitor.Api.Alerts;
+using LogicMonitor.Datamart.Mapping;
 using LogicMonitor.Datamart.Models;
 using Xunit;
 using Xunit.Abstractions;
