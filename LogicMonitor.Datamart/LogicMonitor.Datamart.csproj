@@ -5,7 +5,8 @@
 		<CodeAnalysisRuleSet>..\Rosylnator.ruleset</CodeAnalysisRuleSet>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<Authors>Panoramic Data Limited</Authors>
-		<Copyright>Copyright © Panoramic Data Limited 2019</Copyright>
+		<Copyright>Copyright © Panoramic Data Limited 2020</Copyright>
+		<PackageIcon>Icon.png</PackageIcon>
 		<Description>LogicMonitor Datamart</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor Datamart</PackageTags>
@@ -31,7 +32,9 @@
 		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="2.2.0" />
 		<PackageReference Include="Nerdbank.GitVersioning" />
 	</ItemGroup>
-
+	<ItemGroup>
+		<None Remove="Icon.png" />
+	</ItemGroup>
 	<ItemGroup>
 	  <PackageReference Update="Nerdbank.GitVersioning" Version="3.1.71">
 	    <PrivateAssets>all</PrivateAssets>
