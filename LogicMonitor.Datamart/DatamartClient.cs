@@ -10,6 +10,7 @@ using LogicMonitor.Datamart.Config;
 using LogicMonitor.Datamart.Extensions;
 using LogicMonitor.Datamart.Mapping;
 using LogicMonitor.Datamart.Models;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -17,7 +18,6 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
-using System.Data.SqlClient;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -70,6 +70,10 @@ namespace LogicMonitor.Datamart
 						}.ConnectionString,
 						opts => opts.CommandTimeout(configuration.SqlCommandTimeoutSeconds)
 						);
+					break;
+				case DatabaseType.Postgres:
+					//dbContextOptionsBuilder
+					//.UseNpgsqlWithRetryStrategy("");
 					break;
 				case DatabaseType.InMemory:
 					dbContextOptionsBuilder
@@ -198,7 +202,7 @@ namespace LogicMonitor.Datamart
 					throw new NotSupportedException("Only SQL Server types support SQL queries.");
 				}
 				return await Task.FromResult(GetDbSet<T>(context)
-					.FromSql(sql)
+					.FromSqlRaw(sql)
 					.ToList()).ConfigureAwait(false);
 			}
 		}

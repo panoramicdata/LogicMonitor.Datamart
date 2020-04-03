@@ -53,6 +53,16 @@ namespace LogicMonitor.Datamart.Config
 		public string DatabaseName { get; set; }
 
 		/// <summary>
+		/// Optional database username for providers that utilise it
+		/// </summary>
+		public string DatabaseUsername { get; set; }
+
+		/// <summary>
+		/// Optional database password for providers that utilise it
+		/// </summary>
+		public string DatabasePassword { get; set; }
+
+		/// <summary>
 		/// The number of seconds to wait for SqlCommands to timeout
 		/// </summary>
 		public int SqlCommandTimeoutSeconds { get; set; } = 600;
