@@ -11,16 +11,9 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor Datamart</PackageTags>
 		<PackageReleaseNotes>
-			Updated LogicMonitor.Api nuget package to 132.0
+			Updated to support postgres database targets for the Datamart
 		</PackageReleaseNotes>
 	</PropertyGroup>
-
-	<ItemGroup>
-	  <Compile Remove="Migrations\20191114131728_AddLastWentMissingUtc.cs" />
-	  <Compile Remove="Migrations\20191114131728_AddLastWentMissingUtc.Designer.cs" />
-	  <Compile Remove="Migrations\20191114144123_RemovedLegacyData.cs" />
-	  <Compile Remove="Migrations\20191114144123_RemovedLegacyData.Designer.cs" />
-	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="AutoMapper" Version="8.1.1" />
