@@ -35,14 +35,14 @@ namespace LogicMonitor.Datamart.Models
 		[MaxLength(50)]
 		public string AlertRuleName { get; set; }
 
-		public int AlertRuleId { get; set; }
+		public int? AlertRuleId { get; set; }
 
 		[MaxLength(50)]
 		public string AlertEscalationChainName { get; set; }
 
-		public int AlertEscalationChainId { get; set; }
+		public int? AlertEscalationChainId { get; set; }
 
-		public int AlertEscalationSubChainId { get; set; }
+		public int? AlertEscalationSubChainId { get; set; }
 
 		public int NextRecipient { get; set; }
 

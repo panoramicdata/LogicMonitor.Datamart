@@ -29,6 +29,17 @@ namespace LogicMonitor.Datamart.Mapping
 					.ForMember(dest => dest.DatamartCreatedUtc, opts => opts.Ignore())
 					.ForMember(dest => dest.DatamartLastModifiedUtc, opts => opts.Ignore())
 
+					// The following can come in as 0, which means unassigned
+					.ForMember(
+						dest => dest.AlertRuleId,
+						opts => opts.MapFrom(src => src.AlertRuleId == 0 ? (int?)null : src.AlertRuleId))
+					.ForMember(
+						dest => dest.AlertEscalationChainId,
+						opts => opts.MapFrom(src => src.AlertEscalationChainId == 0 ? (int?)null : src.AlertEscalationChainId))
+					.ForMember(
+						dest => dest.AlertEscalationSubChainId,
+						opts => opts.MapFrom(src => src.AlertEscalationSubChainId == 0 ? (int?)null : src.AlertEscalationSubChainId))
+
 					// Manually set afterwards
 					.ForMember(dest => dest.MonitorObjectGroup0Id, opts => opts.Ignore())
 					.ForMember(dest => dest.MonitorObjectGroup1Id, opts => opts.Ignore())

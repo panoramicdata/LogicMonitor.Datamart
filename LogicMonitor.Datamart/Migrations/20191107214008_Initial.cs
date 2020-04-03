@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using System;
 
 namespace LogicMonitor.Datamart.Migrations
@@ -13,7 +14,7 @@ namespace LogicMonitor.Datamart.Migrations
 				 columns: table => new
 				 {
 					 DatamartId = table.Column<int>(nullable: false)
-							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn).Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
 					 DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
 					 DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
 					 Id = table.Column<int>(nullable: false),
@@ -40,7 +41,7 @@ namespace LogicMonitor.Datamart.Migrations
 				 columns: table => new
 				 {
 					 DatamartId = table.Column<int>(nullable: false)
-							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn).Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
 					 DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
 					 DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
 					 Id = table.Column<int>(nullable: false),
@@ -60,7 +61,7 @@ namespace LogicMonitor.Datamart.Migrations
 				 columns: table => new
 				 {
 					 DatamartId = table.Column<int>(nullable: false)
-							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn).Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
 					 DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
 					 DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
 					 Id = table.Column<int>(nullable: false),
@@ -74,7 +75,7 @@ namespace LogicMonitor.Datamart.Migrations
 				 columns: table => new
 				 {
 					 DatamartId = table.Column<int>(nullable: false)
-							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn).Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
 					 DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
 					 DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
 					 Id = table.Column<int>(nullable: false),
@@ -92,7 +93,7 @@ namespace LogicMonitor.Datamart.Migrations
 				 columns: table => new
 				 {
 					 DatamartId = table.Column<int>(nullable: false)
-							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn).Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
 					 DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
 					 DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
 					 Id = table.Column<int>(nullable: false),
@@ -143,7 +144,7 @@ namespace LogicMonitor.Datamart.Migrations
 				 columns: table => new
 				 {
 					 DatamartId = table.Column<int>(nullable: false)
-							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn).Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
 					 DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
 					 DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
 					 Id = table.Column<int>(nullable: false),
@@ -203,7 +204,7 @@ namespace LogicMonitor.Datamart.Migrations
 				 columns: table => new
 				 {
 					 DatamartId = table.Column<int>(nullable: false)
-							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn).Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
 					 DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
 					 DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
 					 Id = table.Column<int>(nullable: false),
@@ -221,7 +222,7 @@ namespace LogicMonitor.Datamart.Migrations
 				 columns: table => new
 				 {
 					 DatamartId = table.Column<int>(nullable: false)
-							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn).Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
 					 DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
 					 DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
 					 Id = table.Column<int>(nullable: false),
@@ -235,7 +236,7 @@ namespace LogicMonitor.Datamart.Migrations
 				 columns: table => new
 				 {
 					 DatamartId = table.Column<int>(nullable: false)
-							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn).Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
 					 DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
 					 DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
 					 Id = table.Column<string>(maxLength: 50, nullable: true),
@@ -252,7 +253,7 @@ namespace LogicMonitor.Datamart.Migrations
 				 columns: table => new
 				 {
 					 DatamartId = table.Column<int>(nullable: false)
-							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn).Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
 					 DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
 					 DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
 					 FullPath = table.Column<string>(maxLength: 200, nullable: true),
@@ -265,7 +266,7 @@ namespace LogicMonitor.Datamart.Migrations
 				 columns: table => new
 				 {
 					 DatamartId = table.Column<int>(nullable: false)
-							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn).Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
 					 DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
 					 DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
 					 Id = table.Column<int>(nullable: false),
@@ -297,7 +298,7 @@ namespace LogicMonitor.Datamart.Migrations
 				 columns: table => new
 				 {
 					 DatamartId = table.Column<int>(nullable: false)
-							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn).Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
 					 DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
 					 DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
 					 Id = table.Column<int>(nullable: false),
@@ -379,7 +380,7 @@ namespace LogicMonitor.Datamart.Migrations
 				 columns: table => new
 				 {
 					 DatamartId = table.Column<int>(nullable: false)
-							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn).Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
 					 DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
 					 DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
 					 Id = table.Column<int>(nullable: false),
@@ -404,7 +405,7 @@ namespace LogicMonitor.Datamart.Migrations
 				 columns: table => new
 				 {
 					 DatamartId = table.Column<int>(nullable: false)
-							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn).Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
 					 DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
 					 DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
 					 Id = table.Column<int>(nullable: false),
@@ -448,7 +449,7 @@ namespace LogicMonitor.Datamart.Migrations
 				 columns: table => new
 				 {
 					 DatamartId = table.Column<int>(nullable: false)
-							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn).Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
 					 DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
 					 DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
 					 Id = table.Column<string>(maxLength: 20, nullable: true),
@@ -579,7 +580,7 @@ namespace LogicMonitor.Datamart.Migrations
 				 columns: table => new
 				 {
 					 DatamartId = table.Column<int>(nullable: false)
-							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn).Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
 					 DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
 					 DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
 					 Id = table.Column<int>(nullable: false),
@@ -635,7 +636,7 @@ namespace LogicMonitor.Datamart.Migrations
 				 columns: table => new
 				 {
 					 DatamartId = table.Column<int>(nullable: false)
-							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn).Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
 					 DatamartCreatedUtc = table.Column<DateTime>(nullable: false),
 					 DatamartLastModifiedUtc = table.Column<DateTime>(nullable: false),
 					 Id = table.Column<int>(nullable: false),
@@ -684,7 +685,7 @@ namespace LogicMonitor.Datamart.Migrations
 				 columns: table => new
 				 {
 					 Id = table.Column<int>(nullable: false)
-							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+							.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn).Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
 					 DateTime = table.Column<DateTime>(nullable: false),
 					 DeviceDataSourceInstanceId = table.Column<int>(nullable: false),
 					 DataPointName = table.Column<string>(nullable: true),
@@ -845,7 +846,9 @@ namespace LogicMonitor.Datamart.Migrations
 				 name: "IX_Alerts_FasterPercentageAvailability",
 				 table: "Alerts",
 				 columns: new[] { "StartOnSeconds", "EndOnSeconds", "IsCleared", "InScheduledDownTime", "MonitorObjectGroup0Id", "MonitorObjectGroup1Id", "MonitorObjectGroup2Id", "MonitorObjectGroup3Id", "MonitorObjectGroup4Id", "MonitorObjectGroup5Id", "MonitorObjectGroup6Id", "MonitorObjectGroup7Id", "MonitorObjectGroup8Id", "MonitorObjectGroup9Id" })
-				 .Annotation("SqlServer:Include", new[] { "Id", "Severity", "ClearValue", "MonitorObjectId", "ResourceTemplateName", "InstanceId", "InstanceName" });
+				 .Annotation("SqlServer:Include", new[] { "Id", "Severity", "ClearValue", "MonitorObjectId", "ResourceTemplateName", "InstanceId", "InstanceName" })
+				 .Annotation("Npgsql:Include", new[] { "Id", "Severity", "ClearValue", "MonitorObjectId", "ResourceTemplateName", "InstanceId", "InstanceName" })
+				 ;
 
 			migrationBuilder.CreateIndex(
 				 name: "IX_Collectors_GroupId",

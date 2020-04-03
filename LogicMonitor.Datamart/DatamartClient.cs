@@ -32,6 +32,8 @@ namespace LogicMonitor.Datamart
 
 		internal const string LogicMonitorCredentialNullMessage = "Either the configuration or some aspect of the LogicMonitorCredential is null";
 
+		private const string ConnectionStringApplicationName = "LogicMonitor.Datamart";
+
 		private readonly ILoggerFactory _loggerFactory;
 		private readonly ILogger _logger;
 
@@ -66,14 +68,25 @@ namespace LogicMonitor.Datamart
 					dbContextOptionsBuilder
 						.UseSqlServer(new DbConnectionStringBuilder
 						{
-							ConnectionString = $"server={configuration.DatabaseServerName};database={configuration.DatabaseName};Trusted_Connection=True;Application Name=LogicMonitor.Datamart"
+							ConnectionString =
+							$"server={configuration.DatabaseServerName};" +
+							$"database={configuration.DatabaseName};" +
+							"Trusted_Connection=True;" +
+							$"Application Name={ConnectionStringApplicationName}"
 						}.ConnectionString,
 						opts => opts.CommandTimeout(configuration.SqlCommandTimeoutSeconds)
 						);
 					break;
 				case DatabaseType.Postgres:
-					//dbContextOptionsBuilder
-					//.UseNpgsqlWithRetryStrategy("");
+					dbContextOptionsBuilder
+						.UseNpgsql(
+							$"Host={configuration.DatabaseServerName};" +
+							$"Database={configuration.DatabaseName};" +
+							$"Username={configuration.DatabaseUsername};" +
+							$"Password={configuration.DatabasePassword};" +
+							$"ApplicationName={ConnectionStringApplicationName}",
+							npgsqlOptions => npgsqlOptions.EnableRetryOnFailure(50)
+						);
 					break;
 				case DatabaseType.InMemory:
 					dbContextOptionsBuilder
