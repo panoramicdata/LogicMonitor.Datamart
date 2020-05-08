@@ -37,7 +37,7 @@ namespace LogicMonitor.Datamart
 				// Truncate the table
 				await context
 					.Database
-					.ExecuteSqlCommandAsync("TRUNCATE TABLE [Alerts]", cancellationToken)
+					.ExecuteSqlRawAsync("TRUNCATE TABLE [Alerts]", cancellationToken)
 					.ConfigureAwait(false);
 			}
 		}
@@ -361,7 +361,7 @@ namespace LogicMonitor.Datamart
 				var sql = "ALTER INDEX IX_Alerts_" + column + " ON [Alerts] " + indexAction;
 				await context
 			  .Database
-			  .ExecuteSqlCommandAsync(sql)
+			  .ExecuteSqlRawAsync(sql)
 #pragma warning restore EF1000 // Possible SQL injection vulnerability.
 			  .ConfigureAwait(false);
 			}
@@ -386,12 +386,13 @@ namespace LogicMonitor.Datamart
 						n => Logger.LogDebug($"Bulk inserted {(int)(n * alertStoreItems.Count)}/{alertStoreItems.Count}"))
 						.ConfigureAwait(false);
 					break;
+				case DatabaseType.Postgres:
 				case DatabaseType.InMemory:
 					context.Alerts.AddRange(alertStoreItems);
 					await context.SaveChangesAsync().ConfigureAwait(false);
 					break;
 				default:
-					break;
+					throw new NotSupportedException($"The Database type {_datamartClient.DatabaseType} is not supported for bulk inserts");
 			}
 			Logger.LogInformation($"Bulk inserted {alertStoreItems.Count} alerts; complete after {stopwatch.Elapsed.TotalSeconds:N1}s");
 		}

@@ -1,10 +1,10 @@
 ﻿using LogicMonitor.Datamart.Models;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,7 +16,7 @@ namespace LogicMonitor.Datamart
 		internal static string TableNamePrefix = "DeviceDataSourceInstanceAggregatedData";
 
 		public static string GetTableName(DateTimeOffset start)
-			=> $"{TableNamePrefix}_{start.UtcDateTime.ToString("yyyyMMdd")}";
+			=> $"{TableNamePrefix}_{start.UtcDateTime:yyyyMMdd}";
 
 		/// <summary>
 		/// Create a new aggregation table for a new day
@@ -74,7 +74,7 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 				logger.LogDebug($"Dropping table {tableName}");
 				var tableCreationSql = "DROP TABLE [" + tableName + "]";
 #pragma warning disable EF1000 // Possible SQL injection vulnerability. - No externally provided data
-				await dbContext.Database.ExecuteSqlCommandAsync(tableCreationSql).ConfigureAwait(false);
+				await dbContext.Database.ExecuteSqlRawAsync(tableCreationSql).ConfigureAwait(false);
 #pragma warning restore EF1000 // Possible SQL injection vulnerability.
 			}
 		}

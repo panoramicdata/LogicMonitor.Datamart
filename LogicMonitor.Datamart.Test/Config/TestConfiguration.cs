@@ -22,5 +22,11 @@
 		/// DatabaseName
 		/// </summary>
 		public string DatabaseName { get; set; }
+
+		public DatabaseType DatabaseType { get; set; }
+
+		public string DatabaseUsername { get; set; }
+
+		public string DatabasePassword { get; set; }
 	}
 }

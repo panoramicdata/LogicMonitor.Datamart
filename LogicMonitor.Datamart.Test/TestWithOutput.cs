@@ -83,9 +83,11 @@ namespace LogicMonitor.Datamart.Test
 				AccessId = logicMonitorCredentials.AccessId,
 				AccessKey = logicMonitorCredentials.AccessKey,
 			};
-			Configuration.DatabaseType = DatabaseType.SqlServer;
+			Configuration.DatabaseType = configuration.DatabaseType;
 			Configuration.DatabaseServerName = configuration.DatabaseServer;
 			Configuration.DatabaseName = configuration.DatabaseName;
+			Configuration.DatabaseUsername = configuration.DatabaseUsername;
+			Configuration.DatabasePassword = configuration.DatabasePassword;
 			DatamartClient = new DatamartClient(
 				Configuration,
 				loggerFactory);

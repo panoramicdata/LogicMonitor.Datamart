@@ -10,6 +10,7 @@ using LogicMonitor.Datamart.Config;
 using LogicMonitor.Datamart.Extensions;
 using LogicMonitor.Datamart.Mapping;
 using LogicMonitor.Datamart.Models;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -17,7 +18,6 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
-using System.Data.SqlClient;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,6 +31,8 @@ namespace LogicMonitor.Datamart
 		internal DatabaseType DatabaseType => _configuration.DatabaseType;
 
 		internal const string LogicMonitorCredentialNullMessage = "Either the configuration or some aspect of the LogicMonitorCredential is null";
+
+		private const string ConnectionStringApplicationName = "LogicMonitor.Datamart";
 
 		private readonly ILoggerFactory _loggerFactory;
 		private readonly ILogger _logger;
@@ -66,9 +68,24 @@ namespace LogicMonitor.Datamart
 					dbContextOptionsBuilder
 						.UseSqlServer(new DbConnectionStringBuilder
 						{
-							ConnectionString = $"server={configuration.DatabaseServerName};database={configuration.DatabaseName};Trusted_Connection=True;Application Name=LogicMonitor.Datamart"
+							ConnectionString =
+							$"server={configuration.DatabaseServerName};" +
+							$"database={configuration.DatabaseName};" +
+							"Trusted_Connection=True;" +
+							$"Application Name={ConnectionStringApplicationName}"
 						}.ConnectionString,
 						opts => opts.CommandTimeout(configuration.SqlCommandTimeoutSeconds)
+						);
+					break;
+				case DatabaseType.Postgres:
+					dbContextOptionsBuilder
+						.UseNpgsql(
+							$"Host={configuration.DatabaseServerName};" +
+							$"Database={configuration.DatabaseName};" +
+							$"Username={configuration.DatabaseUsername};" +
+							$"Password={configuration.DatabasePassword};" +
+							$"ApplicationName={ConnectionStringApplicationName}",
+							npgsqlOptions => npgsqlOptions.EnableRetryOnFailure(50)
 						);
 					break;
 				case DatabaseType.InMemory:
@@ -91,46 +108,64 @@ namespace LogicMonitor.Datamart
 			_logger = loggerFactory.CreateLogger<DatamartClient>();
 		}
 
-		public async Task<bool> IsDatabaseCreatedAsync()
+		public async Task<bool> IsDatabaseCreatedAsync(CancellationToken cancellationToken = default)
 		{
 			using (var context = new Context(DbContextOptions))
 			{
-				return await context.Database.GetService<IRelationalDatabaseCreator>().ExistsAsync().ConfigureAwait(false);
+				return await context
+					.Database
+					.GetService<IRelationalDatabaseCreator>()
+					.ExistsAsync(cancellationToken)
+					.ConfigureAwait(false);
 			}
 		}
 
-		public async Task<bool> IsDatabaseSchemaUpToDateAsync()
+		public async Task<bool> IsDatabaseSchemaUpToDateAsync(CancellationToken cancellationToken = default)
 		{
 			using (var context = new Context(DbContextOptions))
 			{
-				var exists = await context.Database.GetService<IRelationalDatabaseCreator>().ExistsAsync().ConfigureAwait(false);
+				var exists = await context
+					.Database
+					.GetService<IRelationalDatabaseCreator>()
+					.ExistsAsync(cancellationToken)
+					.ConfigureAwait(false);
 				if (!exists)
 				{
 					return false;
 				}
 
-				var isMigrationNeeded = (await context.Database.GetPendingMigrationsAsync().ConfigureAwait(false)).Any();
-				return !isMigrationNeeded;
+				var pendingMigrations = await context
+					.Database
+					.GetPendingMigrationsAsync(cancellationToken)
+					.ConfigureAwait(false);
+
+				return !pendingMigrations.Any();
 			}
 		}
 
-		public async Task EnsureDatabaseCreatedAndSchemaUpdatedAsync()
+		public async Task EnsureDatabaseCreatedAndSchemaUpdatedAsync(CancellationToken cancellationToken = default)
 		{
 			using (var context = new Context(DbContextOptions))
 			{
 				_logger.LogInformation($"Applying migrations as appropriate to database...");
-				await context.Database.MigrateAsync().ConfigureAwait(false);
+				await context
+					.Database
+					.MigrateAsync(cancellationToken)
+					.ConfigureAwait(false);
 				_logger.LogInformation("Migrations up to date.");
 			}
 		}
 
-		public async Task EnsureDatabaseDeletedAsync()
+		public async Task EnsureDatabaseDeletedAsync(CancellationToken cancellationToken = default)
 		{
 			using (var context = new Context(DbContextOptions))
 			{
 				var dbConnection = context.Database.GetDbConnection();
 				_logger.LogInformation($"Deleting database {dbConnection.Database} on {dbConnection.DataSource}...");
-				await context.Database.EnsureDeletedAsync().ConfigureAwait(false);
+				await context
+					.Database
+					.EnsureDeletedAsync(cancellationToken)
+					.ConfigureAwait(false);
 				_logger.LogInformation($"Deleted database {dbConnection.Database} on {dbConnection.DataSource}...");
 			}
 		}
@@ -180,7 +215,7 @@ namespace LogicMonitor.Datamart
 					throw new NotSupportedException("Only SQL Server types support SQL queries.");
 				}
 				return await Task.FromResult(GetDbSet<T>(context)
-					.FromSql(sql)
+					.FromSqlRaw(sql)
 					.ToList()).ConfigureAwait(false);
 			}
 		}

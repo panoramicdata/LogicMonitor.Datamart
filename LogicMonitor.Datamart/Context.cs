@@ -39,6 +39,8 @@ namespace LogicMonitor.Datamart
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
+			modelBuilder.UseIdentityByDefaultColumns();
+
 			// MonitorObjectGroup indexes
 			var monitorObjectGroups = modelBuilder.Entity<MonitorObjectGroupStoreItem>();
 			monitorObjectGroups.HasIndex(g => new { g.FullPath, g.MonitoredObjectType });
@@ -73,8 +75,8 @@ namespace LogicMonitor.Datamart
 			alerts.HasIndex(a => a.StartOnSeconds);
 			alerts.HasIndex(a => a.EndOnSeconds);
 
-			alerts
-				.ForSqlServerHasIndex(a => new
+			var alertIndexBuilder = alerts
+				.HasIndex(a => new
 				{
 					a.StartOnSeconds,
 					a.EndOnSeconds,
@@ -90,8 +92,11 @@ namespace LogicMonitor.Datamart
 					a.MonitorObjectGroup7Id,
 					a.MonitorObjectGroup8Id,
 					a.MonitorObjectGroup9Id,
-				})
-				.ForSqlServerInclude(a => new
+				});
+
+			if (Database.IsNpgsql())
+			{
+				NpgsqlIndexBuilderExtensions.IncludeProperties(alertIndexBuilder, a => new
 				{
 					a.Id,
 					a.Severity,
@@ -102,6 +107,22 @@ namespace LogicMonitor.Datamart
 					a.InstanceName,
 				})
 				.HasName($"IX_{nameof(Alerts)}_FasterPercentageAvailability");
+			}
+			if (Database.IsSqlServer())
+			{
+				SqlServerIndexBuilderExtensions.IncludeProperties(alertIndexBuilder, a => new
+				{
+					a.Id,
+					a.Severity,
+					a.ClearValue,
+					a.MonitorObjectId,
+					a.ResourceTemplateName,
+					a.InstanceId,
+					a.InstanceName,
+				})
+				.HasName($"IX_{nameof(Alerts)}_FasterPercentageAvailability")
+				;
+			}
 
 			// DeviceDataSourceInstance indexes
 			modelBuilder.Entity<DeviceDataSourceInstanceStoreItem>()
