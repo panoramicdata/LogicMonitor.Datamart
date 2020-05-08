@@ -39,7 +39,8 @@ namespace LogicMonitor.Datamart
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
-			modelBuilder.UseIdentityByDefaultColumns();
+			modelBuilder.ForNpgsqlUseIdentityByDefaultColumns();
+			modelBuilder.ForSqlServerUseIdentityColumns();
 
 			// MonitorObjectGroup indexes
 			var monitorObjectGroups = modelBuilder.Entity<MonitorObjectGroupStoreItem>();
@@ -96,29 +97,29 @@ namespace LogicMonitor.Datamart
 
 			if (Database.IsNpgsql())
 			{
-				NpgsqlIndexBuilderExtensions.IncludeProperties(alertIndexBuilder, a => new
+				alertIndexBuilder.ForNpgsqlInclude(new[]
 				{
-					a.Id,
-					a.Severity,
-					a.ClearValue,
-					a.MonitorObjectId,
-					a.ResourceTemplateName,
-					a.InstanceId,
-					a.InstanceName,
+					nameof(AlertStoreItem.Id),
+					nameof(AlertStoreItem.Severity),
+					nameof(AlertStoreItem.ClearValue),
+					nameof(AlertStoreItem.MonitorObjectId),
+					nameof(AlertStoreItem.ResourceTemplateName),
+					nameof(AlertStoreItem.InstanceId),
+					nameof(AlertStoreItem.InstanceName)
 				})
 				.HasName($"IX_{nameof(Alerts)}_FasterPercentageAvailability");
 			}
 			if (Database.IsSqlServer())
 			{
-				SqlServerIndexBuilderExtensions.IncludeProperties(alertIndexBuilder, a => new
+				alertIndexBuilder.ForSqlServerInclude(new[]
 				{
-					a.Id,
-					a.Severity,
-					a.ClearValue,
-					a.MonitorObjectId,
-					a.ResourceTemplateName,
-					a.InstanceId,
-					a.InstanceName,
+					nameof(AlertStoreItem.Id),
+					nameof(AlertStoreItem.Severity),
+					nameof(AlertStoreItem.ClearValue),
+					nameof(AlertStoreItem.MonitorObjectId),
+					nameof(AlertStoreItem.ResourceTemplateName),
+					nameof(AlertStoreItem.InstanceId),
+					nameof(AlertStoreItem.InstanceName)
 				})
 				.HasName($"IX_{nameof(Alerts)}_FasterPercentageAvailability")
 				;

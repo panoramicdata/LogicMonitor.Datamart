@@ -37,7 +37,7 @@ namespace LogicMonitor.Datamart
 				// Truncate the table
 				await context
 					.Database
-					.ExecuteSqlRawAsync("TRUNCATE TABLE [Alerts]", cancellationToken)
+					.ExecuteSqlCommandAsync("TRUNCATE TABLE [Alerts]", cancellationToken)
 					.ConfigureAwait(false);
 			}
 		}
@@ -89,136 +89,143 @@ namespace LogicMonitor.Datamart
 				{
 					foreach (var deviceId in databaseDeviceIds)
 					{
-						using (var context = new Context(_datamartClient.DbContextOptions))
+						try
 						{
-							// Get the device
-							var device = await context.Devices.SingleOrDefaultAsync(d => d.Id == deviceId).ConfigureAwait(false);
-
-							// Build up the list of alerts in memory, then delete the table contents and re-add.
-							alertsToBulkInsert.Clear();
-
-							stopwatch.Restart();
-							deviceIndex++;
-							Logger.LogDebug($"Retrieving datasource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName}");
-
-							// Get the  alerts
-
-							timeCursor = Math.Max(device.LastAlertClosedTimeSeconds, _startDateTimeUtc.ToUnixTimeSeconds());
-							var timeCursorLastTime = timeCursor;
-							deviceAlertCount = 0;
-							while (timeCursor <= nowSecondsSinceEpoch)
+							using (var context = new Context(_datamartClient.DbContextOptions))
 							{
-								var alertFilter = new Filter<Alert>
+								// Get the device
+								var device = await context.Devices.SingleOrDefaultAsync(d => d.Id == deviceId).ConfigureAwait(false);
+
+								// Build up the list of alerts in memory, then delete the table contents and re-add.
+								alertsToBulkInsert.Clear();
+
+								stopwatch.Restart();
+								deviceIndex++;
+								Logger.LogDebug($"Retrieving datasource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName}");
+
+								// Get the  alerts
+
+								timeCursor = Math.Max(device.LastAlertClosedTimeSeconds, _startDateTimeUtc.ToUnixTimeSeconds());
+								var timeCursorLastTime = timeCursor;
+								deviceAlertCount = 0;
+								while (timeCursor <= nowSecondsSinceEpoch)
 								{
-									FilterItems = new List<FilterItem<Alert>>
+									var alertFilter = new Filter<Alert>
+									{
+										FilterItems = new List<FilterItem<Alert>>
 							{
 								new Eq<Alert>(nameof(Alert.IsCleared), "*"),
 								new Gt<Alert>(nameof(Alert.EndOnSeconds), timeCursor),
 							},
-									Order = new Order<Alert>
+										Order = new Order<Alert>
+										{
+											Property = nameof(Alert.EndOnSeconds),
+											Direction = OrderDirection.Asc
+										},
+										Take = pageSize
+									};
+									var alertsThisTime = await _datamartClient.GetAllAsync(alertFilter, $"device/devices/{deviceId}/alerts", cancellationToken).ConfigureAwait(false);
+
+									deviceAlertCount += alertsThisTime.Count;
+
+									Logger.LogDebug($"Processing datasource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName}");
+									var dataProcessingStopwatch = Stopwatch.StartNew();
+
+									// A structure for reducing the alerts that came in so we only have 1 record per Id, the last one is the only one of interest
+									var reducedAlerts = new Dictionary<string, Alert>();
+									foreach (var networkAlert in alertsThisTime)
 									{
-										Property = nameof(Alert.EndOnSeconds),
-										Direction = OrderDirection.Asc
-									},
-									Take = pageSize
-								};
-								var alertsThisTime = await _datamartClient.GetAllAsync(alertFilter, $"device/devices/{deviceId}/alerts", cancellationToken).ConfigureAwait(false);
-
-								deviceAlertCount += alertsThisTime.Count;
-
-								Logger.LogDebug($"Processing datasource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName}");
-								var dataProcessingStopwatch = Stopwatch.StartNew();
-
-								// A structure for reducing the alerts that came in so we only have 1 record per Id, the last one is the only one of interest
-								var reducedAlerts = new Dictionary<string, Alert>();
-								foreach (var networkAlert in alertsThisTime)
-								{
-									reducedAlerts[networkAlert.Id] = networkAlert;
-								}
-
-								var sqlFetch = new Stopwatch();
-								var sqlSave = new Stopwatch();
-
-								// We either need to update an existing alert, or bulk insert this one
-								foreach (var networkAlert in reducedAlerts.Values)
-								{
-									sqlFetch.Start();
-									// Is it already in the database?
-									var databaseAlert = await context
-										.Alerts
-										.SingleOrDefaultAsync(asi => asi.Id == networkAlert.Id)
-										.ConfigureAwait(false);
-									sqlFetch.Stop();
-
-									if (databaseAlert == null)
-									{
-										// No.  We will bulk insert
-										var newStoreItem = DatamartClient.MapperInstance.Map<Alert, AlertStoreItem>(networkAlert);
-										var utcNow = DateTimeOffset.UtcNow;
-										newStoreItem.DatamartCreatedUtc = utcNow.UtcDateTime;
-										newStoreItem.DatamartLastModifiedUtc = utcNow.UtcDateTime;
-										await SetMonitorObjectGroupIdsAsync(monitorObjectGroupContext, networkAlert, newStoreItem, memoryCache).ConfigureAwait(false);
-										alertsToBulkInsert[networkAlert.Id] = newStoreItem;
-										updateAlertStats.New++;
+										reducedAlerts[networkAlert.Id] = networkAlert;
 									}
-									else
+
+									var sqlFetch = new Stopwatch();
+									var sqlSave = new Stopwatch();
+
+									// We either need to update an existing alert, or bulk insert this one
+									foreach (var networkAlert in reducedAlerts.Values)
 									{
-										// Yes. We update now with the fields that CAN change.
-										databaseAlert.AckComment = networkAlert.AckComment.Truncate(50);
-										databaseAlert.AckedBy = networkAlert.AckedBy.Truncate(50);
-										databaseAlert.AckedOnSeconds = networkAlert.AckedOnSeconds;
-										databaseAlert.ClearValue = networkAlert.ClearValue.Truncate(50);
-										databaseAlert.EndOnSeconds = networkAlert.EndOnSeconds;
-										databaseAlert.IsCleared = networkAlert.IsCleared;
-										sqlSave.Start();
-										await context
-											.SaveChangesAsync()
+										sqlFetch.Start();
+										// Is it already in the database?
+										var databaseAlert = await context
+											.Alerts
+											.SingleOrDefaultAsync(asi => asi.Id == networkAlert.Id)
 											.ConfigureAwait(false);
-										sqlSave.Stop();
-										updateAlertStats.Updated++;
+										sqlFetch.Stop();
+
+										if (databaseAlert == null)
+										{
+											// No.  We will bulk insert
+											var newStoreItem = DatamartClient.MapperInstance.Map<Alert, AlertStoreItem>(networkAlert);
+											var utcNow = DateTimeOffset.UtcNow;
+											newStoreItem.DatamartCreatedUtc = utcNow.UtcDateTime;
+											newStoreItem.DatamartLastModifiedUtc = utcNow.UtcDateTime;
+											await SetMonitorObjectGroupIdsAsync(monitorObjectGroupContext, networkAlert, newStoreItem, memoryCache).ConfigureAwait(false);
+											alertsToBulkInsert[networkAlert.Id] = newStoreItem;
+											updateAlertStats.New++;
+										}
+										else
+										{
+											// Yes. We update now with the fields that CAN change.
+											databaseAlert.AckComment = networkAlert.AckComment.Truncate(50);
+											databaseAlert.AckedBy = networkAlert.AckedBy.Truncate(50);
+											databaseAlert.AckedOnSeconds = networkAlert.AckedOnSeconds;
+											databaseAlert.ClearValue = networkAlert.ClearValue.Truncate(50);
+											databaseAlert.EndOnSeconds = networkAlert.EndOnSeconds;
+											databaseAlert.IsCleared = networkAlert.IsCleared;
+											sqlSave.Start();
+											await context
+												.SaveChangesAsync()
+												.ConfigureAwait(false);
+											sqlSave.Stop();
+											updateAlertStats.Updated++;
+										}
 									}
+									var message = $"Processed datasource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName}; {reducedAlerts.Count}(of {alertsThisTime.Count}) " +
+										$"get({sqlFetch.ElapsedMilliseconds:N0}ms) save({sqlSave.ElapsedMilliseconds:N0}ms) in {dataProcessingStopwatch.ElapsedMilliseconds:N0}ms " +
+										$"from {DateTimeOffset.FromUnixTimeSeconds(timeCursor).UtcDateTime}...)";
+									Logger.LogDebug(message);
+
+									// Update the timeCursor to point to the highest value observed in the data
+
+									if (alertsThisTime.Count > 0)
+									{
+										// The timeCursor should be at least as high as it was and if there are any later EndOnSeconds, we'll update to that. This will ignore the 0's coming back from OpenAlerts.
+										timeCursor = Math.Max(timeCursor, alertsThisTime.Max(a => a.EndOnSeconds));
+									}
+
+									if (alertsThisTime.Count < pageSize)
+									{
+										break;
+									}
+
+									// It's possible that there are more than the max buffer count of alerts in a single second.
+									// If this is the case, give up on that second and move to the next one.
+									if (timeCursor == timeCursorLastTime)
+									{
+										// BUG - There is an issue where if there are more than 300 open alerts, we never get any further, this just loops very slowly, increasing 1 second at a time - all the EndOnSeconds will be 0
+										timeCursor++;
+									}
+
+									timeCursorLastTime = timeCursor;
 								}
-								var message = $"Processed datasource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName}; {reducedAlerts.Count}(of {alertsThisTime.Count}) " +
-									$"get({sqlFetch.ElapsedMilliseconds:N0}ms) save({sqlSave.ElapsedMilliseconds:N0}ms) in {dataProcessingStopwatch.ElapsedMilliseconds:N0}ms " +
-									$"from {DateTimeOffset.FromUnixTimeSeconds(timeCursor).UtcDateTime}...)";
-								Logger.LogDebug(message);
 
-								// Update the timeCursor to point to the highest value observed in the data
-
-								if (alertsThisTime.Count > 0)
+								if (alertsToBulkInsert.Values.Count > 0)
 								{
-									// The timeCursor should be at least as high as it was and if there are any later EndOnSeconds, we'll update to that. This will ignore the 0's coming back from OpenAlerts.
-									timeCursor = Math.Max(timeCursor, alertsThisTime.Max(a => a.EndOnSeconds));
+									await BulkInsertAlertsAsync(context, alertsToBulkInsert.Values.ToList()).ConfigureAwait(false);
+									alertsToBulkInsert.Clear();
 								}
+								// Update the device
+								device.LastAlertClosedTimeSeconds = timeCursor;
+								await context
+									.SaveChangesAsync()
+									.ConfigureAwait(false);
 
-								if (alertsThisTime.Count < pageSize)
-								{
-									break;
-								}
-
-								// It's possible that there are more than the max buffer count of alerts in a single second.
-								// If this is the case, give up on that second and move to the next one.
-								if (timeCursor == timeCursorLastTime)
-								{
-									// BUG - There is an issue where if there are more than 300 open alerts, we never get any further, this just loops very slowly, increasing 1 second at a time - all the EndOnSeconds will be 0
-									timeCursor++;
-								}
-
-								timeCursorLastTime = timeCursor;
+								Logger.LogInformation($"Retrieved datasource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName} ({deviceIndex}/{databaseDeviceIds.Count}). Retrieved {deviceAlertCount} in {stopwatch.Elapsed.TotalSeconds:N1}s");
 							}
-
-							if (alertsToBulkInsert.Values.Count > 0)
-							{
-								await BulkInsertAlertsAsync(context, alertsToBulkInsert.Values.ToList()).ConfigureAwait(false);
-								alertsToBulkInsert.Clear();
-							}
-							// Update the device
-							device.LastAlertClosedTimeSeconds = timeCursor;
-							await context
-								.SaveChangesAsync()
-								.ConfigureAwait(false);
-
-							Logger.LogInformation($"Retrieved datasource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName} ({deviceIndex}/{databaseDeviceIds.Count}). Retrieved {deviceAlertCount} in {stopwatch.Elapsed.TotalSeconds:N1}s");
+						}
+						catch(Exception e)
+						{
+							Logger.LogWarning($"Failed to retrieve alerts for {_datamartClient.AccountName} : Id={deviceId} due to {e.Message}");
 						}
 					}
 				}
@@ -361,7 +368,7 @@ namespace LogicMonitor.Datamart
 				var sql = "ALTER INDEX IX_Alerts_" + column + " ON [Alerts] " + indexAction;
 				await context
 			  .Database
-			  .ExecuteSqlRawAsync(sql)
+			  .ExecuteSqlCommandAsync(sql)
 #pragma warning restore EF1000 // Possible SQL injection vulnerability.
 			  .ConfigureAwait(false);
 			}

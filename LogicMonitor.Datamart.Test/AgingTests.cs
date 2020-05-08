@@ -10,17 +10,15 @@ namespace LogicMonitor.Datamart.Test
 	{
 		public AgingTests(ITestOutputHelper iTestOutputHelper) : base(iTestOutputHelper) { }
 
+		// Age - retaining 5 days
 		[Fact]
 		public async void AgeData()
-		{
-			// Age - retaining 5 days
-			await new DataAging(
+			=> await new DataAging(
 					DatamartClient,
 					5,
 					LoggerFactory)
 				.ExecuteAsync(default)
 				.ConfigureAwait(false);
-		}
 
 		[Fact]
 		public void DetermineTablesToAge_GivenList_CorrectResult()
@@ -41,6 +39,7 @@ namespace LogicMonitor.Datamart.Test
 
 			var expectedResult = new List<string>
 			{
+				AggregationWriter.GetTableName(today.AddDays(-3)),
 				AggregationWriter.GetTableName(today.AddDays(-4)),
 				AggregationWriter.GetTableName(today.AddDays(-5)),
 				AggregationWriter.GetTableName(today.AddDays(-6))

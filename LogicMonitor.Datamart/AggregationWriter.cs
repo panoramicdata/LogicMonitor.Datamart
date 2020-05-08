@@ -74,7 +74,7 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 				logger.LogDebug($"Dropping table {tableName}");
 				var tableCreationSql = "DROP TABLE [" + tableName + "]";
 #pragma warning disable EF1000 // Possible SQL injection vulnerability. - No externally provided data
-				await dbContext.Database.ExecuteSqlRawAsync(tableCreationSql).ConfigureAwait(false);
+				await dbContext.Database.ExecuteSqlCommandAsync(tableCreationSql).ConfigureAwait(false);
 #pragma warning restore EF1000 // Possible SQL injection vulnerability.
 			}
 		}
@@ -97,7 +97,12 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 					connection.Open();
 					using (var command = connection.CreateCommand())
 					{
-						command.CommandText = $"select name from sys.Tables where name like '{TableNamePrefix}%' order by name";
+						command.CommandText =
+							dbContext.Database.IsSqlServer()
+								? $"SELECT name FROM sys.Tables WHERE name LIKE '{TableNamePrefix}%' ORDER BY name"
+							: dbContext.Database.IsNpgsql()
+								? $"SELECT table_name as name FROM information_schema.tables WHERE table_name LIKE '{TableNamePrefix}%' ORDER BY table_name"
+								: throw new NotSupportedException();
 						using (var reader = await command.ExecuteReaderAsync())
 						{
 							if (reader.HasRows)
