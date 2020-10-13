@@ -75,6 +75,9 @@ namespace LogicMonitor.Datamart.Mapping
 					dest => dest.ScriptType,
 					opts => opts.Ignore())
 				.ForMember(
+					dest => dest.SuppressDuplicates,
+					opts => opts.Ignore())
+				.ForMember(
 					dest => dest.Tags,
 					opts => opts.Ignore())
 				.ForMember(
