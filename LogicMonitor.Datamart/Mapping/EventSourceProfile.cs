@@ -42,6 +42,9 @@ namespace LogicMonitor.Datamart.Mapping
 					dest => dest.CheckIntervalSeconds,
 					opts => opts.Ignore())
 				.ForMember(
+					dest => dest.CheckSum,
+					opts => opts.Ignore())
+				.ForMember(
 					dest => dest.ClearAfterAcknowledgement,
 					opts => opts.Ignore())
 				.ForMember(
@@ -58,6 +61,9 @@ namespace LogicMonitor.Datamart.Mapping
 					opts => opts.Ignore())
 				.ForMember(
 					dest => dest.LinuxCommandLine,
+					opts => opts.Ignore())
+				.ForMember(
+					dest => dest.LineageId,
 					opts => opts.Ignore())
 				.ForMember(
 					dest => dest.LogFiles,
