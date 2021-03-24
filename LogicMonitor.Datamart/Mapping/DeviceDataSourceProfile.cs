@@ -41,7 +41,7 @@ namespace LogicMonitor.Datamart.Mapping
 					dest => dest.AlertStatusPriority,
 					opts => opts.Ignore())
 				.ForMember(
-					dest => dest.AlertingDisabledOnSeconds,
+					dest => dest.AlertingDisabledOn,
 					opts => opts.Ignore())
 				.ForMember(
 					dest => dest.CollectionMethod,
