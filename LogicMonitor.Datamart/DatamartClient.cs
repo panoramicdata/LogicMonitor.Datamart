@@ -363,6 +363,7 @@ namespace LogicMonitor.Datamart
 				var dbSet = action(context);
 
 				// Fetch the items from the LogicMonitor API
+				var lastObservedUtc = DateTime.UtcNow;
 				var apiItems = await GetAllAsync<TApi>(cancellationToken: cancellationToken)
 					.ConfigureAwait(false);
 				logger.LogDebug($"{typeof(TApi).Name}: Loaded {apiItems.Count} items.");
@@ -370,7 +371,7 @@ namespace LogicMonitor.Datamart
 				// Add/update all the items
 				foreach (var item in apiItems)
 				{
-					dbSet.AddOrUpdateIdentifiedItem(item, logger);
+					dbSet.AddOrUpdateIdentifiedItem(item, lastObservedUtc, logger);
 				}
 
 				// Calculate and log the stats

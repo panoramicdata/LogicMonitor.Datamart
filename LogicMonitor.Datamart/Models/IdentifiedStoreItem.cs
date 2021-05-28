@@ -1,3 +1,5 @@
+using System;
+
 namespace LogicMonitor.Datamart.Models
 {
 	public abstract class IdentifiedStoreItem : StoreItem
@@ -6,5 +8,10 @@ namespace LogicMonitor.Datamart.Models
 		/// The LogicMonitor Id
 		/// </summary>
 		public int Id { get; set; }
+
+		/// <summary>
+		/// When the Item was last observed
+		/// </summary>
+		public DateTime DatamartLastObservedUtc { get; set; } = DateTime.MinValue;
 	}
 }

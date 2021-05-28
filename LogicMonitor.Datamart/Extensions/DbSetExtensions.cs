@@ -14,7 +14,12 @@ namespace LogicMonitor.Datamart.Extensions
 {
 	public static class DbSetExtension
 	{
-		public static void AddOrUpdateIdentifiedItem<TApi, TStore>(this DbSet<TStore> dbSet, TApi data, ILogger logger)
+		public static void AddOrUpdateIdentifiedItem<TApi, TStore>(
+				this DbSet<TStore> dbSet,
+				TApi data,
+				DateTime lastObservedUtc,
+				ILogger logger
+			)
 			where TApi : IdentifiedItem
 			where TStore : IdentifiedStoreItem
 		{
@@ -37,6 +42,7 @@ namespace LogicMonitor.Datamart.Extensions
 				}
 				// Map from data onto the existing storeItem which EF internal tracker will work out whether anything changed
 				storeItem = DatamartClient.MapperInstance.Map(data, storeItem);
+				storeItem.DatamartLastObservedUtc = lastObservedUtc;
 				return;
 			}
 			if (logger?.IsEnabled(LogLevel.Trace) == true)
