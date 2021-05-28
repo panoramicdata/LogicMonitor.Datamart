@@ -89,6 +89,11 @@ namespace LogicMonitor.Datamart
 				{
 					foreach (var deviceId in databaseDeviceIds)
 					{
+						if (cancellationToken.IsCancellationRequested)
+						{
+							break;
+						}
+
 						try
 						{
 							using (var context = new Context(_datamartClient.DbContextOptions))
@@ -108,15 +113,16 @@ namespace LogicMonitor.Datamart
 								timeCursor = Math.Max(device.LastAlertClosedTimeSeconds, _startDateTimeUtc.ToUnixTimeSeconds());
 								var timeCursorLastTime = timeCursor;
 								deviceAlertCount = 0;
-								while (timeCursor <= nowSecondsSinceEpoch)
+
+								while (timeCursor <= nowSecondsSinceEpoch && !cancellationToken.IsCancellationRequested)
 								{
 									var alertFilter = new Filter<Alert>
 									{
 										FilterItems = new List<FilterItem<Alert>>
-							{
-								new Eq<Alert>(nameof(Alert.IsCleared), "*"),
-								new Gt<Alert>(nameof(Alert.EndOnSeconds), timeCursor),
-							},
+										{
+											new Eq<Alert>(nameof(Alert.IsCleared), "*"),
+											new Gt<Alert>(nameof(Alert.EndOnSeconds), timeCursor),
+										},
 										Order = new Order<Alert>
 										{
 											Property = nameof(Alert.EndOnSeconds),
@@ -223,7 +229,7 @@ namespace LogicMonitor.Datamart
 								Logger.LogInformation($"Retrieved datasource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName} ({deviceIndex}/{databaseDeviceIds.Count}). Retrieved {deviceAlertCount} in {stopwatch.Elapsed.TotalSeconds:N1}s");
 							}
 						}
-						catch(Exception e)
+						catch (Exception e)
 						{
 							Logger.LogWarning($"Failed to retrieve alerts for {_datamartClient.AccountName} : Id={deviceId} due to {e.Message}");
 						}
