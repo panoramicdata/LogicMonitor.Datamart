@@ -24,7 +24,7 @@ using System.Threading.Tasks;
 
 namespace LogicMonitor.Datamart
 {
-	public class DatamartClient : PortalClient
+	public class DatamartClient : LogicMonitorClient
 	{
 		internal DbContextOptions<Context> DbContextOptions { get; }
 
@@ -45,11 +45,13 @@ namespace LogicMonitor.Datamart
 		public DatamartClient(
 			Configuration configuration,
 			ILoggerFactory loggerFactory
-			) : base(
-				configuration?.LogicMonitorCredential?.Subdomain ?? throw new ArgumentNullException(nameof(configuration), LogicMonitorCredentialNullMessage),
-				configuration?.LogicMonitorCredential?.AccessId ?? throw new ArgumentNullException(nameof(configuration), LogicMonitorCredentialNullMessage),
-				configuration?.LogicMonitorCredential?.AccessKey ?? throw new ArgumentNullException(nameof(configuration), LogicMonitorCredentialNullMessage),
-				loggerFactory.CreateLogger<PortalClient>())
+			) : base(new LogicMonitorClientOptions
+			{
+				AccessId = configuration?.LogicMonitorCredential?.AccessId ?? throw new ArgumentNullException(nameof(configuration), LogicMonitorCredentialNullMessage),
+				AccessKey = configuration?.LogicMonitorCredential?.AccessKey ?? throw new ArgumentNullException(nameof(configuration), LogicMonitorCredentialNullMessage),
+				Account = configuration?.LogicMonitorCredential?.Subdomain ?? throw new ArgumentNullException(nameof(configuration), LogicMonitorCredentialNullMessage),
+				Logger = loggerFactory.CreateLogger<LogicMonitorClient>()
+			})
 		{
 			// Store and validate configuration
 			_configuration = configuration;
