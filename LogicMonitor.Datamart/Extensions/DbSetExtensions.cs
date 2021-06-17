@@ -51,7 +51,9 @@ namespace LogicMonitor.Datamart.Extensions
 			}
 
 			// Add a new entry
-			dbSet.Add(DatamartClient.MapperInstance.Map<TApi, TStore>(data));
+			var newEntry = DatamartClient.MapperInstance.Map<TApi, TStore>(data);
+			newEntry.DatamartLastObservedUtc = lastObservedUtc;
+			dbSet.Add(newEntry);
 		}
 
 		public static async Task AddOrUpdateAlertRangeSavingChanges(this DbSet<AlertStoreItem> dbSet, List<Alert> items)
