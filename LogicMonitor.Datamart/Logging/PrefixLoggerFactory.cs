@@ -26,16 +26,16 @@ namespace LogicMonitor.Datamart.Logging
 			{
 				if (disposing)
 				{
-					_loggerFactory.Dispose();
+					// Nothing to do
 				}
 				disposed = true;
 			}
 		}
 
-#pragma warning disable CA1816 // Dispose methods should call SuppressFinalize
-#pragma warning disable CA1063 // Implement IDisposable Correctly
-		public void Dispose() => Dispose(true);
-#pragma warning restore CA1063 // Implement IDisposable Correctly
-#pragma warning restore CA1816 // Dispose methods should call SuppressFinalize
+		public void Dispose()
+		{
+			Dispose(true);
+			System.GC.SuppressFinalize(this);
+		}
 	}
 }

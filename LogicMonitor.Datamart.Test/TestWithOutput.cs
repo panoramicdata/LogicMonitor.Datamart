@@ -20,7 +20,7 @@ namespace LogicMonitor.Datamart.Test
 	{
 		protected static DateTimeOffset TwelveHoursAgo = DateTimeOffset.UtcNow.AddHours(-12);
 
-		protected static Configuration Configuration = new Configuration
+		protected static Configuration Configuration = new()
 		{
 			Name = "Test",
 			AggregationDurationMinutes = 15,

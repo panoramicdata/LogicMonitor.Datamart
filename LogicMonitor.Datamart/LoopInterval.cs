@@ -49,13 +49,11 @@ namespace LogicMonitor.Datamart
 				{
 					Logger.LogInformation(ex, $"Loopsync {_name} cancelled.");
 				}
-#pragma warning disable CA1031 // Do not catch general exception types - We're specifically catching everything here
 				catch (Exception ex)
 				{
 					// This shouldn't generally happen so if it does, dump the entire exception ex which will include inner exceptions
 					Logger.LogError(ex, $"An unexpected error occurred during the LoopInterval: {ex}");
 				}
-#pragma warning restore CA1031 // Do not catch general exception types
 
 				stopwatch.Stop();
 				Logger.LogInformation($"Finished {_name} in {stopwatch.Elapsed.Humanize(7, minUnit: TimeUnit.Second)}.");

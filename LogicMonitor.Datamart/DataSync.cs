@@ -34,69 +34,65 @@ namespace LogicMonitor.Datamart
 			Logger.LogInformation("Data sync started...");
 			var configurationLevelAggregationDuration = TimeSpan.FromMinutes(_configuration.AggregationDurationMinutes);
 
-			using (var context = new Context(_datamartClient.DbContextOptions))
+			using var context = new Context(_datamartClient.DbContextOptions);
+			// Use the database as a reference for what should be loaded in to ensure referential integrity between the data and the DeviceDataSourceInstance
+
+			// Get the configured DataSource names
+			Logger.LogInformation("Getting reference data...");
+			var deviceDataSourceNames = _configuration.DataSources
+				.ConvertAll(dsci => dsci.Name);
+
+			// Get the database DataSources for those names
+			var matchingDatabaseDataSources = await context
+				.DataSources
+				.Where(ds => deviceDataSourceNames.Contains(ds.Name))
+				.ToListAsync()
+				.ConfigureAwait(false);
+
+			// Get the LogicMonitor Ids for those DataSources
+			var dataSourceIds = matchingDatabaseDataSources
+				.ConvertAll(ds => ds.Id);
+
+			// Get the database instances for those DataSources, excluding ones where LastWentMissingUtc is set
+			var databaseDeviceDataSourceInstances = await context
+				.DeviceDataSourceInstances
+				.Where(ddsi =>
+					ddsi.LastWentMissingUtc == null
+					&& ddsi.DataSourceId.HasValue
+					&& dataSourceIds.Contains(ddsi.DataSourceId.Value)
+				)
+				// To make debugging a little more deterministic, order by the Device and then its instances
+				.OrderBy(ddsi => ddsi.DeviceId).ThenBy(ddsi => ddsi.Id)
+				.ToListAsync()
+				.ConfigureAwait(false);
+
+			// If there aren't any, log and return
+			if (databaseDeviceDataSourceInstances.Count == 0)
 			{
-				// Use the database as a reference for what should be loaded in to ensure referential integrity between the data and the DeviceDataSourceInstance
+				Logger.LogWarning($"Found no DeviceDataSourceInstances in the databases for DeviceDataSource names {string.Join(", ", deviceDataSourceNames)}. Check dimensions have been synced.");
+				return;
+			}
+			// We have the database deviceDataSourceInstances for the configured DataSources
 
-				// Get the configured DataSource names
-				Logger.LogInformation("Getting reference data...");
-				var deviceDataSourceNames = _configuration.DataSources
-					.Select(dsci => dsci.Name)
-					.ToList();
+			// Clear out the PortalClient Cache, otherwise we remember all the datavalues for no reason
+			_datamartClient.ClearCache();
+			var oldCacheState = _datamartClient.UseCache;
+			_datamartClient.UseCache = false;
 
-				// Get the database DataSources for those names
-				var matchingDatabaseDataSources = await context
-					.DataSources
-					.Where(ds => deviceDataSourceNames.Contains(ds.Name))
-					.ToListAsync()
+			try
+			{
+				await GetAndWriteAggregations(
+					_datamartClient,
+					_configuration,
+					Logger,
+					databaseDeviceDataSourceInstances,
+					configurationLevelAggregationDuration,
+					cancellationToken)
 					.ConfigureAwait(false);
-
-				// Get the LogicMonitor Ids for those DataSources
-				var dataSourceIds = matchingDatabaseDataSources
-					.Select(ds => ds.Id)
-					.ToList();
-
-				// Get the database instances for those DataSources, excluding ones where LastWentMissingUtc is set
-				var databaseDeviceDataSourceInstances = await context
-					.DeviceDataSourceInstances
-					.Where(ddsi =>
-						ddsi.LastWentMissingUtc == null
-						&& ddsi.DataSourceId.HasValue
-						&& dataSourceIds.Contains(ddsi.DataSourceId.Value)
-					)
-					// To make debugging a little more deterministic, order by the Device and then its instances
-					.OrderBy(ddsi => ddsi.DeviceId).ThenBy(ddsi => ddsi.Id)
-					.ToListAsync()
-					.ConfigureAwait(false);
-
-				// If there aren't any, log and return
-				if (databaseDeviceDataSourceInstances.Count == 0)
-				{
-					Logger.LogWarning($"Found no DeviceDataSourceInstances in the databases for DeviceDataSource names {string.Join(", ", deviceDataSourceNames)}. Check dimensions have been synced.");
-					return;
-				}
-				// We have the database deviceDataSourceInstances for the configured DataSources
-
-				// Clear out the PortalClient Cache, otherwise we remember all the datavalues for no reason
-				_datamartClient.ClearCache();
-				var oldCacheState = _datamartClient.UseCache;
-				_datamartClient.UseCache = false;
-
-				try
-				{
-					await GetAndWriteAggregations(
-						_datamartClient,
-						_configuration,
-						Logger,
-						databaseDeviceDataSourceInstances,
-						configurationLevelAggregationDuration,
-						cancellationToken)
-						.ConfigureAwait(false);
-				}
-				finally
-				{
-					_datamartClient.UseCache = oldCacheState;
-				}
+			}
+			finally
+			{
+				_datamartClient.UseCache = oldCacheState;
 			}
 		}
 
@@ -227,122 +223,119 @@ namespace LogicMonitor.Datamart
 							totalRowsLoadedFromApi += rowsRetrieved;
 
 							// Create a new DbContext to clear out tracked objects
-							using (var dataContext = new Context(datamartClient.DbContextOptions))
+							using var dataContext = new Context(datamartClient.DbContextOptions);
+							using var dbConnection = dataContext.Database.GetDbConnection();
+							using var sqlConnection = new SqlConnection(dbConnection.ConnectionString);
+							await sqlConnection.OpenAsync().ConfigureAwait(false);
+							aggregationsToWrite.Clear();
+
+							// Iterate over the retrieved DeviceDataSourceInstances
+							foreach (var instanceFetchDataResponse in instancesFetchDataResponse.InstanceFetchDataResponses)
 							{
-								using (var sqlConnection = new SqlConnection(dataContext.Database.GetDbConnection().ConnectionString))
+								// Get the configuration for this DataSourceName
+								var dataSourceConfigurationItem = configuration.DataSources.SingleOrDefault(dsci => dsci.Name == instanceFetchDataResponse.DataSourceName);
+
+								var deviceDataSourceInstanceIdAsInt = int.Parse(instanceFetchDataResponse.DeviceDataSourceInstanceId);
+
+								if (instanceFetchDataResponse.Timestamps.Length > 0)
 								{
-									await sqlConnection.OpenAsync().ConfigureAwait(false);
-									aggregationsToWrite.Clear();
-
-									// Iterate over the retrieved DeviceDataSourceInstances
-									foreach (var instanceFetchDataResponse in instancesFetchDataResponse.InstanceFetchDataResponses)
+									// Process only the configured DataPoints to retrieve
+									// Add data to the context for each of the dataPointNames
+									foreach (var dataPointModel in dataSourceConfigurationItem.DataPoints)
 									{
-										// Get the configuration for this DataSourceName
-										var dataSourceConfigurationItem = configuration.DataSources.SingleOrDefault(dsci => dsci.Name == instanceFetchDataResponse.DataSourceName);
+										// Get the index into the timestamps and values
+										var dataPointIndex = Array.FindIndex(instanceFetchDataResponse.DataPoints, dpName => dpName == dataPointModel.Name);
 
-										var deviceDataSourceInstanceIdAsInt = int.Parse(instanceFetchDataResponse.DeviceDataSourceInstanceId);
-
-										if (instanceFetchDataResponse.Timestamps.Length > 0)
+										if (dataPointIndex == -1)
 										{
-											// Process only the configured DataPoints to retrieve
-											// Add data to the context for each of the dataPointNames
-											foreach (var dataPointModel in dataSourceConfigurationItem.DataPoints)
-											{
-												// Get the index into the timestamps and values
-												var dataPointIndex = Array.FindIndex(instanceFetchDataResponse.DataPoints, dpName => dpName == dataPointModel.Name);
+											// We have a datapoint in our configuration that isn't being returned for this DataSource, therefore we cant write it out
+											continue;
+										}
 
-												if (dataPointIndex == -1)
+										// Validate the result is good to zip up
+										if (instanceFetchDataResponse.Timestamps.Length != instanceFetchDataResponse.DataValues.Length)
+										{
+											logger.LogError($"Expected count of {nameof(instanceFetchDataResponse.Timestamps)} ({instanceFetchDataResponse.Timestamps.Length}) and count of {nameof(instanceFetchDataResponse.DataValues)} ({instanceFetchDataResponse.DataValues.Length}) to match.");
+											// We've logged, try the next DataPoint
+											continue;
+										}
+
+										var data = instanceFetchDataResponse.Timestamps.Zip(
+											instanceFetchDataResponse.DataValues.Select(v => v[dataPointIndex]),
+											(timeStampMs, value)
+												=> new
 												{
-													// We have a datapoint in our configuration that isn't being returned for this DataSource, therefore we cant write it out
-													continue;
-												}
+													DateTime = DateTimeOffset.FromUnixTimeMilliseconds(timeStampMs).UtcDateTime,
+													DataPointName = dataPointModel.Name,
+													Value = (double?)(value is string ? null : value),
+													DeviceDataSourceInstanceId = deviceDataSourceInstanceIdAsInt
+												})
+												.ToList();
+										// Data:                   :-------------------------------:
+										// Data fetched is a block :---.---.---.---.---.---.---.---:
+										//... where the maximum size is 8 hours, with an integer number data aggregation chunks
+										// We need to aggregate this in blocks of aggregationDuration
 
-												// Validate the result is good to zip up
-												if (instanceFetchDataResponse.Timestamps.Length != instanceFetchDataResponse.DataValues.Length)
-												{
-													logger.LogError($"Expected count of {nameof(instanceFetchDataResponse.Timestamps)} ({instanceFetchDataResponse.Timestamps.Length}) and count of {nameof(instanceFetchDataResponse.DataValues)} ({instanceFetchDataResponse.DataValues.Length}) to match.");
-													// We've logged, try the next DataPoint
-													continue;
-												}
+										var databaseDataPoint = await dataContext
+											.DataSourceDataPoints
+											.SingleOrDefaultAsync(dp => dp.Name == dataPointModel.Name && dp.DataSource.Name == instanceFetchDataResponse.DataSourceName)
+											.ConfigureAwait(false);
 
-												var data = instanceFetchDataResponse.Timestamps.Zip(
-													instanceFetchDataResponse.DataValues.Select(v => v[dataPointIndex]),
-													(timeStampMs, value)
-														=> new
-														{
-															DateTime = DateTimeOffset.FromUnixTimeMilliseconds(timeStampMs).UtcDateTime,
-															DataPointName = dataPointModel.Name,
-															Value = (double?)(value is string ? null : value),
-															DeviceDataSourceInstanceId = deviceDataSourceInstanceIdAsInt
-														})
-														.ToList();
-												// Data:                   :-------------------------------:
-												// Data fetched is a block :---.---.---.---.---.---.---.---:
-												//... where the maximum size is 8 hours, with an integer number data aggregation chunks
-												// We need to aggregate this in blocks of aggregationDuration
-
-												var databaseDataPoint = await dataContext
-													.DataSourceDataPoints
-													.SingleOrDefaultAsync(dp => dp.Name == dataPointModel.Name && dp.DataSource.Name == instanceFetchDataResponse.DataSourceName)
-													.ConfigureAwait(false);
-
-												// Aggregate it in blocks of DataAggregationDuration
-												var aggregationTimeCursor = blockStart;
-												aggregationTimeCursor += dataSourceAggregationDuration;
-												var deviceDataSourceInstanceAggregatedDataStoreItems = data
-													.GroupBy(d => ((int)(d.DateTime - blockStart).TotalSeconds) / ((int)dataSourceAggregationDuration.TotalSeconds))
-													.Select(chunkedData =>
-													{
-														var periodStart = (blockStart + TimeSpan.FromSeconds(chunkedData.Key * dataSourceAggregationDuration.TotalSeconds)).UtcDateTime;
-														return new DeviceDataSourceInstanceAggregatedDataBulkWriteModel
-														{
-															DeviceDataSourceInstanceId = deviceDataSourceInstanceIdAsInt,
-															DataPointId = databaseDataPoint.DatamartId,
-															PeriodStart = periodStart,
-															PeriodEnd = periodStart.Add(dataSourceAggregationDuration),
-															DataCount = chunkedData.Count(d => d.Value != null),
-															NoDataCount = chunkedData.Count(d => d.Value == null),
-															Sum = chunkedData.Sum(d => d.Value ?? 0),
-															SumSquared = chunkedData.Sum(d => d.Value == null ? 0 : d.Value.Value * d.Value.Value),
-															Max = chunkedData.Max(d => d.Value),
-															Min = chunkedData.Min(d => d.Value)
-														};
-													})
-													.ToList();
-												aggregationsToWrite.AddRange(deviceDataSourceInstanceAggregatedDataStoreItems);
-												// Increment the blockIndex
-												blockIndex++;
-											}
-										}
-
-										// We always want to write something out about where we've attempted to get data until
-
-										// TODO write out aggregationsToWrite using bulk write in a transaction with the progress on day boundaries
-
-										if (aggregationsToWrite.Count > 0)
-										{
-											foreach (var blockToWrite in aggregationsToWrite.GroupBy(a => a.PeriodStart.Date))
+										// Aggregate it in blocks of DataAggregationDuration
+										var aggregationTimeCursor = blockStart;
+										aggregationTimeCursor += dataSourceAggregationDuration;
+										var deviceDataSourceInstanceAggregatedDataStoreItems = data
+											.GroupBy(d => ((int)(d.DateTime - blockStart).TotalSeconds) / ((int)dataSourceAggregationDuration.TotalSeconds))
+											.Select(chunkedData =>
 											{
-												await AggregationWriter.WriteAggregations(
-													sqlConnection,
-													configuration.SqlCommandTimeoutSeconds,
-													configuration.SqlBulkCopyTimeoutSeconds,
-													deviceDataSourceInstanceIdAsInt,
-													blockToWrite.Key,
-													blockToWrite,
-													logger);
-											}
-										}
-										else
-										{
-											await AggregationWriter.WriteProgressBoundaryAsync(
-												sqlConnection,
-												configuration.SqlCommandTimeoutSeconds,
-												deviceDataSourceInstanceIdAsInt,
-												blockEnd.UtcDateTime,
-												null);
-										}
+												var periodStart = (blockStart + TimeSpan.FromSeconds(chunkedData.Key * dataSourceAggregationDuration.TotalSeconds)).UtcDateTime;
+												return new DeviceDataSourceInstanceAggregatedDataBulkWriteModel
+												{
+													DeviceDataSourceInstanceId = deviceDataSourceInstanceIdAsInt,
+													DataPointId = databaseDataPoint.DatamartId,
+													PeriodStart = periodStart,
+													PeriodEnd = periodStart.Add(dataSourceAggregationDuration),
+													DataCount = chunkedData.Count(d => d.Value != null),
+													NoDataCount = chunkedData.Count(d => d.Value == null),
+													Sum = chunkedData.Sum(d => d.Value ?? 0),
+													SumSquared = chunkedData.Sum(d => d.Value == null ? 0 : d.Value.Value * d.Value.Value),
+													Max = chunkedData.Max(d => d.Value),
+													Min = chunkedData.Min(d => d.Value)
+												};
+											})
+											.ToList();
+										aggregationsToWrite.AddRange(deviceDataSourceInstanceAggregatedDataStoreItems);
+										// Increment the blockIndex
+										blockIndex++;
 									}
+								}
+
+								// We always want to write something out about where we've attempted to get data until
+
+								// TODO write out aggregationsToWrite using bulk write in a transaction with the progress on day boundaries
+
+								if (aggregationsToWrite.Count > 0)
+								{
+									foreach (var blockToWrite in aggregationsToWrite.GroupBy(a => a.PeriodStart.Date))
+									{
+										await AggregationWriter.WriteAggregations(
+											sqlConnection,
+											configuration.SqlCommandTimeoutSeconds,
+											configuration.SqlBulkCopyTimeoutSeconds,
+											deviceDataSourceInstanceIdAsInt,
+											blockToWrite.Key,
+											blockToWrite,
+											logger);
+									}
+								}
+								else
+								{
+									await AggregationWriter.WriteProgressBoundaryAsync(
+										sqlConnection,
+										configuration.SqlCommandTimeoutSeconds,
+										deviceDataSourceInstanceIdAsInt,
+										blockEnd.UtcDateTime,
+										null);
 								}
 							}
 						}
@@ -353,7 +346,7 @@ namespace LogicMonitor.Datamart
 					}
 				}
 			}
-			logger.LogInformation($"Syncing data complete.");
+			logger.LogInformation("Syncing data complete.");
 		}
 	}
 }

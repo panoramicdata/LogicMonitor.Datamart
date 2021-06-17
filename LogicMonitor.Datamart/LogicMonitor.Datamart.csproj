@@ -19,6 +19,10 @@
 		<PackageReference Include="AutoMapper" Version="8.1.1" />
 		<PackageReference Include="EFCore.BulkExtensions" Version="2.6.3" />
 		<PackageReference Include="Humanizer.Core" Version="2.8.26" />
+		<PackageReference Include="IDisposableAnalyzers" Version="3.4.13">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 		<PackageReference Include="LogicMonitor.Api" Version="2.151.7" />
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.2" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="2.2.6" />
@@ -30,6 +34,10 @@
 		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="2.2.0" />
 		<PackageReference Include="Nerdbank.GitVersioning" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.2.4" />
+		<PackageReference Include="SecurityCodeScan.VS2019" Version="5.1.0">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="Icon.png" Pack="true" PackagePath="" />

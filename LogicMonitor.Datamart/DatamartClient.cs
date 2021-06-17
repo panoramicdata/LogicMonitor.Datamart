@@ -155,7 +155,7 @@ namespace LogicMonitor.Datamart
 		public async Task EnsureDatabaseDeletedAsync(CancellationToken cancellationToken = default)
 		{
 			using var context = new Context(DbContextOptions);
-			var dbConnection = context.Database.GetDbConnection();
+			using var dbConnection = context.Database.GetDbConnection();
 			_logger.LogInformation($"Deleting database {dbConnection.Database} on {dbConnection.DataSource}...");
 			await context
 				.Database
@@ -656,7 +656,8 @@ namespace LogicMonitor.Datamart
 		internal async Task<string> EnsureTableExistsAsync(DateTimeOffset testAggregationPeriod)
 		{
 			using var context = new Context(DbContextOptions);
-			using var sqlConnection = new SqlConnection(context.Database.GetDbConnection().ConnectionString);
+			using var dbConnection = context.Database.GetDbConnection();
+			using var sqlConnection = new SqlConnection(dbConnection.ConnectionString);
 			await sqlConnection.OpenAsync();
 			var tableName = await AggregationWriter.EnsureTableExistsAsync(sqlConnection, _configuration.SqlCommandTimeoutSeconds, testAggregationPeriod);
 			sqlConnection.Close();

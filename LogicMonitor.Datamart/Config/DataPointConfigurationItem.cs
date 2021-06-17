@@ -24,7 +24,7 @@ namespace LogicMonitor.Datamart.Config
 		{
 			if (string.IsNullOrWhiteSpace(Name))
 			{
-				throw new ConfigurationException($"Name not set on DataPoint.");
+				throw new ConfigurationException("Name not set on DataPoint.");
 			}
 
 			if (string.IsNullOrWhiteSpace(MeasurementUnit))

@@ -68,15 +68,13 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 				throw new ArgumentNullException(nameof(dbContextOptions));
 			}
 
-			using (var dbContext = new Context(dbContextOptions))
-			{
-				var tableName = GetTableName(start);
-				logger.LogDebug($"Dropping table {tableName}");
-				var tableCreationSql = "DROP TABLE [" + tableName + "]";
+			using var dbContext = new Context(dbContextOptions);
+			var tableName = GetTableName(start);
+			logger.LogDebug($"Dropping table {tableName}");
+			var tableCreationSql = "DROP TABLE [" + tableName + "]";
 #pragma warning disable EF1000 // Possible SQL injection vulnerability. - No externally provided data
-				await dbContext.Database.ExecuteSqlCommandAsync(tableCreationSql).ConfigureAwait(false);
+			await dbContext.Database.ExecuteSqlCommandAsync(tableCreationSql).ConfigureAwait(false);
 #pragma warning restore EF1000 // Possible SQL injection vulnerability.
-			}
 		}
 
 		/// <summary>
@@ -92,27 +90,21 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 			var tableNames = new List<string>();
 			using (var dbContext = new Context(dbContextOptions))
 			{
-				using (var connection = dbContext.Database.GetDbConnection())
+				using var connection = dbContext.Database.GetDbConnection();
+				connection.Open();
+				using var command = connection.CreateCommand();
+				command.CommandText =
+					dbContext.Database.IsSqlServer()
+						? $"SELECT name FROM sys.Tables WHERE name LIKE '{TableNamePrefix}%' ORDER BY name"
+					: dbContext.Database.IsNpgsql()
+						? $"SELECT table_name as name FROM information_schema.tables WHERE table_name LIKE '{TableNamePrefix}%' ORDER BY table_name"
+						: throw new NotSupportedException();
+				using var reader = await command.ExecuteReaderAsync();
+				if (reader.HasRows)
 				{
-					connection.Open();
-					using (var command = connection.CreateCommand())
+					while (reader.Read())
 					{
-						command.CommandText =
-							dbContext.Database.IsSqlServer()
-								? $"SELECT name FROM sys.Tables WHERE name LIKE '{TableNamePrefix}%' ORDER BY name"
-							: dbContext.Database.IsNpgsql()
-								? $"SELECT table_name as name FROM information_schema.tables WHERE table_name LIKE '{TableNamePrefix}%' ORDER BY table_name"
-								: throw new NotSupportedException();
-						using (var reader = await command.ExecuteReaderAsync())
-						{
-							if (reader.HasRows)
-							{
-								while (reader.Read())
-								{
-									tableNames.Add(reader.GetString(0));
-								}
-							}
-						}
+						tableNames.Add(reader.GetString(0));
 					}
 				}
 			}
@@ -136,7 +128,7 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 			logger.LogTrace($"Preparing DataTable for {aggregationCount} aggregations...");
 
 			// Prep the data into a DataTable, setting initial structure from the database
-			var table = new DataTable();
+			using var table = new DataTable();
 			using (var adapter = new SqlDataAdapter($"SELECT TOP 0 * FROM {tableName}", sqlConnection))
 			{
 				adapter.Fill(table);
@@ -163,44 +155,40 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 			logger.LogTrace($"Preparing DataTable for {aggregationCount} aggregations complete after {stopwatch.ElapsedMilliseconds:N0}ms.");
 			stopwatch.Restart();
 
-			using (var transaction = sqlConnection.BeginTransaction())
+			using var transaction = sqlConnection.BeginTransaction();
+			stopwatch.Restart();
+			logger.LogTrace($"Bulk writing {aggregationCount} aggregations...");
+			// Write out the data as part of a transaction
+			using (var bulkCopy = new SqlBulkCopy(sqlConnection, SqlBulkCopyOptions.Default, transaction))
 			{
-				stopwatch.Restart();
-				logger.LogTrace($"Bulk writing {aggregationCount} aggregations...");
-				// Write out the data as part of a transaction
-				using (var bulkCopy = new SqlBulkCopy(sqlConnection, SqlBulkCopyOptions.Default, transaction))
-				{
-					bulkCopy.DestinationTableName = tableName;
-					bulkCopy.BulkCopyTimeout = sqlBulkCopyTimeoutSeconds;
-					await bulkCopy.WriteToServerAsync(table).ConfigureAwait(false);
-				}
-				logger.LogTrace($"Bulk writing {aggregationCount} aggregations complete after {stopwatch.ElapsedMilliseconds:N0}ms.");
-
-				stopwatch.Restart();
-				logger.LogTrace($"Setting progress for DDSI {deviceDataSourceInstanceId} to {lastAggregationHourWrittenUtc}...");
-				// Update the progress as part of a transaction
-				await WriteProgressBoundaryAsync(sqlConnection, sqlCommandTimeoutSeconds, deviceDataSourceInstanceId, lastAggregationHourWrittenUtc, transaction);
-				logger.LogTrace($"Setting progress for DDSI {deviceDataSourceInstanceId} to {lastAggregationHourWrittenUtc} complete after {stopwatch.ElapsedMilliseconds:N0}ms.");
-
-				stopwatch.Restart();
-				logger.LogTrace("Committing transaction...");
-				transaction.Commit();
-				logger.LogTrace($"Committing transaction complete after {stopwatch.ElapsedMilliseconds:N0}ms");
+				bulkCopy.DestinationTableName = tableName;
+				bulkCopy.BulkCopyTimeout = sqlBulkCopyTimeoutSeconds;
+				await bulkCopy.WriteToServerAsync(table).ConfigureAwait(false);
 			}
+			logger.LogTrace($"Bulk writing {aggregationCount} aggregations complete after {stopwatch.ElapsedMilliseconds:N0}ms.");
+
+			stopwatch.Restart();
+			logger.LogTrace($"Setting progress for DDSI {deviceDataSourceInstanceId} to {lastAggregationHourWrittenUtc}...");
+			// Update the progress as part of a transaction
+			await WriteProgressBoundaryAsync(sqlConnection, sqlCommandTimeoutSeconds, deviceDataSourceInstanceId, lastAggregationHourWrittenUtc, transaction);
+			logger.LogTrace($"Setting progress for DDSI {deviceDataSourceInstanceId} to {lastAggregationHourWrittenUtc} complete after {stopwatch.ElapsedMilliseconds:N0}ms.");
+
+			stopwatch.Restart();
+			logger.LogTrace("Committing transaction...");
+			transaction.Commit();
+			logger.LogTrace($"Committing transaction complete after {stopwatch.ElapsedMilliseconds:N0}ms");
 		}
 
 		internal static async Task WriteProgressBoundaryAsync(SqlConnection sqlConnection, int sqlCommandTimeoutSeconds, int deviceDataSourceInstanceId, DateTime lastAggregationHourWrittenUtc, SqlTransaction transaction)
 		{
 			const string sql = "update DeviceDataSourceInstances set LastAggregationHourWrittenUtc=@LastAggregationHourWrittenUtc where id=@Id";
-			using (var command = new SqlCommand(sql, sqlConnection, transaction))
-			{
-				// Set the CommandTimeout in seconds - it's important this gets written out, it is in a transction, but we wait a bit longer here.
-				// Normally this defaults to 30s, but we have observed this timing out on heavily loaded disk based systems.
-				command.CommandTimeout = sqlCommandTimeoutSeconds;
-				command.Parameters.AddWithValue("@LastAggregationHourWrittenUtc", lastAggregationHourWrittenUtc);
-				command.Parameters.AddWithValue("@Id", deviceDataSourceInstanceId);
-				await command.ExecuteNonQueryAsync().ConfigureAwait(false);
-			}
+			using var command = new SqlCommand(sql, sqlConnection, transaction);
+			// Set the CommandTimeout in seconds - it's important this gets written out, it is in a transction, but we wait a bit longer here.
+			// Normally this defaults to 30s, but we have observed this timing out on heavily loaded disk based systems.
+			command.CommandTimeout = sqlCommandTimeoutSeconds;
+			command.Parameters.AddWithValue("@LastAggregationHourWrittenUtc", lastAggregationHourWrittenUtc);
+			command.Parameters.AddWithValue("@Id", deviceDataSourceInstanceId);
+			await command.ExecuteNonQueryAsync().ConfigureAwait(false);
 		}
 
 		internal static async Task PerformAgingAsync(
@@ -215,20 +203,17 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 			var tablesToRemove = DetermineTablesToAge(existingTables, countAggregationDaysToRetain);
 			if (tablesToRemove.Count > 0)
 			{
-				using (var context = new Context(dbContextOptions))
-				using (var sqlConnection = new SqlConnection(context.Database.GetDbConnection().ConnectionString))
+				using var context = new Context(dbContextOptions);
+				using var dbConnection = context.Database.GetDbConnection();
+				using var sqlConnection = new SqlConnection(dbConnection.ConnectionString);
+				await sqlConnection.OpenAsync();
+				using var command = new SqlCommand(string.Empty, sqlConnection);
+				command.CommandTimeout = sqlCommandTimeoutSeconds;
+				foreach (var tableName in tablesToRemove)
 				{
-					await sqlConnection.OpenAsync();
-					using (var command = new SqlCommand(string.Empty, sqlConnection))
-					{
-						command.CommandTimeout = sqlCommandTimeoutSeconds;
-						foreach (var tableName in tablesToRemove)
-						{
-							logger.LogInformation($"Aging out table {tableName}");
-							command.CommandText = "drop table " + tableName;
-							await command.ExecuteNonQueryAsync().ConfigureAwait(false);
-						}
-					}
+					logger.LogInformation($"Aging out table {tableName}");
+					command.CommandText = "drop table " + tableName;
+					await command.ExecuteNonQueryAsync().ConfigureAwait(false);
 				}
 			}
 		}
