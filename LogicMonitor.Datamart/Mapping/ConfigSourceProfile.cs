@@ -18,6 +18,9 @@ namespace LogicMonitor.Datamart.Mapping
 				.ForMember(
 					dest => dest.DatamartLastModifiedUtc,
 					opts => opts.Ignore())
+				.ForMember(
+					dest => dest.DatamartLastObservedUtc,
+					opts => opts.Ignore())
 				;
 			CreateMap<ConfigSourceStoreItem, ConfigSource>()
 				.ForMember(

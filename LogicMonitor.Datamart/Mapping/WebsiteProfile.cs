@@ -19,6 +19,9 @@ namespace LogicMonitor.Datamart.Mapping
 					dest => dest.DatamartLastModifiedUtc,
 					opts => opts.Ignore())
 				.ForMember(
+					dest => dest.DatamartLastObservedUtc,
+					opts => opts.Ignore())
+				.ForMember(
 					dest => dest.WebsiteGroup,
 					opts => opts.Ignore())
 				;
