@@ -11,7 +11,8 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor Datamart</PackageTags>
 		<PackageReleaseNotes>
-			Updated to LogicMonitor API 2.150.1
+			Updated to LogicMonitor API 2.151.7
+			Adjusted logging
 		</PackageReleaseNotes>
 	</PropertyGroup>
 

@@ -321,6 +321,8 @@ namespace LogicMonitor.Datamart
 			where TApi : IdentifiedItem, IHasEndpoint, new()
 			where TStore : IdentifiedStoreItem
 		{
+			logger.LogDebug($"{typeof(TApi).Name}: Loading entries...");
+
 			using var context = new Context(DbContextOptions);
 			// Get the right DbSet from the context
 			var dbSet = action(context);
