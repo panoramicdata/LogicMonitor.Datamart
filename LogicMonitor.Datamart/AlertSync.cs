@@ -213,7 +213,7 @@ namespace LogicMonitor.Datamart
 
 						if (alertsToBulkInsert.Values.Count > 0)
 						{
-							await BulkInsertAlertsAsync(context, alertsToBulkInsert.Values.ToList()).ConfigureAwait(false);
+							await BulkInsertAlertsAsync(_datamartClient.DbContextOptions, alertsToBulkInsert.Values.ToList()).ConfigureAwait(false);
 							alertsToBulkInsert.Clear();
 						}
 						// Update the device
@@ -373,7 +373,7 @@ namespace LogicMonitor.Datamart
 			Logger.LogInformation($"Alert index action {indexAction} complete after {stopwatch.Elapsed.Seconds:N1}s");
 		}
 
-		internal async Task BulkInsertAlertsAsync(Context context, List<AlertStoreItem> alertStoreItems)
+		internal async Task BulkInsertAlertsAsync(DbContextOptions<Context> contextOptions, List<AlertStoreItem> alertStoreItems)
 		{
 			Logger.LogDebug($"Bulk inserting {alertStoreItems.Count} alerts...");
 			var stopwatch = Stopwatch.StartNew();
@@ -381,20 +381,29 @@ namespace LogicMonitor.Datamart
 			{
 				case DatabaseType.SqlServer:
 					// Bulk insert
-					await context.BulkInsertAsync(
-						alertStoreItems,
-						new BulkConfig
-						{
-							BulkCopyTimeout = 0,
-							BatchSize = 10000,
-						},
-						n => Logger.LogDebug($"Bulk inserted {(int)(n * alertStoreItems.Count)}/{alertStoreItems.Count}"))
-						.ConfigureAwait(false);
+					using (var context = new Context(contextOptions))
+					{
+						await context.BulkInsertAsync(
+							alertStoreItems,
+							new BulkConfig
+							{
+								BulkCopyTimeout = 0,
+								BatchSize = 10000,
+							},
+							n => Logger.LogDebug($"Bulk inserted {(int)(n * alertStoreItems.Count)}/{alertStoreItems.Count}"))
+							.ConfigureAwait(false);
+					}
 					break;
 				case DatabaseType.Postgres:
 				case DatabaseType.InMemory:
-					context.Alerts.AddRange(alertStoreItems);
-					await context.SaveChangesAsync().ConfigureAwait(false);
+					// Add and save in chunks to avoid over usage of memory. This can be done using proper bulk insert once the ef core libraries can be updated.
+					const int BatchSize = 1000;
+					for (var batch = 0; batch * BatchSize < alertStoreItems.Count; batch++)
+					{
+						using var context = new Context(contextOptions);
+						context.Alerts.AddRange(alertStoreItems.Skip(batch * BatchSize).Take(BatchSize));
+						await context.SaveChangesAsync().ConfigureAwait(false);
+					}
 					break;
 				default:
 					throw new NotSupportedException($"The Database type {_datamartClient.DatabaseType} is not supported for bulk inserts");
