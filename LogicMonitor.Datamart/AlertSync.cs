@@ -400,6 +400,8 @@ namespace LogicMonitor.Datamart
 					const int BatchSize = 1000;
 					for (var batch = 0; batch * BatchSize < alertStoreItems.Count; batch++)
 					{
+						Logger.LogDebug($"Bulk inserting {Math.Min(alertStoreItems.Count, batch * BatchSize) } alerts...");
+
 						using var context = new Context(contextOptions);
 						context.Alerts.AddRange(alertStoreItems.Skip(batch * BatchSize).Take(BatchSize));
 						await context.SaveChangesAsync().ConfigureAwait(false);
