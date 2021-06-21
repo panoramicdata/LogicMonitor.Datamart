@@ -209,6 +209,13 @@ namespace LogicMonitor.Datamart
 							}
 
 							timeCursorLastTime = timeCursor;
+
+							// If we've got a lot of new values then break out the loop so that writes can go ahead
+							// This will also help limit the total amount of RAM used
+							if (alertsToBulkInsert.Values.Count > 10000)
+							{
+								break;
+							}
 						}
 
 						if (alertsToBulkInsert.Values.Count > 0)
