@@ -214,6 +214,7 @@ namespace LogicMonitor.Datamart
 							// This will also help limit the total amount of RAM used
 							if (alertsToBulkInsert.Values.Count > 10000)
 							{
+								Logger.LogDebug($"Already got {alertsToBulkInsert.Values.Count}, going to write out...");
 								break;
 							}
 						}
