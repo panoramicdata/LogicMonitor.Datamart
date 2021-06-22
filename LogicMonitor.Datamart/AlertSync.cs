@@ -76,6 +76,7 @@ namespace LogicMonitor.Datamart
 			long timeCursor;
 			var deviceAlertCount = 0;
 			const int pageSize = 300;
+			const int maxNewAlerts = 10000;
 			var alertsToBulkInsert = new Dictionary<string, AlertStoreItem>();
 			var deviceIndex = 0;
 
@@ -183,7 +184,7 @@ namespace LogicMonitor.Datamart
 								}
 							}
 							var message = $"Processed datasource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName}; {reducedAlerts.Count}(of {alertsThisTime.Count}) " +
-								$"get({sqlFetch.ElapsedMilliseconds:N0}ms) save({sqlSave.ElapsedMilliseconds:N0}ms) in {dataProcessingStopwatch.ElapsedMilliseconds:N0}ms " +
+								$"dbGet({sqlFetch.ElapsedMilliseconds:N0}ms) dbSave({sqlSave.ElapsedMilliseconds:N0}ms) in {dataProcessingStopwatch.ElapsedMilliseconds:N0}ms " +
 								$"from {DateTimeOffset.FromUnixTimeSeconds(timeCursor).UtcDateTime}...)";
 							Logger.LogDebug(message);
 
@@ -197,6 +198,7 @@ namespace LogicMonitor.Datamart
 
 							if (alertsThisTime.Count < pageSize)
 							{
+								// not a full page so we got as much as we can for this time period, leave the loop
 								break;
 							}
 
@@ -204,15 +206,25 @@ namespace LogicMonitor.Datamart
 							// If this is the case, give up on that second and move to the next one.
 							if (timeCursor == timeCursorLastTime)
 							{
-								// BUG - There is an issue where if there are more than 300 open alerts, we never get any further, this just loops very slowly, increasing 1 second at a time - all the EndOnSeconds will be 0
-								timeCursor++;
+								// There is a situation where if there are more than 300 open alerts
+								if (alertsThisTime.Max(a => a.EndOnSeconds) == 0)
+								{
+									// All alerts are still open and there are no alerts in front of them to process, so we can just set the timeCursor to nowSecondsSinceEpoch
+									timeCursor = nowSecondsSinceEpoch;
+								}
+								else
+								{
+									// We probably haven't got all the possible alerts for the timeCursor (>300), but it's the best we can do
+									// move on by 1 second and get another batch
+									timeCursor++;
+								}
 							}
 
 							timeCursorLastTime = timeCursor;
 
 							// If we've got a lot of new values then break out the loop so that writes can go ahead
 							// This will also help limit the total amount of RAM used
-							if (alertsToBulkInsert.Values.Count > 10000)
+							if (alertsToBulkInsert.Values.Count > maxNewAlerts)
 							{
 								Logger.LogDebug($"Already got {alertsToBulkInsert.Values.Count}, going to write out...");
 								break;
