@@ -210,12 +210,14 @@ namespace LogicMonitor.Datamart
 								if (alertsThisTime.Max(a => a.EndOnSeconds) == 0)
 								{
 									// All alerts are still open and there are no alerts in front of them to process, so we can just set the timeCursor to nowSecondsSinceEpoch
+									Logger.LogDebug($"All alerts received have EndOnSeconds==0. Moving timeCursor to 'now': {nowSecondsSinceEpoch} ({DateTimeOffset.FromUnixTimeSeconds(nowSecondsSinceEpoch)})");
 									timeCursor = nowSecondsSinceEpoch;
 								}
 								else
 								{
 									// We probably haven't got all the possible alerts for the timeCursor (>300), but it's the best we can do
 									// move on by 1 second and get another batch
+									Logger.LogDebug("All alerts received have same EndOnSeconds (>0). Incrementing timeCursor by 1 second.");
 									timeCursor++;
 								}
 							}
