@@ -212,6 +212,8 @@ namespace LogicMonitor.Datamart
 									// All alerts are still open and there are no alerts in front of them to process, so we can just set the timeCursor to nowSecondsSinceEpoch
 									Logger.LogDebug($"All alerts received have EndOnSeconds==0. Moving timeCursor to 'now': {nowSecondsSinceEpoch} ({DateTimeOffset.FromUnixTimeSeconds(nowSecondsSinceEpoch)})");
 									timeCursor = nowSecondsSinceEpoch;
+									// We're done looping, nothing else to do on this device for the moment
+									break;
 								}
 								else
 								{
