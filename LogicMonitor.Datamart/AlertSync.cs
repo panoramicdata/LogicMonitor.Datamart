@@ -51,9 +51,11 @@ namespace LogicMonitor.Datamart
 			// Run the test against one instance of the context
 			using (var context = new Context(_datamartClient.DbContextOptions))
 			{
+				// Ordered for predictability
 				databaseDeviceIds = await context
 							.Devices
 							.Select(d => d.Id)
+							.OrderBy(id => id)
 							.ToListAsync()
 							.ConfigureAwait(false);
 			}
