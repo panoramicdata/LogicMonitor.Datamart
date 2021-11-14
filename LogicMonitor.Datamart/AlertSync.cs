@@ -36,7 +36,7 @@ namespace LogicMonitor.Datamart
 			// Truncate the table
 			await context
 				.Database
-				.ExecuteSqlCommandAsync("TRUNCATE TABLE [Alerts]", cancellationToken)
+				.ExecuteSqlRawAsync("TRUNCATE TABLE [Alerts]", cancellationToken)
 				.ConfigureAwait(false);
 		}
 
@@ -56,7 +56,7 @@ namespace LogicMonitor.Datamart
 							.Devices
 							.Select(d => d.Id)
 							.OrderBy(id => id)
-							.ToListAsync()
+							.ToListAsync(cancellationToken)
 							.ConfigureAwait(false);
 			}
 			var updateAlertStats = await UpdateDeviceAlerts(nowSecondsSinceEpoch, databaseDeviceIds, cancellationToken)
@@ -69,7 +69,7 @@ namespace LogicMonitor.Datamart
 
 		private async Task<UpdateAlertStats> UpdateDeviceAlerts(long nowSecondsSinceEpoch, List<int> databaseDeviceIds, CancellationToken cancellationToken)
 		{
-			Logger.LogInformation($"Loading alerts for {databaseDeviceIds.Count} devices...");
+			Logger.LogInformation("Loading alerts for {databaseDeviceIdsCount} devices...", databaseDeviceIds.Count);
 
 			// Record stats
 			var updateAlertStats = new UpdateAlertStats();
@@ -98,14 +98,22 @@ namespace LogicMonitor.Datamart
 					{
 						using var context = new Context(_datamartClient.DbContextOptions);
 						// Get the device
-						var device = await context.Devices.SingleOrDefaultAsync(d => d.Id == deviceId).ConfigureAwait(false);
+						var device = await context
+							.Devices
+							.SingleOrDefaultAsync(d => d.Id == deviceId, cancellationToken)
+							.ConfigureAwait(false);
 
 						// Build up the list of alerts in memory, then delete the table contents and re-add.
 						alertsToBulkInsert.Clear();
 
 						stopwatch.Restart();
 						deviceIndex++;
-						Logger.LogDebug($"Retrieving datasource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName}");
+						Logger.LogDebug(
+							"Retrieving datasource alerts for {_datamartClientAccountName} : Id={deviceId}, CurrentDisplayName={deviceDisplayName}",
+							_datamartClient.AccountName,
+							deviceId,
+							device.DisplayName
+							);
 
 						// Get the  alerts
 
@@ -133,7 +141,12 @@ namespace LogicMonitor.Datamart
 
 							deviceAlertCount += alertsThisTime.Count;
 
-							Logger.LogDebug($"Processing datasource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName}");
+							Logger.LogDebug(
+								"Processing datasource alerts for {_datamartClientAccountName} : Id={deviceId}, CurrentDisplayName={deviceDisplayName}",
+								_datamartClient.AccountName,
+								deviceId,
+								device.DisplayName
+								);
 							var dataProcessingStopwatch = Stopwatch.StartNew();
 
 							// A structure for reducing the alerts that came in so we only have 1 record per Id, the last one is the only one of interest
@@ -153,7 +166,7 @@ namespace LogicMonitor.Datamart
 								// Is it already in the database?
 								var databaseAlert = await context
 									.Alerts
-									.SingleOrDefaultAsync(asi => asi.Id == networkAlert.Id)
+									.SingleOrDefaultAsync(asi => asi.Id == networkAlert.Id, cancellationToken: cancellationToken)
 									.ConfigureAwait(false);
 								sqlFetch.Stop();
 
@@ -179,16 +192,24 @@ namespace LogicMonitor.Datamart
 									databaseAlert.IsCleared = networkAlert.IsCleared;
 									sqlSave.Start();
 									await context
-										.SaveChangesAsync()
+										.SaveChangesAsync(cancellationToken)
 										.ConfigureAwait(false);
 									sqlSave.Stop();
 									updateAlertStats.Updated++;
 								}
 							}
-							var message = $"Processed datasource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName}; {reducedAlerts.Count}(of {alertsThisTime.Count}) " +
-								$"dbGet({sqlFetch.ElapsedMilliseconds:N0}ms) dbSave({sqlSave.ElapsedMilliseconds:N0}ms) in {dataProcessingStopwatch.ElapsedMilliseconds:N0}ms " +
-								$"from {DateTimeOffset.FromUnixTimeSeconds(timeCursor).UtcDateTime}...)";
-							Logger.LogDebug(message);
+							Logger.LogDebug(
+								"Processed datasource alerts for {_datamartClientAccountName} : Id={deviceId}, CurrentDisplayName={deviceDisplayName}; {reducedAlertsCount}(of {alertsThisTimeCount}) dbGet({sqlFetchElapsedMilliseconds:N0}ms) dbSave({sqlSaveElapsedMilliseconds:N0}ms) in {dataProcessingStopwatchElapsedMilliseconds:N0}ms from {dateTime}...)",
+								_datamartClient.AccountName,
+								deviceId,
+								device.DisplayName,
+								reducedAlerts.Count,
+								alertsThisTime.Count,
+								sqlFetch.ElapsedMilliseconds,
+								sqlSave.ElapsedMilliseconds,
+								dataProcessingStopwatch.ElapsedMilliseconds,
+								DateTimeOffset.FromUnixTimeSeconds(timeCursor).UtcDateTime
+								);
 
 							// Update the timeCursor to point to the highest value observed in the data
 
@@ -212,7 +233,10 @@ namespace LogicMonitor.Datamart
 								if (alertsThisTime.Max(a => a.EndOnSeconds) == 0)
 								{
 									// All alerts are still open and there are no alerts in front of them to process, so we can just set the timeCursor to nowSecondsSinceEpoch
-									Logger.LogDebug($"All alerts received have EndOnSeconds==0. Moving timeCursor to 'now': {nowSecondsSinceEpoch} ({DateTimeOffset.FromUnixTimeSeconds(nowSecondsSinceEpoch)})");
+									Logger.LogDebug(
+										"All alerts received have EndOnSeconds==0. Moving timeCursor to 'now': {nowSecondsSinceEpoch} ({dateTimeOffset})",
+										nowSecondsSinceEpoch,
+										DateTimeOffset.FromUnixTimeSeconds(nowSecondsSinceEpoch));
 									timeCursor = nowSecondsSinceEpoch;
 									// We're done looping, nothing else to do on this device for the moment
 									break;
@@ -232,7 +256,7 @@ namespace LogicMonitor.Datamart
 							// This will also help limit the total amount of RAM used
 							if (alertsToBulkInsert.Values.Count > maxNewAlerts)
 							{
-								Logger.LogDebug($"Already got {alertsToBulkInsert.Values.Count}, going to write out...");
+								Logger.LogDebug("Already got {alertsToBulkInsertValuesCount}, going to write out...", alertsToBulkInsert.Values.Count);
 								break;
 							}
 						}
@@ -245,14 +269,29 @@ namespace LogicMonitor.Datamart
 						// Update the device
 						device.LastAlertClosedTimeSeconds = timeCursor;
 						await context
-							.SaveChangesAsync()
+							.SaveChangesAsync(cancellationToken)
 							.ConfigureAwait(false);
 
-						Logger.LogInformation($"Retrieved datasource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName} ({deviceIndex}/{databaseDeviceIds.Count}). Retrieved {deviceAlertCount} in {stopwatch.Elapsed.TotalSeconds:N1}s");
+						Logger.LogInformation(
+							"Retrieved datasource alerts for {_datamartClientAccountName} : Id={deviceId}, CurrentDisplayName={deviceDisplayName} ({deviceIndex}/{databaseDeviceIdsCount}). Retrieved {deviceAlertCount} in {durationSeconds:N1}s",
+							_datamartClient.AccountName,
+							deviceId,
+							device.DisplayName,
+							deviceIndex,
+							databaseDeviceIds.Count,
+							deviceAlertCount,
+							stopwatch.Elapsed.TotalSeconds
+							);
 					}
 					catch (Exception e)
 					{
-						Logger.LogWarning($"Failed to retrieve alerts for {_datamartClient.AccountName} : Id={deviceId} due to {e.Message}");
+						Logger.LogWarning(
+							e,
+							"Failed to retrieve alerts for {_datamartClientAccountName} : Id={deviceId} due to {eMessage}",
+							_datamartClient.AccountName,
+							deviceId,
+							e.Message
+						);
 					}
 				}
 			}
@@ -330,7 +369,10 @@ namespace LogicMonitor.Datamart
 				var databaseEntry = await monitorObjectGroupContext.MonitorObjectGroups.SingleOrDefaultAsync(g => g.MonitoredObjectType == networkAlert.MonitorObjectType && g.FullPath == networkAlert.MonitorObjectGroups[index].FullPath).ConfigureAwait(false);
 				if (databaseEntry == null)
 				{
-					Logger.LogDebug($"Adding new MonitorObjectGroup {networkAlert.MonitorObjectType}:{networkAlert.MonitorObjectGroups[index].FullPath}");
+					Logger.LogDebug(
+						"Adding new MonitorObjectGroup {networkAlertMonitorObjectType}:{networkAlertMonitorObjectGroupFullPath}",
+						networkAlert.MonitorObjectType,
+						networkAlert.MonitorObjectGroups[index].FullPath);
 					databaseEntry = new MonitorObjectGroupStoreItem
 					{
 						MonitoredObjectType = networkAlert.MonitorObjectType,
@@ -338,20 +380,23 @@ namespace LogicMonitor.Datamart
 					};
 					monitorObjectGroupContext.MonitorObjectGroups.Add(databaseEntry);
 					await monitorObjectGroupContext.SaveChangesAsync().ConfigureAwait(false);
-					Logger.LogInformation($"Added new MonitorObjectGroup {databaseEntry.MonitoredObjectType}:{databaseEntry.FullPath} with id {databaseEntry.DatamartId}");
+					Logger.LogInformation(
+						"Added new MonitorObjectGroup {databaseEntryMonitoredObjectType}:{databaseEntryFullPath} with id {databaseEntryDatamartId}",
+						databaseEntry.MonitoredObjectType,
+						databaseEntry.FullPath,
+						databaseEntry.DatamartId
+						);
 				}
 				return databaseEntry.DatamartId;
 			}).ConfigureAwait(false);
 			return result;
 		}
 
-#pragma warning disable RCS1213 // Remove unused member declaration. - This is retained for reference
 		private async Task AlterIndexes(Context context, bool enabled)
-#pragma warning restore RCS1213 // Remove unused member declaration.
 		{
 			var stopwatch = Stopwatch.StartNew();
 			var indexAction = enabled ? "REBUILD" : "DISABLE";
-			Logger.LogDebug($"Alert index {indexAction}...");
+			Logger.LogDebug("Alert index {indexAction}...", indexAction);
 			foreach (var column in new[] {
 					"InternalId",
 					"Id",
@@ -388,20 +433,18 @@ namespace LogicMonitor.Datamart
 					"FasterPercentageAvailability"
 				})
 			{
-#pragma warning disable EF1000 // Possible SQL injection vulnerability.
 				var sql = "ALTER INDEX IX_Alerts_" + column + " ON [Alerts] " + indexAction;
 				await context
 			  .Database
-			  .ExecuteSqlCommandAsync(sql)
-#pragma warning restore EF1000 // Possible SQL injection vulnerability.
+			  .ExecuteSqlRawAsync(sql)
 			  .ConfigureAwait(false);
 			}
-			Logger.LogInformation($"Alert index action {indexAction} complete after {stopwatch.Elapsed.Seconds:N1}s");
+			Logger.LogInformation("Alert index action {indexAction} complete after {timeSeconds:N1}s", indexAction, stopwatch.Elapsed.Seconds);
 		}
 
 		internal async Task BulkInsertAlertsAsync(DbContextOptions<Context> contextOptions, List<AlertStoreItem> alertStoreItems)
 		{
-			Logger.LogDebug($"Bulk inserting {alertStoreItems.Count} alerts...");
+			Logger.LogDebug("Bulk inserting {alertStoreItemsCount} alerts...", alertStoreItems.Count);
 			var stopwatch = Stopwatch.StartNew();
 			switch (_datamartClient.DatabaseType)
 			{
@@ -416,7 +459,7 @@ namespace LogicMonitor.Datamart
 								BulkCopyTimeout = 0,
 								BatchSize = 10000,
 							},
-							n => Logger.LogDebug($"Bulk inserted {(int)(n * alertStoreItems.Count)}/{alertStoreItems.Count}"))
+							n => Logger.LogDebug("Bulk inserted {count1}/{count2}", (int)(n * alertStoreItems.Count), alertStoreItems.Count))
 							.ConfigureAwait(false);
 					}
 					break;
@@ -426,7 +469,7 @@ namespace LogicMonitor.Datamart
 					const int BatchSize = 1000;
 					for (var batch = 0; batch * BatchSize < alertStoreItems.Count; batch++)
 					{
-						Logger.LogDebug($"Bulk inserting batch {batch + 1} of up to {BatchSize} alerts...");
+						Logger.LogDebug("Bulk inserting batch {batchId} of up to {batchSize} alerts...", batch + 1, BatchSize);
 
 						using var context = new Context(contextOptions);
 						context.Alerts.AddRange(alertStoreItems.Skip(batch * BatchSize).Take(BatchSize));
@@ -436,7 +479,7 @@ namespace LogicMonitor.Datamart
 				default:
 					throw new NotSupportedException($"The Database type {_datamartClient.DatabaseType} is not supported for bulk inserts");
 			}
-			Logger.LogInformation($"Bulk inserted {alertStoreItems.Count} alerts; complete after {stopwatch.Elapsed.TotalSeconds:N1}s");
+			Logger.LogInformation("Bulk inserted {alertStoreItemsCount} alerts; complete after {duration:N1}s", alertStoreItems.Count, stopwatch.Elapsed.TotalSeconds);
 		}
 	}
 }

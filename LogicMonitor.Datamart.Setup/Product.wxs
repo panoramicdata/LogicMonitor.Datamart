@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix
+	xmlns="http://schemas.microsoft.com/wix/2006/wi"
+	xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+	<Product Id="*"
+		Name="LogicMonitor.Datamart.Setup"
+		Language="1033"
+		Version="1.0.0.0"
+		Manufacturer="Panoramic Data Limited"
+		UpgradeCode="a3fe7646-c0cd-4762-b2fa-e0f8ba8be9ad">
+
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+
+		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+		<Media Id="1" Cabinet="product.cab" EmbedCab="yes" />
+
+		<Feature Id="ProductFeature" Title="LogicMonitor Datamart" Level="1">
+			<ComponentGroupRef Id="ProductComponents" />
+			<ComponentGroupRef Id="WixInstallerDatamart_Project" />
+		</Feature>
+	</Product>
+
+	<Fragment>
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Id="ProgramFilesFolder">
+				<Directory Id="INSTALLFOLDER" Name="LogicMonitor Datamart" />
+			</Directory>
+		</Directory>
+	</Fragment>
+
+	<Fragment>
+		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+			<Component Id="DataMartComponent" Guid="{3526753F-00ED-4D03-BE95-9424A0DD8D24}">
+				<CreateFolder />
+				<File
+					Id="LogicMonitor.Datamart.Service.exe"
+					Name="LogicMonitor.Datamart.Service.exe"
+					Source="$(var.LogicMonitor.Datamart.Service.ProjectDir)bin\publish\LogicMonitor.Datamart.Service.exe"
+					Vital="yes"
+					KeyPath="yes" />
+				<File
+					Id="LogicMonitor.Datamart.Service.dll"
+					Name="LogicMonitor.Datamart.Service.dll"
+					Source="$(var.LogicMonitor.Datamart.Service.ProjectDir)bin\publish\LogicMonitor.Datamart.Service.dll"
+					Vital="yes" />
+
+				<ServiceInstall
+					Id="DataMartServiceInstaller"
+					Name="LogicMonitorDataMart"
+					Start="demand"
+					DisplayName="LogicMonitor Datamart"
+					Description="LogicMonitor Datamart !(bind.FileVersion.LogicMonitor.Datamart.Service.dll)"
+					Type="ownProcess"
+					Vital="yes"
+					Account="[WEB_APP_POOL_IDENTITY_NAME]"
+					Password="[WEB_APP_POOL_IDENTITY_PWD]"
+					ErrorControl="normal"
+					Interactive="no">
+				</ServiceInstall>
+				<ServiceControl
+					Id="DataMartServiceInstaller"
+					Name="LogicMonitorDataMart"
+					Stop="both"
+					Remove="both"
+					Wait="no" />
+			</Component>
+		</ComponentGroup>
+	</Fragment>
+</Wix>

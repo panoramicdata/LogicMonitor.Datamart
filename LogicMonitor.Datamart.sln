@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.28711.60
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LogicMonitor.Datamart", "LogicMonitor.Datamart\LogicMonitor.Datamart.csproj", "{43A21CE9-EBAB-427E-94FB-41EF307E0D28}"
 EndProject
@@ -16,7 +16,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		global.json = global.json
 		LICENSE = LICENSE
 		README.md = README.md
-		Rosylnator.ruleset = Rosylnator.ruleset
 		version.json = version.json
 	EndProjectSection
 	ProjectSection(FolderGlobals) = preProject
@@ -25,6 +24,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LogicMonitor.Datamart.Test", "LogicMonitor.Datamart.Test\LogicMonitor.Datamart.Test.csproj", "{C3EC3A2C-95D3-4036-AA4D-CDB1119CF9B2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogicMonitor.Datamart.Service", "LogicMonitor.Datamart.Service\LogicMonitor.Datamart.Service.csproj", "{B7827C9F-51F8-4960-88FC-7522535042B4}"
+EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "LogicMonitor.Datamart.Setup", "LogicMonitor.Datamart.Setup\LogicMonitor.Datamart.Setup.wixproj", "{01BD5489-AC4C-4E34-A5BA-C5F4D1FA800B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -58,6 +61,22 @@ Global
 		{C3EC3A2C-95D3-4036-AA4D-CDB1119CF9B2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C3EC3A2C-95D3-4036-AA4D-CDB1119CF9B2}.Release|x86.ActiveCfg = Release|Any CPU
 		{C3EC3A2C-95D3-4036-AA4D-CDB1119CF9B2}.Release|x86.Build.0 = Release|Any CPU
+		{B7827C9F-51F8-4960-88FC-7522535042B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7827C9F-51F8-4960-88FC-7522535042B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7827C9F-51F8-4960-88FC-7522535042B4}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B7827C9F-51F8-4960-88FC-7522535042B4}.Debug|x86.Build.0 = Debug|Any CPU
+		{B7827C9F-51F8-4960-88FC-7522535042B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7827C9F-51F8-4960-88FC-7522535042B4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B7827C9F-51F8-4960-88FC-7522535042B4}.Release|x86.ActiveCfg = Release|Any CPU
+		{B7827C9F-51F8-4960-88FC-7522535042B4}.Release|x86.Build.0 = Release|Any CPU
+		{01BD5489-AC4C-4E34-A5BA-C5F4D1FA800B}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{01BD5489-AC4C-4E34-A5BA-C5F4D1FA800B}.Debug|Any CPU.Build.0 = Debug|x86
+		{01BD5489-AC4C-4E34-A5BA-C5F4D1FA800B}.Debug|x86.ActiveCfg = Debug|x86
+		{01BD5489-AC4C-4E34-A5BA-C5F4D1FA800B}.Debug|x86.Build.0 = Debug|x86
+		{01BD5489-AC4C-4E34-A5BA-C5F4D1FA800B}.Release|Any CPU.ActiveCfg = Release|x86
+		{01BD5489-AC4C-4E34-A5BA-C5F4D1FA800B}.Release|Any CPU.Build.0 = Release|x86
+		{01BD5489-AC4C-4E34-A5BA-C5F4D1FA800B}.Release|x86.ActiveCfg = Release|x86
+		{01BD5489-AC4C-4E34-A5BA-C5F4D1FA800B}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -45,13 +45,7 @@ namespace LogicMonitor.Datamart
 		public DatamartClient(
 			Configuration configuration,
 			ILoggerFactory loggerFactory
-			) : base(new LogicMonitorClientOptions
-			{
-				AccessId = configuration?.LogicMonitorCredential?.AccessId ?? throw new ArgumentNullException(nameof(configuration), LogicMonitorCredentialNullMessage),
-				AccessKey = configuration?.LogicMonitorCredential?.AccessKey ?? throw new ArgumentNullException(nameof(configuration), LogicMonitorCredentialNullMessage),
-				Account = configuration?.LogicMonitorCredential?.Subdomain ?? throw new ArgumentNullException(nameof(configuration), LogicMonitorCredentialNullMessage),
-				Logger = loggerFactory.CreateLogger<LogicMonitorClient>()
-			})
+			) : base(configuration.LogicMonitorClientOptions)
 		{
 			// Store and validate configuration
 			_configuration = configuration;
@@ -156,12 +150,12 @@ namespace LogicMonitor.Datamart
 		{
 			using var context = new Context(DbContextOptions);
 			using var dbConnection = context.Database.GetDbConnection();
-			_logger.LogInformation($"Deleting database {dbConnection.Database} on {dbConnection.DataSource}...");
+			_logger.LogInformation("Deleting database {dbConnectionDatabase} on {dbConnectionDataSource}...", dbConnection.Database, dbConnection.DataSource);
 			await context
 				.Database
 				.EnsureDeletedAsync(cancellationToken)
 				.ConfigureAwait(false);
-			_logger.LogInformation($"Deleted database {dbConnection.Database} on {dbConnection.DataSource}...");
+			_logger.LogInformation("Deleted database {dbConnectionDatabase} on {dbConnectionDataSource}...", dbConnection.Database, dbConnection.DataSource);
 		}
 
 		private DbSet<TStore> GetDbSet<TStore>(Context context) where TStore : class, new()
@@ -189,7 +183,7 @@ namespace LogicMonitor.Datamart
 			return !context.Database.IsSqlServer()
 				? throw new NotSupportedException("Only SQL Server types support SQL queries.")
 				: await Task.FromResult(GetDbSet<T>(context)
-					.FromSql(sql)
+					.FromSqlRaw(sql)
 					.ToList()).ConfigureAwait(false);
 		}
 
@@ -321,7 +315,7 @@ namespace LogicMonitor.Datamart
 			where TApi : IdentifiedItem, IHasEndpoint, new()
 			where TStore : IdentifiedStoreItem
 		{
-			logger.LogDebug($"{typeof(TApi).Name}: Loading entries...");
+			logger.LogDebug("{type}: Loading entries...", typeof(TApi).Name);
 
 			using var context = new Context(DbContextOptions);
 			// Get the right DbSet from the context
@@ -331,7 +325,7 @@ namespace LogicMonitor.Datamart
 			var lastObservedUtc = DateTime.UtcNow;
 			var apiItems = await GetAllAsync<TApi>(cancellationToken: cancellationToken)
 				.ConfigureAwait(false);
-			logger.LogDebug($"{typeof(TApi).Name}: Loaded {apiItems.Count} items.");
+			logger.LogDebug("{type}: Loaded {apiItemsCount} items.", typeof(TApi).Name, apiItems.Count);
 
 			// Add/update all the items
 			foreach (var item in apiItems)
@@ -344,7 +338,7 @@ namespace LogicMonitor.Datamart
 			var modified = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Modified);
 			var total = context.ChangeTracker.Entries().Count();
 			var affectedRowCount = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-			logger.LogInformation($"{typeof(TApi).Name}: Total {total}; Added {added}; Modified {modified}.");
+			logger.LogInformation("{type}: Total {total}; Added {added}; Modified {modified}.", typeof(TApi).Name, total, added, modified);
 
 			// For DataPoints, the information from LogicMonitor is present on the DataSources.
 			// So, after fetching the DataSources, we should also update the DataPoints in the database
@@ -373,7 +367,7 @@ namespace LogicMonitor.Datamart
 				if (apiDataSource == null)
 				{
 					// May not happen if the config references a non-existent DataSource
-					_logger.LogError($"For LogicMonitor instance {_configuration.LogicMonitorCredential.Subdomain}, expected to find LogicMonitor API DataSource called '{dataSourceName}', but it was missing.");
+					_logger.LogError("For LogicMonitor instance {_configurationLogicMonitorCredentialSubdomain}, expected to find LogicMonitor API DataSource called '{dataSourceName}', but it was missing.", _configuration.LogicMonitorClientOptions.Account, dataSourceName);
 					continue;
 				}
 
@@ -384,7 +378,7 @@ namespace LogicMonitor.Datamart
 				if (apiDataSource == null)
 				{
 					// Should not happen, as we have only just updated the database with DataSources
-					_logger.LogError($"For LogicMonitor instance {_configuration.LogicMonitorCredential.Subdomain}, expected to find Database DataSource called '{dataSourceName}', but it was missing.");
+					_logger.LogError("For LogicMonitor instance {_configurationLogicMonitorCredentialSubdomain}, expected to find Database DataSource called '{dataSourceName}', but it was missing.", _configuration.LogicMonitorClientOptions.Account, dataSourceName);
 					continue;
 				}
 				// We have a matching DataSource from both the API and the database.
@@ -399,9 +393,12 @@ namespace LogicMonitor.Datamart
 					if (apiDataPoint == null)
 					{
 						_logger.LogError(
-							$"For LogicMonitor instance '{_configuration.LogicMonitorCredential.Subdomain}', DataSource '{dataSourceName}': " +
-							$"could not find configured DataPoint '{configDataPoint.Name}'. " +
-							$"Available DataPoints: {string.Join(", ", apiDataSource.DataSourceDataPoints.Select(dp => dp.Name).OrderBy(dp => dp))}");
+							"For LogicMonitor instance '{_configurationLogicMonitorCredentialSubdomain}', DataSource '{dataSourceName}': could not find configured DataPoint '{configDataPointName}'. Available DataPoints: {availableDataPoints}",
+							_configuration.LogicMonitorClientOptions.Account,
+							dataSourceName,
+							configDataPoint.Name,
+							string.Join(", ", apiDataSource.DataSourceDataPoints.Select(dp => dp.Name).OrderBy(dp => dp))
+						);
 						continue;
 					}
 
@@ -421,7 +418,12 @@ namespace LogicMonitor.Datamart
 							MeasurementUnit = configDataPoint.MeasurementUnit
 						});
 
-						_logger.LogInformation($"For LogicMonitor instance {_configuration.LogicMonitorCredential.Subdomain}, for {dataSourceName}, added datapoint {configDataPoint.Name} to database.");
+						_logger.LogInformation(
+							"For LogicMonitor instance {_configurationLogicMonitorCredentialSubdomain}, for {dataSourceName}, added datapoint {configDataPointName} to database.",
+							_configuration.LogicMonitorClientOptions.Account,
+							dataSourceName,
+							configDataPoint.Name
+							);
 						await context
 							.SaveChangesAsync()
 							.ConfigureAwait(false);

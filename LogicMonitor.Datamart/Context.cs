@@ -39,8 +39,8 @@ namespace LogicMonitor.Datamart
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
-			modelBuilder.ForNpgsqlUseIdentityByDefaultColumns();
-			modelBuilder.ForSqlServerUseIdentityColumns();
+			//modelBuilder.ForNpgsqlUseIdentityByDefaultColumns();
+			//modelBuilder.ForSqlServerUseIdentityColumns();
 
 			// MonitorObjectGroup indexes
 			var monitorObjectGroups = modelBuilder.Entity<MonitorObjectGroupStoreItem>();
@@ -95,35 +95,56 @@ namespace LogicMonitor.Datamart
 					a.MonitorObjectGroup9Id,
 				});
 
-			if (Database.IsNpgsql())
-			{
-				alertIndexBuilder.ForNpgsqlInclude(new[]
+			// TODO - Check equivalency:
+
+			modelBuilder.Entity<AlertStoreItem>()
+				.HasIndex(a => new
 				{
-					nameof(AlertStoreItem.Id),
-					nameof(AlertStoreItem.Severity),
-					nameof(AlertStoreItem.ClearValue),
-					nameof(AlertStoreItem.MonitorObjectId),
-					nameof(AlertStoreItem.ResourceTemplateName),
-					nameof(AlertStoreItem.InstanceId),
-					nameof(AlertStoreItem.InstanceName)
-				})
-				.HasName($"IX_{nameof(Alerts)}_FasterPercentageAvailability");
-			}
-			if (Database.IsSqlServer())
-			{
-				alertIndexBuilder.ForSqlServerInclude(new[]
-				{
-					nameof(AlertStoreItem.Id),
-					nameof(AlertStoreItem.Severity),
-					nameof(AlertStoreItem.ClearValue),
-					nameof(AlertStoreItem.MonitorObjectId),
-					nameof(AlertStoreItem.ResourceTemplateName),
-					nameof(AlertStoreItem.InstanceId),
-					nameof(AlertStoreItem.InstanceName)
-				})
-				.HasName($"IX_{nameof(Alerts)}_FasterPercentageAvailability")
-				;
-			}
+					a.StartOnSeconds,
+					a.EndOnSeconds,
+					a.IsCleared,
+					a.InScheduledDownTime,
+					a.MonitorObjectGroup0Id,
+					a.MonitorObjectGroup1Id,
+					a.MonitorObjectGroup2Id,
+					a.MonitorObjectGroup3Id,
+					a.MonitorObjectGroup4Id,
+					a.MonitorObjectGroup5Id,
+					a.MonitorObjectGroup6Id,
+					a.MonitorObjectGroup7Id,
+					a.MonitorObjectGroup8Id,
+					a.MonitorObjectGroup9Id,
+				});
+
+			//if (Database.IsNpgsql())
+			//{
+			//	alertIndexBuilder.ForNpgsqlInclude(new[]
+			//	{
+			//		nameof(AlertStoreItem.Id),
+			//		nameof(AlertStoreItem.Severity),
+			//		nameof(AlertStoreItem.ClearValue),
+			//		nameof(AlertStoreItem.MonitorObjectId),
+			//		nameof(AlertStoreItem.ResourceTemplateName),
+			//		nameof(AlertStoreItem.InstanceId),
+			//		nameof(AlertStoreItem.InstanceName)
+			//	})
+			//	.HasName($"IX_{nameof(Alerts)}_FasterPercentageAvailability");
+			//}
+			//if (Database.IsSqlServer())
+			//{
+			//	alertIndexBuilder.ForSqlServerInclude(new[]
+			//	{
+			//		nameof(AlertStoreItem.Id),
+			//		nameof(AlertStoreItem.Severity),
+			//		nameof(AlertStoreItem.ClearValue),
+			//		nameof(AlertStoreItem.MonitorObjectId),
+			//		nameof(AlertStoreItem.ResourceTemplateName),
+			//		nameof(AlertStoreItem.InstanceId),
+			//		nameof(AlertStoreItem.InstanceName)
+			//	})
+			//	.HasName($"IX_{nameof(Alerts)}_FasterPercentageAvailability")
+			//	;
+			//}
 
 			// DeviceDataSourceInstance indexes
 			modelBuilder.Entity<DeviceDataSourceInstanceStoreItem>()

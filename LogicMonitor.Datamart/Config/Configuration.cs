@@ -1,4 +1,5 @@
-﻿using LogicMonitor.Datamart.Exceptions;
+﻿using LogicMonitor.Api;
+using LogicMonitor.Datamart.Exceptions;
 using System;
 using System.Collections.Generic;
 
@@ -33,9 +34,9 @@ namespace LogicMonitor.Datamart.Config
 		public int LateArrivingDataWindowHours { get; set; } = 2;
 
 		/// <summary>
-		/// The LogicMonitor credential
+		/// The LogicMonitor client options
 		/// </summary>
-		public LogicMonitorCredential LogicMonitorCredential { get; set; }
+		public LogicMonitorClientOptions LogicMonitorClientOptions { get; set; }
 
 		/// <summary>
 		/// The Database type
@@ -81,6 +82,18 @@ namespace LogicMonitor.Datamart.Config
 
 		public List<string> DeviceProperties { get; set; } = new List<string>();
 
+		public int LogSyncDesiredMaxIntervalMinutes { get; set; } = 60;
+
+		public int DimensionSyncDesiredMaxIntervalMinutes { get; set; } = 3600;
+		public int DataAgingDesiredMaxIntervalMinutes { get; set; }
+		public int CountAggregationDaysToRetain { get; set; }
+		public int DataSyncDesiredMaxIntervalMinutes { get; set; }
+		public int AlertSyncDesiredMaxIntervalMinutes { get; set; }
+		public bool SyncLogs { get; set; }
+		public bool SyncDimensions { get; set; }
+		public bool SyncAlerts { get; set; }
+		public bool SyncData { get; set; }
+
 		public void Validate()
 		{
 			if (string.IsNullOrWhiteSpace(Name))
@@ -103,9 +116,9 @@ namespace LogicMonitor.Datamart.Config
 				throw new ConfigurationException("LateArrivingDataWindowHours should be a positive integer.");
 			}
 
-			if (LogicMonitorCredential == null)
+			if (LogicMonitorClientOptions == null)
 			{
-				throw new ConfigurationException("LogicMonitor credential not set.");
+				throw new ConfigurationException("LogicMonitor client options not set.");
 			}
 
 			if (DatabaseType == DatabaseType.Unknown)

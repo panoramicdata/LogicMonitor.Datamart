@@ -46,7 +46,7 @@ namespace LogicMonitor.Datamart
 			var matchingDatabaseDataSources = await context
 				.DataSources
 				.Where(ds => deviceDataSourceNames.Contains(ds.Name))
-				.ToListAsync()
+				.ToListAsync(cancellationToken)
 				.ConfigureAwait(false);
 
 			// Get the LogicMonitor Ids for those DataSources
@@ -63,13 +63,13 @@ namespace LogicMonitor.Datamart
 				)
 				// To make debugging a little more deterministic, order by the Device and then its instances
 				.OrderBy(ddsi => ddsi.DeviceId).ThenBy(ddsi => ddsi.Id)
-				.ToListAsync()
+				.ToListAsync(cancellationToken)
 				.ConfigureAwait(false);
 
 			// If there aren't any, log and return
 			if (databaseDeviceDataSourceInstances.Count == 0)
 			{
-				Logger.LogWarning($"Found no DeviceDataSourceInstances in the databases for DeviceDataSource names {string.Join(", ", deviceDataSourceNames)}. Check dimensions have been synced.");
+				Logger.LogWarning("Found no DeviceDataSourceInstances in the databases for DeviceDataSource names {deviceDataSourceNamesJoined}. Check dimensions have been synced.", string.Join(", ", deviceDataSourceNames));
 				return;
 			}
 			// We have the database deviceDataSourceInstances for the configured DataSources
@@ -119,7 +119,7 @@ namespace LogicMonitor.Datamart
 			var dataSourceAggregationDuration = configurationLevelAggregationDuration;
 
 			// Get data for each instance
-			logger.LogInformation($"Syncing {databaseDeviceDataSourceInstances.Count} DeviceDataSourceInstances...");
+			logger.LogInformation("Syncing {databaseDeviceDataSourceInstancesCount} DeviceDataSourceInstances...", databaseDeviceDataSourceInstances.Count);
 			foreach (var databaseDeviceDataSourceInstanceGroup in
 					databaseDeviceDataSourceInstances
 					.GroupBy(ddsi => ddsi.LastAggregationHourWrittenUtc ?? DateTime.MinValue)
@@ -139,8 +139,13 @@ namespace LogicMonitor.Datamart
 						.Select(t => t.item.Id)
 						.ToList();
 
-					var rangeDescription = $"Batch {batchIndex + 1}: {instanceIdList.Count} instances starting {databaseDeviceDataSourceInstanceGroup.Key:yyyy-MM-dd HH:mm:ss}: {string.Join(",", instanceIdList)}...";
-					logger.LogDebug(rangeDescription);
+					logger.LogDebug(
+						"Batch {batchIndexPlusOne}: {instanceIdListCount} instances starting {databaseDeviceDataSourceInstanceGroupKey:yyyy-MM-dd HH:mm:ss}: {instanceIdListJoined}...",
+						batchIndex + 1,
+						instanceIdList.Count,
+						databaseDeviceDataSourceInstanceGroup.Key,
+						string.Join(",", instanceIdList)
+						);
 
 					try
 					{
@@ -169,7 +174,11 @@ namespace LogicMonitor.Datamart
 								// Increment by the aggregation duration until we're within the window
 								lastUpdatedDateTimeUtc = lastUpdatedDateTimeUtc.Add(dataSourceAggregationDuration);
 							}
-							logger.LogDebug($"lastUpdatedDateTimeUtc {originalLastUpdatedDateTimeUtc} is more than {MaxHoursBack} hours ago so setting to {lastUpdatedDateTimeUtc}.");
+							logger.LogDebug(
+								"lastUpdatedDateTimeUtc {originalLastUpdatedDateTimeUtc} is more than {MaxHoursBack} hours ago so setting to {lastUpdatedDateTimeUtc}.",
+								originalLastUpdatedDateTimeUtc,
+								MaxHoursBack,
+								lastUpdatedDateTimeUtc);
 						}
 
 						var timeCursor = lastUpdatedDateTimeUtc;
@@ -203,7 +212,7 @@ namespace LogicMonitor.Datamart
 								// If we've genuinely done nothing, then log it so terminating after this is shown to be intentional
 								if (blockIndex == 0)
 								{
-									logger.LogDebug($"BlockIndex is 0, nothing to do for batch {batchIndex + 1}.");
+									logger.LogDebug("BlockIndex is 0, nothing to do for batch {batchIndexPlusOne}.", batchIndex + 1);
 								}
 								break;
 							}
@@ -218,7 +227,7 @@ namespace LogicMonitor.Datamart
 								).ConfigureAwait(false);
 
 							var rowsRetrieved = instancesFetchDataResponse.InstanceFetchDataResponses.Sum(r => r.Timestamps.Length);
-							logger.LogDebug($"Loaded {rowsRetrieved} entries.");
+							logger.LogDebug("Loaded {rowsRetrieved} entries.", rowsRetrieved);
 							//if (rowsRetrieved > 0)
 							totalRowsLoadedFromApi += rowsRetrieved;
 
@@ -226,7 +235,7 @@ namespace LogicMonitor.Datamart
 							using var dataContext = new Context(datamartClient.DbContextOptions);
 							using var dbConnection = dataContext.Database.GetDbConnection();
 							using var sqlConnection = new SqlConnection(dbConnection.ConnectionString);
-							await sqlConnection.OpenAsync().ConfigureAwait(false);
+							await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
 							aggregationsToWrite.Clear();
 
 							// Iterate over the retrieved DeviceDataSourceInstances
@@ -255,7 +264,13 @@ namespace LogicMonitor.Datamart
 										// Validate the result is good to zip up
 										if (instanceFetchDataResponse.Timestamps.Length != instanceFetchDataResponse.DataValues.Length)
 										{
-											logger.LogError($"Expected count of {nameof(instanceFetchDataResponse.Timestamps)} ({instanceFetchDataResponse.Timestamps.Length}) and count of {nameof(instanceFetchDataResponse.DataValues)} ({instanceFetchDataResponse.DataValues.Length}) to match.");
+											logger.LogError(
+												"Expected count of {timestampsName} ({instanceFetchDataResponseTimestampsLength}) and count of {dataValuesName} ({instanceFetchDataResponseDataValuesLength}) to match.",
+												nameof(instanceFetchDataResponse.Timestamps),
+												instanceFetchDataResponse.Timestamps.Length,
+												nameof(instanceFetchDataResponse.DataValues),
+												instanceFetchDataResponse.DataValues.Length
+												);
 											// We've logged, try the next DataPoint
 											continue;
 										}
@@ -278,7 +293,7 @@ namespace LogicMonitor.Datamart
 
 										var databaseDataPoint = await dataContext
 											.DataSourceDataPoints
-											.SingleOrDefaultAsync(dp => dp.Name == dataPointModel.Name && dp.DataSource.Name == instanceFetchDataResponse.DataSourceName)
+											.SingleOrDefaultAsync(dp => dp.Name == dataPointModel.Name && dp.DataSource.Name == instanceFetchDataResponse.DataSourceName, cancellationToken)
 											.ConfigureAwait(false);
 
 										// Aggregate it in blocks of DataAggregationDuration
@@ -342,7 +357,13 @@ namespace LogicMonitor.Datamart
 					}
 					catch (Exception e)
 					{
-						logger.LogWarning(e, $"{rangeDescription} failed due to {e}");
+						logger.LogWarning(
+							e, "Batch {batchIndexPlusOne}: {instanceIdListCount} instances starting {databaseDeviceDataSourceInstanceGroupKey:yyyy-MM-dd HH:mm:ss}: {instanceIdListJoined}... failed due to {e.Message}",
+							batchIndex + 1,
+							instanceIdList.Count,
+							databaseDeviceDataSourceInstanceGroup.Key,
+							string.Join(",", instanceIdList),
+							e);
 					}
 				}
 			}

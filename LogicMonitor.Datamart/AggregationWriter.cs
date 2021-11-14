@@ -70,11 +70,9 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 
 			using var dbContext = new Context(dbContextOptions);
 			var tableName = GetTableName(start);
-			logger.LogDebug($"Dropping table {tableName}");
+			logger.LogDebug("Dropping table {tableName}", tableName);
 			var tableCreationSql = "DROP TABLE [" + tableName + "]";
-#pragma warning disable EF1000 // Possible SQL injection vulnerability. - No externally provided data
-			await dbContext.Database.ExecuteSqlCommandAsync(tableCreationSql).ConfigureAwait(false);
-#pragma warning restore EF1000 // Possible SQL injection vulnerability.
+			await dbContext.Database.ExecuteSqlRawAsync(tableCreationSql).ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -125,7 +123,7 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 			var aggregationCount = aggregations.Count();
 
 			var stopwatch = Stopwatch.StartNew();
-			logger.LogTrace($"Preparing DataTable for {aggregationCount} aggregations...");
+			logger.LogTrace("Preparing DataTable for {aggregationCount} aggregations...", aggregationCount);
 
 			// Prep the data into a DataTable, setting initial structure from the database
 			using var table = new DataTable();
@@ -152,12 +150,15 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 			}
 
 			var lastAggregationHourWrittenUtc = aggregations.Max(a => a.PeriodEnd);
-			logger.LogTrace($"Preparing DataTable for {aggregationCount} aggregations complete after {stopwatch.ElapsedMilliseconds:N0}ms.");
+			logger.LogTrace(
+				"Preparing DataTable for {aggregationCount} aggregations complete after {stopwatchElapsedMilliseconds:N0}ms.",
+				aggregationCount,
+				stopwatch.ElapsedMilliseconds);
 			stopwatch.Restart();
 
 			using var transaction = sqlConnection.BeginTransaction();
 			stopwatch.Restart();
-			logger.LogTrace($"Bulk writing {aggregationCount} aggregations...");
+			logger.LogTrace("Bulk writing {aggregationCount} aggregations...", aggregationCount);
 			// Write out the data as part of a transaction
 			using (var bulkCopy = new SqlBulkCopy(sqlConnection, SqlBulkCopyOptions.Default, transaction))
 			{
@@ -165,21 +166,39 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 				bulkCopy.BulkCopyTimeout = sqlBulkCopyTimeoutSeconds;
 				await bulkCopy.WriteToServerAsync(table).ConfigureAwait(false);
 			}
-			logger.LogTrace($"Bulk writing {aggregationCount} aggregations complete after {stopwatch.ElapsedMilliseconds:N0}ms.");
+			logger.LogTrace(
+				"Bulk writing {aggregationCount} aggregations complete after {stopwatchElapsedMilliseconds:N0}ms.",
+				aggregationCount,
+				stopwatch.ElapsedMilliseconds
+				);
 
 			stopwatch.Restart();
-			logger.LogTrace($"Setting progress for DDSI {deviceDataSourceInstanceId} to {lastAggregationHourWrittenUtc}...");
+			logger.LogTrace(
+				"Setting progress for DDSI {deviceDataSourceInstanceId} to {lastAggregationHourWrittenUtc}...",
+				deviceDataSourceInstanceId,
+				lastAggregationHourWrittenUtc
+				);
 			// Update the progress as part of a transaction
 			await WriteProgressBoundaryAsync(sqlConnection, sqlCommandTimeoutSeconds, deviceDataSourceInstanceId, lastAggregationHourWrittenUtc, transaction);
-			logger.LogTrace($"Setting progress for DDSI {deviceDataSourceInstanceId} to {lastAggregationHourWrittenUtc} complete after {stopwatch.ElapsedMilliseconds:N0}ms.");
+			logger.LogTrace("Setting progress for DDSI {deviceDataSourceInstanceId} to {lastAggregationHourWrittenUtc} complete after {stopwatchElapsedMilliseconds:N0}ms.",
+				deviceDataSourceInstanceId,
+				lastAggregationHourWrittenUtc,
+				stopwatch.ElapsedMilliseconds
+				);
 
 			stopwatch.Restart();
 			logger.LogTrace("Committing transaction...");
 			transaction.Commit();
-			logger.LogTrace($"Committing transaction complete after {stopwatch.ElapsedMilliseconds:N0}ms");
+			logger.LogTrace("Committing transaction complete after {stopwatchElapsedMilliseconds:N0}ms", stopwatch.ElapsedMilliseconds);
 		}
 
-		internal static async Task WriteProgressBoundaryAsync(SqlConnection sqlConnection, int sqlCommandTimeoutSeconds, int deviceDataSourceInstanceId, DateTime lastAggregationHourWrittenUtc, SqlTransaction transaction)
+		internal static async Task WriteProgressBoundaryAsync(
+			SqlConnection sqlConnection,
+			int sqlCommandTimeoutSeconds,
+			int deviceDataSourceInstanceId,
+			DateTime lastAggregationHourWrittenUtc,
+			SqlTransaction transaction
+			)
 		{
 			const string sql = "update DeviceDataSourceInstances set LastAggregationHourWrittenUtc=@LastAggregationHourWrittenUtc where id=@Id";
 			using var command = new SqlCommand(sql, sqlConnection, transaction);
@@ -211,7 +230,7 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 				command.CommandTimeout = sqlCommandTimeoutSeconds;
 				foreach (var tableName in tablesToRemove)
 				{
-					logger.LogInformation($"Aging out table {tableName}");
+					logger.LogInformation("Aging out table {tableName}", tableName);
 					command.CommandText = "drop table " + tableName;
 					await command.ExecuteNonQueryAsync().ConfigureAwait(false);
 				}

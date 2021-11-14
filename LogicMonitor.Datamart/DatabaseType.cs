@@ -25,6 +25,9 @@ namespace LogicMonitor.Datamart
 		/// </summary>
 		InMemory,
 
+		/// <summary>
+		/// Postgres
+		/// </summary>
 		Postgres
 	}
 }
