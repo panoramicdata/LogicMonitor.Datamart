@@ -1,30 +1,24 @@
-﻿using FluentAssertions;
-using System;
-using System.Collections.Generic;
-using Xunit;
-using Xunit.Abstractions;
+﻿namespace LogicMonitor.Datamart.Test;
 
-namespace LogicMonitor.Datamart.Test
+public class AgingTests : TestWithOutput
 {
-	public class AgingTests : TestWithOutput
+	public AgingTests(ITestOutputHelper iTestOutputHelper) : base(iTestOutputHelper) { }
+
+	// Age - retaining 5 days
+	[Fact]
+	public async void AgeData()
+		=> await new DataAging(
+				DatamartClient,
+				5,
+				LoggerFactory)
+			.ExecuteAsync(default)
+			.ConfigureAwait(false);
+
+	[Fact]
+	public void DetermineTablesToAge_GivenList_CorrectResult()
 	{
-		public AgingTests(ITestOutputHelper iTestOutputHelper) : base(iTestOutputHelper) { }
-
-		// Age - retaining 5 days
-		[Fact]
-		public async void AgeData()
-			=> await new DataAging(
-					DatamartClient,
-					5,
-					LoggerFactory)
-				.ExecuteAsync(default)
-				.ConfigureAwait(false);
-
-		[Fact]
-		public void DetermineTablesToAge_GivenList_CorrectResult()
-		{
-			var today = DateTimeOffset.UtcNow.Date;
-			var existingTables = new List<string>
+		var today = DateTimeOffset.UtcNow.Date;
+		var existingTables = new List<string>
 			{
 				AggregationWriter.GetTableName(today),
 				AggregationWriter.GetTableName(today.AddDays(-1)),
@@ -35,9 +29,9 @@ namespace LogicMonitor.Datamart.Test
 				AggregationWriter.GetTableName(today.AddDays(-6)),
 			};
 
-			var tablesToRemove = AggregationWriter.DetermineTablesToAge(existingTables, 3);
+		var tablesToRemove = AggregationWriter.DetermineTablesToAge(existingTables, 3);
 
-			var expectedResult = new List<string>
+		var expectedResult = new List<string>
 			{
 				AggregationWriter.GetTableName(today.AddDays(-3)),
 				AggregationWriter.GetTableName(today.AddDays(-4)),
@@ -45,7 +39,6 @@ namespace LogicMonitor.Datamart.Test
 				AggregationWriter.GetTableName(today.AddDays(-6))
 			};
 
-			tablesToRemove.Should().BeEquivalentTo(expectedResult);
-		}
+		tablesToRemove.Should().BeEquivalentTo(expectedResult);
 	}
 }

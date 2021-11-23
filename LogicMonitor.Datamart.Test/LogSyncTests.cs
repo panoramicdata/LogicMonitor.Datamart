@@ -1,28 +1,23 @@
-﻿using System;
-using Xunit;
-using Xunit.Abstractions;
+﻿namespace LogicMonitor.Datamart.Test;
 
-namespace LogicMonitor.Datamart.Test
+public class LogSyncTests : TestWithOutput
 {
-	public class LogSyncTests : TestWithOutput
+	public LogSyncTests(ITestOutputHelper iTestOutputHelper)
+	 : base(iTestOutputHelper)
 	{
-		public LogSyncTests(ITestOutputHelper iTestOutputHelper)
-		 : base(iTestOutputHelper)
-		{
-		}
+	}
 
-		[Fact]
-		public async void GetLogs()
-		{
-			var startDateTimeUtc = DateTimeOffset.UtcNow.AddDays(-7);
-			//var startDateTimeUtc = DateTimeOffset.ParseExact("2019-04-01", "yyyy-MM-dd", CultureInfo.InvariantCulture).UtcDateTime;
+	[Fact]
+	public async void GetLogs()
+	{
+		var startDateTimeUtc = DateTimeOffset.UtcNow.AddDays(-7);
+		//var startDateTimeUtc = DateTimeOffset.ParseExact("2019-04-01", "yyyy-MM-dd", CultureInfo.InvariantCulture).UtcDateTime;
 
-			await new LogSync(
-					DatamartClient,
-					startDateTimeUtc,
-					LoggerFactory)
-				.ExecuteAsync(default)
-				.ConfigureAwait(false);
-		}
+		await new LogSync(
+				DatamartClient,
+				startDateTimeUtc,
+				LoggerFactory)
+			.ExecuteAsync(default)
+			.ConfigureAwait(false);
 	}
 }

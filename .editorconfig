@@ -6,6 +6,7 @@
 
 #use hard tabs for indentation
 indent_style = tab
+csharp_style_namespace_declarations=file_scoped:silent
 
 [*.json]
 indent_style = tab

@@ -1,20 +1,15 @@
-using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+namespace LogicMonitor.Datamart.Models;
 
-namespace LogicMonitor.Datamart.Models
+public abstract class StoreItem
 {
-	public abstract class StoreItem
-	{
-		/// <summary>
-		/// Database unique Id
-		/// </summary>
-		[Key]
-		[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-		public int DatamartId { get; set; }
+	/// <summary>
+	/// Database unique Id
+	/// </summary>
+	[Key]
+	[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+	public int DatamartId { get; set; }
 
-		public DateTime DatamartCreatedUtc { get; set; }
+	public DateTime DatamartCreatedUtc { get; set; }
 
-		public DateTime DatamartLastModifiedUtc { get; set; }
-	}
+	public DateTime DatamartLastModifiedUtc { get; set; }
 }

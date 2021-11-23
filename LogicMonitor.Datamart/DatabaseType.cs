@@ -1,30 +1,29 @@
-namespace LogicMonitor.Datamart
+namespace LogicMonitor.Datamart;
+
+/// <summary>
+/// The Database type
+/// </summary>
+public enum DatabaseType
 {
 	/// <summary>
-	/// The Database type
+	/// Not yet set
 	/// </summary>
-	public enum DatabaseType
-	{
-		/// <summary>
-		/// Not yet set
-		/// </summary>
-		Unknown,
+	Unknown,
 
-		/// <summary>
-		/// None
-		/// </summary>
-		None,
+	/// <summary>
+	/// None
+	/// </summary>
+	None,
 
-		/// <summary>
-		/// SqlServer
-		/// </summary>
-		SqlServer,
+	/// <summary>
+	/// SqlServer
+	/// </summary>
+	SqlServer,
 
-		/// <summary>
-		/// In-memory
-		/// </summary>
-		InMemory,
+	/// <summary>
+	/// In-memory
+	/// </summary>
+	InMemory,
 
-		Postgres
-	}
+	Postgres
 }

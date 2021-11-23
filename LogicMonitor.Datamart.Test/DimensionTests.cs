@@ -1,23 +1,19 @@
-using Xunit;
-using Xunit.Abstractions;
+namespace LogicMonitor.Datamart.Test;
 
-namespace LogicMonitor.Datamart.Test
+public class DimensionTests : TestWithOutput
 {
-	public class DimensionTests : TestWithOutput
+	public DimensionTests(ITestOutputHelper iTestOutputHelper) : base(iTestOutputHelper)
 	{
-		public DimensionTests(ITestOutputHelper iTestOutputHelper) : base(iTestOutputHelper)
-		{
-		}
+	}
 
-		[Fact]
-		public async void GetDimensions()
-		{
-			await new DimensionSync(
-					DatamartClient,
-					Configuration,
-					LoggerFactory)
-				.ExecuteAsync(default)
-				.ConfigureAwait(false);
-		}
+	[Fact]
+	public async void GetDimensions()
+	{
+		await new DimensionSync(
+				DatamartClient,
+				Configuration,
+				LoggerFactory)
+			.ExecuteAsync(default)
+			.ConfigureAwait(false);
 	}
 }

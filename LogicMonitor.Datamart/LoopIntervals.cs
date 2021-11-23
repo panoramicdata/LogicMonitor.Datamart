@@ -1,8 +1,7 @@
-﻿namespace LogicMonitor.Datamart
+﻿namespace LogicMonitor.Datamart;
+
+public static class LoopIntervals
 {
-	public static class LoopIntervals
-	{
-		public const int ExecuteOnce = -1;
-		public const int Immediately = 0;
-	}
+	public const int ExecuteOnce = -1;
+	public const int Immediately = 0;
 }
