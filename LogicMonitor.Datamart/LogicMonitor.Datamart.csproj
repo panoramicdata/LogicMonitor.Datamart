@@ -11,7 +11,7 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor Datamart</PackageTags>
 		<PackageReleaseNotes>
-			Updated LogicMonitor.Api to 2.161.4
+			Updated LogicMonitor.Api to 2.161.5
 		</PackageReleaseNotes>
 	</PropertyGroup>
 
@@ -23,7 +23,7 @@
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="LogicMonitor.Api" Version="2.161.4" />
+		<PackageReference Include="LogicMonitor.Api" Version="2.161.5" />
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.2" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="2.2.6" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="2.2.6" />
