@@ -46,6 +46,9 @@ namespace LogicMonitor.Datamart.Mapping
 					dest => dest.SystemProperties,
 					opts => opts.Ignore())
 				.ForMember(
+					dest => dest.IsUncInstance,
+					opts => opts.Ignore())
+				.ForMember(
 					dest => dest.AutoProperties,
 					opts => opts.Ignore())
 				.ForMember(
