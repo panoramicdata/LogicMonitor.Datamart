@@ -330,9 +330,7 @@ internal class AlertSync : LoopInterval
 		return result;
 	}
 
-#pragma warning disable RCS1213 // Remove unused member declaration. - This is retained for reference
 	private async Task AlterIndexes(Context context, bool enabled)
-#pragma warning restore RCS1213 // Remove unused member declaration.
 	{
 		var stopwatch = Stopwatch.StartNew();
 		var indexAction = enabled ? "REBUILD" : "DISABLE";

@@ -24,7 +24,7 @@
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="LogicMonitor.Api" Version="2.161.5" />
+		<PackageReference Include="LogicMonitor.Api" Version="2.161.11" />
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.2" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="2.2.6" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="2.2.6" />
