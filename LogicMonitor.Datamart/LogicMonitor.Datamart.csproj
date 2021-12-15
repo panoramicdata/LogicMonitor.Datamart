@@ -11,7 +11,8 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor Datamart</PackageTags>
 		<PackageReleaseNotes>
-			Updated LogicMonitor.Api to 2.161.5
+			Updated LogicMonitor.Api to 2.161.11
+			Modified DatamartClient constructor to use LogicMonitorClientOptions
 		</PackageReleaseNotes>
 		<LangVersion>latest</LangVersion>
 	</PropertyGroup>

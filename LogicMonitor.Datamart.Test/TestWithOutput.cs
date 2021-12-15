@@ -1,4 +1,6 @@
-﻿namespace LogicMonitor.Datamart.Test;
+﻿using LogicMonitor.Api;
+
+namespace LogicMonitor.Datamart.Test;
 
 public abstract class TestWithOutput
 {
@@ -61,11 +63,12 @@ public abstract class TestWithOutput
 		var configuration = LoadConfiguration("appsettings.json");
 		var logicMonitorCredentials = configuration.LogicMonitorCredentials;
 		var loggerFactory = new PrefixLoggerFactory(logicMonitorCredentials.Account, LogFactory.Create(iTestOutputHelper));
-		Configuration.LogicMonitorCredential = new LogicMonitorCredential
+		Configuration.LogicMonitorClientOptions = new LogicMonitorClientOptions
 		{
-			Subdomain = logicMonitorCredentials.Account,
+			Account = logicMonitorCredentials.Account,
 			AccessId = logicMonitorCredentials.AccessId,
 			AccessKey = logicMonitorCredentials.AccessKey,
+			Logger = loggerFactory.CreateLogger<LogicMonitorClient>()
 		};
 		Configuration.DatabaseType = configuration.DatabaseType;
 		Configuration.DatabaseServerName = configuration.DatabaseServer;

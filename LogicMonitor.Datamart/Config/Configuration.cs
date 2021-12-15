@@ -29,9 +29,9 @@ public class Configuration
 	public int LateArrivingDataWindowHours { get; set; } = 2;
 
 	/// <summary>
-	/// The LogicMonitor credential
+	/// The LogicMonitor client options
 	/// </summary>
-	public LogicMonitorCredential LogicMonitorCredential { get; set; }
+	public LogicMonitorClientOptions LogicMonitorClientOptions { get; set; }
 
 	/// <summary>
 	/// The Database type
@@ -99,9 +99,9 @@ public class Configuration
 			throw new ConfigurationException("LateArrivingDataWindowHours should be a positive integer.");
 		}
 
-		if (LogicMonitorCredential == null)
+		if (LogicMonitorClientOptions == null)
 		{
-			throw new ConfigurationException("LogicMonitor credential not set.");
+			throw new ConfigurationException("LogicMonitor client options not set.");
 		}
 
 		if (DatabaseType == DatabaseType.Unknown)
