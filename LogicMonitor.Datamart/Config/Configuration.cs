@@ -1,4 +1,6 @@
-﻿using LogicMonitor.Datamart.Exceptions;
+﻿using LogicMonitor.Api;
+using LogicMonitor.Datamart.Exceptions;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 
@@ -35,7 +37,12 @@ namespace LogicMonitor.Datamart.Config
 		/// <summary>
 		/// The LogicMonitor credential
 		/// </summary>
-		public LogicMonitorCredential LogicMonitorCredential { get; set; }
+		public LogicMonitorClientOptions LogicMonitorClientOptions { get; set; }
+
+		/// <summary>
+		/// The LoggerFactory
+		/// </summary>
+		public ILoggerFactory LoggerFactory { get; set; }
 
 		/// <summary>
 		/// The Database type
@@ -103,7 +110,7 @@ namespace LogicMonitor.Datamart.Config
 				throw new ConfigurationException("LateArrivingDataWindowHours should be a positive integer.");
 			}
 
-			if (LogicMonitorCredential == null)
+			if (LogicMonitorClientOptions == null)
 			{
 				throw new ConfigurationException("LogicMonitor credential not set.");
 			}

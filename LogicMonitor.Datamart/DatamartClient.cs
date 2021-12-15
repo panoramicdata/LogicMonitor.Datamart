@@ -24,7 +24,7 @@ using System.Threading.Tasks;
 
 namespace LogicMonitor.Datamart
 {
-	public class DatamartClient : PortalClient
+	public class DatamartClient : LogicMonitorClient
 	{
 		internal DbContextOptions<Context> DbContextOptions { get; }
 
@@ -42,14 +42,7 @@ namespace LogicMonitor.Datamart
 
 		internal static IMapper MapperInstance = new Mapper(_mapperConfig);
 
-		public DatamartClient(
-			Configuration configuration,
-			ILoggerFactory loggerFactory
-			) : base(
-				configuration?.LogicMonitorCredential?.Subdomain ?? throw new ArgumentNullException(nameof(configuration), LogicMonitorCredentialNullMessage),
-				configuration?.LogicMonitorCredential?.AccessId ?? throw new ArgumentNullException(nameof(configuration), LogicMonitorCredentialNullMessage),
-				configuration?.LogicMonitorCredential?.AccessKey ?? throw new ArgumentNullException(nameof(configuration), LogicMonitorCredentialNullMessage),
-				loggerFactory.CreateLogger<PortalClient>())
+		public DatamartClient(Configuration configuration) : base(configuration?.LogicMonitorClientOptions)
 		{
 			// Store and validate configuration
 			_configuration = configuration;
@@ -104,8 +97,8 @@ namespace LogicMonitor.Datamart
 			}
 			DbContextOptions = dbContextOptionsBuilder.Options;
 
-			_loggerFactory = loggerFactory;
-			_logger = loggerFactory.CreateLogger<DatamartClient>();
+			_loggerFactory = _configuration.LoggerFactory;
+			_logger =_loggerFactory.CreateLogger<DatamartClient>();
 		}
 
 		public async Task<bool> IsDatabaseCreatedAsync(CancellationToken cancellationToken = default)
@@ -410,7 +403,7 @@ namespace LogicMonitor.Datamart
 				if (apiDataSource == null)
 				{
 					// May not happen if the config references a non-existent DataSource
-					_logger.LogError($"For LogicMonitor instance {_configuration.LogicMonitorCredential.Subdomain}, expected to find LogicMonitor API DataSource called '{dataSourceName}', but it was missing.");
+					_logger.LogError($"For LogicMonitor instance {_configuration.LogicMonitorClientOptions.Account}, expected to find LogicMonitor API DataSource called '{dataSourceName}', but it was missing.");
 					continue;
 				}
 
@@ -421,7 +414,7 @@ namespace LogicMonitor.Datamart
 				if (apiDataSource == null)
 				{
 					// Should not happen, as we have only just updated the database with DataSources
-					_logger.LogError($"For LogicMonitor instance {_configuration.LogicMonitorCredential.Subdomain}, expected to find Database DataSource called '{dataSourceName}', but it was missing.");
+					_logger.LogError($"For LogicMonitor instance {_configuration.LogicMonitorClientOptions.Account}, expected to find Database DataSource called '{dataSourceName}', but it was missing.");
 					continue;
 				}
 				// We have a matching DataSource from both the API and the database.
@@ -436,7 +429,7 @@ namespace LogicMonitor.Datamart
 					if (apiDataPoint == null)
 					{
 						_logger.LogError(
-							$"For LogicMonitor instance '{_configuration.LogicMonitorCredential.Subdomain}', DataSource '{dataSourceName}': " +
+							$"For LogicMonitor instance '{_configuration.LogicMonitorClientOptions.Account}', DataSource '{dataSourceName}': " +
 							$"could not find configured DataPoint '{configDataPoint.Name}'. " +
 							$"Available DataPoints: {string.Join(", ", apiDataSource.DataSourceDataPoints.Select(dp => dp.Name).OrderBy(dp => dp))}");
 						continue;
@@ -458,7 +451,7 @@ namespace LogicMonitor.Datamart
 							MeasurementUnit = configDataPoint.MeasurementUnit
 						});
 
-						_logger.LogInformation($"For LogicMonitor instance {_configuration.LogicMonitorCredential.Subdomain}, for {dataSourceName}, added datapoint {configDataPoint.Name} to database.");
+						_logger.LogInformation($"For LogicMonitor instance {_configuration.LogicMonitorClientOptions.Account}, for {dataSourceName}, added datapoint {configDataPoint.Name} to database.");
 						await context
 							.SaveChangesAsync()
 							.ConfigureAwait(false);

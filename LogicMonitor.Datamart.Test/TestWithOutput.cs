@@ -1,4 +1,5 @@
 ﻿using Divergic.Logging.Xunit;
+using LogicMonitor.Api;
 using LogicMonitor.Datamart.Config;
 using LogicMonitor.Datamart.Logging;
 using LogicMonitor.Datamart.Test.Config;
@@ -76,21 +77,22 @@ namespace LogicMonitor.Datamart.Test
 			EndEpoch = nowUtc.ToUnixTimeSeconds();
 			var configuration = LoadConfiguration("appsettings.json");
 			var logicMonitorCredentials = configuration.LogicMonitorCredentials;
-			var loggerFactory = new PrefixLoggerFactory(logicMonitorCredentials.Account, LogFactory.Create(iTestOutputHelper));
-			Configuration.LogicMonitorCredential = new LogicMonitorCredential
+			Configuration.LoggerFactory = new PrefixLoggerFactory(logicMonitorCredentials.Account, LogFactory.Create(iTestOutputHelper));
+			Configuration.LogicMonitorClientOptions = new LogicMonitorClientOptions
 			{
-				Subdomain = logicMonitorCredentials.Account,
+				Account = logicMonitorCredentials.Account,
 				AccessId = logicMonitorCredentials.AccessId,
 				AccessKey = logicMonitorCredentials.AccessKey,
+				Logger = Configuration.LoggerFactory.CreateLogger<LogicMonitorClient>()
 			};
 			Configuration.DatabaseType = configuration.DatabaseType;
 			Configuration.DatabaseServerName = configuration.DatabaseServer;
 			Configuration.DatabaseName = configuration.DatabaseName;
 			Configuration.DatabaseUsername = configuration.DatabaseUsername;
 			Configuration.DatabasePassword = configuration.DatabasePassword;
-			DatamartClient = new DatamartClient(
-				Configuration,
-				loggerFactory);
+			
+
+			DatamartClient = new DatamartClient(Configuration);
 
 			DatamartClient.EnsureDatabaseCreatedAndSchemaUpdatedAsync().GetAwaiter().GetResult();
 
