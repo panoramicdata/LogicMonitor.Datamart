@@ -74,6 +74,7 @@ public class DatamartClient : LogicMonitorClient
 		{
 			dbContextOptionsBuilder.EnableSensitiveDataLogging();
 		}
+
 		DbContextOptions = dbContextOptionsBuilder.Options;
 
 		_loggerFactory = loggerFactory;
@@ -159,7 +160,7 @@ public class DatamartClient : LogicMonitorClient
 		return !context.Database.IsSqlServer()
 			? throw new NotSupportedException("Only SQL Server types support SQL queries.")
 			: await Task.FromResult(GetDbSet<T>(context)
-				.FromSql(sql)
+				.FromSqlRaw(sql)
 				.ToList()).ConfigureAwait(false);
 	}
 
@@ -440,42 +441,52 @@ public class DatamartClient : LogicMonitorClient
 		{
 			queryable = queryable.Where(a => a.Id == id);
 		}
+
 		if (problemSignature != null)
 		{
 			queryable = queryable.Where(a => a.InternalId == problemSignature);
 		}
+
 		if (monitorObjectId != null)
 		{
 			queryable = queryable.Where(a => a.MonitorObjectId == monitorObjectId);
 		}
+
 		if (monitorObjectName != null)
 		{
 			queryable = queryable.Where(a => a.MonitorObjectName == monitorObjectName);
 		}
+
 		if (resourceTemplateId != null)
 		{
 			queryable = queryable.Where(a => a.ResourceTemplateId == resourceTemplateId);
 		}
+
 		if (resourceTemplateDisplayName != null)
 		{
 			queryable = queryable.Where(a => a.ResourceTemplateName == resourceTemplateDisplayName);
 		}
+
 		if (instanceName != null)
 		{
 			queryable = queryable.Where(a => a.InstanceName == instanceName);
 		}
+
 		if (dataPointName != null)
 		{
 			queryable = queryable.Where(a => a.DataPointName == dataPointName);
 		}
+
 		if (alertLevels != null)
 		{
 			queryable = queryable.Where(a => alertLevels.Select(al => (int)al).Contains(a.Severity));
 		}
+
 		if (alertTypes != null)
 		{
 			queryable = queryable.Where(a => alertTypes.Contains(a.AlertType));
 		}
+
 		if (!includeInactive)
 		{
 			queryable = queryable.Where(a => !a.IsCleared);
@@ -515,6 +526,7 @@ public class DatamartClient : LogicMonitorClient
 			default:
 				throw new NotSupportedException($"Unsupported SDT filter {sdtFilter}");
 		}
+
 		switch (ackFilter)
 		{
 			case AckFilter.All:

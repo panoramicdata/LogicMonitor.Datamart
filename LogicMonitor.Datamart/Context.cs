@@ -33,9 +33,6 @@ public class Context : DbContext
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
-		modelBuilder.ForNpgsqlUseIdentityByDefaultColumns();
-		modelBuilder.ForSqlServerUseIdentityColumns();
-
 		// MonitorObjectGroup indexes
 		var monitorObjectGroups = modelBuilder.Entity<MonitorObjectGroupStoreItem>();
 		monitorObjectGroups.HasIndex(g => new { g.FullPath, g.MonitoredObjectType });
@@ -91,8 +88,7 @@ public class Context : DbContext
 
 		if (Database.IsNpgsql())
 		{
-			alertIndexBuilder.ForNpgsqlInclude(new[]
-			{
+			NpgsqlIndexBuilderExtensions.IncludeProperties(alertIndexBuilder,
 					nameof(AlertStoreItem.Id),
 					nameof(AlertStoreItem.Severity),
 					nameof(AlertStoreItem.ClearValue),
@@ -100,13 +96,13 @@ public class Context : DbContext
 					nameof(AlertStoreItem.ResourceTemplateName),
 					nameof(AlertStoreItem.InstanceId),
 					nameof(AlertStoreItem.InstanceName)
-				})
-			.HasName($"IX_{nameof(Alerts)}_FasterPercentageAvailability");
+				)
+			.HasDatabaseName($"IX_{nameof(Alerts)}_FasterPercentageAvailability");
 		}
+
 		if (Database.IsSqlServer())
 		{
-			alertIndexBuilder.ForSqlServerInclude(new[]
-			{
+			SqlServerIndexBuilderExtensions.IncludeProperties(alertIndexBuilder,
 					nameof(AlertStoreItem.Id),
 					nameof(AlertStoreItem.Severity),
 					nameof(AlertStoreItem.ClearValue),
@@ -114,9 +110,8 @@ public class Context : DbContext
 					nameof(AlertStoreItem.ResourceTemplateName),
 					nameof(AlertStoreItem.InstanceId),
 					nameof(AlertStoreItem.InstanceName)
-				})
-			.HasName($"IX_{nameof(Alerts)}_FasterPercentageAvailability")
-			;
+				)
+			.HasDatabaseName($"IX_{nameof(Alerts)}_FasterPercentageAvailability");
 		}
 
 		// DeviceDataSourceInstance indexes

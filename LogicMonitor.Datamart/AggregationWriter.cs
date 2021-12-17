@@ -41,6 +41,7 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 			command.CommandTimeout = sqlCommandTimeoutSeconds;
 			await command.ExecuteNonQueryAsync().ConfigureAwait(false);
 		}
+
 		return tableName;
 	}
 
@@ -59,11 +60,12 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 
 		using var dbContext = new Context(dbContextOptions);
 		var tableName = GetTableName(start);
-		logger.LogDebug($"Dropping table {tableName}");
+		logger.LogDebug("Dropping table {tableName}", tableName);
 		var tableCreationSql = "DROP TABLE [" + tableName + "]";
-#pragma warning disable EF1000 // Possible SQL injection vulnerability. - No externally provided data
-		await dbContext.Database.ExecuteSqlCommandAsync(tableCreationSql).ConfigureAwait(false);
-#pragma warning restore EF1000 // Possible SQL injection vulnerability.
+		await dbContext
+			.Database
+			.ExecuteSqlRawAsync(tableCreationSql)
+			.ConfigureAwait(false);
 	}
 
 	/// <summary>
@@ -97,6 +99,7 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 				}
 			}
 		}
+
 		return tableNames;
 	}
 
@@ -154,6 +157,7 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 			bulkCopy.BulkCopyTimeout = sqlBulkCopyTimeoutSeconds;
 			await bulkCopy.WriteToServerAsync(table).ConfigureAwait(false);
 		}
+
 		logger.LogTrace($"Bulk writing {aggregationCount} aggregations complete after {stopwatch.ElapsedMilliseconds:N0}ms.");
 
 		stopwatch.Restart();

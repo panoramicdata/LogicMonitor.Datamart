@@ -21,7 +21,7 @@ internal class AlertSync : LoopInterval
 		// Truncate the table
 		await context
 			.Database
-			.ExecuteSqlCommandAsync("TRUNCATE TABLE [Alerts]", cancellationToken)
+			.ExecuteSqlRawAsync("TRUNCATE TABLE [Alerts]", cancellationToken)
 			.ConfigureAwait(false);
 	}
 
@@ -44,6 +44,7 @@ internal class AlertSync : LoopInterval
 						.ToListAsync()
 						.ConfigureAwait(false);
 		}
+
 		var updateAlertStats = await UpdateDeviceAlerts(nowSecondsSinceEpoch, databaseDeviceIds, cancellationToken)
 			.ConfigureAwait(false);
 
@@ -170,6 +171,7 @@ internal class AlertSync : LoopInterval
 								updateAlertStats.Updated++;
 							}
 						}
+
 						var message = $"Processed datasource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName}; {reducedAlerts.Count}(of {alertsThisTime.Count}) " +
 							$"dbGet({sqlFetch.ElapsedMilliseconds:N0}ms) dbSave({sqlSave.ElapsedMilliseconds:N0}ms) in {dataProcessingStopwatch.ElapsedMilliseconds:N0}ms " +
 							$"from {DateTimeOffset.FromUnixTimeSeconds(timeCursor).UtcDateTime}...)";
@@ -269,38 +271,47 @@ internal class AlertSync : LoopInterval
 		{
 			alertStoreItem.MonitorObjectGroup0Id = await GetMonitorObjectGroupIdAsync(cache, monitorObjectGroupContext, networkAlert, 0).ConfigureAwait(false);
 		}
+
 		if (networkAlert.MonitorObjectGroups.Count > 1)
 		{
 			alertStoreItem.MonitorObjectGroup1Id = await GetMonitorObjectGroupIdAsync(cache, monitorObjectGroupContext, networkAlert, 1).ConfigureAwait(false);
 		}
+
 		if (networkAlert.MonitorObjectGroups.Count > 2)
 		{
 			alertStoreItem.MonitorObjectGroup2Id = await GetMonitorObjectGroupIdAsync(cache, monitorObjectGroupContext, networkAlert, 2).ConfigureAwait(false);
 		}
+
 		if (networkAlert.MonitorObjectGroups.Count > 3)
 		{
 			alertStoreItem.MonitorObjectGroup3Id = await GetMonitorObjectGroupIdAsync(cache, monitorObjectGroupContext, networkAlert, 3).ConfigureAwait(false);
 		}
+
 		if (networkAlert.MonitorObjectGroups.Count > 4)
 		{
 			alertStoreItem.MonitorObjectGroup4Id = await GetMonitorObjectGroupIdAsync(cache, monitorObjectGroupContext, networkAlert, 4).ConfigureAwait(false);
 		}
+
 		if (networkAlert.MonitorObjectGroups.Count > 5)
 		{
 			alertStoreItem.MonitorObjectGroup5Id = await GetMonitorObjectGroupIdAsync(cache, monitorObjectGroupContext, networkAlert, 5).ConfigureAwait(false);
 		}
+
 		if (networkAlert.MonitorObjectGroups.Count > 6)
 		{
 			alertStoreItem.MonitorObjectGroup6Id = await GetMonitorObjectGroupIdAsync(cache, monitorObjectGroupContext, networkAlert, 6).ConfigureAwait(false);
 		}
+
 		if (networkAlert.MonitorObjectGroups.Count > 7)
 		{
 			alertStoreItem.MonitorObjectGroup7Id = await GetMonitorObjectGroupIdAsync(cache, monitorObjectGroupContext, networkAlert, 7).ConfigureAwait(false);
 		}
+
 		if (networkAlert.MonitorObjectGroups.Count > 8)
 		{
 			alertStoreItem.MonitorObjectGroup8Id = await GetMonitorObjectGroupIdAsync(cache, monitorObjectGroupContext, networkAlert, 8).ConfigureAwait(false);
 		}
+
 		if (networkAlert.MonitorObjectGroups.Count > 9)
 		{
 			alertStoreItem.MonitorObjectGroup9Id = await GetMonitorObjectGroupIdAsync(cache, monitorObjectGroupContext, networkAlert, 9).ConfigureAwait(false);
@@ -325,6 +336,7 @@ internal class AlertSync : LoopInterval
 				await monitorObjectGroupContext.SaveChangesAsync().ConfigureAwait(false);
 				Logger.LogInformation($"Added new MonitorObjectGroup {databaseEntry.MonitoredObjectType}:{databaseEntry.FullPath} with id {databaseEntry.DatamartId}");
 			}
+
 			return databaseEntry.DatamartId;
 		}).ConfigureAwait(false);
 		return result;
@@ -371,14 +383,13 @@ internal class AlertSync : LoopInterval
 					"FasterPercentageAvailability"
 				})
 		{
-#pragma warning disable EF1000 // Possible SQL injection vulnerability.
 			var sql = "ALTER INDEX IX_Alerts_" + column + " ON [Alerts] " + indexAction;
 			await context
-		  .Database
-		  .ExecuteSqlCommandAsync(sql)
-#pragma warning restore EF1000 // Possible SQL injection vulnerability.
+			  .Database
+			  .ExecuteSqlRawAsync(sql)
 			  .ConfigureAwait(false);
 		}
+
 		Logger.LogInformation($"Alert index action {indexAction} complete after {stopwatch.Elapsed.Seconds:N1}s");
 	}
 
@@ -402,6 +413,7 @@ internal class AlertSync : LoopInterval
 						n => Logger.LogDebug($"Bulk inserted {(int)(n * alertStoreItems.Count)}/{alertStoreItems.Count}"))
 						.ConfigureAwait(false);
 				}
+
 				break;
 			case DatabaseType.Postgres:
 			case DatabaseType.InMemory:
@@ -415,10 +427,12 @@ internal class AlertSync : LoopInterval
 					context.Alerts.AddRange(alertStoreItems.Skip(batch * BatchSize).Take(BatchSize));
 					await context.SaveChangesAsync().ConfigureAwait(false);
 				}
+
 				break;
 			default:
 				throw new NotSupportedException($"The Database type {_datamartClient.DatabaseType} is not supported for bulk inserts");
 		}
+
 		Logger.LogInformation($"Bulk inserted {alertStoreItems.Count} alerts; complete after {stopwatch.Elapsed.TotalSeconds:N1}s");
 	}
 }

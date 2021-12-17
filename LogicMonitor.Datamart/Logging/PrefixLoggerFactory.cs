@@ -26,6 +26,7 @@ public class PrefixLoggerFactory : ILoggerFactory
 			{
 				// Nothing to do
 			}
+
 			disposed = true;
 		}
 	}

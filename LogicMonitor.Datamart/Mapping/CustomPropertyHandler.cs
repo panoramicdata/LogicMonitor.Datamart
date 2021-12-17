@@ -11,10 +11,12 @@ public static class CustomPropertyHandler
 		{
 			throw new System.ArgumentNullException(nameof(propertyNames));
 		}
+
 		if (propertyNames.Count > MaxPropertyCount)
 		{
 			throw new ConfigurationException($"Configure between 0 and {MaxPropertyCount} {nameof(Configuration.DeviceProperties)}");
 		}
+
 		_propertyNames = propertyNames;
 	}
 

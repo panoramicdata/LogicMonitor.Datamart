@@ -2,7 +2,7 @@
 
 internal class TruncateMappingAction<TSource, TDestination> : IMappingAction<TSource, TDestination>
 {
-	public void Process(TSource source, TDestination destination)
+	public void Process(TSource source, TDestination destination, ResolutionContext context)
 	{
 		// Loop over all the destination properties and truncate any strings if required
 		var destType = typeof(TDestination);

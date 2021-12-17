@@ -171,6 +171,7 @@ internal class DimensionSync : LoopInterval
 
 			// Check for any that were NOT in the entries that came back from the API
 		}
+
 		var added = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Added);
 		var modified = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Modified);
 		var total = context.ChangeTracker.Entries().Count();

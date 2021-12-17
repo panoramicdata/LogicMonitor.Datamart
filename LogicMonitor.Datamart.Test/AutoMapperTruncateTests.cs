@@ -1,4 +1,6 @@
-﻿namespace LogicMonitor.Datamart.Test;
+﻿using LogicMonitor.Datamart.Mapping;
+
+namespace LogicMonitor.Datamart.Test;
 
 public class AutoMapperTruncateTests : TestWithOutput
 {
@@ -10,9 +12,27 @@ public class AutoMapperTruncateTests : TestWithOutput
 	[Fact]
 	public void Test()
 	{
-		var config = new MapperConfigurationExpression();
-		Mapper.Initialize(config);
-		Mapper.Configuration.AssertConfigurationIsValid();
+
+		var config = new MapperConfiguration(cfg =>
+		{
+			cfg.AddProfile<AlertProfile>();
+			cfg.AddProfile<AlertRuleProfile>();
+			cfg.AddProfile<CollectorGroupProfile>();
+			cfg.AddProfile<CollectorProfile>();
+			cfg.AddProfile<ConfigSourceProfile>();
+			cfg.AddProfile<DataSourceProfile>();
+			cfg.AddProfile<DeviceDataSourceInstanceProfile>();
+			cfg.AddProfile<DeviceDataSourceProfile>();
+			cfg.AddProfile<DeviceGroupProfile>();
+			cfg.AddProfile<DeviceProfile>();
+			cfg.AddProfile<EscalationChainProfile>();
+			cfg.AddProfile<EventSourceProfile>();
+			cfg.AddProfile<LogProfile>();
+			cfg.AddProfile<WebsiteGroupProfile>();
+			cfg.AddProfile<WebsiteProfile>();
+			cfg.AddProfile<LogProfile>();
+		});
+		config.AssertConfigurationIsValid();
 	}
 
 	[Fact]

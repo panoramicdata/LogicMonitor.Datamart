@@ -101,6 +101,7 @@ internal class LogSync : LoopInterval
 
 			Logger.LogDebug($"Processed {apiEntriesThisTime} log items ending {timeCursor} for {_datamartClient.AccountName}");
 		}
+
 		Logger.LogInformation($"Finished storing {totalLogEntriesStored} Log entries for {_datamartClient.AccountName}");
 	}
 }

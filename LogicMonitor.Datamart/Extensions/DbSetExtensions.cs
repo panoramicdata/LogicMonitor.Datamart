@@ -15,6 +15,7 @@ public static class DbSetExtension
 		{
 			throw new ArgumentNullException(nameof(dbSet));
 		}
+
 		if (data == null)
 		{
 			throw new ArgumentNullException(nameof(data));
@@ -33,6 +34,7 @@ public static class DbSetExtension
 			storeItem.DatamartLastObservedUtc = lastObservedUtc;
 			return;
 		}
+
 		if (logger?.IsEnabled(LogLevel.Trace) == true)
 		{
 			logger.LogTrace($"Adding new {typeof(TStore).Name} with id {data.Id}");
@@ -75,6 +77,7 @@ public static class DbSetExtension
 			mappedStoreItem.DatamartCreatedUtc = DateTime.UtcNow;
 			mappedStoreItem.DatamartLastModifiedUtc = DateTime.UtcNow;
 		}
+
 		dbSet.Add(mappedStoreItem);
 	}
 
@@ -91,6 +94,7 @@ public static class DbSetExtension
 		{
 			throw new NotSupportedException($"{t.FullName} does not have a KeyAttribute field. Unable to exec AddOrUpdate call.");
 		}
+
 		var keyVals = keyFields.Select(p => p.GetValue(data));
 		var entities = dbSet.AsQueryable();
 		var i = 0;
@@ -99,6 +103,7 @@ public static class DbSetExtension
 			entities = entities.Where(p => p.GetType().GetProperty(keyFields[i].Name).GetValue(p).Equals(keyVal));
 			i++;
 		}
+
 		var dbVal = entities.FirstOrDefault();
 		if (dbVal != null)
 		{
@@ -113,11 +118,13 @@ public static class DbSetExtension
 							.GetProperties(), p => p.Name == keyAttr.Name)
 							.GetValue(dbVal));
 				}
+
 				context.Entry(dbVal).CurrentValues.SetValues(data);
 				context.Entry(dbVal).State = EntityState.Modified;
 				return;
 			}
 		}
+
 		dbSet.Add(DatamartClient.MapperInstance.Map<TApi, TStore>(data));
 	}
 }

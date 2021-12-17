@@ -157,6 +157,7 @@ internal class DataSync : LoopInterval
 							// Increment by the aggregation duration until we're within the window
 							lastUpdatedDateTimeUtc = lastUpdatedDateTimeUtc.Add(dataSourceAggregationDuration);
 						}
+
 						logger.LogDebug($"lastUpdatedDateTimeUtc {originalLastUpdatedDateTimeUtc} is more than {MaxHoursBack} hours ago so setting to {lastUpdatedDateTimeUtc}.");
 					}
 
@@ -181,6 +182,7 @@ internal class DataSync : LoopInterval
 							{
 								break;
 							}
+
 							timeCursor += dataSourceAggregationDuration;
 						}
 						// We have a block of time to fetch, starting at blockStart and ending at timeCursor.
@@ -193,6 +195,7 @@ internal class DataSync : LoopInterval
 							{
 								logger.LogDebug($"BlockIndex is 0, nothing to do for batch {batchIndex + 1}.");
 							}
+
 							break;
 						}
 
@@ -334,6 +337,7 @@ internal class DataSync : LoopInterval
 				}
 			}
 		}
+
 		logger.LogInformation("Syncing data complete.");
 	}
 }
