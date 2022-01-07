@@ -18,8 +18,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="AutoMapper" Version="10.1.1" />
-		<PackageReference Include="EFCore.BulkExtensions" Version="6.2.3" />
+		<PackageReference Include="AutoMapper" Version="11.0.0" />
+		<PackageReference Include="EFCore.BulkExtensions" Version="6.2.6" />
 		<PackageReference Include="Humanizer.Core" Version="2.13.14" />
 		<PackageReference Include="IDisposableAnalyzers" Version="4.0.1">
 		  <PrivateAssets>all</PrivateAssets>
@@ -35,7 +35,7 @@
 		</PackageReference>
 		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="6.0.0" />
 		<PackageReference Include="Nerdbank.GitVersioning" />
-		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.1" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.2" />
 		<PackageReference Include="SecurityCodeScan.VS2019" Version="5.6.0">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -45,7 +45,7 @@
 		<None Include="Icon.png" Pack="true" PackagePath="" />
 	</ItemGroup>
 	<ItemGroup>
-	  <PackageReference Update="Nerdbank.GitVersioning" Version="3.4.244">
+	  <PackageReference Update="Nerdbank.GitVersioning" Version="3.4.255">
 	    <PrivateAssets>all</PrivateAssets>
 	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	  </PackageReference>
