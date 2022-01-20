@@ -52,11 +52,10 @@ public class DatamartClient : LogicMonitorClient
 			case DatabaseType.Postgres:
 				dbContextOptionsBuilder
 					.UseNpgsql(
-						$"Host={configuration.DatabaseServerName};" +
+						$"Server={configuration.DatabaseServerName};" +
 						$"Database={configuration.DatabaseName};" +
-						$"Username={configuration.DatabaseUsername};" +
-						$"Password={configuration.DatabasePassword};" +
-						$"ApplicationName={ConnectionStringApplicationName}",
+						$"Uid={configuration.DatabaseUsername};" +
+						$"Pwd={configuration.DatabasePassword};",
 						npgsqlOptions => npgsqlOptions.EnableRetryOnFailure(50)
 					);
 				break;

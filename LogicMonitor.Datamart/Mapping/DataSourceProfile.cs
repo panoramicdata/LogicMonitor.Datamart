@@ -110,6 +110,9 @@ public class DataSourceProfile : Profile
 				dest => dest.Technology,
 				opts => opts.Ignore())
 			.ForMember(
+				dest => dest.UseWildValueAsUuid,
+				opts => opts.Ignore())
+			.ForMember(
 				dest => dest.Version,
 				opts => opts.Ignore())
 			.ForMember(

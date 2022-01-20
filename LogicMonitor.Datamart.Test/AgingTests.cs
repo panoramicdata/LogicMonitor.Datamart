@@ -33,7 +33,6 @@ public class AgingTests : TestWithOutput
 
 		var expectedResult = new List<string>
 			{
-				AggregationWriter.GetTableName(today.AddDays(-3)),
 				AggregationWriter.GetTableName(today.AddDays(-4)),
 				AggregationWriter.GetTableName(today.AddDays(-5)),
 				AggregationWriter.GetTableName(today.AddDays(-6))

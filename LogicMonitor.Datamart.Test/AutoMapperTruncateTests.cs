@@ -30,7 +30,6 @@ public class AutoMapperTruncateTests : TestWithOutput
 			cfg.AddProfile<LogProfile>();
 			cfg.AddProfile<WebsiteGroupProfile>();
 			cfg.AddProfile<WebsiteProfile>();
-			cfg.AddProfile<LogProfile>();
 		});
 		config.AssertConfigurationIsValid();
 	}
