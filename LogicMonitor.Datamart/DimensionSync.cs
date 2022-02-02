@@ -51,7 +51,7 @@ internal class DimensionSync : LoopInterval
 			}
 			catch (Exception e)
 			{
-				Logger.LogWarning(e.Message, e);
+				Logger.LogWarning(e, "{message}", e.Message);
 			}
 		}
 	}
@@ -71,7 +71,10 @@ internal class DimensionSync : LoopInterval
 		// Get the Devices that match the appliesTo function on the DataSource
 		var appliesToMatches = await _datamartClient.GetAppliesToAsync(dataSource.AppliesTo, cancellationToken).ConfigureAwait(false);
 
-		Logger.LogDebug($"Syncing {dataSourceName} instances for {appliesToMatches.Count} devices");
+		Logger.LogDebug(
+			"Syncing {dataSourceName} instances for {appliesToMatchesCount} devices",
+			dataSourceName,
+			appliesToMatches.Count);
 
 		using var context = new Context(_datamartClient.DbContextOptions);
 		var markedMissing = 0;
@@ -86,16 +89,22 @@ internal class DimensionSync : LoopInterval
 			var deviceDataSource = await _datamartClient.GetDeviceDataSourceByDeviceIdAndDataSourceIdAsync(device.Id, dataSource.Id, cancellationToken).ConfigureAwait(false);
 			if (dataSource == null)
 			{
-				Logger.LogTrace($"No DeviceDataSource for Device:{device.DisplayName}, DataSource:{dataSource.Name}");
+				Logger.LogTrace(
+					"No DeviceDataSource for Device:{deviceDisplayName}, DataSource:{dataSourceName}",
+					device.DisplayName,
+					dataSource.Name);
 				continue;
 			}
 			// We have a DeviceDataSource
-			Logger.LogTrace($"DeviceDataSource fetched for Device:{device.DisplayName}, DataSource:{dataSource.Name}");
+			Logger.LogTrace(
+				"DeviceDataSource fetched for Device:{deviceDisplayName}, DataSource:{dataSourceName}",
+				device.DisplayName,
+				dataSource.Name);
 
 			// Ensure that this DeviceDataSource exists in the database
 			var databaseDeviceDataSource = await context
 				.DeviceDataSources
-				.SingleOrDefaultAsync(dds => dds.DeviceId == deviceDataSource.DeviceId && dds.DataSourceId == deviceDataSource.DataSourceId)
+				.SingleOrDefaultAsync(dds => dds.DeviceId == deviceDataSource.DeviceId && dds.DataSourceId == deviceDataSource.DataSourceId, cancellationToken: cancellationToken)
 				.ConfigureAwait(false);
 			if (databaseDeviceDataSource == null)
 			{
@@ -120,12 +129,15 @@ internal class DimensionSync : LoopInterval
 
 			foreach (var apiDeviceDataSourceInstance in apiDeviceDataSourceInstances)
 			{
-				Logger.LogDebug($"Device {device.DisplayName}, Instance: {apiDeviceDataSourceInstance.Name}");
+				Logger.LogDebug(
+					"Device {deviceDisplayName}, Instance: {apiDeviceDataSourceInstanceName}",
+					device.DisplayName,
+					apiDeviceDataSourceInstance.Name);
 
 				// Ensure that this DeviceDataSourceInstance exists in the database
 				var databaseDeviceDataSourceInstance = await context
 					.DeviceDataSourceInstances
-					.SingleOrDefaultAsync(dddsi => dddsi.Id == apiDeviceDataSourceInstance.Id)
+					.SingleOrDefaultAsync(dddsi => dddsi.Id == apiDeviceDataSourceInstance.Id, cancellationToken: cancellationToken)
 					.ConfigureAwait(false);
 				if (databaseDeviceDataSourceInstance == null)
 				{
@@ -148,7 +160,7 @@ internal class DimensionSync : LoopInterval
 					.DeviceDataSourceInstances
 					.Where(ddsi => ddsi.DeviceId == device.Id && ddsi.DataSourceId == dataSource.Id && ddsi.LastWentMissingUtc == null)
 					.Select(ddsi => ddsi.Id)
-					.ToListAsync()
+					.ToListAsync(cancellationToken: cancellationToken)
 					.ConfigureAwait(false));
 
 			var apiDeviceDataSourceInstanceIds = new HashSet<int>(apiDeviceDataSourceInstances.Select(ddsi => ddsi.Id));
@@ -161,7 +173,7 @@ internal class DimensionSync : LoopInterval
 					// Get the entry to modify from the context and update it
 					var databaseDeviceDataSourceInstance = await context
 						.DeviceDataSourceInstances
-						.SingleOrDefaultAsync(dddsi => dddsi.Id == deviceDatasourceInstanceIdToMarkMissing)
+						.SingleOrDefaultAsync(dddsi => dddsi.Id == deviceDatasourceInstanceIdToMarkMissing, cancellationToken: cancellationToken)
 						.ConfigureAwait(false);
 					databaseDeviceDataSourceInstance.LastWentMissingUtc = DateTime.UtcNow;
 				}
@@ -175,7 +187,13 @@ internal class DimensionSync : LoopInterval
 		var added = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Added);
 		var modified = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Modified);
 		var total = context.ChangeTracker.Entries().Count();
-		var rowsAffected = await context.SaveChangesAsync().ConfigureAwait(false);
-		Logger.LogInformation($"Sync completed for {dataSourceName}; Total {total}; Added {added}; Modified {modified} ({markedMissing:N0} MarkedMissing).");
+		var rowsAffected = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+		Logger.LogInformation(
+			"Sync completed for {dataSourceName}; Total {total}; Added {added}; Modified {modified} ({markedMissing:N0} MarkedMissing).",
+			dataSourceName,
+			total,
+			added,
+			modified,
+			markedMissing);
 	}
 }

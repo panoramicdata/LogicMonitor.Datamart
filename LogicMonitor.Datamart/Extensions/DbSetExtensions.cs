@@ -27,7 +27,10 @@ public static class DbSetExtension
 			// Update an existing entry
 			if (logger?.IsEnabled(LogLevel.Trace) == true)
 			{
-				logger.LogTrace($"Updating existing {typeof(TStore).Name} with id {storeItem.Id} ({storeItem.DatamartId})");
+				logger.LogTrace("Updating existing {typeName} with id {storeItemId} ({storeItemDatamartId})",
+					typeof(TStore).Name,
+					storeItem.Id,
+					storeItem.DatamartId);
 			}
 			// Map from data onto the existing storeItem which EF internal tracker will work out whether anything changed
 			storeItem = DatamartClient.MapperInstance.Map(data, storeItem);
@@ -37,7 +40,10 @@ public static class DbSetExtension
 
 		if (logger?.IsEnabled(LogLevel.Trace) == true)
 		{
-			logger.LogTrace($"Adding new {typeof(TStore).Name} with id {data.Id}");
+			logger.LogTrace("Adding new {typeName} with id {dataId}",
+				typeof(TStore).Name,
+				data.Id
+				);
 		}
 
 		// Add a new entry

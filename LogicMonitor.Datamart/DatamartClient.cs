@@ -126,12 +126,18 @@ public class DatamartClient : LogicMonitorClient
 	{
 		using var context = new Context(DbContextOptions);
 		using var dbConnection = context.Database.GetDbConnection();
-		_logger.LogInformation($"Deleting database {dbConnection.Database} on {dbConnection.DataSource}...");
+		_logger.LogInformation(
+			"Deleting database {dbConnectionDatabase} on {dbConnectionDataSource}...",
+			dbConnection.Database,
+			dbConnection.DataSource);
 		await context
 			.Database
 			.EnsureDeletedAsync(cancellationToken)
 			.ConfigureAwait(false);
-		_logger.LogInformation($"Deleted database {dbConnection.Database} on {dbConnection.DataSource}...");
+		_logger.LogInformation(
+			"Deleted database {dbConnectionDatabase} on {dbConnectionDataSource}...",
+			dbConnection.Database,
+			dbConnection.DataSource);
 	}
 
 	private DbSet<TStore> GetDbSet<TStore>(Context context) where TStore : class, new()
@@ -291,7 +297,9 @@ public class DatamartClient : LogicMonitorClient
 		where TApi : IdentifiedItem, IHasEndpoint, new()
 		where TStore : IdentifiedStoreItem
 	{
-		logger.LogDebug($"{typeof(TApi).Name}: Loading entries...");
+		logger.LogDebug(
+			"{typeName}: Loading entries...",
+			typeof(TApi).Name);
 
 		using var context = new Context(DbContextOptions);
 		// Get the right DbSet from the context
@@ -301,7 +309,10 @@ public class DatamartClient : LogicMonitorClient
 		var lastObservedUtc = DateTime.UtcNow;
 		var apiItems = await GetAllAsync<TApi>(cancellationToken: cancellationToken)
 			.ConfigureAwait(false);
-		logger.LogDebug($"{typeof(TApi).Name}: Loaded {apiItems.Count} items.");
+		logger.LogDebug(
+			"{typeName}: Loaded {apiItemsCount} items.",
+			typeof(TApi).Name,
+			apiItems.Count);
 
 		// Add/update all the items
 		foreach (var item in apiItems)
@@ -314,7 +325,12 @@ public class DatamartClient : LogicMonitorClient
 		var modified = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Modified);
 		var total = context.ChangeTracker.Entries().Count();
 		var affectedRowCount = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-		logger.LogInformation($"{typeof(TApi).Name}: Total {total}; Added {added}; Modified {modified}.");
+		logger.LogInformation(
+			"{typeName}: Total {total}; Added {added}; Modified {modified}.",
+			typeof(TApi).Name,
+			total,
+			added,
+			modified);
 
 		// For DataPoints, the information from LogicMonitor is present on the DataSources.
 		// So, after fetching the DataSources, we should also update the DataPoints in the database
@@ -343,7 +359,10 @@ public class DatamartClient : LogicMonitorClient
 			if (apiDataSource == null)
 			{
 				// May not happen if the config references a non-existent DataSource
-				_logger.LogError($"For LogicMonitor instance {_configuration.LogicMonitorClientOptions.Account}, expected to find LogicMonitor API DataSource called '{dataSourceName}', but it was missing.");
+				_logger.LogError(
+					"For LogicMonitor instance {logicMonitorAccount}, expected to find LogicMonitor API DataSource called '{dataSourceName}', but it was missing.",
+					_configuration.LogicMonitorClientOptions.Account,
+					dataSourceName);
 				continue;
 			}
 
@@ -354,7 +373,10 @@ public class DatamartClient : LogicMonitorClient
 			if (apiDataSource == null)
 			{
 				// Should not happen, as we have only just updated the database with DataSources
-				_logger.LogError($"For LogicMonitor instance {_configuration.LogicMonitorClientOptions.Account}, expected to find Database DataSource called '{dataSourceName}', but it was missing.");
+				_logger.LogError(
+					"For LogicMonitor instance {logicMonitorAccount}, expected to find Database DataSource called '{dataSourceName}', but it was missing.",
+					_configuration.LogicMonitorClientOptions.Account,
+					dataSourceName);
 				continue;
 			}
 			// We have a matching DataSource from both the API and the database.
@@ -369,9 +391,12 @@ public class DatamartClient : LogicMonitorClient
 				if (apiDataPoint == null)
 				{
 					_logger.LogError(
-						$"For LogicMonitor instance '{_configuration.LogicMonitorClientOptions.Account}', DataSource '{dataSourceName}': " +
-						$"could not find configured DataPoint '{configDataPoint.Name}'. " +
-						$"Available DataPoints: {string.Join(", ", apiDataSource.DataSourceDataPoints.Select(dp => dp.Name).OrderBy(dp => dp))}");
+						"For LogicMonitor instance '{logicMonitorAccount}', DataSource '{dataSourceName}': could not find configured DataPoint '{configDataPointName}'. Available DataPoints: {dataPoints}",
+						_configuration.LogicMonitorClientOptions.Account,
+						dataSourceName,
+						configDataPoint.Name,
+						string.Join(", ", apiDataSource.DataSourceDataPoints.Select(dp => dp.Name).OrderBy(dp => dp))
+						);
 					continue;
 				}
 
@@ -391,7 +416,11 @@ public class DatamartClient : LogicMonitorClient
 						MeasurementUnit = configDataPoint.MeasurementUnit
 					});
 
-					_logger.LogInformation($"For LogicMonitor instance {_configuration.LogicMonitorClientOptions.Account}, for {dataSourceName}, added datapoint {configDataPoint.Name} to database.");
+					_logger.LogInformation(
+						"For LogicMonitor instance {logicMonitorAccount}, for {dataSourceName}, added datapoint {configDataPointName} to database.",
+						_configuration.LogicMonitorClientOptions.Account,
+						dataSourceName,
+						configDataPoint.Name);
 					await context
 						.SaveChangesAsync()
 						.ConfigureAwait(false);

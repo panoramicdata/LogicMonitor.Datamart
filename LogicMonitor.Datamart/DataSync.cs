@@ -34,7 +34,7 @@ internal class DataSync : LoopInterval
 		var matchingDatabaseDataSources = await context
 			.DataSources
 			.Where(ds => deviceDataSourceNames.Contains(ds.Name))
-			.ToListAsync()
+			.ToListAsync(cancellationToken: cancellationToken)
 			.ConfigureAwait(false);
 
 		// Get the LogicMonitor Ids for those DataSources
@@ -51,7 +51,7 @@ internal class DataSync : LoopInterval
 			)
 			// To make debugging a little more deterministic, order by the Device and then its instances
 			.OrderBy(ddsi => ddsi.DeviceId).ThenBy(ddsi => ddsi.Id)
-			.ToListAsync()
+			.ToListAsync(cancellationToken: cancellationToken)
 			.ConfigureAwait(false);
 
 		// If there aren't any, log and return
@@ -217,7 +217,7 @@ internal class DataSync : LoopInterval
 						using var dataContext = new Context(datamartClient.DbContextOptions);
 						using var dbConnection = dataContext.Database.GetDbConnection();
 						using var sqlConnection = new SqlConnection(dbConnection.ConnectionString);
-						await sqlConnection.OpenAsync().ConfigureAwait(false);
+						await sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
 						aggregationsToWrite.Clear();
 
 						// Iterate over the retrieved DeviceDataSourceInstances
@@ -269,7 +269,7 @@ internal class DataSync : LoopInterval
 
 									var databaseDataPoint = await dataContext
 										.DataSourceDataPoints
-										.SingleOrDefaultAsync(dp => dp.Name == dataPointModel.Name && dp.DataSource.Name == instanceFetchDataResponse.DataSourceName)
+										.SingleOrDefaultAsync(dp => dp.Name == dataPointModel.Name && dp.DataSource.Name == instanceFetchDataResponse.DataSourceName, cancellationToken: cancellationToken)
 										.ConfigureAwait(false);
 
 									// Aggregate it in blocks of DataAggregationDuration

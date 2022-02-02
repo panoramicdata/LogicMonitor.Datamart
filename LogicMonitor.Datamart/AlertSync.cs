@@ -41,7 +41,7 @@ internal class AlertSync : LoopInterval
 						.Devices
 						.Select(d => d.Id)
 						.OrderBy(id => id)
-						.ToListAsync()
+						.ToListAsync(cancellationToken: cancellationToken)
 						.ConfigureAwait(false);
 		}
 
@@ -53,9 +53,14 @@ internal class AlertSync : LoopInterval
 		return updateAlertStats;
 	}
 
-	private async Task<UpdateAlertStats> UpdateDeviceAlerts(long nowSecondsSinceEpoch, List<int> databaseDeviceIds, CancellationToken cancellationToken)
+	private async Task<UpdateAlertStats> UpdateDeviceAlerts(
+		long nowSecondsSinceEpoch,
+		List<int> databaseDeviceIds,
+		CancellationToken cancellationToken)
 	{
-		Logger.LogInformation($"Loading alerts for {databaseDeviceIds.Count} devices...");
+		Logger.LogInformation(
+			"Loading alerts for {databaseDeviceIdCount} devices...",
+			databaseDeviceIds.Count);
 
 		// Record stats
 		var updateAlertStats = new UpdateAlertStats();
@@ -84,14 +89,18 @@ internal class AlertSync : LoopInterval
 				{
 					using var context = new Context(_datamartClient.DbContextOptions);
 					// Get the device
-					var device = await context.Devices.SingleOrDefaultAsync(d => d.Id == deviceId).ConfigureAwait(false);
+					var device = await context.Devices.SingleOrDefaultAsync(d => d.Id == deviceId, cancellationToken: cancellationToken).ConfigureAwait(false);
 
 					// Build up the list of alerts in memory, then delete the table contents and re-add.
 					alertsToBulkInsert.Clear();
 
 					stopwatch.Restart();
 					deviceIndex++;
-					Logger.LogDebug($"Retrieving datasource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName}");
+					Logger.LogDebug(
+						"Retrieving datasource alerts for {datamartClientAccountName} : Id={deviceId}, CurrentDisplayName={deviceDisplayName}",
+						_datamartClient.AccountName,
+						deviceId,
+						device.DisplayName);
 
 					// Get the  alerts
 
@@ -119,7 +128,11 @@ internal class AlertSync : LoopInterval
 
 						deviceAlertCount += alertsThisTime.Count;
 
-						Logger.LogDebug($"Processing datasource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName}");
+						Logger.LogDebug(
+							"Processing datasource alerts for {datamartClientAccountName} : Id={deviceId}, CurrentDisplayName={deviceDisplayName}",
+							_datamartClient.AccountName,
+							deviceId,
+							device.DisplayName);
 						var dataProcessingStopwatch = Stopwatch.StartNew();
 
 						// A structure for reducing the alerts that came in so we only have 1 record per Id, the last one is the only one of interest
@@ -139,7 +152,7 @@ internal class AlertSync : LoopInterval
 							// Is it already in the database?
 							var databaseAlert = await context
 								.Alerts
-								.SingleOrDefaultAsync(asi => asi.Id == networkAlert.Id)
+								.SingleOrDefaultAsync(asi => asi.Id == networkAlert.Id, cancellationToken: cancellationToken)
 								.ConfigureAwait(false);
 							sqlFetch.Stop();
 
@@ -165,7 +178,7 @@ internal class AlertSync : LoopInterval
 								databaseAlert.IsCleared = networkAlert.IsCleared;
 								sqlSave.Start();
 								await context
-									.SaveChangesAsync()
+									.SaveChangesAsync(cancellationToken)
 									.ConfigureAwait(false);
 								sqlSave.Stop();
 								updateAlertStats.Updated++;
@@ -175,7 +188,7 @@ internal class AlertSync : LoopInterval
 						var message = $"Processed datasource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName}; {reducedAlerts.Count}(of {alertsThisTime.Count}) " +
 							$"dbGet({sqlFetch.ElapsedMilliseconds:N0}ms) dbSave({sqlSave.ElapsedMilliseconds:N0}ms) in {dataProcessingStopwatch.ElapsedMilliseconds:N0}ms " +
 							$"from {DateTimeOffset.FromUnixTimeSeconds(timeCursor).UtcDateTime}...)";
-						Logger.LogDebug(message);
+						Logger.LogDebug("{message}", message);
 
 						// Update the timeCursor to point to the highest value observed in the data
 
@@ -199,7 +212,10 @@ internal class AlertSync : LoopInterval
 							if (alertsThisTime.Max(a => a.EndOnSeconds) == 0)
 							{
 								// All alerts are still open and there are no alerts in front of them to process, so we can just set the timeCursor to nowSecondsSinceEpoch
-								Logger.LogDebug($"All alerts received have EndOnSeconds==0. Moving timeCursor to 'now': {nowSecondsSinceEpoch} ({DateTimeOffset.FromUnixTimeSeconds(nowSecondsSinceEpoch)})");
+								Logger.LogDebug(
+									"All alerts received have EndOnSeconds==0. Moving timeCursor to 'now': {nowSecondsSinceEpoch} ({dateTime})",
+									nowSecondsSinceEpoch,
+									DateTimeOffset.FromUnixTimeSeconds(nowSecondsSinceEpoch));
 								timeCursor = nowSecondsSinceEpoch;
 								// We're done looping, nothing else to do on this device for the moment
 								break;
@@ -219,7 +235,7 @@ internal class AlertSync : LoopInterval
 						// This will also help limit the total amount of RAM used
 						if (alertsToBulkInsert.Values.Count > maxNewAlerts)
 						{
-							Logger.LogDebug($"Already got {alertsToBulkInsert.Values.Count}, going to write out...");
+							Logger.LogDebug("Already got {alertsToBulkInsertValuesCount}, going to write out...", alertsToBulkInsert.Values.Count);
 							break;
 						}
 					}
@@ -232,14 +248,28 @@ internal class AlertSync : LoopInterval
 					// Update the device
 					device.LastAlertClosedTimeSeconds = timeCursor;
 					await context
-						.SaveChangesAsync()
+						.SaveChangesAsync(cancellationToken)
 						.ConfigureAwait(false);
 
-					Logger.LogInformation($"Retrieved datasource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName} ({deviceIndex}/{databaseDeviceIds.Count}). Retrieved {deviceAlertCount} in {stopwatch.Elapsed.TotalSeconds:N1}s");
+					Logger.LogInformation(
+						"Retrieved datasource alerts for {datamartClientAccountName} : Id={deviceId}, CurrentDisplayName={deviceDisplayName} ({deviceIndex}/{databaseDeviceIdsCount}). Retrieved {deviceAlertCount} in {stopwatchElapsedTotalSeconds:N1}s",
+						_datamartClient.AccountName,
+						deviceId,
+						device.DisplayName,
+						deviceIndex,
+						databaseDeviceIds.Count,
+						deviceAlertCount,
+						stopwatch.Elapsed.TotalSeconds
+						);
 				}
 				catch (Exception e)
 				{
-					Logger.LogWarning($"Failed to retrieve alerts for {_datamartClient.AccountName} : Id={deviceId} due to {e.Message}");
+					Logger.LogWarning(
+						"Failed to retrieve alerts for {datamartClientAccountName} : Id={deviceId} due to {message}",
+						_datamartClient.AccountName,
+						deviceId,
+						e.Message
+						);
 				}
 			}
 		}
@@ -326,7 +356,10 @@ internal class AlertSync : LoopInterval
 			var databaseEntry = await monitorObjectGroupContext.MonitorObjectGroups.SingleOrDefaultAsync(g => g.MonitoredObjectType == networkAlert.MonitorObjectType && g.FullPath == networkAlert.MonitorObjectGroups[index].FullPath).ConfigureAwait(false);
 			if (databaseEntry == null)
 			{
-				Logger.LogDebug($"Adding new MonitorObjectGroup {networkAlert.MonitorObjectType}:{networkAlert.MonitorObjectGroups[index].FullPath}");
+				Logger.LogDebug(
+					"Adding new MonitorObjectGroup {networkAlertMonitorObjectType}:{networkAlertMonitorObjectGroupsFullPath}",
+					networkAlert.MonitorObjectType,
+					networkAlert.MonitorObjectGroups[index].FullPath);
 				databaseEntry = new MonitorObjectGroupStoreItem
 				{
 					MonitoredObjectType = networkAlert.MonitorObjectType,
@@ -334,7 +367,12 @@ internal class AlertSync : LoopInterval
 				};
 				monitorObjectGroupContext.MonitorObjectGroups.Add(databaseEntry);
 				await monitorObjectGroupContext.SaveChangesAsync().ConfigureAwait(false);
-				Logger.LogInformation($"Added new MonitorObjectGroup {databaseEntry.MonitoredObjectType}:{databaseEntry.FullPath} with id {databaseEntry.DatamartId}");
+				Logger.LogInformation(
+					"Added new MonitorObjectGroup {databaseEntryMonitoredObjectType}:{databaseEntryFullPath} with id {databaseEntryDatamartId}",
+					databaseEntry.MonitoredObjectType,
+					databaseEntry.FullPath,
+					databaseEntry.DatamartId
+					);
 			}
 
 			return databaseEntry.DatamartId;
@@ -346,7 +384,7 @@ internal class AlertSync : LoopInterval
 	{
 		var stopwatch = Stopwatch.StartNew();
 		var indexAction = enabled ? "REBUILD" : "DISABLE";
-		Logger.LogDebug($"Alert index {indexAction}...");
+		Logger.LogDebug("Alert index {indexAction}...", indexAction);
 		foreach (var column in new[] {
 					"InternalId",
 					"Id",
@@ -390,12 +428,17 @@ internal class AlertSync : LoopInterval
 			  .ConfigureAwait(false);
 		}
 
-		Logger.LogInformation($"Alert index action {indexAction} complete after {stopwatch.Elapsed.Seconds:N1}s");
+		Logger.LogInformation(
+			"Alert index action {indexAction} complete after {stopwatchElapsedSeconds:N1}s",
+			indexAction,
+			stopwatch.Elapsed.Seconds);
 	}
 
 	internal async Task BulkInsertAlertsAsync(DbContextOptions<Context> contextOptions, List<AlertStoreItem> alertStoreItems)
 	{
-		Logger.LogDebug($"Bulk inserting {alertStoreItems.Count} alerts...");
+		Logger.LogDebug(
+			"Bulk inserting {alertStoreItemCount} alerts...",
+			alertStoreItems.Count);
 		var stopwatch = Stopwatch.StartNew();
 		switch (_datamartClient.DatabaseType)
 		{
@@ -410,7 +453,10 @@ internal class AlertSync : LoopInterval
 							BulkCopyTimeout = 0,
 							BatchSize = 10000,
 						},
-						n => Logger.LogDebug($"Bulk inserted {(int)(n * alertStoreItems.Count)}/{alertStoreItems.Count}"))
+						n => Logger.LogDebug(
+							"Bulk inserted {itemNumber}/{alertStoreItemCount}",
+							(int)(n * alertStoreItems.Count),
+							alertStoreItems.Count))
 						.ConfigureAwait(false);
 				}
 
@@ -421,7 +467,10 @@ internal class AlertSync : LoopInterval
 				const int BatchSize = 1000;
 				for (var batch = 0; batch * BatchSize < alertStoreItems.Count; batch++)
 				{
-					Logger.LogDebug($"Bulk inserting batch {batch + 1} of up to {BatchSize} alerts...");
+					Logger.LogDebug(
+						"Bulk inserting batch {batchNumber} of up to {BatchSize} alerts...",
+						batch + 1,
+						BatchSize);
 
 					using var context = new Context(contextOptions);
 					context.Alerts.AddRange(alertStoreItems.Skip(batch * BatchSize).Take(BatchSize));
@@ -433,6 +482,9 @@ internal class AlertSync : LoopInterval
 				throw new NotSupportedException($"The Database type {_datamartClient.DatabaseType} is not supported for bulk inserts");
 		}
 
-		Logger.LogInformation($"Bulk inserted {alertStoreItems.Count} alerts; complete after {stopwatch.Elapsed.TotalSeconds:N1}s");
+		Logger.LogInformation(
+			"Bulk inserted {alertStoreItems.Count} alerts; complete after {stopwatchElapsedTotalSeconds:N1}s",
+			alertStoreItems.Count,
+			stopwatch.Elapsed.TotalSeconds);
 	}
 }

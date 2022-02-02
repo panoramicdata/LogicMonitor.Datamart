@@ -33,7 +33,7 @@ internal class LogSync : LoopInterval
 			mostRecentTimestamp = (await context
 				.LogItems
 				.OrderByDescending(l => l.HappenedOnTimeStampUtc)
-				.FirstOrDefaultAsync()
+				.FirstOrDefaultAsync(cancellationToken: cancellationToken)
 				.ConfigureAwait(false))
 				?.HappenedOnTimeStampUtc
 				?? 0;
@@ -73,7 +73,7 @@ internal class LogSync : LoopInterval
 				.LogItems
 				.Where(l => l.HappenedOnTimeStampUtc == timeCursor)
 				.Select(l => l.Id)
-				.ToListAsync()
+				.ToListAsync(cancellationToken: cancellationToken)
 				.ConfigureAwait(false);
 
 			// Remove those that came in on the boundary that we already have
@@ -87,21 +87,29 @@ internal class LogSync : LoopInterval
 
 			totalLogEntriesStored += apiEntriesThisTime.Count;
 
-			Logger.LogDebug($"Processing log items for {_datamartClient.AccountName}");
+			Logger.LogDebug(
+				"Processing log items for {datamartClientAccountName}",
+				_datamartClient.AccountName);
 			var dataProcessingStopwatch = Stopwatch.StartNew();
 			var sqlSave = new Stopwatch();
 
 			context.LogItems.AddRange(apiEntriesThisTime.Select(DatamartClient.MapperInstance.Map<LogItem, LogStoreItem>));
 
 			await context
-				.SaveChangesAsync()
+				.SaveChangesAsync(cancellationToken)
 				.ConfigureAwait(false);
 
 			timeCursor = apiEntriesThisTime.Max(e => e.HappenedOnTimeStampUtc);
 
-			Logger.LogDebug($"Processed {apiEntriesThisTime} log items ending {timeCursor} for {_datamartClient.AccountName}");
+			Logger.LogDebug("Processed {apiEntriesThisTime} log items ending {timeCursor} for {datamartClientAccountName}",
+				apiEntriesThisTime,
+				timeCursor,
+				_datamartClient.AccountName);
 		}
 
-		Logger.LogInformation($"Finished storing {totalLogEntriesStored} Log entries for {_datamartClient.AccountName}");
+		Logger.LogInformation(
+			"Finished storing {totalLogEntriesStored} Log entries for {logicMonitorAccountName}",
+			totalLogEntriesStored,
+			_datamartClient.AccountName);
 	}
 }

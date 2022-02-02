@@ -33,7 +33,7 @@ internal abstract class LoopInterval
 		{
 			stopwatch.Restart();
 
-			Logger.LogInformation($"Starting {_name}...");
+			Logger.LogInformation("Starting {name}...", _name);
 
 			try
 			{
@@ -41,22 +41,30 @@ internal abstract class LoopInterval
 			}
 			catch (Exception ex) when (ex is OperationCanceledException || ex is TaskCanceledException)
 			{
-				Logger.LogInformation(ex, $"Loopsync {_name} cancelled.");
+				Logger.LogInformation(ex, "Loopsync {name} cancelled.", _name);
 			}
 			catch (Exception ex)
 			{
 				// This shouldn't generally happen so if it does, dump the entire exception ex which will include inner exceptions
-				Logger.LogError(ex, $"An unexpected error occurred during the LoopInterval: {ex}");
+				Logger.LogError(
+					ex,
+					"An unexpected error occurred during the LoopInterval: {message}",
+					ex.Message);
 			}
 
 			stopwatch.Stop();
-			Logger.LogInformation($"Finished {_name} in {stopwatch.Elapsed.Humanize(7, minUnit: TimeUnit.Second)}.");
+			Logger.LogInformation(
+				"Finished {name} in {stopwatchHumanized}.",
+				_name,
+				stopwatch.Elapsed.Humanize(7, minUnit: TimeUnit.Second));
 
 			// Are we repeating?
 			if (intervalMinutes == LoopIntervals.ExecuteOnce)
 			{
 				// NO
-				Logger.LogInformation($"{_name} configured to run once, finished.");
+				Logger.LogInformation(
+					"{name} configured to run once, finished.",
+					_name);
 				break;
 			}
 
@@ -64,12 +72,20 @@ internal abstract class LoopInterval
 			var remainingTimeInInterval = syncInterval.Subtract(stopwatch.Elapsed);
 			if (remainingTimeInInterval.TotalSeconds > 0)
 			{
-				Logger.LogInformation($"Next {_name} will start in {remainingTimeInInterval.Humanize(7, minUnit: TimeUnit.Second)} at {DateTime.UtcNow.Add(remainingTimeInInterval)}.");
+				Logger.LogInformation(
+					"Next {name} will start in {remainingTimeInInterval} at {remainingTimeInInterval}.",
+					_name,
+					remainingTimeInInterval.Humanize(7, minUnit: TimeUnit.Second),
+					DateTime.UtcNow.Add(remainingTimeInInterval)
+					);
 				await Task.Delay(remainingTimeInInterval, cancellationToken).ConfigureAwait(false);
 			}
 			else
 			{
-				Logger.LogWarning($"Next {_name} will start immediately as it took longer than the configured {intervalMinutes} minutes.");
+				Logger.LogWarning(
+					"Next {name} will start immediately as it took longer than the configured {intervalMinutes} minutes.",
+					_name,
+					intervalMinutes);
 			}
 		}
 	}
