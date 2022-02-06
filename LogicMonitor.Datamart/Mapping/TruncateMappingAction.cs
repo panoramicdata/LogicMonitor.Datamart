@@ -16,7 +16,7 @@ internal class TruncateMappingAction<TSource, TDestination> : IMappingAction<TSo
 				&& property.GetCustomAttributes().FirstOrDefault(a => a.GetType() == typeof(MaxLengthAttribute)) is MaxLengthAttribute maxLengthAttribute
 				&& currentValue.Length > maxLengthAttribute.Length)
 			{
-				property.SetValue(destination, currentValue.Substring(0, maxLengthAttribute.Length));
+				property.SetValue(destination, currentValue[..maxLengthAttribute.Length]);
 			}
 		}
 	}
