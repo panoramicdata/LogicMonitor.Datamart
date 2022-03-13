@@ -372,7 +372,7 @@ public class DatamartClient : LogicMonitorClient
 				.DataSources
 				.SingleOrDefaultAsync(ds => ds.Name == dataSourceName)
 				.ConfigureAwait(false);
-			if (apiDataSource is null)
+			if (databaseDataSource is null)
 			{
 				// Should not happen, as we have only just updated the database with DataSources
 				_logger.LogError(

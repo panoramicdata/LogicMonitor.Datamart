@@ -1,4 +1,6 @@
-﻿namespace LogicMonitor.Datamart;
+﻿using System.Globalization;
+
+namespace LogicMonitor.Datamart;
 
 internal static class AggregationWriter
 {
@@ -241,7 +243,11 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 
 	internal static List<string> DetermineTablesToAge(List<string> existingTables, int countAggregationDaysToRetain)
 	{
-		var ageBoundary = DateTimeOffset.UtcNow.Date.AddDays(-countAggregationDaysToRetain).ToString("yyyyMMdd");
+		var ageBoundary = DateTimeOffset
+			.UtcNow
+			.Date
+			.AddDays(-countAggregationDaysToRetain)
+			.ToString("yyyyMMdd", CultureInfo.InvariantCulture);
 		return existingTables.Where(t => string.CompareOrdinal(t, TableNamePrefix.Length + 1, ageBoundary, 0, 8) < 0).ToList();
 	}
 }
