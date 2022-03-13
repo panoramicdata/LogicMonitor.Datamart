@@ -60,7 +60,7 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 
 		using var dbContext = new Context(dbContextOptions);
 		var tableName = GetTableName(start);
-		logger.LogDebug("Dropping table {tableName}", tableName);
+		logger.LogDebug("Dropping table {TableName}", tableName);
 		var tableCreationSql = "DROP TABLE [" + tableName + "]";
 		await dbContext
 			.Database
@@ -82,7 +82,9 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 		using (var dbContext = new Context(dbContextOptions))
 		{
 			using var connection = dbContext.Database.GetDbConnection();
-			connection.Open();
+			await connection
+				.OpenAsync()
+				.ConfigureAwait(false);
 			using var command = connection.CreateCommand();
 			command.CommandText =
 				dbContext.Database.IsSqlServer()
@@ -90,10 +92,12 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 				: dbContext.Database.IsNpgsql()
 					? $"SELECT table_name as name FROM information_schema.tables WHERE table_name LIKE '{TableNamePrefix}%' ORDER BY table_name"
 					: throw new NotSupportedException();
-			using var reader = await command.ExecuteReaderAsync();
+			using var reader = await command
+				.ExecuteReaderAsync()
+				.ConfigureAwait(false);
 			if (reader.HasRows)
 			{
-				while (reader.Read())
+				while (await reader.ReadAsync().ConfigureAwait(false))
 				{
 					tableNames.Add(reader.GetString(0));
 				}
@@ -112,13 +116,14 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 		IEnumerable<DeviceDataSourceInstanceAggregatedDataBulkWriteModel> aggregations,
 		ILogger logger)
 	{
-		var tableName = await EnsureTableExistsAsync(sqlConnection, sqlCommandTimeoutSeconds, key);
+		var tableName = await EnsureTableExistsAsync(sqlConnection, sqlCommandTimeoutSeconds, key)
+			.ConfigureAwait(false);
 
 		var aggregationCount = aggregations.Count();
 
 		var stopwatch = Stopwatch.StartNew();
 		logger.LogTrace(
-			"Preparing DataTable for {aggregationCount} aggregations...",
+			"Preparing DataTable for {AggregationCount} aggregations...",
 			aggregationCount);
 
 		// Prep the data into a DataTable, setting initial structure from the database
@@ -147,7 +152,7 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 
 		var lastAggregationHourWrittenUtc = aggregations.Max(a => a.PeriodEnd);
 		logger.LogTrace(
-			"Preparing DataTable for {aggregationCount} aggregations complete after {stopwatchElapsedMilliseconds:N0}ms.",
+			"Preparing DataTable for {AggregationCount} aggregations complete after {StopwatchElapsedMilliseconds:N0}ms.",
 			aggregationCount,
 			stopwatch.ElapsedMilliseconds);
 		stopwatch.Restart();
@@ -155,7 +160,7 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 		using var transaction = sqlConnection.BeginTransaction();
 		stopwatch.Restart();
 		logger.LogTrace(
-			"Bulk writing {aggregationCount} aggregations...",
+			"Bulk writing {AggregationCount} aggregations...",
 			aggregationCount);
 		// Write out the data as part of a transaction
 		using (var bulkCopy = new SqlBulkCopy(sqlConnection, SqlBulkCopyOptions.Default, transaction))
@@ -166,20 +171,21 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 		}
 
 		logger.LogTrace(
-			"Bulk writing {aggregationCount} aggregations complete after {stopwatchElapsedMilliseconds:N0}ms.",
+			"Bulk writing {AggregationCount} aggregations complete after {StopwatchElapsedMilliseconds:N0}ms.",
 			aggregationCount,
 			stopwatch.ElapsedMilliseconds
 			);
 
 		stopwatch.Restart();
 		logger.LogTrace(
-			"Setting progress for DDSI {deviceDataSourceInstanceId} to {lastAggregationHourWrittenUtc}...",
+			"Setting progress for DDSI {DeviceDataSourceInstanceId} to {LastAggregationHourWrittenUtc}...",
 			deviceDataSourceInstanceId,
 			lastAggregationHourWrittenUtc);
 		// Update the progress as part of a transaction
-		await WriteProgressBoundaryAsync(sqlConnection, sqlCommandTimeoutSeconds, deviceDataSourceInstanceId, lastAggregationHourWrittenUtc, transaction);
+		await WriteProgressBoundaryAsync(sqlConnection, sqlCommandTimeoutSeconds, deviceDataSourceInstanceId, lastAggregationHourWrittenUtc, transaction)
+			.ConfigureAwait(false);
 		logger.LogTrace(
-			"Setting progress for DDSI {deviceDataSourceInstanceId} to {lastAggregationHourWrittenUtc} complete after {stopwatchElapsedMilliseconds:N0}ms.",
+			"Setting progress for DDSI {DeviceDataSourceInstanceId} to {LastAggregationHourWrittenUtc} complete after {StopwatchElapsedMilliseconds:N0}ms.",
 			deviceDataSourceInstanceId,
 			lastAggregationHourWrittenUtc,
 			stopwatch.ElapsedMilliseconds);
@@ -188,7 +194,7 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 		logger.LogTrace("Committing transaction...");
 		transaction.Commit();
 		logger.LogTrace(
-			"Committing transaction complete after {stopwatchElapsedMilliseconds:N0}ms",
+			"Committing transaction complete after {StopwatchElapsedMilliseconds:N0}ms",
 			stopwatch.ElapsedMilliseconds);
 	}
 
@@ -219,12 +225,14 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 			using var context = new Context(dbContextOptions);
 			using var dbConnection = context.Database.GetDbConnection();
 			using var sqlConnection = new SqlConnection(dbConnection.ConnectionString);
-			await sqlConnection.OpenAsync();
+			await sqlConnection
+				.OpenAsync()
+				.ConfigureAwait(false);
 			using var command = new SqlCommand(string.Empty, sqlConnection);
 			command.CommandTimeout = sqlCommandTimeoutSeconds;
 			foreach (var tableName in tablesToRemove)
 			{
-				logger.LogInformation("Aging out table {tableName}", tableName);
+				logger.LogInformation("Aging out table {TableName}", tableName);
 				command.CommandText = "drop table " + tableName;
 				await command.ExecuteNonQueryAsync().ConfigureAwait(false);
 			}

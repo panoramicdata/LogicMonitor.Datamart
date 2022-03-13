@@ -5,12 +5,12 @@ public class Configuration
 	/// <summary>
 	/// The configuration name
 	/// </summary>
-	public string Name { get; set; }
+	public string Name { get; set; } = null!;
 
 	/// <summary>
 	/// The DataSources
 	/// </summary>
-	public List<DataSourceConfigurationItem> DataSources { get; set; } = new List<DataSourceConfigurationItem>();
+	public List<DataSourceConfigurationItem> DataSources { get; set; } = new();
 
 	/// <summary>
 	/// The aggregation duration override in minutes
@@ -31,7 +31,7 @@ public class Configuration
 	/// <summary>
 	/// The LogicMonitor client options
 	/// </summary>
-	public LogicMonitorClientOptions LogicMonitorClientOptions { get; set; }
+	public LogicMonitorClientOptions LogicMonitorClientOptions { get; set; } = null!;
 
 	/// <summary>
 	/// The Database type
@@ -41,22 +41,22 @@ public class Configuration
 	/// <summary>
 	/// The Database server name
 	/// </summary>
-	public string DatabaseServerName { get; set; }
+	public string DatabaseServerName { get; set; } = null!;
 
 	/// <summary>
 	/// The Database name
 	/// </summary>
-	public string DatabaseName { get; set; }
+	public string DatabaseName { get; set; } = null!;
 
 	/// <summary>
 	/// Optional database username for providers that utilise it
 	/// </summary>
-	public string DatabaseUsername { get; set; }
+	public string DatabaseUsername { get; set; } = null!;
 
 	/// <summary>
 	/// Optional database password for providers that utilise it
 	/// </summary>
-	public string DatabasePassword { get; set; }
+	public string DatabasePassword { get; set; } = null!;
 
 	/// <summary>
 	/// The number of seconds to wait for SqlCommands to timeout
@@ -75,7 +75,7 @@ public class Configuration
 
 	public int DeviceDataSourceInstanceBatchSize { get; set; } = 100;
 
-	public List<string> DeviceProperties { get; set; } = new List<string>();
+	public List<string> DeviceProperties { get; set; } = new();
 
 	public void Validate()
 	{

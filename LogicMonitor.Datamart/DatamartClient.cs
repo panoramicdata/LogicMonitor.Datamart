@@ -21,7 +21,7 @@ public class DatamartClient : LogicMonitorClient
 	public DatamartClient(
 		Configuration configuration,
 		ILoggerFactory loggerFactory
-		) : base(configuration.LogicMonitorClientOptions)
+		) : base((configuration ?? throw new ArgumentNullException(nameof(configuration))).LogicMonitorClientOptions)
 	{
 		// Store and validate configuration
 		_configuration = configuration;
@@ -127,7 +127,7 @@ public class DatamartClient : LogicMonitorClient
 		using var context = new Context(DbContextOptions);
 		using var dbConnection = context.Database.GetDbConnection();
 		_logger.LogInformation(
-			"Deleting database {dbConnectionDatabase} on {dbConnectionDataSource}...",
+			"Deleting database {DbConnectionDatabase} on {DbConnectionDataSource}...",
 			dbConnection.Database,
 			dbConnection.DataSource);
 		await context
@@ -135,7 +135,7 @@ public class DatamartClient : LogicMonitorClient
 			.EnsureDeletedAsync(cancellationToken)
 			.ConfigureAwait(false);
 		_logger.LogInformation(
-			"Deleted database {dbConnectionDatabase} on {dbConnectionDataSource}...",
+			"Deleted database {DbConnectionDatabase} on {DbConnectionDataSource}...",
 			dbConnection.Database,
 			dbConnection.DataSource);
 	}
@@ -298,7 +298,7 @@ public class DatamartClient : LogicMonitorClient
 		where TStore : IdentifiedStoreItem
 	{
 		logger.LogDebug(
-			"{typeName}: Loading entries...",
+			"{TypeName}: Loading entries...",
 			typeof(TApi).Name);
 
 		using var context = new Context(DbContextOptions);
@@ -310,7 +310,7 @@ public class DatamartClient : LogicMonitorClient
 		var apiItems = await GetAllAsync<TApi>(cancellationToken: cancellationToken)
 			.ConfigureAwait(false);
 		logger.LogDebug(
-			"{typeName}: Loaded {apiItemsCount} items.",
+			"{TypeName}: Loaded {ApiItemsCount} items.",
 			typeof(TApi).Name,
 			apiItems.Count);
 
@@ -326,7 +326,7 @@ public class DatamartClient : LogicMonitorClient
 		var total = context.ChangeTracker.Entries().Count();
 		var affectedRowCount = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 		logger.LogInformation(
-			"{typeName}: Total {total}; Added {added}; Modified {modified}.",
+			"{TypeName}: Total {Total}; Added {Added}; Modified {Modified}.",
 			typeof(TApi).Name,
 			total,
 			added,
@@ -336,7 +336,8 @@ public class DatamartClient : LogicMonitorClient
 		// So, after fetching the DataSources, we should also update the DataPoints in the database
 		if (typeof(TStore) == typeof(DataSourceStoreItem))
 		{
-			await UpdateDataPointsAsync(context, apiItems.Cast<DataSource>().ToList());
+			await UpdateDataPointsAsync(context, apiItems.Cast<DataSource>().ToList())
+				.ConfigureAwait(false);
 		}
 	}
 
@@ -356,11 +357,11 @@ public class DatamartClient : LogicMonitorClient
 			// The DataSource from the API
 			var apiDataSource = apiDataSources
 				.SingleOrDefault(ds => ds.Name == dataSourceName);
-			if (apiDataSource == null)
+			if (apiDataSource is null)
 			{
 				// May not happen if the config references a non-existent DataSource
 				_logger.LogError(
-					"For LogicMonitor instance {logicMonitorAccount}, expected to find LogicMonitor API DataSource called '{dataSourceName}', but it was missing.",
+					"For LogicMonitor instance {LogicMonitorAccount}, expected to find LogicMonitor API DataSource called '{DataSourceName}', but it was missing.",
 					_configuration.LogicMonitorClientOptions.Account,
 					dataSourceName);
 				continue;
@@ -369,12 +370,13 @@ public class DatamartClient : LogicMonitorClient
 			// The DataSource from the database
 			var databaseDataSource = await context
 				.DataSources
-				.SingleOrDefaultAsync(ds => ds.Name == dataSourceName);
-			if (apiDataSource == null)
+				.SingleOrDefaultAsync(ds => ds.Name == dataSourceName)
+				.ConfigureAwait(false);
+			if (apiDataSource is null)
 			{
 				// Should not happen, as we have only just updated the database with DataSources
 				_logger.LogError(
-					"For LogicMonitor instance {logicMonitorAccount}, expected to find Database DataSource called '{dataSourceName}', but it was missing.",
+					"For LogicMonitor instance {LogicMonitorAccount}, expected to find Database DataSource called '{DataSourceName}', but it was missing.",
 					_configuration.LogicMonitorClientOptions.Account,
 					dataSourceName);
 				continue;
@@ -391,7 +393,7 @@ public class DatamartClient : LogicMonitorClient
 				if (apiDataPoint == null)
 				{
 					_logger.LogError(
-						"For LogicMonitor instance '{logicMonitorAccount}', DataSource '{dataSourceName}': could not find configured DataPoint '{configDataPointName}'. Available DataPoints: {dataPoints}",
+						"For LogicMonitor instance '{LogicMonitorAccount}', DataSource '{DataSourceName}': could not find configured DataPoint '{ConfigDataPointName}'. Available DataPoints: {DataPoints}",
 						_configuration.LogicMonitorClientOptions.Account,
 						dataSourceName,
 						configDataPoint.Name,
@@ -403,7 +405,8 @@ public class DatamartClient : LogicMonitorClient
 				// Is it in the database?
 				var databaseDataSourceDataPointModel = await context
 					.DataSourceDataPoints
-					.SingleOrDefaultAsync(dsdp => dsdp.DataSource.Name == apiDataSource.Name && dsdp.Name == configDataPoint.Name);
+					.SingleOrDefaultAsync(dsdp => dsdp.DataSource.Name == apiDataSource.Name && dsdp.Name == configDataPoint.Name)
+					.ConfigureAwait(false);
 				if (databaseDataSourceDataPointModel == null)
 				{
 					// No. Add it to the database
@@ -417,7 +420,7 @@ public class DatamartClient : LogicMonitorClient
 					});
 
 					_logger.LogInformation(
-						"For LogicMonitor instance {logicMonitorAccount}, for {dataSourceName}, added datapoint {configDataPointName} to database.",
+						"For LogicMonitor instance {LogicMonitorAccount}, for {DataSourceName}, added datapoint {ConfigDataPointName} to database.",
 						_configuration.LogicMonitorClientOptions.Account,
 						dataSourceName,
 						configDataPoint.Name);
@@ -446,15 +449,15 @@ public class DatamartClient : LogicMonitorClient
 		int? take,
 		string id,
 		AckFilter ackFilter,
-		List<string> monitorObjectGroups,
+		ICollection<string> monitorObjectGroups,
 		string monitorObjectName,
 		int? monitorObjectId,
-		List<AlertType> alertTypes,
+		ICollection<AlertType> alertTypes,
 		string resourceTemplateDisplayName,
 		int? resourceTemplateId,
 		string instanceName,
 		string dataPointName,
-		List<AlertLevel> alertLevels,
+		ICollection<AlertLevel> alertLevels,
 		string orderBy,
 		OrderDirection orderDirection,
 		SdtFilter sdtFilter,
@@ -521,7 +524,7 @@ public class DatamartClient : LogicMonitorClient
 		}
 
 		// Only one is ever passed
-		var monitorObjectGroup = monitorObjectGroups?[0];
+		var monitorObjectGroup = monitorObjectGroups?.First();
 		if (monitorObjectGroup != null)
 		{
 			var likeString = $"{monitorObjectGroup.TrimEnd('*')}%";
@@ -631,7 +634,7 @@ public class DatamartClient : LogicMonitorClient
 			.ConfigureAwait(false);
 
 	public static async Task<List<int>> GetAllCachedDeviceGroupIdsAsync(DbSet<DeviceGroupStoreItem> deviceGroups, string groupName)
-		=> groupName.EndsWith("*", StringComparison.Ordinal)
+		=> (groupName ?? throw new ArgumentNullException(nameof(groupName))).EndsWith("*", StringComparison.Ordinal)
 			? await deviceGroups
 				.Where(dg => dg.FullPath.StartsWith(groupName.TrimEnd('*'), StringComparison.Ordinal))
 				.Select(dg => dg.Id)
@@ -644,7 +647,7 @@ public class DatamartClient : LogicMonitorClient
 				.ConfigureAwait(false);
 
 	public static async Task<List<int>> GetAllCachedWebsiteGroupIdsAsync(DbSet<WebsiteGroupStoreItem> websiteGroups, string groupName)
-		=> groupName.EndsWith("*", StringComparison.Ordinal)
+		=> (groupName ?? throw new ArgumentNullException(nameof(groupName))).EndsWith("*", StringComparison.Ordinal)
 			? await websiteGroups
 				.Where(wg => wg.FullPath.StartsWith(groupName.TrimEnd('*'), StringComparison.Ordinal))
 				.Select(wg => wg.Id)
@@ -670,9 +673,15 @@ public class DatamartClient : LogicMonitorClient
 		using var context = new Context(DbContextOptions);
 		using var dbConnection = context.Database.GetDbConnection();
 		using var sqlConnection = new SqlConnection(dbConnection.ConnectionString);
-		await sqlConnection.OpenAsync();
-		var tableName = await AggregationWriter.EnsureTableExistsAsync(sqlConnection, _configuration.SqlCommandTimeoutSeconds, testAggregationPeriod);
-		sqlConnection.Close();
+		await sqlConnection
+			.OpenAsync()
+			.ConfigureAwait(false);
+		var tableName = await AggregationWriter
+			.EnsureTableExistsAsync(sqlConnection, _configuration.SqlCommandTimeoutSeconds, testAggregationPeriod)
+			.ConfigureAwait(false);
+		await sqlConnection
+			.CloseAsync()
+			.ConfigureAwait(false);
 		return tableName;
 	}
 }

@@ -88,7 +88,7 @@ internal class LogSync : LoopInterval
 			totalLogEntriesStored += apiEntriesThisTime.Count;
 
 			Logger.LogDebug(
-				"Processing log items for {datamartClientAccountName}",
+				"Processing log items for {DatamartClientAccountName}",
 				_datamartClient.AccountName);
 			var dataProcessingStopwatch = Stopwatch.StartNew();
 			var sqlSave = new Stopwatch();
@@ -101,14 +101,14 @@ internal class LogSync : LoopInterval
 
 			timeCursor = apiEntriesThisTime.Max(e => e.HappenedOnTimeStampUtc);
 
-			Logger.LogDebug("Processed {apiEntriesThisTime} log items ending {timeCursor} for {datamartClientAccountName}",
+			Logger.LogDebug("Processed {ApiEntriesThisTime} log items ending {TimeCursor} for {DatamartClientAccountName}",
 				apiEntriesThisTime,
 				timeCursor,
 				_datamartClient.AccountName);
 		}
 
 		Logger.LogInformation(
-			"Finished storing {totalLogEntriesStored} Log entries for {logicMonitorAccountName}",
+			"Finished storing {TotalLogEntriesStored} Log entries for {LogicMonitorAccountName}",
 			totalLogEntriesStored,
 			_datamartClient.AccountName);
 	}

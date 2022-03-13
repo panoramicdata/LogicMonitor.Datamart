@@ -1,4 +1,6 @@
-﻿namespace LogicMonitor.Datamart;
+﻿using System.Globalization;
+
+namespace LogicMonitor.Datamart;
 
 internal class DataSync : LoopInterval
 {
@@ -57,7 +59,9 @@ internal class DataSync : LoopInterval
 		// If there aren't any, log and return
 		if (databaseDeviceDataSourceInstances.Count == 0)
 		{
-			Logger.LogWarning($"Found no DeviceDataSourceInstances in the databases for DeviceDataSource names {string.Join(", ", deviceDataSourceNames)}. Check dimensions have been synced.");
+			Logger.LogWarning(
+				"Found no DeviceDataSourceInstances in the databases for DeviceDataSource names {Names}. Check dimensions have been synced.",
+				string.Join(", ", deviceDataSourceNames));
 			return;
 		}
 		// We have the database deviceDataSourceInstances for the configured DataSources
@@ -107,7 +111,9 @@ internal class DataSync : LoopInterval
 		var dataSourceAggregationDuration = configurationLevelAggregationDuration;
 
 		// Get data for each instance
-		logger.LogInformation($"Syncing {databaseDeviceDataSourceInstances.Count} DeviceDataSourceInstances...");
+		logger.LogInformation(
+			"Syncing {InstanceCount} DeviceDataSourceInstances...",
+			databaseDeviceDataSourceInstances.Count);
 		foreach (var databaseDeviceDataSourceInstanceGroup in
 				databaseDeviceDataSourceInstances
 				.GroupBy(ddsi => ddsi.LastAggregationHourWrittenUtc ?? DateTime.MinValue)
@@ -158,7 +164,12 @@ internal class DataSync : LoopInterval
 							lastUpdatedDateTimeUtc = lastUpdatedDateTimeUtc.Add(dataSourceAggregationDuration);
 						}
 
-						logger.LogDebug($"lastUpdatedDateTimeUtc {originalLastUpdatedDateTimeUtc} is more than {MaxHoursBack} hours ago so setting to {lastUpdatedDateTimeUtc}.");
+						logger.LogDebug(
+							"lastUpdatedDateTimeUtc {OriginalLastUpdatedDateTimeUtc} is more than {MaxHoursBack} hours ago so setting to {LastUpdatedDateTimeUtc}.",
+							originalLastUpdatedDateTimeUtc,
+							MaxHoursBack,
+							lastUpdatedDateTimeUtc
+							);
 					}
 
 					var timeCursor = lastUpdatedDateTimeUtc;
@@ -193,7 +204,7 @@ internal class DataSync : LoopInterval
 							// If we've genuinely done nothing, then log it so terminating after this is shown to be intentional
 							if (blockIndex == 0)
 							{
-								logger.LogDebug($"BlockIndex is 0, nothing to do for batch {batchIndex + 1}.");
+								logger.LogDebug("BlockIndex is 0, nothing to do for batch {BatchNumber}.", batchIndex + 1);
 							}
 
 							break;
@@ -209,7 +220,7 @@ internal class DataSync : LoopInterval
 							).ConfigureAwait(false);
 
 						var rowsRetrieved = instancesFetchDataResponse.InstanceFetchDataResponses.Sum(r => r.Timestamps.Length);
-						logger.LogDebug($"Loaded {rowsRetrieved} entries.");
+						logger.LogDebug("Loaded {RowsRetrieved} entries.", rowsRetrieved);
 						//if (rowsRetrieved > 0)
 						totalRowsLoadedFromApi += rowsRetrieved;
 
@@ -226,7 +237,7 @@ internal class DataSync : LoopInterval
 							// Get the configuration for this DataSourceName
 							var dataSourceConfigurationItem = configuration.DataSources.SingleOrDefault(dsci => dsci.Name == instanceFetchDataResponse.DataSourceName);
 
-							var deviceDataSourceInstanceIdAsInt = int.Parse(instanceFetchDataResponse.DeviceDataSourceInstanceId);
+							var deviceDataSourceInstanceIdAsInt = int.Parse(instanceFetchDataResponse.DeviceDataSourceInstanceId, CultureInfo.InvariantCulture);
 
 							if (instanceFetchDataResponse.Timestamps.Length > 0)
 							{
@@ -246,7 +257,10 @@ internal class DataSync : LoopInterval
 									// Validate the result is good to zip up
 									if (instanceFetchDataResponse.Timestamps.Length != instanceFetchDataResponse.DataValues.Length)
 									{
-										logger.LogError($"Expected count of {nameof(instanceFetchDataResponse.Timestamps)} ({instanceFetchDataResponse.Timestamps.Length}) and count of {nameof(instanceFetchDataResponse.DataValues)} ({instanceFetchDataResponse.DataValues.Length}) to match.");
+										logger.LogError(
+											$"Expected count of {nameof(instanceFetchDataResponse.Timestamps)} ({{TimestampsLength}}) and count of {nameof(instanceFetchDataResponse.DataValues)} ({{DataValuesLength}}) to match.",
+											instanceFetchDataResponse.Timestamps.Length,
+											instanceFetchDataResponse.DataValues.Length);
 										// We've logged, try the next DataPoint
 										continue;
 									}
@@ -316,7 +330,8 @@ internal class DataSync : LoopInterval
 										deviceDataSourceInstanceIdAsInt,
 										blockToWrite.Key,
 										blockToWrite,
-										logger);
+										logger)
+										.ConfigureAwait(false);
 								}
 							}
 							else
@@ -326,14 +341,19 @@ internal class DataSync : LoopInterval
 									configuration.SqlCommandTimeoutSeconds,
 									deviceDataSourceInstanceIdAsInt,
 									blockEnd.UtcDateTime,
-									null);
+									null)
+									.ConfigureAwait(false);
 							}
 						}
 					}
 				}
 				catch (Exception e)
 				{
-					logger.LogWarning(e, $"{rangeDescription} failed due to {e}");
+					logger.LogWarning(
+						e,
+						"{RangeDescription} failed due to {Message}",
+						rangeDescription,
+						e.Message);
 				}
 			}
 		}

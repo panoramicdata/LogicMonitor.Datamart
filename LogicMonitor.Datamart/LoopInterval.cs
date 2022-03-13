@@ -33,7 +33,7 @@ internal abstract class LoopInterval
 		{
 			stopwatch.Restart();
 
-			Logger.LogInformation("Starting {name}...", _name);
+			Logger.LogInformation("Starting {Name}...", _name);
 
 			try
 			{
@@ -41,20 +41,20 @@ internal abstract class LoopInterval
 			}
 			catch (Exception ex) when (ex is OperationCanceledException || ex is TaskCanceledException)
 			{
-				Logger.LogInformation(ex, "Loopsync {name} cancelled.", _name);
+				Logger.LogInformation(ex, "Loopsync {Name} cancelled.", _name);
 			}
 			catch (Exception ex)
 			{
 				// This shouldn't generally happen so if it does, dump the entire exception ex which will include inner exceptions
 				Logger.LogError(
 					ex,
-					"An unexpected error occurred during the LoopInterval: {message}",
+					"An unexpected error occurred during the LoopInterval: {Message}",
 					ex.Message);
 			}
 
 			stopwatch.Stop();
 			Logger.LogInformation(
-				"Finished {name} in {stopwatchHumanized}.",
+				"Finished {Name} in {StopwatchHumanized}.",
 				_name,
 				stopwatch.Elapsed.Humanize(7, minUnit: TimeUnit.Second));
 
@@ -63,7 +63,7 @@ internal abstract class LoopInterval
 			{
 				// NO
 				Logger.LogInformation(
-					"{name} configured to run once, finished.",
+					"{Name} configured to run once, finished.",
 					_name);
 				break;
 			}
@@ -73,7 +73,7 @@ internal abstract class LoopInterval
 			if (remainingTimeInInterval.TotalSeconds > 0)
 			{
 				Logger.LogInformation(
-					"Next {name} will start in {remainingTimeInInterval} at {remainingTimeInInterval}.",
+					"Next {Name} will start in {RemainingTimeInInterval} at {RemainingTimeInInterval}.",
 					_name,
 					remainingTimeInInterval.Humanize(7, minUnit: TimeUnit.Second),
 					DateTime.UtcNow.Add(remainingTimeInInterval)
@@ -83,7 +83,7 @@ internal abstract class LoopInterval
 			else
 			{
 				Logger.LogWarning(
-					"Next {name} will start immediately as it took longer than the configured {intervalMinutes} minutes.",
+					"Next {Name} will start immediately as it took longer than the configured {IntervalMinutes} minutes.",
 					_name,
 					intervalMinutes);
 			}

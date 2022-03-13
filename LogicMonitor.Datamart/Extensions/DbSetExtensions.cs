@@ -27,7 +27,7 @@ public static class DbSetExtension
 			// Update an existing entry
 			if (logger?.IsEnabled(LogLevel.Trace) == true)
 			{
-				logger.LogTrace("Updating existing {typeName} with id {storeItemId} ({storeItemDatamartId})",
+				logger.LogTrace("Updating existing {TypeName} with id {StoreItemId} ({StoreItemDatamartId})",
 					typeof(TStore).Name,
 					storeItem.Id,
 					storeItem.DatamartId);
@@ -40,7 +40,7 @@ public static class DbSetExtension
 
 		if (logger?.IsEnabled(LogLevel.Trace) == true)
 		{
-			logger.LogTrace("Adding new {typeName} with id {dataId}",
+			logger.LogTrace("Adding new {TypeName} with id {DataId}",
 				typeof(TStore).Name,
 				data.Id
 				);
@@ -52,7 +52,7 @@ public static class DbSetExtension
 		dbSet.Add(newEntry);
 	}
 
-	public static async Task AddOrUpdateAlertRangeSavingChanges(this DbSet<AlertStoreItem> dbSet, List<Alert> items)
+	public static async Task AddOrUpdateAlertRangeSavingChanges(this DbSet<AlertStoreItem> dbSet, ICollection<Alert> items)
 	{
 		foreach (var item in items ?? throw new ArgumentNullException(nameof(items)))
 		{
@@ -65,7 +65,7 @@ public static class DbSetExtension
 
 	public static void AddOrUpdateAlert(this DbSet<AlertStoreItem> dbSet, Alert data)
 	{
-		var context = dbSet.GetContext();
+		var context = (dbSet ?? throw new ArgumentNullException(nameof(dbSet))).GetContext();
 		var storeItem = dbSet.AsQueryable().Where(si => si.Id == data.Id).FirstOrDefault();
 		var mappedStoreItem = DatamartClient.MapperInstance.Map<Alert, AlertStoreItem>(data);
 

@@ -51,7 +51,7 @@ internal class DimensionSync : LoopInterval
 			}
 			catch (Exception e)
 			{
-				Logger.LogWarning(e, "{message}", e.Message);
+				Logger.LogWarning(e, "{Message}", e.Message);
 			}
 		}
 	}
@@ -62,7 +62,7 @@ internal class DimensionSync : LoopInterval
 
 		// Get the DataSource
 		var dataSource = await _datamartClient.GetByNameAsync<DataSource>(dataSourceName, cancellationToken).ConfigureAwait(false);
-		if (dataSource == null)
+		if (dataSource is null)
 		{
 			throw new InvalidOperationException($"DataSource {dataSourceName} does not exist.");
 		}
@@ -72,7 +72,7 @@ internal class DimensionSync : LoopInterval
 		var appliesToMatches = await _datamartClient.GetAppliesToAsync(dataSource.AppliesTo, cancellationToken).ConfigureAwait(false);
 
 		Logger.LogDebug(
-			"Syncing {dataSourceName} instances for {appliesToMatchesCount} devices",
+			"Syncing {DataSourceName} instances for {AppliesToMatchesCount} devices",
 			dataSourceName,
 			appliesToMatches.Count);
 
@@ -83,28 +83,35 @@ internal class DimensionSync : LoopInterval
 		foreach (var appliesToMatch in appliesToMatches)
 		{
 			// Get the device
-			var device = await _datamartClient.GetAsync<Device>(appliesToMatch.Id, cancellationToken).ConfigureAwait(false);
+			var device = await _datamartClient
+				.GetAsync<Device>(appliesToMatch.Id, cancellationToken)
+				.ConfigureAwait(false);
 
 			// Get the DeviceDataSource
-			var deviceDataSource = await _datamartClient.GetDeviceDataSourceByDeviceIdAndDataSourceIdAsync(device.Id, dataSource.Id, cancellationToken).ConfigureAwait(false);
-			if (dataSource == null)
+			var deviceDataSource = await _datamartClient
+				.GetDeviceDataSourceByDeviceIdAndDataSourceIdAsync(device.Id, dataSource.Id, cancellationToken)
+				.ConfigureAwait(false);
+			if (deviceDataSource is null)
 			{
 				Logger.LogTrace(
-					"No DeviceDataSource for Device:{deviceDisplayName}, DataSource:{dataSourceName}",
+					"No DeviceDataSource for Device:{DeviceDisplayName}, DataSource:{DataSourceName}",
 					device.DisplayName,
 					dataSource.Name);
 				continue;
 			}
 			// We have a DeviceDataSource
 			Logger.LogTrace(
-				"DeviceDataSource fetched for Device:{deviceDisplayName}, DataSource:{dataSourceName}",
+				"DeviceDataSource fetched for Device:{DeviceDisplayName}, DataSource:{DataSourceName}",
 				device.DisplayName,
 				dataSource.Name);
 
 			// Ensure that this DeviceDataSource exists in the database
 			var databaseDeviceDataSource = await context
 				.DeviceDataSources
-				.SingleOrDefaultAsync(dds => dds.DeviceId == deviceDataSource.DeviceId && dds.DataSourceId == deviceDataSource.DataSourceId, cancellationToken: cancellationToken)
+				.SingleOrDefaultAsync(dds =>
+						dds.DeviceId == deviceDataSource.DeviceId
+						&& dds.DataSourceId == deviceDataSource.DataSourceId,
+					cancellationToken: cancellationToken)
 				.ConfigureAwait(false);
 			if (databaseDeviceDataSource == null)
 			{
@@ -130,7 +137,7 @@ internal class DimensionSync : LoopInterval
 			foreach (var apiDeviceDataSourceInstance in apiDeviceDataSourceInstances)
 			{
 				Logger.LogDebug(
-					"Device {deviceDisplayName}, Instance: {apiDeviceDataSourceInstanceName}",
+					"Device {DeviceDisplayName}, Instance: {ApiDeviceDataSourceInstanceName}",
 					device.DisplayName,
 					apiDeviceDataSourceInstance.Name);
 
@@ -189,7 +196,7 @@ internal class DimensionSync : LoopInterval
 		var total = context.ChangeTracker.Entries().Count();
 		var rowsAffected = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 		Logger.LogInformation(
-			"Sync completed for {dataSourceName}; Total {total}; Added {added}; Modified {modified} ({markedMissing:N0} MarkedMissing).",
+			"Sync completed for {DataSourceName}; Total {Total}; Added {Added}; Modified {Modified} ({MarkedMissing:N0} MarkedMissing).",
 			dataSourceName,
 			total,
 			added,
