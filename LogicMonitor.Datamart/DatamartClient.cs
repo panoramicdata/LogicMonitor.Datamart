@@ -48,7 +48,8 @@ public class DatamartClient : LogicMonitorClient
 								? "Trusted_Connection=True;"
 								: $"User Id={configuration.DatabaseUsername};Password={configuration.DatabasePassword}"
 						) +
-						$"Application Name={ConnectionStringApplicationName}"
+						$"Application Name={ConnectionStringApplicationName};" +
+						"TrustServerCertificate=True"
 					}.ConnectionString,
 					opts => opts.CommandTimeout(configuration.SqlCommandTimeoutSeconds)
 					);
