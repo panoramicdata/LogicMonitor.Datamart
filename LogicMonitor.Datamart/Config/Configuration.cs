@@ -49,12 +49,12 @@ public class Configuration
 	public string DatabaseName { get; set; } = null!;
 
 	/// <summary>
-	/// Optional database username for providers that utilise it
+	/// Optional database username for providers that utilize it
 	/// </summary>
 	public string DatabaseUsername { get; set; } = null!;
 
 	/// <summary>
-	/// Optional database password for providers that utilise it
+	/// Optional database password for providers that utilize it
 	/// </summary>
 	public string DatabasePassword { get; set; } = null!;
 

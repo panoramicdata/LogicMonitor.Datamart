@@ -25,5 +25,8 @@ public enum DatabaseType
 	/// </summary>
 	InMemory,
 
+	/// <summary>
+	/// Postgres
+	/// </summary>
 	Postgres
 }
