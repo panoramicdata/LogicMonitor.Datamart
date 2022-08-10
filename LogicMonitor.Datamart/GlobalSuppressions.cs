@@ -12,3 +12,10 @@ using System.Diagnostics.CodeAnalysis;
 	Scope = "namespaceanddescendants",
 	Target = "~N:LogicMonitor.Datamart")
 ]
+[assembly: SuppressMessage(
+	"Design",
+	"CA1062:Validate arguments of public methods",
+	Justification = "Code generated",
+	Scope = "namespaceanddescendants",
+	Target = "~N:LogicMonitor.Datamart.Migrations")
+]
