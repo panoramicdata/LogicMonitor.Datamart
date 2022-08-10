@@ -182,6 +182,12 @@ internal class DimensionSync : LoopInterval
 						.DeviceDataSourceInstances
 						.SingleOrDefaultAsync(dddsi => dddsi.Id == deviceDatasourceInstanceIdToMarkMissing, cancellationToken: cancellationToken)
 						.ConfigureAwait(false);
+
+					if (databaseDeviceDataSourceInstance is null)
+					{
+						continue;
+					}
+
 					databaseDeviceDataSourceInstance.LastWentMissingUtc = DateTime.UtcNow;
 				}
 

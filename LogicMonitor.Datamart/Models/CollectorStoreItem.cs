@@ -6,21 +6,21 @@ public class CollectorStoreItem : IdentifiedStoreItem
 	public CollectorGroupStoreItem CollectorGroup { get; set; }
 
 	// Database properties
-	public string Name { get; set; }
+	public string Name { get; set; } = string.Empty;
 
-	public string Description { get; set; }
+	public string Description { get; set; } = string.Empty;
 
-	public string AckComment { get; set; }
+	public string AckComment { get; set; } = string.Empty;
 
 	public bool Acked { get; set; }
 
-	public string AckedBy { get; set; }
+	public string AckedBy { get; set; } = string.Empty;
 
-	public string AckedOnLocalString { get; set; }
+	public string AckedOnLocalString { get; set; } = string.Empty;
 
 	public long? AckedOnUtcTimestampUtc { get; set; }
 
-	public string Architecture { get; set; }
+	public string Architecture { get; set; } = string.Empty;
 
 	public int BackupCollectorId { get; set; }
 
@@ -28,29 +28,29 @@ public class CollectorStoreItem : IdentifiedStoreItem
 
 	public bool CanDowngrade { get; set; }
 
-	public string CanDowngradeReason { get; set; }
+	public string CanDowngradeReason { get; set; } = string.Empty;
 
 	public bool ClearSent { get; set; }
 
-	public string CollectorConfiguration { get; set; }
+	public string CollectorConfiguration { get; set; } = string.Empty;
 
 	public int DeviceId { get; set; }
 
 	public int GroupId { get; set; }
 
-	public string GroupName { get; set; }
+	public string GroupName { get; set; } = string.Empty;
 
-	public string Configuration { get; set; }
+	public string Configuration { get; set; } = string.Empty;
 
 	public int ConfigurationVersion { get; set; }
 
-	public string CreatedOnLocalString { get; set; }
+	public string CreatedOnLocalString { get; set; } = string.Empty;
 
 	public long CreatedOnTimeStampUtc { get; set; }
 
-	public string Credential { get; set; }
+	public string Credential { get; set; } = string.Empty;
 
-	public string Credential2 { get; set; }
+	public string Credential2 { get; set; } = string.Empty;
 
 	public int DeviceCount { get; set; }
 
@@ -64,13 +64,13 @@ public class CollectorStoreItem : IdentifiedStoreItem
 
 	public bool HasFailOverDevice { get; set; }
 
-	public string HostName { get; set; }
+	public string HostName { get; set; } = string.Empty;
 
 	public bool InSdt { get; set; }
 
 	public bool IsDown { get; set; }
 
-	public string LastSentNotificationOnLocal { get; set; }
+	public string LastSentNotificationOnLocal { get; set; } = string.Empty;
 
 	public int LastSentNotificationOnTimeStampUtc { get; set; }
 
@@ -80,21 +80,21 @@ public class CollectorStoreItem : IdentifiedStoreItem
 
 	public int NextRecipient { get; set; }
 
-	public string OnetimeDowngradeInfo { get; set; }
+	public string OnetimeDowngradeInfo { get; set; } = string.Empty;
 
-	public string Platform { get; set; }
+	public string Platform { get; set; } = string.Empty;
 
 	public int PreviousVersion { get; set; }
 
-	public string ProxyConfiguration { get; set; }
+	public string ProxyConfiguration { get; set; } = string.Empty;
 
 	public int ResendIntervalSeconds { get; set; }
 
-	public string WebsiteConfiguration { get; set; }
+	public string WebsiteConfiguration { get; set; } = string.Empty;
 
 	public int WebsiteCount { get; set; }
 
-	public string Size { get; set; }
+	public string Size { get; set; } = string.Empty;
 
 	public int SpecifiedCollectorDeviceGroupId { get; set; }
 
@@ -102,7 +102,7 @@ public class CollectorStoreItem : IdentifiedStoreItem
 
 	public bool SuppressAlertClear { get; set; }
 
-	public string UpdatedOnLocalString { get; set; }
+	public string UpdatedOnLocalString { get; set; } = string.Empty;
 
 	public long UpgradeTimeUtcSeconds { get; set; }
 
@@ -110,7 +110,7 @@ public class CollectorStoreItem : IdentifiedStoreItem
 
 	public int UptimeSeconds { get; set; }
 
-	public string UserChangeOnLocal { get; set; }
+	public string UserChangeOnLocal { get; set; } = string.Empty;
 
 	public long UserChangeOnUtcSeconds { get; set; }
 
@@ -120,11 +120,11 @@ public class CollectorStoreItem : IdentifiedStoreItem
 
 	public int UserVisibleWebsiteCount { get; set; }
 
-	public string WatchdogConfiguration { get; set; }
+	public string WatchdogConfiguration { get; set; } = string.Empty;
 
-	public string WatchdogUpdatedOnLocal { get; set; }
+	public string WatchdogUpdatedOnLocal { get; set; } = string.Empty;
 
 	public long? WatchdogUpdatedOnSeconds { get; set; }
 
-	public string WrapperConfiguration { get; set; }
+	public string WrapperConfiguration { get; set; } = string.Empty;
 }

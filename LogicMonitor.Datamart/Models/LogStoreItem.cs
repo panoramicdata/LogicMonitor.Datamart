@@ -4,13 +4,13 @@ public class LogStoreItem : StoreItem
 {
 	// Database properties
 	[MaxLength(50)]
-	public string Id { get; set; }
+	public string Id { get; set; } = string.Empty;
 
 	/// <summary>
 	/// The user that performed the action
 	/// </summary>
 	[MaxLength(100)]
-	public string UserName { get; set; }
+	public string UserName { get; set; } = string.Empty;
 
 	/// <summary>
 	/// The DateTime the event happened in seconds since the Epoch
@@ -21,16 +21,16 @@ public class LogStoreItem : StoreItem
 	/// The session ID
 	/// </summary>
 	[MaxLength(50)]
-	public string SessionId { get; set; }
+	public string SessionId { get; set; } = string.Empty;
 
 	/// <summary>
 	/// Event description
 	/// </summary>
-	public string Description { get; set; }
+	public string Description { get; set; } = string.Empty;
 
 	/// <summary>
 	/// IP Address
 	/// </summary>
 	[MaxLength(200)]
-	public string IpAddress { get; set; }
+	public string IpAddress { get; set; } = string.Empty;
 }

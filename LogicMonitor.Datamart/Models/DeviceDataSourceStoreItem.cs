@@ -3,11 +3,11 @@ namespace LogicMonitor.Datamart.Models;
 public class DeviceDataSourceStoreItem : IdentifiedStoreItem
 {
 	// Navigation properties
-	public List<DeviceDataSourceInstanceStoreItem> DeviceDataSourceInstances { get; set; }
+	public List<DeviceDataSourceInstanceStoreItem> DeviceDataSourceInstances { get; set; } = null!;
 
-	public DataSourceStoreItem DataSource { get; set; }
+	public DataSourceStoreItem DataSource { get; set; } = null!;
 
-	public DeviceStoreItem Device { get; set; }
+	public DeviceStoreItem Device { get; set; } = null!;
 
 	// Database properties
 	public long AssignedOnSeconds { get; set; }

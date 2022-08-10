@@ -3,12 +3,12 @@ namespace LogicMonitor.Datamart.Models;
 public class WebsiteGroupStoreItem : IdentifiedStoreItem
 {
 	// Navigation properties
-	public List<WebsiteStoreItem> Websites { get; set; }
+	public List<WebsiteStoreItem> Websites { get; set; } = null!;
 
 	// Database properties
-	public string Name { get; set; }
+	public string Name { get; set; } = string.Empty;
 
-	public string Description { get; set; }
+	public string Description { get; set; } = string.Empty;
 
 	public AlertStatus AlertStatus { get; set; }
 

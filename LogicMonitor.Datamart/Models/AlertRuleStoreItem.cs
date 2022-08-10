@@ -3,22 +3,22 @@ namespace LogicMonitor.Datamart.Models;
 public class AlertRuleStoreItem : IdentifiedStoreItem
 {
 	// Navigation properties
-	public List<AlertStoreItem> Alerts { get; set; }
+	public List<AlertStoreItem> Alerts { get; set; } = null!;
 
 	// DataStore properties
-	public string Name { get; set; }
+	public string Name { get; set; } = string.Empty;
 
-	public string Description { get; set; }
+	public string Description { get; set; } = string.Empty;
 
 	public int Priority { get; set; }
 
-	public string LevelString { get; set; }
+	public string LevelString { get; set; } = string.Empty;
 
-	public string DataSourceName { get; set; }
+	public string DataSourceName { get; set; } = string.Empty;
 
-	public string DataSourceInstanceName { get; set; }
+	public string DataSourceInstanceName { get; set; } = string.Empty;
 
-	public string DataPoint { get; set; }
+	public string DataPoint { get; set; } = string.Empty;
 
 	public int EscalationChainIntervalMinutes { get; set; }
 

@@ -13,23 +13,23 @@ public class Context : DbContext
 		//Database.SetCommandTimeout(TimeSpan.FromHours(1));
 	}
 
-	public DbSet<AlertStoreItem> Alerts { get; set; }
-	public DbSet<AlertRuleStoreItem> AlertRules { get; set; }
-	public DbSet<CollectorStoreItem> Collectors { get; set; }
-	public DbSet<CollectorGroupStoreItem> CollectorGroups { get; set; }
-	public DbSet<ConfigSourceStoreItem> ConfigSources { get; set; }
-	public DbSet<DataSourceStoreItem> DataSources { get; set; }
-	public DbSet<DataSourceDataPointStoreItem> DataSourceDataPoints { get; set; }
-	public DbSet<DeviceDataSourceStoreItem> DeviceDataSources { get; set; }
-	public DbSet<DeviceDataSourceInstanceStoreItem> DeviceDataSourceInstances { get; set; }
-	public DbSet<EscalationChainStoreItem> EscalationChains { get; set; }
-	public DbSet<EventSourceStoreItem> EventSources { get; set; }
-	public DbSet<DeviceStoreItem> Devices { get; set; }
-	public DbSet<DeviceGroupStoreItem> DeviceGroups { get; set; }
-	public DbSet<LogStoreItem> LogItems { get; set; }
-	public DbSet<WebsiteStoreItem> Websites { get; set; }
-	public DbSet<WebsiteGroupStoreItem> WebsiteGroups { get; set; }
-	public DbSet<MonitorObjectGroupStoreItem> MonitorObjectGroups { get; set; }
+	public DbSet<AlertStoreItem> Alerts { get; set; } = null!;
+	public DbSet<AlertRuleStoreItem> AlertRules { get; set; } = null!;
+	public DbSet<CollectorStoreItem> Collectors { get; set; } = null!;
+	public DbSet<CollectorGroupStoreItem> CollectorGroups { get; set; } = null!;
+	public DbSet<ConfigSourceStoreItem> ConfigSources { get; set; } = null!;
+	public DbSet<DataSourceStoreItem> DataSources { get; set; } = null!;
+	public DbSet<DataSourceDataPointStoreItem> DataSourceDataPoints { get; set; } = null!;
+	public DbSet<DeviceDataSourceStoreItem> DeviceDataSources { get; set; } = null!;
+	public DbSet<DeviceDataSourceInstanceStoreItem> DeviceDataSourceInstances { get; set; } = null!;
+	public DbSet<EscalationChainStoreItem> EscalationChains { get; set; } = null!;
+	public DbSet<EventSourceStoreItem> EventSources { get; set; } = null!;
+	public DbSet<DeviceStoreItem> Devices { get; set; } = null!;
+	public DbSet<DeviceGroupStoreItem> DeviceGroups { get; set; } = null!;
+	public DbSet<LogStoreItem> LogItems { get; set; } = null!;
+	public DbSet<WebsiteStoreItem> Websites { get; set; } = null!;
+	public DbSet<WebsiteGroupStoreItem> WebsiteGroups { get; set; } = null!;
+	public DbSet<MonitorObjectGroupStoreItem> MonitorObjectGroups { get; set; } = null!;
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{

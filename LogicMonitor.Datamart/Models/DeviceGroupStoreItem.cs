@@ -2,9 +2,9 @@ namespace LogicMonitor.Datamart.Models;
 
 public class DeviceGroupStoreItem : IdentifiedStoreItem
 {
-	public string Name { get; set; }
+	public string Name { get; set; } = string.Empty;
 
-	public string Description { get; set; }
+	public string Description { get; set; } = string.Empty;
 
 	public AlertDisableStatus AlertDisableStatus { get; set; }
 
@@ -12,15 +12,15 @@ public class DeviceGroupStoreItem : IdentifiedStoreItem
 
 	public AlertStatus AlertStatus { get; set; }
 
-	public string AppliesTo { get; set; }
+	public string AppliesTo { get; set; } = string.Empty;
 
-	public string AutoVisualResult { get; set; }
+	public string AutoVisualResult { get; set; } = string.Empty;
 
-	public string ClusterAlertStatus { get; set; }
+	public string ClusterAlertStatus { get; set; } = string.Empty;
 
 	public int ClusterAlertStatusPriority { get; set; }
 
-	public string DefaultCollectorDescription { get; set; }
+	public string DefaultCollectorDescription { get; set; } = string.Empty;
 
 	public int DefaultCollectorId { get; set; }
 
@@ -28,25 +28,25 @@ public class DeviceGroupStoreItem : IdentifiedStoreItem
 
 	public int AwsDeviceCount { get; set; }
 
-	public string AwsRegionsInfo { get; set; }
+	public string AwsRegionsInfo { get; set; } = string.Empty;
 
-	public string AwsTestResult { get; set; }
+	public string AwsTestResult { get; set; } = string.Empty;
 
 	public int AwsTestResultCode { get; set; }
 
 	public int AzureDeviceCount { get; set; }
 
-	public string AzureRegionsInfo { get; set; }
+	public string AzureRegionsInfo { get; set; } = string.Empty;
 
-	public string AzureTestResult { get; set; }
+	public string AzureTestResult { get; set; } = string.Empty;
 
 	public int AzureTestResultCode { get; set; }
 
 	public int GcpDeviceCount { get; set; }
 
-	public string GcpRegionsInfo { get; set; }
+	public string GcpRegionsInfo { get; set; } = string.Empty;
 
-	public string GcpTestResult { get; set; }
+	public string GcpTestResult { get; set; } = string.Empty;
 
 	public int GcpTestResultCode { get; set; }
 
@@ -68,9 +68,9 @@ public class DeviceGroupStoreItem : IdentifiedStoreItem
 
 	public bool EffectiveAlertEnabled { get; set; }
 
-	public string FullPath { get; set; }
+	public string FullPath { get; set; } = string.Empty;
 
-	public string GroupStatus { get; set; }
+	public string GroupStatus { get; set; } = string.Empty;
 
 	public bool IsAlertingDisabled { get; set; }
 
