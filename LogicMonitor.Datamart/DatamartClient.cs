@@ -43,7 +43,11 @@ public class DatamartClient : LogicMonitorClient
 						ConnectionString =
 						$"server={configuration.DatabaseServerName};" +
 						$"database={configuration.DatabaseName};" +
-						"Trusted_Connection=True;" +
+						(
+							string.IsNullOrWhiteSpace(configuration.DatabaseUsername)
+								? "Trusted_Connection=True;"
+								: $"User Id={configuration.DatabaseUsername};Password={configuration.DatabasePassword}"
+						) +
 						$"Application Name={ConnectionStringApplicationName}"
 					}.ConnectionString,
 					opts => opts.CommandTimeout(configuration.SqlCommandTimeoutSeconds)
@@ -447,21 +451,21 @@ public class DatamartClient : LogicMonitorClient
 		bool includeInactive,
 		int? skip,
 		int? take,
-		string id,
+		string? id,
 		AckFilter ackFilter,
 		ICollection<string> monitorObjectGroups,
-		string monitorObjectName,
+		string? monitorObjectName,
 		int? monitorObjectId,
-		ICollection<AlertType> alertTypes,
-		string resourceTemplateDisplayName,
+		ICollection<AlertType>? alertTypes,
+		string? resourceTemplateDisplayName,
 		int? resourceTemplateId,
-		string instanceName,
-		string dataPointName,
-		ICollection<AlertLevel> alertLevels,
-		string orderBy,
-		OrderDirection orderDirection,
+		string? instanceName,
+		string? dataPointName,
+		ICollection<AlertLevel>? alertLevels,
+		string? orderBy,
+		OrderDirection? orderDirection,
 		SdtFilter sdtFilter,
-		string problemSignature,
+		string? problemSignature,
 		bool isPercentageAvailability = false
 		)
 	{
