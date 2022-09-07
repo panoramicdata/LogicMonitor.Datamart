@@ -4,6 +4,7 @@ using LogicMonitor.Datamart;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LogicMonitor.Datamart.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20220907151752_NullableField_Collector_Credential")]
+    partial class NullableField_Collector_Credential
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -822,6 +824,7 @@ namespace LogicMonitor.Datamart.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("SdtAt")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("SdtStatus")
@@ -1496,6 +1499,7 @@ namespace LogicMonitor.Datamart.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("HostName")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Id")
@@ -1540,6 +1544,7 @@ namespace LogicMonitor.Datamart.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Script")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("SdtStatus")

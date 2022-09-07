@@ -22,7 +22,7 @@ public class DeviceDataSourceInstanceStoreItem : IdentifiedStoreItem
 	public bool LockDescription { get; set; }
 	public bool StopMonitoring { get; set; }
 	public SdtStatus SdtStatus { get; set; }
-	public string SdtAt { get; set; } = string.Empty;
+	public string? SdtAt { get; set; }
 	public string WildValue { get; set; } = string.Empty;
 	public string WildValue2 { get; set; } = string.Empty;
 

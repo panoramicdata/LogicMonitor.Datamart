@@ -48,7 +48,7 @@ public class CollectorStoreItem : IdentifiedStoreItem
 
 	public long CreatedOnTimeStampUtc { get; set; }
 
-	public string Credential { get; set; } = string.Empty;
+	public string? Credential { get; set; }
 
 	public string? Credential2 { get; set; }
 

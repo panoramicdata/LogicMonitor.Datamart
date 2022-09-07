@@ -14,7 +14,7 @@ public class WebsiteStoreItem : IdentifiedStoreItem
 
 	public string Domain { get; set; } = string.Empty;
 
-	public string HostName { get; set; } = string.Empty;
+	public string? HostName { get; set; }
 
 	public AlertDisableStatus AlertDisableStatus { get; set; }
 
@@ -50,7 +50,7 @@ public class WebsiteStoreItem : IdentifiedStoreItem
 
 	public string Schema { get; set; } = string.Empty;
 
-	public string Script { get; set; } = string.Empty;
+	public string? Script { get; set; }
 
 	public SdtStatus SdtStatus { get; set; }
 
