@@ -66,7 +66,7 @@ internal class DataSync : LoopInterval
 		}
 		// We have the database deviceDataSourceInstances for the configured DataSources
 
-		// Clear out the PortalClient Cache, otherwise we remember all the datavalues for no reason
+		// Clear out the PortalClient Cache, otherwise we remember all the data values for no reason
 		_datamartClient.ClearCache();
 		var oldCacheState = _datamartClient.UseCache;
 		_datamartClient.UseCache = false;
@@ -107,7 +107,7 @@ internal class DataSync : LoopInterval
 
 		var stopwatch = new Stopwatch();
 
-		// Determine the aggregation duration at the datasource level
+		// Determine the aggregation duration at the DataSource level
 		var dataSourceAggregationDuration = configurationLevelAggregationDuration;
 
 		// Get data for each instance
@@ -235,7 +235,16 @@ internal class DataSync : LoopInterval
 						foreach (var instanceFetchDataResponse in instancesFetchDataResponse.InstanceFetchDataResponses)
 						{
 							// Get the configuration for this DataSourceName
-							var dataSourceConfigurationItem = configuration.DataSources.SingleOrDefault(dsci => dsci.Name == instanceFetchDataResponse.DataSourceName);
+							var dataSourceConfigurationItem = configuration
+								.DataSources
+								.SingleOrDefault(dsci => dsci.Name == instanceFetchDataResponse.DataSourceName);
+
+							if (dataSourceConfigurationItem is null)
+							{
+								// We'll get it next time
+								logger.LogInformation($"Could not find {nameof(DataSource)} with name '{{DataSourceName}}'.  Skipping.", instanceFetchDataResponse.DataSourceName);
+								continue;
+							}
 
 							var deviceDataSourceInstanceIdAsInt = int.Parse(instanceFetchDataResponse.DeviceDataSourceInstanceId, CultureInfo.InvariantCulture);
 

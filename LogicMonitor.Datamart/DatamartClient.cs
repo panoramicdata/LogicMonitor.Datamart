@@ -146,7 +146,8 @@ public class DatamartClient : LogicMonitorClient
 	}
 
 	private DbSet<TStore> GetDbSet<TStore>(Context context) where TStore : class, new()
-		=> typeof(TStore).Name switch
+	{
+		var result = typeof(TStore).Name switch
 		{
 			nameof(AlertStoreItem) => context.Alerts as DbSet<TStore>,
 			nameof(AlertRuleStoreItem) => context.AlertRules as DbSet<TStore>,
@@ -164,6 +165,14 @@ public class DatamartClient : LogicMonitorClient
 			_ => throw new NotSupportedException(),
 		};
 
+		if (result == null)
+		{
+			throw new NotSupportedException($"Type {typeof(TStore).Name} is not supported");
+		}
+
+		return result;
+	}
+
 	public async Task<List<T>> SqlListQuery<T>(string sql) where T : class, IHasEndpoint, new()
 	{
 		using var context = new Context(DbContextOptions);
@@ -178,18 +187,21 @@ public class DatamartClient : LogicMonitorClient
 		where TApi : IdentifiedItem
 	{
 		using var context = new Context(DbContextOptions);
-		switch (typeof(TApi).Name)
+		string typeName = typeof(TApi).Name;
+		switch (typeName)
 		{
 			case nameof(Device):
 				var deviceStoreItem = await context
 					.Devices
 					.SingleOrDefaultAsync(i => i.Id == id, cancellationToken)
 					.ConfigureAwait(false);
-				return deviceStoreItem == null
-					? null
+				var result = deviceStoreItem == null
+					? throw new KeyNotFoundException($"Device with id {id} not found")
 					: MapperInstance.Map<DeviceStoreItem, Device>(deviceStoreItem) as TApi;
+
+				return result ?? throw new InvalidOperationException($"Could not convert {nameof(DeviceStoreItem)} to {nameof(Device)}");
 			default:
-				throw new NotSupportedException();
+				throw new NotSupportedException($"Getting cached {typeName} is not supported");
 		}
 	}
 
@@ -347,7 +359,7 @@ public class DatamartClient : LogicMonitorClient
 	}
 
 	/// <summary>
-	/// Update Datapoints, given a list of DataSources just retrieved from the LogicMonitor API
+	/// Update DataPoints, given a list of DataSources just retrieved from the LogicMonitor API
 	/// </summary>
 	/// <param name="context">The database context</param>
 	/// <param name="apiDataSources">The list of API DataSources</param>
