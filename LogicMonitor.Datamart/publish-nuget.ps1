@@ -11,15 +11,15 @@ if(-not (Test-Path($apiKeyFilename))){
 }
 $apiKey = Get-Content $apiKeyFilename;
 
-# Getting changes into master branch
+# Getting changes into main branch
 Write-Host "Fetching latest commits..."
 &git fetch
 
 $branch= &git rev-parse --abbrev-ref HEAD
-if ($branch -ne "master") {
-	$title = "Not on master branch - confirm that you want to merge the current branch into master and release."
+if ($branch -ne "main") {
+	$title = "Not on main branch - confirm that you want to merge the current branch into main and release."
 	$message = "Do you want to merge and publish?"
-	$yes = New-Object System.Management.Automation.Host.ChoiceDescription "&Yes", "Merges current branch to master and publishes."
+	$yes = New-Object System.Management.Automation.Host.ChoiceDescription "&Yes", "Merges current branch to main and publishes."
 	$no = New-Object System.Management.Automation.Host.ChoiceDescription "&No", "Aborts execution."
 	$options = [System.Management.Automation.Host.ChoiceDescription[]]($yes, $no)
 	$result = $host.ui.PromptForChoice($title, $message, $options, 0)
@@ -30,26 +30,26 @@ if ($branch -ne "master") {
 	}
 
 	try {
-		Write-Host "Checking out master..."
-		&git checkout master
+		Write-Host "Checking out main..."
+		&git checkout main
 		if (-not $?) {throw "Error with git checkout"}
 
 		Write-Host "Pulling..."
 		&git pull
 		if (-not $?) {throw "Error with git pull"}
 
-		Write-Host "Merging $branch into master..."
+		Write-Host "Merging $branch into main..."
 		&git merge $branch --no-edit
 		if (-not $?) {throw "Error with git merge"}
 
-		Write-Host "Pushing master..."
+		Write-Host "Pushing main..."
 		&git push
 		if (-not $?) {throw "Error with git push"}
 	}
 	catch
 	{
-		# If there was a problem and we were not on master then switch back
-		if ($branch -ne "master") {
+		# If there was a problem and we were not on main then switch back
+		if ($branch -ne "main") {
 			Write-Host "Switching back to branch: $branch"
 			&git checkout $branch
 		}
@@ -77,8 +77,8 @@ try {
 }
 finally
 {
-	# If we were not on master then switch back
-	if ($branch -ne "master") {
+	# If we were not on main then switch back
+	if ($branch -ne "main") {
 		Write-Host "Switching back to branch: $branch"
 		&git checkout $branch
 	}
