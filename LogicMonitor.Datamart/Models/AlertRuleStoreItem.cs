@@ -8,7 +8,7 @@ public class AlertRuleStoreItem : IdentifiedStoreItem
 	// DataStore properties
 	public string Name { get; set; } = string.Empty;
 
-	public string Description { get; set; } = string.Empty;
+	public string? Description { get; set; } = string.Empty;
 
 	public int Priority { get; set; }
 

@@ -44,7 +44,7 @@ public class AlertTests : TestWithOutput
 			null,
 			null,
 			null,
-			new Api.Alerts.AckFilter(),
+			new AckFilter(),
 			new List<string> { "PDL" },
 			null,
 			null,
@@ -56,7 +56,7 @@ public class AlertTests : TestWithOutput
 			null,
 			null,
 			Api.Filters.OrderDirection.Asc,
-			new Api.Alerts.SdtFilter(),
+			new SdtFilter(),
 			null,
 			true
 			).ConfigureAwait(false);

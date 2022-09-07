@@ -14,13 +14,13 @@ public class DeviceGroupStoreItem : IdentifiedStoreItem
 
 	public string AppliesTo { get; set; } = string.Empty;
 
-	public string AutoVisualResult { get; set; } = string.Empty;
+	public string? AutoVisualResult { get; set; }
 
 	public string ClusterAlertStatus { get; set; } = string.Empty;
 
 	public int ClusterAlertStatusPriority { get; set; }
 
-	public string DefaultCollectorDescription { get; set; } = string.Empty;
+	public string? DefaultCollectorDescription { get; set; } = string.Empty;
 
 	public int DefaultCollectorId { get; set; }
 
@@ -30,7 +30,7 @@ public class DeviceGroupStoreItem : IdentifiedStoreItem
 
 	public string AwsRegionsInfo { get; set; } = string.Empty;
 
-	public string AwsTestResult { get; set; } = string.Empty;
+	public string? AwsTestResult { get; set; }
 
 	public int AwsTestResultCode { get; set; }
 
@@ -38,7 +38,7 @@ public class DeviceGroupStoreItem : IdentifiedStoreItem
 
 	public string AzureRegionsInfo { get; set; } = string.Empty;
 
-	public string AzureTestResult { get; set; } = string.Empty;
+	public string? AzureTestResult { get; set; }
 
 	public int AzureTestResultCode { get; set; }
 
@@ -46,7 +46,7 @@ public class DeviceGroupStoreItem : IdentifiedStoreItem
 
 	public string GcpRegionsInfo { get; set; } = string.Empty;
 
-	public string GcpTestResult { get; set; } = string.Empty;
+	public string? GcpTestResult { get; set; }
 
 	public int GcpTestResultCode { get; set; }
 

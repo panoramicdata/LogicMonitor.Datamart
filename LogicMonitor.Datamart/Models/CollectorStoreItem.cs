@@ -40,7 +40,7 @@ public class CollectorStoreItem : IdentifiedStoreItem
 
 	public string GroupName { get; set; } = string.Empty;
 
-	public string Configuration { get; set; } = string.Empty;
+	public string? Configuration { get; set; }
 
 	public int ConfigurationVersion { get; set; }
 
@@ -50,7 +50,7 @@ public class CollectorStoreItem : IdentifiedStoreItem
 
 	public string Credential { get; set; } = string.Empty;
 
-	public string Credential2 { get; set; } = string.Empty;
+	public string? Credential2 { get; set; }
 
 	public int DeviceCount { get; set; }
 
@@ -80,7 +80,7 @@ public class CollectorStoreItem : IdentifiedStoreItem
 
 	public int NextRecipient { get; set; }
 
-	public string OnetimeDowngradeInfo { get; set; } = string.Empty;
+	public string? OnetimeDowngradeInfo { get; set; }
 
 	public string Platform { get; set; } = string.Empty;
 
