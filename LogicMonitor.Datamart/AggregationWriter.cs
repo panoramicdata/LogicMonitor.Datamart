@@ -204,7 +204,7 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 	{
 		const string sql = "update DeviceDataSourceInstances set LastAggregationHourWrittenUtc=@LastAggregationHourWrittenUtc where id=@Id";
 		using var command = new SqlCommand(sql, sqlConnection, transaction);
-		// Set the CommandTimeout in seconds - it's important this gets written out, it is in a transction, but we wait a bit longer here.
+		// Set the CommandTimeout in seconds - it's important this gets written out, it is in a transaction, but we wait a bit longer here.
 		// Normally this defaults to 30s, but we have observed this timing out on heavily loaded disk based systems.
 		command.CommandTimeout = sqlCommandTimeoutSeconds;
 		command.Parameters.AddWithValue("@LastAggregationHourWrittenUtc", lastAggregationHourWrittenUtc);

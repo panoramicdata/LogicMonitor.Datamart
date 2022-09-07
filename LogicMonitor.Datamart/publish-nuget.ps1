@@ -50,13 +50,12 @@ if ($branch -ne "master") {
 	{
 		# If there was a problem and we were not on master then switch back
 		if ($branch -ne "master") {
-			Write-Host "Switching back to $branch branch"
+			Write-Host "Switching back to branch: $branch"
 			&git checkout $branch
 		}
 		exit 1;
 	}
 }
-
 
 try {
 
@@ -80,7 +79,7 @@ finally
 {
 	# If we were not on master then switch back
 	if ($branch -ne "master") {
-		Write-Host "Switching back to $branch branch"
+		Write-Host "Switching back to branch: $branch"
 		&git checkout $branch
 	}
 }

@@ -41,7 +41,7 @@ internal abstract class LoopInterval
 			}
 			catch (Exception ex) when (ex is OperationCanceledException || ex is TaskCanceledException)
 			{
-				Logger.LogInformation(ex, "Loopsync {Name} cancelled.", _name);
+				Logger.LogInformation(ex, "LoopAsync {Name} cancelled.", _name);
 			}
 			catch (Exception ex)
 			{

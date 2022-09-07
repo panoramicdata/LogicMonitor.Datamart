@@ -301,7 +301,7 @@ public class DatamartClient : LogicMonitorClient
 	}
 
 	/// <summary>
-	/// Add or Update the Database using the items already retreived from the LogicMonitor API
+	/// Add or Update the Database using the items already retrieved from the LogicMonitor API
 	/// </summary>
 	/// <typeparam name="TApi">The LogicMonitor API type</typeparam>
 	/// <typeparam name="TStore">The Database StoreItem type</typeparam>

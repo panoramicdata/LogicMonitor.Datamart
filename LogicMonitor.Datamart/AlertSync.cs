@@ -97,7 +97,7 @@ internal class AlertSync : LoopInterval
 					stopwatch.Restart();
 					deviceIndex++;
 					Logger.LogDebug(
-						"Retrieving datasource alerts for {DatamartClientAccountName} : Id={DeviceId}, CurrentDisplayName={DeviceDisplayName}",
+						"Retrieving DataSource alerts for {DatamartClientAccountName} : Id={DeviceId}, CurrentDisplayName={DeviceDisplayName}",
 						_datamartClient.AccountName,
 						deviceId,
 						device.DisplayName);
@@ -129,7 +129,7 @@ internal class AlertSync : LoopInterval
 						deviceAlertCount += alertsThisTime.Count;
 
 						Logger.LogDebug(
-							"Processing datasource alerts for {DatamartClientAccountName} : Id={DeviceId}, CurrentDisplayName={DeviceDisplayName}",
+							"Processing DataSource alerts for {DatamartClientAccountName} : Id={DeviceId}, CurrentDisplayName={DeviceDisplayName}",
 							_datamartClient.AccountName,
 							deviceId,
 							device.DisplayName);
@@ -185,7 +185,7 @@ internal class AlertSync : LoopInterval
 							}
 						}
 
-						var message = $"Processed datasource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName}; {reducedAlerts.Count}(of {alertsThisTime.Count}) " +
+						var message = $"Processed DataSource alerts for {_datamartClient.AccountName} : Id={deviceId}, CurrentDisplayName={device.DisplayName}; {reducedAlerts.Count}(of {alertsThisTime.Count}) " +
 							$"dbGet({sqlFetch.ElapsedMilliseconds:N0}ms) dbSave({sqlSave.ElapsedMilliseconds:N0}ms) in {dataProcessingStopwatch.ElapsedMilliseconds:N0}ms " +
 							$"from {DateTimeOffset.FromUnixTimeSeconds(timeCursor).UtcDateTime}...)";
 						Logger.LogDebug("{Message}", message);
@@ -252,7 +252,7 @@ internal class AlertSync : LoopInterval
 						.ConfigureAwait(false);
 
 					Logger.LogInformation(
-						"Retrieved datasource alerts for {DatamartClientAccountName} : Id={DeviceId}, CurrentDisplayName={DeviceDisplayName} ({DeviceIndex}/{DatabaseDeviceIdsCount}). Retrieved {DeviceAlertCount} in {StopwatchElapsedTotalSeconds:N1}s",
+						"Retrieved DataSource alerts for {DatamartClientAccountName} : Id={DeviceId}, CurrentDisplayName={DeviceDisplayName} ({DeviceIndex}/{DatabaseDeviceIdsCount}). Retrieved {DeviceAlertCount} in {StopwatchElapsedTotalSeconds:N1}s",
 						_datamartClient.AccountName,
 						deviceId,
 						device.DisplayName,

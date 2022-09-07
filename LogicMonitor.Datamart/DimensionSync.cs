@@ -43,7 +43,7 @@ internal class DimensionSync : LoopInterval
 			{
 				if (cancellationToken.IsCancellationRequested)
 				{
-					// We're done, dont' loop any more
+					// We're done, don't loop any more
 					return;
 				}
 				// If it was anything else then re-throw
