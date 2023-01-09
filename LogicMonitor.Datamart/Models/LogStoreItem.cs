@@ -21,7 +21,7 @@ public class LogStoreItem : StoreItem
 	/// The session ID
 	/// </summary>
 	[MaxLength(50)]
-	public string SessionId { get; set; } = string.Empty;
+	public string? SessionId { get; set; } = string.Empty;
 
 	/// <summary>
 	/// Event description
