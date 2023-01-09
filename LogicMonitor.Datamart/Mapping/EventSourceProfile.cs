@@ -41,7 +41,7 @@ public class EventSourceProfile : Profile
 				dest => dest.CheckIntervalSeconds,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.CheckSum,
+				dest => dest.Checksum,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.ClearAfterAcknowledgement,
