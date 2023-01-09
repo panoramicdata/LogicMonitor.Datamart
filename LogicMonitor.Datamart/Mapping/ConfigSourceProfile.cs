@@ -73,6 +73,18 @@ public class ConfigSourceProfile : Profile
 			.ForMember(
 				dest => dest.Version,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.OriginId,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.Checksum,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.LineageId,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.InstallationMetadata,
+				opts => opts.Ignore())
 			;
 	}
 }

@@ -52,6 +52,12 @@ public class CollectorGroupProfile : Profile
 			.ForMember(
 				dest => dest.DeviceCount,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.MismatchVersion,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.HighestPriorityCollectorStatus,
+				opts => opts.Ignore())
 			;
 	}
 }

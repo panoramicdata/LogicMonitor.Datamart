@@ -43,6 +43,9 @@ public class WebsiteProfile : Profile
 			.ForMember(
 				dest => dest.UpdatedOnSeconds,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.RolePrivileges,
+				opts => opts.Ignore())
 			;
 	}
 }

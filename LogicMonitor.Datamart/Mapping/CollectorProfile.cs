@@ -47,6 +47,42 @@ public class CollectorProfile : Profile
 			.ForMember(
 				dest => dest.InstanceCount,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.BearerToken,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.Type,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.ConfigurationFields,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.CopyUrl,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.DownloadUrl,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.EncodedConfigData,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.Format,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.IsEncoded,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.IsLmLogsEnabled,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.OtelId,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.OtelVerison,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.IsSyntheticsEnables,
+				opts => opts.Ignore())
 			;
 	}
 }

@@ -97,6 +97,15 @@ public class EventSourceProfile : Profile
 			.ForMember(
 				dest => dest.WindowsScript,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.Dimension,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.InstanceCount,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.InstallationMetadata,
+				opts => opts.Ignore())
 			;
 	}
 }

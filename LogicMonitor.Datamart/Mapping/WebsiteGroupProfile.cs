@@ -31,6 +31,9 @@ public class WebsiteGroupProfile : Profile
 			.ForMember(
 				dest => dest.TestLocation,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.RolePrivileges,
+				opts => opts.Ignore())
 			;
 	}
 }

@@ -72,6 +72,60 @@ public class DeviceProfile : Profile
 			.ForMember(
 				dest => dest.AutoBalancedCollectorGroupId,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.CurrentLogCollectorId,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.IsPreferredLogCollectorConfigured,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.LogCollectorDescription,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.LogCollectorGroupId,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.LogCollectorGroupName,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.LogCollectorId,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.AwsTestResult,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.AwsTestResultCode,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.AzureTestResult,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.AzureTestResultCode,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.GcpTestResult,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.GcpTestResultCode,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.SaasTestResult,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.SaasTestResultCode,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.AutoVisualResult,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.ResourceIds,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.SyntheticsCollectorIds,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.RolePrivileges,
+				opts => opts.Ignore())
 			;
 	}
 }

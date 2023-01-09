@@ -118,6 +118,18 @@ public class DataSourceProfile : Profile
 			.ForMember(
 				dest => dest.DataSourceDataPoints,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.PayloadVersion,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.Checksum,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.LineageId,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.InstallationMetadata,
+				opts => opts.Ignore())
 			;
 	}
 }

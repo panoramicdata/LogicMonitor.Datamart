@@ -46,6 +46,18 @@ public class DeviceGroupProfile : Profile
 			.ForMember(
 				dest => dest.DefaultAutoBalancedCollectorGroupId,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.KubernetesDeviceCount,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.RolePrivileges,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.SaasTestResult,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.SaasTestResultCode,
+				opts => opts.Ignore())
 			;
 	}
 }

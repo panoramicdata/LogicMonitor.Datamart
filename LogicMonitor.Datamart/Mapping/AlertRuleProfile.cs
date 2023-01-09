@@ -31,6 +31,12 @@ public class AlertRuleProfile : Profile
 			.ForMember(
 				dest => dest.EscalationChain,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.ResourceProperties,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.SendAnomalySuppressedAlert,
+				opts => opts.Ignore())
 			;
 	}
 }

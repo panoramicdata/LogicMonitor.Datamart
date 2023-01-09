@@ -88,6 +88,14 @@ public class AlertProfile : Profile
 			.ForMember(dest => dest.MonitorObjectGroups, opts => opts.Ignore())
 			.ForMember(dest => dest.EnableAnomalyAlertSuppression, opts => opts.Ignore())
 			.ForMember(dest => dest.EnableAnomalyAlertGeneration, opts => opts.Ignore())
-			.ForMember(dest => dest.Tenant, opts => opts.Ignore());
+			.ForMember(dest => dest.Tenant, opts => opts.Ignore())
+			.ForMember(dest => dest.DependencyRole, opts => opts.Ignore())
+			.ForMember(dest => dest.DependencyRoutingState, opts => opts.Ignore())
+			.ForMember(dest => dest.IsActiveDiscoveryAlert, opts => opts.Ignore())
+			.ForMember(dest => dest.ActiveDiscoveryAlertDescription, opts => opts.Ignore())
+			.ForMember(dest => dest.IsAnomaly, opts => opts.Ignore())
+			.ForMember(dest => dest.Suppressor, opts => opts.Ignore())
+			.ForMember(dest => dest.SuppressedDescending, opts => opts.Ignore())
+			;
 	}
 }
