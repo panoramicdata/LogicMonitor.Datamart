@@ -20,6 +20,9 @@ public class DeviceGroupProfile : Profile
 			;
 		CreateMap<DeviceGroupStoreItem, DeviceGroup>()
 			.ForMember(
+				dest => dest.AwsTestResult,
+				opts => opts.Ignore())
+			.ForMember(
 				dest => dest.CustomProperties,
 				opts => opts.Ignore())
 			.ForMember(

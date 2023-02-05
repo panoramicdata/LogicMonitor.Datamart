@@ -29,11 +29,17 @@ public class DeviceDataSourceInstanceProfile : Profile
 			.ForMember(
 				dest => dest.LastWentMissingUtc,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.SdtAt,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.SdtStatus,
+				opts => opts.Ignore())
 			;
 
 		CreateMap<DeviceDataSourceInstanceStoreItem, DeviceDataSourceInstance>()
 			.ForMember(
-				dest => dest.AlertingDisabledOn,
+				dest => dest.AlertDisabledOn,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.CustomProperties,
@@ -46,6 +52,9 @@ public class DeviceDataSourceInstanceProfile : Profile
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.AutoProperties,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.CollectorId,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.DataSourceName,
