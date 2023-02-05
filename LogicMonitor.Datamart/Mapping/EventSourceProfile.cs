@@ -38,16 +38,13 @@ public class EventSourceProfile : Profile
 				dest => dest.AuditVersion,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.CheckIntervalSeconds,
-				opts => opts.Ignore())
-			.ForMember(
 				dest => dest.Checksum,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.ClearAfterAcknowledgement,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.EventSourceType,
+				dest => dest.Collector,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.Filters,
@@ -71,10 +68,10 @@ public class EventSourceProfile : Profile
 				dest => dest.LinuxScript,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.Published,
+				dest => dest.Number,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.Schedule,
+				dest => dest.ScheduleMinutes,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.ScriptType,
@@ -99,9 +96,6 @@ public class EventSourceProfile : Profile
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.Dimension,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.InstanceCount,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.InstallationMetadata,
