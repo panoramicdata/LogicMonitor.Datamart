@@ -7,7 +7,7 @@ public class DimensionTests : TestWithOutput
 	}
 
 	[Fact]
-	public async void GetDimensions()
+	public async Task GetDimensions()
 	{
 		await new DimensionSync(
 				DatamartClient,
