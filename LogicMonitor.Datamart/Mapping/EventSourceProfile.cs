@@ -44,7 +44,7 @@ public class EventSourceProfile : Profile
 				dest => dest.ClearAfterAcknowledgement,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.Collector,
+				dest => dest.Type,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.Filters,
