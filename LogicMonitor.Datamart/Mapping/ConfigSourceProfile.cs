@@ -23,9 +23,6 @@ public class ConfigSourceProfile : Profile
 				dest => dest.ConfigChecks,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.Published,
-				opts => opts.Ignore())
-			.ForMember(
 				dest => dest.AppliesTo,
 				opts => opts.Ignore())
 			.ForMember(
@@ -59,9 +56,6 @@ public class ConfigSourceProfile : Profile
 				dest => dest.HasMultiInstances,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.Retention,
-				opts => opts.Ignore())
-			.ForMember(
 				dest => dest.Tags,
 				opts => opts.Ignore())
 			.ForMember(
@@ -72,9 +66,6 @@ public class ConfigSourceProfile : Profile
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.Version,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.OriginId,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.Checksum,

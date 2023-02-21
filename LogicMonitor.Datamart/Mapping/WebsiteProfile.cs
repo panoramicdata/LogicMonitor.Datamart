@@ -20,7 +20,38 @@ public class WebsiteProfile : Profile
 			.ForMember(
 				dest => dest.WebsiteGroup,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.HostName,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.IsAlertingDisabled,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.WebsiteMethod,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.PageLoadAlertTimeInMs,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.PercentPacketsNotReceiveInTime,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.PacketsNotReceivedTimeoutMs,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.Schema,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.Script,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.WebsiteGroupId,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.StopMonitoringByWebsiteGroup,
+				opts => opts.Ignore())
 			;
+
 		CreateMap<WebsiteStoreItem, Website>()
 			.ForMember(
 				dest => dest.Collectors,
@@ -45,6 +76,30 @@ public class WebsiteProfile : Profile
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.RolePrivileges,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.GroupId,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.DisableAlerting,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.StopMonitoringByFolder,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.PacketsLossThresholdPercent,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.PacketsLossTimeoutMs,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.Host,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.PageLoadAlertTimeMs,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.HttpSchema,
 				opts => opts.Ignore())
 			;
 	}
