@@ -77,6 +77,8 @@ public class Configuration
 
 	public List<string> DeviceProperties { get; set; } = new();
 
+	public DatamartClientMode Mode { get; set; } = DatamartClientMode.HighResolution;
+
 	public void Validate()
 	{
 		if (string.IsNullOrWhiteSpace(Name))
