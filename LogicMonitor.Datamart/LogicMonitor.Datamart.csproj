@@ -11,7 +11,10 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor Datamart</PackageTags>
 		<PackageReleaseNotes>
-			Updated LogicMonitor.Api to 2.183
+			Complete rework of database definitions.  Breaking change.
+			Databases now use Guids.
+			Only a VERY low resolution is now supported - with a resolution of one month.
+			Many additional aggregations added.
 		</PackageReleaseNotes>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
