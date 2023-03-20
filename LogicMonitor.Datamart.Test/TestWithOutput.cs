@@ -41,13 +41,18 @@ public abstract class TestWithOutput
 					},
 				},
 				new DataSourceConfigurationItem{
-					Name = "Properties Reveal",
+					Name = "SNMP_Network_Interfaces",
 					DataPoints = new List<DataPointConfigurationItem>
 					{
 						new DataPointConfigurationItem
 							{
-								Name = "datapoint0",
-								MeasurementUnit = "noodles",
+								Name = "InMBps",
+								MeasurementUnit = "MBps",
+							},
+						new DataPointConfigurationItem
+							{
+								Name = "OutMBps",
+								MeasurementUnit = "MBps",
 							}
 					},
 				}
