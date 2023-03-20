@@ -6,7 +6,13 @@ public class EscalationChainProfile : Profile
 	{
 		CreateMap<EscalationChain, EscalationChainStoreItem>()
 			.ForMember(
-				dest => dest.DatamartId,
+				dest => dest.Id,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.LogicMonitorId,
+				opts => opts.MapFrom(src => src.Id))
+			.ForMember(
+				dest => dest.AlertRules,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.DatamartCreatedUtc,
@@ -19,6 +25,9 @@ public class EscalationChainProfile : Profile
 				opts => opts.Ignore())
 			;
 		CreateMap<EscalationChainStoreItem, EscalationChain>()
+			.ForMember(
+				dest => dest.Id,
+				opts => opts.MapFrom(src => src.LogicMonitorId))
 			.ForMember(
 				dest => dest.CcDestination,
 				opts => opts.Ignore())

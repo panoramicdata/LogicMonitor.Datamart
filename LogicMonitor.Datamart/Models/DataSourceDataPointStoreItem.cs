@@ -3,10 +3,10 @@
 public class DataSourceDataPointStoreItem : IdentifiedStoreItem
 {
 	// Navigation properties
-	public DataSourceStoreItem DataSource { get; set; }
+	public DataSourceStoreItem? DataSource { get; set; }
 
 	// Database properties
-	public int DataSourceId { get; set; }
+	public Guid DataSourceId { get; set; }
 
 	public string Name { get; set; }
 

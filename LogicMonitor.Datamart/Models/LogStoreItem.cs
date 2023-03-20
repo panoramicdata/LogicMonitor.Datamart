@@ -4,7 +4,7 @@ public class LogStoreItem : StoreItem
 {
 	// Database properties
 	[MaxLength(50)]
-	public string Id { get; set; } = string.Empty;
+	public string LogicMonitorId { get; set; } = string.Empty;
 
 	/// <summary>
 	/// The user that performed the action

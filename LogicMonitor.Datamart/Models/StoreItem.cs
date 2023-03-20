@@ -7,7 +7,7 @@ public abstract class StoreItem
 	/// </summary>
 	[Key]
 	[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-	public int DatamartId { get; set; }
+	public Guid Id { get; set; }
 
 	public DateTime DatamartCreatedUtc { get; set; }
 

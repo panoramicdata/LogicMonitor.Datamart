@@ -6,14 +6,22 @@ public class DeviceDataSourceProfile : Profile
 	{
 		CreateMap<DeviceDataSource, DeviceDataSourceStoreItem>()
 			.ForMember(
+				dest => dest.Id,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.LogicMonitorId,
+				opts => opts.MapFrom(src => src.Id))
+			.ForMember(
 				dest => dest.Device,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.DeviceId,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.DataSource,
 				opts => opts.Ignore())
-
 			.ForMember(
-				dest => dest.DatamartId,
+				dest => dest.DataSourceId,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.DatamartCreatedUtc,
@@ -30,6 +38,9 @@ public class DeviceDataSourceProfile : Profile
 			;
 
 		CreateMap<DeviceDataSourceStoreItem, DeviceDataSource>()
+			.ForMember(
+				dest => dest.Id,
+				opts => opts.MapFrom(src => src.LogicMonitorId))
 			.ForMember(
 				dest => dest.AlertDisableStatus,
 				opts => opts.Ignore())
@@ -53,6 +64,12 @@ public class DeviceDataSourceProfile : Profile
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.DataSourceGraphs,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.DataSourceId,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.DeviceId,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.GroupName,

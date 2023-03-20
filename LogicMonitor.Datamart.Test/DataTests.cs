@@ -8,9 +8,20 @@ public class DataTests : TestWithOutput
 	}
 
 	[Fact]
-	public async void Get12HoursOfData()
+	public async void HighResolutionDataSync()
 	{
-		await new DataSync(
+		await new HighResolutionDataSync(
+				DatamartClient,
+				Configuration,
+				LoggerFactory)
+			.ExecuteAsync(default)
+			.ConfigureAwait(false);
+	}
+
+	[Fact]
+	public async void LowResolutionDataSync()
+	{
+		await new LowResolutionDataSync(
 				DatamartClient,
 				Configuration,
 				LoggerFactory)

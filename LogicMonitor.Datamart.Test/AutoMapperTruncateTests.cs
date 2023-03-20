@@ -44,6 +44,6 @@ public class AutoMapperTruncateTests : TestWithOutput
 		};
 		var destination = DatamartClient.MapperInstance.Map<Alert, AlertStoreItem>(source);
 		Assert.Equal("11111111112222222222333333333344444444445555555555", destination.AckedBy);
-		Assert.Equal("11111111112222222222", destination.Id);
+		Assert.Equal("11111111112222222222", destination.LogicMonitorId);
 	}
 }

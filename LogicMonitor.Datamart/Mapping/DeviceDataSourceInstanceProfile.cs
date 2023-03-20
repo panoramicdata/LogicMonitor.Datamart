@@ -6,7 +6,13 @@ public class DeviceDataSourceInstanceProfile : Profile
 	{
 		CreateMap<DeviceDataSourceInstance, DeviceDataSourceInstanceStoreItem>()
 			.ForMember(
-				dest => dest.DatamartId,
+				dest => dest.Id,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.LogicMonitorId,
+				opts => opts.MapFrom(src => src.Id))
+			.ForMember(
+				dest => dest.DeviceDataSourceId,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.DatamartCreatedUtc,
@@ -21,10 +27,7 @@ public class DeviceDataSourceInstanceProfile : Profile
 				dest => dest.DeviceDataSource,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.Device,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.LastAggregationHourWrittenUtc,
+				dest => dest.DataCompleteToUtc,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.LastWentMissingUtc,
@@ -39,10 +42,25 @@ public class DeviceDataSourceInstanceProfile : Profile
 
 		CreateMap<DeviceDataSourceInstanceStoreItem, DeviceDataSourceInstance>()
 			.ForMember(
+				dest => dest.Id,
+				opts => opts.MapFrom(src => src.LogicMonitorId))
+			.ForMember(
 				dest => dest.AlertDisabledOn,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.CustomProperties,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.DataSourceId,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.DeviceDataSourceId,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.DeviceDisplayName,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.DeviceId,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.SystemProperties,

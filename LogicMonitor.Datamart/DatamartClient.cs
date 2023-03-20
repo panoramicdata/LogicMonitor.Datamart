@@ -85,7 +85,7 @@ public class DatamartClient : LogicMonitorClient
 		_logger = loggerFactory.CreateLogger<DatamartClient>();
 	}
 
-	public async Task<bool> IsDatabaseCreatedAsync(CancellationToken cancellationToken = default)
+	public async Task<bool> IsDatabaseCreatedAsync(CancellationToken cancellationToken)
 	{
 		using var context = new Context(DbContextOptions);
 		return await context
@@ -95,7 +95,7 @@ public class DatamartClient : LogicMonitorClient
 			.ConfigureAwait(false);
 	}
 
-	public async Task<bool> IsDatabaseSchemaUpToDateAsync(CancellationToken cancellationToken = default)
+	public async Task<bool> IsDatabaseSchemaUpToDateAsync(CancellationToken cancellationToken)
 	{
 		using var context = new Context(DbContextOptions);
 		var exists = await context
@@ -116,18 +116,20 @@ public class DatamartClient : LogicMonitorClient
 		return !pendingMigrations.Any();
 	}
 
-	public async Task EnsureDatabaseCreatedAndSchemaUpdatedAsync(CancellationToken cancellationToken = default)
+	public async Task EnsureDatabaseCreatedAndSchemaUpdatedAsync(CancellationToken cancellationToken)
 	{
-		using var context = new Context(DbContextOptions);
-		_logger.LogInformation("Applying migrations as appropriate to database...");
-		await context
+		using var migrationsContext = new Context(DbContextOptions);
+
+		_logger.LogInformation("Applying migrations to database...");
+		await migrationsContext
 			.Database
 			.MigrateAsync(cancellationToken)
 			.ConfigureAwait(false);
+
 		_logger.LogInformation("Migrations up to date.");
 	}
 
-	public async Task EnsureDatabaseDeletedAsync(CancellationToken cancellationToken = default)
+	public async Task EnsureDatabaseDeletedAsync(CancellationToken cancellationToken)
 	{
 		using var context = new Context(DbContextOptions);
 		using var dbConnection = context.Database.GetDbConnection();
@@ -165,12 +167,7 @@ public class DatamartClient : LogicMonitorClient
 			_ => throw new NotSupportedException(),
 		};
 
-		if (result == null)
-		{
-			throw new NotSupportedException($"Type {typeof(TStore).Name} is not supported");
-		}
-
-		return result;
+		return result ?? throw new NotSupportedException($"Type {typeof(TStore).Name} is not supported");
 	}
 
 	public async Task<List<T>> SqlListQuery<T>(string sql) where T : class, IHasEndpoint, new()
@@ -183,7 +180,7 @@ public class DatamartClient : LogicMonitorClient
 				.ToList()).ConfigureAwait(false);
 	}
 
-	public async Task<TApi> GetCachedAsync<TApi>(int id, CancellationToken cancellationToken = default)
+	public async Task<TApi> GetCachedAsync<TApi>(int id, CancellationToken cancellationToken)
 		where TApi : IdentifiedItem
 	{
 		using var context = new Context(DbContextOptions);
@@ -193,7 +190,7 @@ public class DatamartClient : LogicMonitorClient
 			case nameof(Device):
 				var deviceStoreItem = await context
 					.Devices
-					.SingleOrDefaultAsync(i => i.Id == id, cancellationToken)
+					.SingleOrDefaultAsync(i => i.LogicMonitorId == id, cancellationToken)
 					.ConfigureAwait(false);
 				var result = deviceStoreItem == null
 					? throw new KeyNotFoundException($"Device with id {id} not found")
@@ -205,7 +202,7 @@ public class DatamartClient : LogicMonitorClient
 		}
 	}
 
-	public async Task<List<TApi>> GetAllCachedAsync<TApi>(CancellationToken cancellationToken = default)
+	public async Task<List<TApi>> GetAllCachedAsync<TApi>(CancellationToken cancellationToken)
 		where TApi : class, IHasEndpoint, new()
 	{
 		using var context = new Context(DbContextOptions);
@@ -256,11 +253,22 @@ public class DatamartClient : LogicMonitorClient
 		return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
 	}
 
-	public Task SyncDataAsync(
+	public Task SyncHighResolutionDataAsync(
 		int desiredMaxIntervalMinutes,
 		CancellationToken cancellationToken)
 	{
-		var sync = new DataSync(
+		var sync = new HighResolutionDataSync(
+			this,
+			_configuration,
+			_loggerFactory);
+		return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
+	}
+
+	public Task SyncLowResolutionDataAsync(
+		int desiredMaxIntervalMinutes,
+		CancellationToken cancellationToken)
+	{
+		var sync = new LowResolutionDataSync(
 			this,
 			_configuration,
 			_loggerFactory);
@@ -334,7 +342,12 @@ public class DatamartClient : LogicMonitorClient
 		// Add/update all the items
 		foreach (var item in apiItems)
 		{
-			dbSet.AddOrUpdateIdentifiedItem(item, lastObservedUtc, logger);
+			await dbSet.AddOrUpdateIdentifiedItem(
+				context,
+				item,
+				lastObservedUtc,
+				logger,
+				cancellationToken);
 		}
 
 		// Calculate and log the stats
@@ -432,7 +445,7 @@ public class DatamartClient : LogicMonitorClient
 						DataSource = databaseDataSource,
 						Name = apiDataPoint.Name,
 						Description = apiDataPoint.Description,
-						Id = apiDataPoint.Id,
+						LogicMonitorId = apiDataPoint.Id,
 						MeasurementUnit = configDataPoint.MeasurementUnit
 					});
 
@@ -487,7 +500,7 @@ public class DatamartClient : LogicMonitorClient
 
 		if (id != null)
 		{
-			queryable = queryable.Where(a => a.Id == id);
+			queryable = queryable.Where(a => a.LogicMonitorId == id);
 		}
 
 		if (problemSignature != null)
@@ -646,7 +659,7 @@ public class DatamartClient : LogicMonitorClient
 	public static async Task<List<int>> GetAllCachedCollectorGroupIdsAsync(DbSet<CollectorGroupStoreItem> collectorGroups, string groupName)
 		=> await collectorGroups
 			.Where(cg => cg.Name == groupName)
-			.Select(cg => cg.Id)
+			.Select(cg => cg.LogicMonitorId)
 			.ToListAsync()
 			.ConfigureAwait(false);
 
@@ -654,12 +667,12 @@ public class DatamartClient : LogicMonitorClient
 		=> (groupName ?? throw new ArgumentNullException(nameof(groupName))).EndsWith("*", StringComparison.Ordinal)
 			? await deviceGroups
 				.Where(dg => dg.FullPath.StartsWith(groupName.TrimEnd('*'), StringComparison.Ordinal))
-				.Select(dg => dg.Id)
+				.Select(dg => dg.LogicMonitorId)
 				.ToListAsync()
 				.ConfigureAwait(false)
 			: await deviceGroups
 				.Where(dg => dg.FullPath == groupName)
-				.Select(dg => dg.Id)
+				.Select(dg => dg.LogicMonitorId)
 				.ToListAsync()
 				.ConfigureAwait(false);
 
@@ -667,12 +680,12 @@ public class DatamartClient : LogicMonitorClient
 		=> (groupName ?? throw new ArgumentNullException(nameof(groupName))).EndsWith("*", StringComparison.Ordinal)
 			? await websiteGroups
 				.Where(wg => wg.FullPath.StartsWith(groupName.TrimEnd('*'), StringComparison.Ordinal))
-				.Select(wg => wg.Id)
+				.Select(wg => wg.LogicMonitorId)
 				.ToListAsync()
 				.ConfigureAwait(false)
 			: await websiteGroups
 				.Where(wg => wg.FullPath == groupName)
-				.Select(wg => wg.Id)
+				.Select(wg => wg.LogicMonitorId)
 				.ToListAsync()
 				.ConfigureAwait(false);
 
@@ -683,7 +696,7 @@ public class DatamartClient : LogicMonitorClient
 		=> AggregationWriter.DropTableAsync(DbContextOptions, testAggregationPeriod, _logger);
 
 	internal Task AgeAggregationTablesAsync(int countAggregationDaysToRetain)
-		=> AggregationWriter.PerformAgingAsync(DbContextOptions, _configuration.SqlCommandTimeoutSeconds, countAggregationDaysToRetain, _logger);
+		=> AggregationWriter.PerformAgingAsync(DbContextOptions, countAggregationDaysToRetain, _logger);
 
 	internal async Task<string> EnsureTableExistsAsync(DateTimeOffset testAggregationPeriod)
 	{
@@ -694,11 +707,187 @@ public class DatamartClient : LogicMonitorClient
 			.OpenAsync()
 			.ConfigureAwait(false);
 		var tableName = await AggregationWriter
-			.EnsureTableExistsAsync(sqlConnection, _configuration.SqlCommandTimeoutSeconds, testAggregationPeriod)
+			.EnsureTableExistsAsync(sqlConnection, testAggregationPeriod)
 			.ConfigureAwait(false);
 		await sqlConnection
 			.CloseAsync()
 			.ConfigureAwait(false);
 		return tableName;
+	}
+
+	public async Task SyncDeviceDataSourcesAndInstancesAsync(
+		DataSourceConfigurationItem dataSourceSpecification,
+		ILogger logger,
+		CancellationToken cancellationToken
+	)
+	{
+		var dataSourceName = dataSourceSpecification.Name;
+
+		// Get the DataSource
+		var dataSource = await GetDataSourceByUniqueNameAsync(dataSourceName, cancellationToken)
+			.ConfigureAwait(false)
+			?? throw new InvalidOperationException($"DataSource {dataSourceName} does not exist.");
+		// We have the DataSource
+
+		// Get the Devices that match the appliesTo function on the DataSource
+		var appliesToMatches = await GetAppliesToAsync(dataSource.AppliesTo, cancellationToken)
+			.ConfigureAwait(false);
+
+		logger.LogDebug(
+			"Syncing {DataSourceName} instances for {AppliesToMatchesCount} devices",
+			dataSourceName,
+			appliesToMatches.Count);
+
+		using var context = new Context(DbContextOptions);
+		var markedMissing = 0;
+
+		// Not all of these will have instances
+		foreach (var appliesToMatch in appliesToMatches)
+		{
+			// Get the device
+			var device = await GetAsync<Device>(appliesToMatch.Id, cancellationToken)
+				.ConfigureAwait(false);
+
+			// Get the DeviceDataSource
+			var deviceDataSource = await GetDeviceDataSourceByDeviceIdAndDataSourceIdAsync(
+					device.Id,
+					dataSource.Id,
+					cancellationToken
+				)
+				.ConfigureAwait(false);
+			if (deviceDataSource is null)
+			{
+				continue;
+			}
+			// We have a DeviceDataSource
+
+			// Ensure that this DeviceDataSource exists in the database
+			var deviceDataSourceStoreItem = await context
+				.DeviceDataSources
+				.Include(dds => dds.DataSource)
+				.Include(dds => dds.Device)
+				.SingleOrDefaultAsync(dds =>
+						dds.Device!.LogicMonitorId == deviceDataSource.DeviceId
+						&& dds.DataSource!.LogicMonitorId == deviceDataSource.DataSourceId,
+					cancellationToken: cancellationToken)
+				.ConfigureAwait(false);
+
+			var deviceStoreItem = await context
+				.Devices
+				.SingleOrDefaultAsync(d => d.LogicMonitorId == deviceDataSource.DeviceId, cancellationToken)
+				.ConfigureAwait(false);
+
+			var dataSourceStoreItem = await context
+				.DataSources
+				.SingleOrDefaultAsync(d => d.LogicMonitorId == deviceDataSource.DataSourceId, cancellationToken)
+				.ConfigureAwait(false);
+
+			if (deviceDataSourceStoreItem == null)
+			{
+				// Add it to the database
+				deviceDataSourceStoreItem = MapperInstance.Map<DeviceDataSourceStoreItem>(deviceDataSource);
+				context.DeviceDataSources.Add(deviceDataSourceStoreItem);
+			}
+			else
+			{
+				// Update the existing entry
+				deviceDataSourceStoreItem = MapperInstance.Map(deviceDataSource, deviceDataSourceStoreItem);
+			}
+
+			deviceDataSourceStoreItem.DeviceId = deviceStoreItem!.Id;
+			deviceDataSourceStoreItem.DataSourceId = dataSourceStoreItem!.Id;
+			// It is now in the database context
+
+			// Fetch the DeviceDataSourceInstances
+			var instanceFetchDateTimeUtc = DateTime.UtcNow;
+			var apiDeviceDataSourceInstances = await GetAllDeviceDataSourceInstancesAsync(
+					device.Id,
+					deviceDataSource.Id,
+					new(),
+					cancellationToken
+				)
+				.ConfigureAwait(false);
+
+			await context
+				.SaveChangesAsync(cancellationToken)
+				.ConfigureAwait(false);
+
+			foreach (var apiDeviceDataSourceInstance in apiDeviceDataSourceInstances)
+			{
+				// Ensure that this DeviceDataSourceInstance exists in the database
+				var databaseDeviceDataSourceInstance = await context
+					.DeviceDataSourceInstances
+					.SingleOrDefaultAsync(dddsi => dddsi.LogicMonitorId == apiDeviceDataSourceInstance.Id, cancellationToken: cancellationToken)
+					.ConfigureAwait(false);
+				if (databaseDeviceDataSourceInstance == null)
+				{
+					// Add it to the database
+					databaseDeviceDataSourceInstance = MapperInstance.Map<DeviceDataSourceInstanceStoreItem>(apiDeviceDataSourceInstance);
+					databaseDeviceDataSourceInstance.DeviceDataSourceId = deviceDataSourceStoreItem.Id;
+					context.DeviceDataSourceInstances.Add(databaseDeviceDataSourceInstance);
+				}
+				else
+				{
+					// Update - including clearing the LastWentMissingUtc field
+					// Update the existing entry using AutoMapper
+					MapperInstance.Map(apiDeviceDataSourceInstance, databaseDeviceDataSourceInstance);
+					databaseDeviceDataSourceInstance.DeviceDataSourceId = deviceDataSourceStoreItem.Id;
+					databaseDeviceDataSourceInstance.LastWentMissingUtc = null;
+				}
+				// It is now in the database context
+			}
+
+			// It's possible that there are entries in the database that are no longer brought back from the API, due to instances being deleted by Active Discovery/manual deletion
+			// Get all database instances where the
+			var databaseDeviceDataSourceInstanceIdsThatShouldHaveComeBackFromApi = new HashSet<int>(await context
+					.DeviceDataSourceInstances
+					.Include(ddsi => ddsi.DeviceDataSource.DataSource)
+					.Include(ddsi => ddsi.DeviceDataSource.Device)
+					.Where(ddsi => ddsi.DeviceDataSource.Device.LogicMonitorId == device.Id && ddsi.DeviceDataSource.DataSource.LogicMonitorId == dataSource.Id && ddsi.LastWentMissingUtc == null)
+					.Select(ddsi => ddsi.LogicMonitorId)
+					.ToListAsync(cancellationToken: cancellationToken)
+					.ConfigureAwait(false));
+
+			var apiDeviceDataSourceInstanceIds = new HashSet<int>(apiDeviceDataSourceInstances.Select(ddsi => ddsi.Id));
+
+			var deviceDatasourceInstanceIdsToMarkMissing = databaseDeviceDataSourceInstanceIdsThatShouldHaveComeBackFromApi
+				.Except(apiDeviceDataSourceInstanceIds)
+				.ToList();
+			if (deviceDatasourceInstanceIdsToMarkMissing.Count > 0)
+			{
+				foreach (var deviceDatasourceInstanceIdToMarkMissing in deviceDatasourceInstanceIdsToMarkMissing)
+				{
+					// Get the entry to modify from the context and update it
+					var databaseDeviceDataSourceInstance = await context
+						.DeviceDataSourceInstances
+						.SingleOrDefaultAsync(dddsi => dddsi.LogicMonitorId == deviceDatasourceInstanceIdToMarkMissing, cancellationToken: cancellationToken)
+						.ConfigureAwait(false);
+
+					if (databaseDeviceDataSourceInstance is null)
+					{
+						continue;
+					}
+
+					databaseDeviceDataSourceInstance.LastWentMissingUtc = DateTime.UtcNow;
+				}
+
+				markedMissing += deviceDatasourceInstanceIdsToMarkMissing.Count;
+			}
+
+			// Check for any that were NOT in the entries that came back from the API
+		}
+
+		var added = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Added);
+		var modified = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Modified);
+		var total = context.ChangeTracker.Entries().Count();
+		var rowsAffected = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+		logger.LogInformation(
+			"Sync completed for {DataSourceName}; Total {Total}; Added {Added}; Modified {Modified} ({MarkedMissing:N0} MarkedMissing).",
+			dataSourceName,
+			total,
+			added,
+			modified,
+			markedMissing);
 	}
 }

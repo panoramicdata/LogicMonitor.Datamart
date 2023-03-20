@@ -1,18 +1,34 @@
 ﻿namespace LogicMonitor.Datamart.Models;
 
-public class DeviceDataSourceInstanceAggregatedDataBulkWriteModel
+public class TimeSeriesDataAggregationStoreItem
 {
-	public int Id { get; set; }
+	public Guid Id { get; set; }
+
+	public Guid DataPointId { get; set; }
 
 	public DateTime PeriodStart { get; set; }
 
 	public DateTime PeriodEnd { get; set; }
 
-	public int DeviceDataSourceInstanceId { get; set; }
+	public double? Centile05 { get; set; }
 
-	public DataSourceDataPointStoreItem DataPoint { get; set; }
+	public double? Centile10 { get; set; }
 
-	public int DataPointId { get; set; }
+	public double? Centile25 { get; set; }
+
+	public double? Centile75 { get; set; }
+
+	public double? Centile90 { get; set; }
+
+	public double? Centile95 { get; set; }
+
+	public double? First { get; set; }
+
+	public double? Last { get; set; }
+
+	public double? FirstWithData { get; set; }
+
+	public double? LastWithData { get; set; }
 
 	public double? Min { get; set; }
 

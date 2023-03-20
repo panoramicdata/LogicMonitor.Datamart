@@ -5,6 +5,7 @@ namespace LogicMonitor.Datamart;
 internal static class AggregationWriter
 {
 	internal static string TableNamePrefix = "DeviceDataSourceInstanceAggregatedData";
+	internal static int SqlTimeoutSeconds = 100;
 
 	public static string GetTableName(DateTimeOffset start)
 		=> $"{TableNamePrefix}_{start.UtcDateTime:yyyyMMdd}";
@@ -12,7 +13,9 @@ internal static class AggregationWriter
 	/// <summary>
 	/// Create a new aggregation table for a new day
 	/// </summary>
-	internal static async Task<string> EnsureTableExistsAsync(SqlConnection sqlConnection, int sqlCommandTimeoutSeconds, DateTimeOffset start)
+	internal static async Task<string> EnsureTableExistsAsync(
+		SqlConnection sqlConnection,
+		DateTimeOffset start)
 	{
 		if (sqlConnection == null)
 		{
@@ -40,8 +43,10 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 
 		using (var command = new SqlCommand(tableCreationSql, sqlConnection))
 		{
-			command.CommandTimeout = sqlCommandTimeoutSeconds;
-			await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+			command.CommandTimeout = SqlTimeoutSeconds;
+			await command
+				.ExecuteNonQueryAsync()
+				.ConfigureAwait(false);
 		}
 
 		return tableName;
@@ -111,14 +116,12 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 
 	internal static async Task WriteAggregations(
 		SqlConnection sqlConnection,
-		int sqlCommandTimeoutSeconds,
-		int sqlBulkCopyTimeoutSeconds,
+		IEnumerable<TimeSeriesDataAggregationStoreItem> aggregations,
 		int deviceDataSourceInstanceId,
-		DateTimeOffset key,
-		IEnumerable<DeviceDataSourceInstanceAggregatedDataBulkWriteModel> aggregations,
+		DateTime key,
 		ILogger logger)
 	{
-		var tableName = await EnsureTableExistsAsync(sqlConnection, sqlCommandTimeoutSeconds, key)
+		var tableName = await EnsureTableExistsAsync(sqlConnection, key)
 			.ConfigureAwait(false);
 
 		var aggregationCount = aggregations.Count();
@@ -139,12 +142,22 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 		foreach (var aggregation in aggregations)
 		{
 			var row = table.NewRow();
+			row["Id"] = Guid.NewGuid();
+			row["DataPointId"] = aggregation.DataPointId;
 			row["PeriodStart"] = aggregation.PeriodStart;
 			row["PeriodEnd"] = aggregation.PeriodEnd;
-			row["DeviceDataSourceInstanceId"] = aggregation.DeviceDataSourceInstanceId;
-			row["DataPointId"] = aggregation.DataPointId;
-			row["Min"] = (object)aggregation.Min ?? DBNull.Value;
-			row["Max"] = (object)aggregation.Max ?? DBNull.Value;
+			row["Centile05"] = aggregation.Centile05.HasValue ? aggregation.Centile05.Value : DBNull.Value;
+			row["Centile10"] = aggregation.Centile10.HasValue ? aggregation.Centile10.Value : DBNull.Value;
+			row["Centile25"] = aggregation.Centile25.HasValue ? aggregation.Centile25.Value : DBNull.Value;
+			row["Centile75"] = aggregation.Centile75.HasValue ? aggregation.Centile75.Value : DBNull.Value;
+			row["Centile90"] = aggregation.Centile90.HasValue ? aggregation.Centile90.Value : DBNull.Value;
+			row["Centile95"] = aggregation.Centile95.HasValue ? aggregation.Centile95.Value : DBNull.Value;
+			row["First"] = aggregation.First.HasValue ? aggregation.First.Value : DBNull.Value;
+			row["Last"] = aggregation.Last.HasValue ? aggregation.Last.Value : DBNull.Value;
+			row["FirstWithData"] = aggregation.FirstWithData.HasValue ? aggregation.FirstWithData.Value : DBNull.Value;
+			row["LastWithData"] = aggregation.LastWithData.HasValue ? aggregation.LastWithData.Value : DBNull.Value;
+			row["Min"] = aggregation.Min.HasValue ? aggregation.Min.Value : DBNull.Value;
+			row["Max"] = aggregation.Max.HasValue ? aggregation.Max.Value : DBNull.Value;
 			row["Sum"] = aggregation.Sum;
 			row["SumSquared"] = aggregation.SumSquared;
 			row["DataCount"] = aggregation.DataCount;
@@ -168,7 +181,7 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 		using (var bulkCopy = new SqlBulkCopy(sqlConnection, SqlBulkCopyOptions.Default, transaction))
 		{
 			bulkCopy.DestinationTableName = tableName;
-			bulkCopy.BulkCopyTimeout = sqlBulkCopyTimeoutSeconds;
+			bulkCopy.BulkCopyTimeout = SqlTimeoutSeconds;
 			await bulkCopy.WriteToServerAsync(table).ConfigureAwait(false);
 		}
 
@@ -184,7 +197,13 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 			deviceDataSourceInstanceId,
 			lastAggregationHourWrittenUtc);
 		// Update the progress as part of a transaction
-		await WriteProgressBoundaryAsync(sqlConnection, sqlCommandTimeoutSeconds, deviceDataSourceInstanceId, lastAggregationHourWrittenUtc, transaction)
+		await WriteProgressBoundaryAsync(
+			sqlConnection,
+			SqlTimeoutSeconds,
+			deviceDataSourceInstanceId,
+			lastAggregationHourWrittenUtc,
+			transaction
+		)
 			.ConfigureAwait(false);
 		logger.LogTrace(
 			"Setting progress for DDSI {DeviceDataSourceInstanceId} to {LastAggregationHourWrittenUtc} complete after {StopwatchElapsedMilliseconds:N0}ms.",
@@ -200,7 +219,12 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 			stopwatch.ElapsedMilliseconds);
 	}
 
-	internal static async Task WriteProgressBoundaryAsync(SqlConnection sqlConnection, int sqlCommandTimeoutSeconds, int deviceDataSourceInstanceId, DateTime lastAggregationHourWrittenUtc, SqlTransaction transaction)
+	internal static async Task WriteProgressBoundaryAsync(
+		SqlConnection sqlConnection,
+		int sqlCommandTimeoutSeconds,
+		int deviceDataSourceInstanceId,
+		DateTime lastAggregationHourWrittenUtc,
+		SqlTransaction transaction)
 	{
 		const string sql = "update DeviceDataSourceInstances set LastAggregationHourWrittenUtc=@LastAggregationHourWrittenUtc where id=@Id";
 		using var command = new SqlCommand(sql, sqlConnection, transaction);
@@ -214,7 +238,6 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 
 	internal static async Task PerformAgingAsync(
 		DbContextOptions<Context> dbContextOptions,
-		int sqlCommandTimeoutSeconds,
 		int countAggregationDaysToRetain,
 		ILogger logger)
 	{
@@ -231,7 +254,7 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 				.OpenAsync()
 				.ConfigureAwait(false);
 			using var command = new SqlCommand(string.Empty, sqlConnection);
-			command.CommandTimeout = sqlCommandTimeoutSeconds;
+			command.CommandTimeout = SqlTimeoutSeconds;
 			foreach (var tableName in tablesToRemove)
 			{
 				logger.LogInformation("Aging out table {TableName}", tableName);

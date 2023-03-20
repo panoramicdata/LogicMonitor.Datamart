@@ -6,9 +6,12 @@ public class WebsiteProfile : Profile
 	{
 		CreateMap<Website, WebsiteStoreItem>()
 			.ForMember(
-				dest => dest.DatamartId,
+				dest => dest.Id,
 				opts => opts.Ignore())
 			.ForMember(
+				dest => dest.LogicMonitorId,
+				opts => opts.MapFrom(src => src.Id))
+				.ForMember(
 				dest => dest.DatamartCreatedUtc,
 				opts => opts.Ignore())
 			.ForMember(
@@ -53,6 +56,9 @@ public class WebsiteProfile : Profile
 			;
 
 		CreateMap<WebsiteStoreItem, Website>()
+			.ForMember(
+				dest => dest.Id,
+				opts => opts.MapFrom(src => src.LogicMonitorId))
 			.ForMember(
 				dest => dest.Collectors,
 				opts => opts.Ignore())

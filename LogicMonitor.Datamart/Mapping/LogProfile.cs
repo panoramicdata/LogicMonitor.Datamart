@@ -6,8 +6,11 @@ public class LogProfile : Profile
 	{
 		CreateMap<LogItem, LogStoreItem>()
 			.ForMember(
-				dest => dest.DatamartId,
+				dest => dest.Id,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.LogicMonitorId,
+				opts => opts.MapFrom(src => src.Id))
 			.ForMember(
 				dest => dest.DatamartCreatedUtc,
 				opts => opts.Ignore())

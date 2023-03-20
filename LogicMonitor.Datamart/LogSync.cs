@@ -60,7 +60,9 @@ internal class LogSync : LoopInterval
 				},
 				Take = pageSize
 			};
-			var apiEntriesThisTime = await _datamartClient.GetAllAsync(filter, cancellationToken).ConfigureAwait(false);
+			var apiEntriesThisTime = await _datamartClient
+				.GetAllAsync(filter, cancellationToken)
+				.ConfigureAwait(false);
 
 			if (apiEntriesThisTime.Count == 0)
 			{
@@ -72,12 +74,14 @@ internal class LogSync : LoopInterval
 			var existingOnBoundary = await context
 				.LogItems
 				.Where(l => l.HappenedOnTimeStampUtc == timeCursor)
-				.Select(l => l.Id)
+				.Select(l => l.LogicMonitorId)
 				.ToListAsync(cancellationToken: cancellationToken)
 				.ConfigureAwait(false);
 
 			// Remove those that came in on the boundary that we already have
-			apiEntriesThisTime = apiEntriesThisTime.Where(e => !existingOnBoundary.Contains(e.Id)).ToList();
+			apiEntriesThisTime = apiEntriesThisTime
+				.Where(e => !existingOnBoundary.Contains(e.Id))
+				.ToList();
 
 			if (apiEntriesThisTime.Count == 0)
 			{

@@ -3,7 +3,9 @@ namespace LogicMonitor.Datamart.Models;
 public class WebsiteStoreItem : IdentifiedStoreItem
 {
 	// Navigation properties
-	public WebsiteGroupStoreItem WebsiteGroup { get; set; } = null!;
+	public WebsiteGroupStoreItem? WebsiteGroup { get; set; }
+
+	public Guid WebsiteGroupId { get; set; }
 
 	// Database properties
 	public string Name { get; set; } = string.Empty;
@@ -12,13 +14,13 @@ public class WebsiteStoreItem : IdentifiedStoreItem
 
 	public int Count { get; set; }
 
-	public string Domain { get; set; } = string.Empty;
+	public string? Domain { get; set; }
 
 	public string? HostName { get; set; }
 
 	public AlertDisableStatus AlertDisableStatus { get; set; }
 
-	public string AlertExpression { get; set; } = string.Empty;
+	public string? AlertExpression { get; set; }
 
 	public AlertStatus AlertStatus { get; set; }
 
@@ -53,8 +55,6 @@ public class WebsiteStoreItem : IdentifiedStoreItem
 	public string? Script { get; set; }
 
 	public SdtStatus SdtStatus { get; set; }
-
-	public int WebsiteGroupId { get; set; }
 
 	public bool StopMonitoring { get; set; }
 
