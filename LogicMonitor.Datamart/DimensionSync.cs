@@ -2,6 +2,7 @@
 
 internal class DimensionSync : LoopInterval
 {
+	private readonly List<string> _types;
 	private readonly DatamartClient _datamartClient;
 	private readonly Configuration _configuration;
 
@@ -11,6 +12,18 @@ internal class DimensionSync : LoopInterval
 		ILoggerFactory loggerFactory)
 		: base(nameof(DimensionSync), loggerFactory)
 	{
+		_datamartClient = datamartClient;
+		_configuration = configuration;
+	}
+
+	public DimensionSync(
+		DatamartClient datamartClient,
+		Configuration configuration,
+		List<string> types,
+		ILoggerFactory loggerFactory)
+		: base(nameof(DimensionSync), loggerFactory)
+	{
+		_types = types;
 		_datamartClient = datamartClient;
 		_configuration = configuration;
 	}
@@ -32,99 +45,143 @@ internal class DimensionSync : LoopInterval
 
 	private async Task SyncThirdLevelDimensionsAsync(CancellationToken cancellationToken)
 	{
-		foreach (var dataSourceSpecification in _configuration.DataSources)
+		if (_types is null || _types.Contains(nameof(DeviceDataSourceInstance)))
 		{
-			try
+			foreach (var dataSourceSpecification in _configuration.DataSources)
 			{
-				await _datamartClient
-					.SyncDeviceDataSourcesAndInstancesAsync(
-						dataSourceSpecification,
-						Logger,
-						cancellationToken
-					)
-					.ConfigureAwait(false);
-			}
-			catch (Exception e) when (e is OperationCanceledException || e is TaskCanceledException)
-			{
-				if (cancellationToken.IsCancellationRequested)
+				try
 				{
-					// We're done, don't loop any more
-					return;
+					await _datamartClient
+						.SyncDeviceDataSourcesAndInstancesAsync(
+							dataSourceSpecification,
+							Logger,
+							cancellationToken
+						)
+						.ConfigureAwait(false);
 				}
-				// If it was anything else then re-throw
-				throw;
-			}
-			catch (Exception e)
-			{
-				Logger.LogWarning(e, "{Message}", e.Message);
+				catch (Exception e) when (e is OperationCanceledException || e is TaskCanceledException)
+				{
+					if (cancellationToken.IsCancellationRequested)
+					{
+						// We're done, don't loop any more
+						return;
+					}
+					// If it was anything else then re-throw
+					throw;
+				}
+				catch (Exception e)
+				{
+					Logger.LogWarning(e, "{Message}", e.Message);
+				}
 			}
 		}
 	}
 
 	private async Task SyncSecondLevelDimensionsAsync(CancellationToken cancellationToken)
 	{
-		await _datamartClient
+		if (_types is null || _types.Contains(nameof(Device)))
+		{
+			await _datamartClient
 			.AddOrUpdate<Device, DeviceStoreItem>(context => context.Devices, Logger, cancellationToken)
 			.ConfigureAwait(false);
-		await _datamartClient
+		}
+
+		if (_types is null || _types.Contains(nameof(Website)))
+		{
+			await _datamartClient
 			.AddOrUpdate<Website, WebsiteStoreItem>(context => context.Websites, Logger, cancellationToken)
 			.ConfigureAwait(false);
-		await _datamartClient
+		}
+
+		if (_types is null || _types.Contains(nameof(Collector)))
+		{
+			await _datamartClient
 			.AddOrUpdate<Collector, CollectorStoreItem>(context => context.Collectors, Logger, cancellationToken)
 			.ConfigureAwait(false);
+		}
 	}
 
 	private async Task SyncTopLevelDimensionsAsync(CancellationToken cancellationToken)
 	{
-		await _datamartClient
+		if (_types is null || _types.Contains(nameof(CollectorGroup)))
+		{
+			await _datamartClient
 			.AddOrUpdate<CollectorGroup, CollectorGroupStoreItem>(
 				context => context.CollectorGroups,
 				Logger,
 				cancellationToken)
 			.ConfigureAwait(false);
+		}
 
-		await _datamartClient
+		if (_types is null || _types.Contains(nameof(EscalationChain)))
+		{
+			await _datamartClient
 			.AddOrUpdate<EscalationChain, EscalationChainStoreItem>(
 				context => context.EscalationChains,
 				Logger,
 				cancellationToken
 			)
 			.ConfigureAwait(false);
+		}
 
-		await _datamartClient
+		if (_types is null || _types.Contains(nameof(AlertRule)))
+		{
+
+			await _datamartClient
 			.AddOrUpdate<AlertRule, AlertRuleStoreItem>(
 				context => context.AlertRules,
 				Logger,
 				cancellationToken)
 			.ConfigureAwait(false);
-		await _datamartClient
+		}
+
+		if (_types is null || _types.Contains(nameof(DataSource)))
+		{
+			await _datamartClient
 			.AddOrUpdate<DataSource, DataSourceStoreItem>(
 				context => context.DataSources,
 				Logger,
 				cancellationToken)
 			.ConfigureAwait(false);
-		await _datamartClient
+		}
+
+		if (_types is null || _types.Contains(nameof(ConfigSource)))
+		{
+			await _datamartClient
 			.AddOrUpdate<ConfigSource, ConfigSourceStoreItem>(
 				context => context.ConfigSources,
 				Logger,
 				cancellationToken).ConfigureAwait(false);
-		await _datamartClient
+		}
+
+		if (_types is null || _types.Contains(nameof(EventSource)))
+		{
+			await _datamartClient
 			.AddOrUpdate<EventSource, EventSourceStoreItem>(
 				context => context.EventSources,
 				Logger,
 				cancellationToken)
 			.ConfigureAwait(false);
-		await _datamartClient
+		}
+
+		if (_types is null || _types.Contains(nameof(DeviceGroup)))
+		{
+			await _datamartClient
 			.AddOrUpdate<DeviceGroup, DeviceGroupStoreItem>(
 				context => context.DeviceGroups,
 				Logger,
 				cancellationToken)
 			.ConfigureAwait(false);
-		await _datamartClient
+		}
+
+		if (_types is null || _types.Contains(nameof(WebsiteGroup)))
+		{
+			await _datamartClient
 			.AddOrUpdate<WebsiteGroup, WebsiteGroupStoreItem>(
 				context => context.WebsiteGroups,
 				Logger,
 				cancellationToken)
 			.ConfigureAwait(false);
+		}
 	}
 }

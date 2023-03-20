@@ -253,6 +253,19 @@ public class DatamartClient : LogicMonitorClient
 		return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
 	}
 
+	public Task SyncDimensionsAsync(
+		int desiredMaxIntervalMinutes,
+		List<string> types,
+		CancellationToken cancellationToken)
+	{
+		var sync = new DimensionSync(
+			this,
+			_configuration,
+			types,
+			_loggerFactory);
+		return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
+	}
+
 	public Task SyncHighResolutionDataAsync(
 		int desiredMaxIntervalMinutes,
 		CancellationToken cancellationToken)
