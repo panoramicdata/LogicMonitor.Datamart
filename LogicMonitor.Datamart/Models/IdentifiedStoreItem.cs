@@ -5,7 +5,7 @@ public abstract class IdentifiedStoreItem : StoreItem
 	/// <summary>
 	/// The LogicMonitor Id
 	/// </summary>
-	public int Id { get; set; }
+	public int LogicMonitorId { get; set; }
 
 	/// <summary>
 	/// When the Item was last observed

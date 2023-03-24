@@ -6,8 +6,11 @@ public class ConfigSourceProfile : Profile
 	{
 		CreateMap<ConfigSource, ConfigSourceStoreItem>()
 			.ForMember(
-				dest => dest.DatamartId,
+				dest => dest.Id,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.LogicMonitorId,
+				opts => opts.MapFrom(src => src.Id))
 			.ForMember(
 				dest => dest.DatamartCreatedUtc,
 				opts => opts.Ignore())
@@ -19,6 +22,9 @@ public class ConfigSourceProfile : Profile
 				opts => opts.Ignore())
 			;
 		CreateMap<ConfigSourceStoreItem, ConfigSource>()
+			.ForMember(
+				dest => dest.Id,
+				opts => opts.MapFrom(src => src.LogicMonitorId))
 			.ForMember(
 				dest => dest.ConfigChecks,
 				opts => opts.Ignore())

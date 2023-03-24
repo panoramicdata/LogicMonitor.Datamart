@@ -3,7 +3,11 @@ namespace LogicMonitor.Datamart.Models;
 public class CollectorStoreItem : IdentifiedStoreItem
 {
 	// Navigation properties
-	public CollectorGroupStoreItem CollectorGroup { get; set; }
+	public ICollection<DeviceStoreItem> Devices { get; set; }
+
+	public CollectorGroupStoreItem? CollectorGroup { get; set; }
+
+	public Guid CollectorGroupId { get; set; }
 
 	// Database properties
 	public string Name { get; set; } = string.Empty;
@@ -33,12 +37,6 @@ public class CollectorStoreItem : IdentifiedStoreItem
 	public bool ClearSent { get; set; }
 
 	public string CollectorConfiguration { get; set; } = string.Empty;
-
-	public int DeviceId { get; set; }
-
-	public int GroupId { get; set; }
-
-	public string GroupName { get; set; } = string.Empty;
 
 	public string? Configuration { get; set; }
 
@@ -73,6 +71,8 @@ public class CollectorStoreItem : IdentifiedStoreItem
 	public string LastSentNotificationOnLocal { get; set; } = string.Empty;
 
 	public int LastSentNotificationOnTimeStampUtc { get; set; }
+
+	public int LogicMonitorDeviceId { get; set; }
 
 	public bool NeedAutoCreateCollectorDevice { get; set; }
 

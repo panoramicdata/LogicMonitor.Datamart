@@ -13,9 +13,9 @@ public abstract class TestWithOutput
 		LateArrivingDataWindowHours = 2,
 		StartDateTimeUtc = new DateTimeOffset(
 			TwelveHoursAgo.Year,
-			TwelveHoursAgo.Month,
-			TwelveHoursAgo.Day,
-			TwelveHoursAgo.Hour,
+			1,
+			1,
+			0,
 			0,
 			0,
 			TimeSpan.Zero).UtcDateTime,
@@ -41,13 +41,18 @@ public abstract class TestWithOutput
 					},
 				},
 				new DataSourceConfigurationItem{
-					Name = "Properties Reveal",
+					Name = "SNMP_Network_Interfaces",
 					DataPoints = new List<DataPointConfigurationItem>
 					{
 						new DataPointConfigurationItem
 							{
-								Name = "datapoint0",
-								MeasurementUnit = "noodles",
+								Name = "InMBps",
+								MeasurementUnit = "MBps",
+							},
+						new DataPointConfigurationItem
+							{
+								Name = "OutMBps",
+								MeasurementUnit = "MBps",
 							}
 					},
 				}
@@ -63,6 +68,7 @@ public abstract class TestWithOutput
 		var configuration = LoadConfiguration("appsettings.json");
 		var logicMonitorCredentials = configuration.LogicMonitorCredentials;
 		var loggerFactory = new PrefixLoggerFactory(logicMonitorCredentials.Account, LogFactory.Create(iTestOutputHelper));
+
 		Configuration.LogicMonitorClientOptions = new LogicMonitorClientOptions
 		{
 			Account = logicMonitorCredentials.Account,
@@ -70,6 +76,7 @@ public abstract class TestWithOutput
 			AccessKey = logicMonitorCredentials.AccessKey,
 			Logger = loggerFactory.CreateLogger<LogicMonitorClient>()
 		};
+
 		Configuration.DatabaseType = configuration.DatabaseType;
 		Configuration.DatabaseServerName = configuration.DatabaseServer;
 		Configuration.DatabaseName = configuration.DatabaseName;
@@ -79,7 +86,10 @@ public abstract class TestWithOutput
 			Configuration,
 			loggerFactory);
 
-		DatamartClient.EnsureDatabaseCreatedAndSchemaUpdatedAsync().GetAwaiter().GetResult();
+		DatamartClient
+			.EnsureDatabaseCreatedAndSchemaUpdatedAsync(default)
+			.GetAwaiter()
+			.GetResult();
 
 		Stopwatch = Stopwatch.StartNew();
 

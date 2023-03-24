@@ -6,8 +6,20 @@ public class CollectorProfile : Profile
 	{
 		CreateMap<Collector, CollectorStoreItem>()
 			.ForMember(
-				dest => dest.DatamartId,
+				dest => dest.Id,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.LogicMonitorId,
+				opts => opts.MapFrom(src => src.Id))
+			.ForMember(
+				dest => dest.CollectorGroupId,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.Devices,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.LogicMonitorDeviceId,
+				opts => opts.MapFrom(src => src.DeviceId))
 			.ForMember(
 				dest => dest.DatamartCreatedUtc,
 				opts => opts.Ignore())
@@ -26,6 +38,18 @@ public class CollectorProfile : Profile
 			;
 
 		CreateMap<CollectorStoreItem, Collector>()
+			.ForMember(
+				dest => dest.Id,
+				opts => opts.MapFrom(src => src.LogicMonitorId))
+			.ForMember(
+				dest => dest.DeviceId,
+				opts => opts.MapFrom(src => src.LogicMonitorDeviceId))
+			.ForMember(
+				dest => dest.GroupId,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.GroupName,
+				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.AutomaticUpgradeInfo,
 				opts => opts.Ignore())

@@ -3,7 +3,11 @@ namespace LogicMonitor.Datamart.Models;
 public class AlertRuleStoreItem : IdentifiedStoreItem
 {
 	// Navigation properties
-	public List<AlertStoreItem> Alerts { get; set; } = null!;
+	public ICollection<AlertStoreItem>? AlertStoreItems { get; set; }
+
+	public EscalationChainStoreItem? EscalationChain { get; set; }
+
+	public Guid EscalationChainId { get; set; }
 
 	// DataStore properties
 	public string Name { get; set; } = string.Empty;
@@ -21,8 +25,6 @@ public class AlertRuleStoreItem : IdentifiedStoreItem
 	public string DataPoint { get; set; } = string.Empty;
 
 	public int EscalationChainIntervalMinutes { get; set; }
-
-	public int EscalationChainId { get; set; }
 
 	public bool SuppressAlertClear { get; set; }
 

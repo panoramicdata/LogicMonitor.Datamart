@@ -6,8 +6,17 @@ public class AlertRuleProfile : Profile
 	{
 		CreateMap<AlertRule, AlertRuleStoreItem>()
 			.ForMember(
-				dest => dest.DatamartId,
+				dest => dest.Id,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.EscalationChainId,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.EscalationChain,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.LogicMonitorId,
+				opts => opts.MapFrom(src => src.Id))
 			.ForMember(
 				dest => dest.DatamartCreatedUtc,
 				opts => opts.Ignore())
@@ -18,10 +27,19 @@ public class AlertRuleProfile : Profile
 				dest => dest.DatamartLastObservedUtc,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.Alerts,
+				dest => dest.AlertStoreItems,
 				opts => opts.Ignore())
 			;
 		CreateMap<AlertRuleStoreItem, AlertRule>()
+			.ForMember(
+				dest => dest.Id,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.EscalationChain,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.EscalationChainId,
+				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.Devices,
 				opts => opts.Ignore())

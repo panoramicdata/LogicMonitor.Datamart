@@ -3,9 +3,14 @@ namespace LogicMonitor.Datamart.Models;
 public class DeviceStoreItem : IdentifiedStoreItem
 {
 	// Navigation properties
-	public List<DeviceDataSourceInstanceStoreItem> DeviceDataSourceInstances { get; set; } = null!;
+	public ICollection<DeviceDataSourceStoreItem> DeviceDataSources { get; set; }
 
-	public List<DeviceDataSourceStoreItem> DeviceDataSources { get; set; } = null!;
+	/// <summary>
+	/// Nullable to allow for cloud collectors
+	/// </summary>
+	public Guid? PreferredCollectorId { get; set; }
+
+	public CollectorStoreItem? PreferredCollector { get; set; }
 
 	// Database properties
 	public string Name { get; set; } = string.Empty;
@@ -73,12 +78,6 @@ public class DeviceStoreItem : IdentifiedStoreItem
 	public int NetflowCollectorGroupId { get; set; }
 
 	public string? NetflowCollectorGroupName { get; set; }
-
-	public int PreferredCollectorId { get; set; }
-
-	public int PreferredCollectorGroupId { get; set; }
-
-	public string PreferredCollectorGroupName { get; set; } = string.Empty;
 
 	public int RelatedDeviceId { get; set; }
 

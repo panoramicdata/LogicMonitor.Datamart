@@ -6,8 +6,11 @@ public class DeviceGroupProfile : Profile
 	{
 		CreateMap<DeviceGroup, DeviceGroupStoreItem>()
 			.ForMember(
-				dest => dest.DatamartId,
+				dest => dest.Id,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.LogicMonitorId,
+				opts => opts.MapFrom(src => src.Id))
 			.ForMember(
 				dest => dest.DatamartCreatedUtc,
 				opts => opts.Ignore())
@@ -19,6 +22,9 @@ public class DeviceGroupProfile : Profile
 				opts => opts.Ignore())
 			;
 		CreateMap<DeviceGroupStoreItem, DeviceGroup>()
+			.ForMember(
+				dest => dest.Id,
+				opts => opts.MapFrom(src => src.LogicMonitorId))
 			.ForMember(
 				dest => dest.AwsTestResult,
 				opts => opts.Ignore())

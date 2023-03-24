@@ -6,14 +6,19 @@ public class DeviceProfile : Profile
 	{
 		CreateMap<Device, DeviceStoreItem>()
 			.ForMember(
+				dest => dest.Id,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.LogicMonitorId,
+				opts => opts.MapFrom(src => src.Id))
+			.ForMember(
+				dest => dest.PreferredCollector,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.PreferredCollectorId,
+				opts => opts.Ignore())
+			.ForMember(
 				dest => dest.DeviceDataSources,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DeviceDataSourceInstances,
-				opts => opts.Ignore())
-
-			.ForMember(
-				dest => dest.DatamartId,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.DatamartCreatedUtc,
@@ -46,6 +51,9 @@ public class DeviceProfile : Profile
 
 		CreateMap<DeviceStoreItem, Device>()
 			.ForMember(
+				dest => dest.Id,
+				opts => opts.MapFrom(src => src.LogicMonitorId))
+			.ForMember(
 				dest => dest.AlertingDisabledOn,
 				opts => opts.Ignore())
 			.ForMember(
@@ -62,6 +70,15 @@ public class DeviceProfile : Profile
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.ManualDiscoveryFlags,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.PreferredCollectorGroupId,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.PreferredCollectorGroupName,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.PreferredCollectorId,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.SystemProperties,

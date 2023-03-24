@@ -2,6 +2,10 @@ namespace LogicMonitor.Datamart.Models;
 
 public class EscalationChainStoreItem : IdentifiedStoreItem
 {
+	// Navigation properties
+	public ICollection<AlertRuleStoreItem>? AlertRules { get; set; }
+
+	// Database properties
 	public string Name { get; set; }
 
 	public string Description { get; set; }

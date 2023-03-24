@@ -2,18 +2,18 @@
 
 namespace LogicMonitor.Datamart;
 
-internal class DataSync : LoopInterval
+internal class HighResolutionDataSync : LoopInterval
 {
 	private static readonly TimeSpan EightHours = TimeSpan.FromHours(8);
 
 	private readonly DatamartClient _datamartClient;
 	private readonly Configuration _configuration;
 
-	public DataSync(
+	public HighResolutionDataSync(
 		DatamartClient datamartClient,
 		Configuration configuration,
 		ILoggerFactory loggerFactory)
-		: base(nameof(DataSync), loggerFactory)
+		: base(nameof(HighResolutionDataSync), loggerFactory)
 	{
 		_datamartClient = datamartClient;
 		_configuration = configuration;
@@ -41,23 +41,25 @@ internal class DataSync : LoopInterval
 
 		// Get the LogicMonitor Ids for those DataSources
 		var dataSourceIds = matchingDatabaseDataSources
-			.ConvertAll(ds => ds.Id);
+			.ConvertAll(ds => ds.LogicMonitorId);
 
 		// Get the database instances for those DataSources, excluding ones where LastWentMissingUtc is set
 		var databaseDeviceDataSourceInstances = await context
 			.DeviceDataSourceInstances
+			.Include(ddsi => ddsi.DeviceDataSource.DataSource)
+			.Include(ddsi => ddsi.DeviceDataSource.Device)
 			.Where(ddsi =>
 				ddsi.LastWentMissingUtc == null
-				&& ddsi.DataSourceId.HasValue
-				&& dataSourceIds.Contains(ddsi.DataSourceId.Value)
+				&& dataSourceIds.Contains(ddsi.DeviceDataSource.DataSource.LogicMonitorId)
 			)
 			// To make debugging a little more deterministic, order by the Device and then its instances
-			.OrderBy(ddsi => ddsi.DeviceId).ThenBy(ddsi => ddsi.Id)
+			.OrderBy(ddsi => ddsi.DeviceDataSourceId)
+			.ThenBy(ddsi => ddsi.LogicMonitorId)
 			.ToListAsync(cancellationToken: cancellationToken)
 			.ConfigureAwait(false);
 
 		// If there aren't any, log and return
-		if (databaseDeviceDataSourceInstances.Count == 0)
+		if (databaseDeviceDataSourceInstances.Count() == 0)
 		{
 			Logger.LogWarning(
 				"Found no DeviceDataSourceInstances in the databases for DeviceDataSource names {Names}. Check dimensions have been synced.",
@@ -103,7 +105,7 @@ internal class DataSync : LoopInterval
 		var utcNow = DateTimeOffset.UtcNow;
 		var lateArrivingDataWindowStart = utcNow.AddHours(-configuration.LateArrivingDataWindowHours);
 
-		var aggregationsToWrite = new List<DeviceDataSourceInstanceAggregatedDataBulkWriteModel>();
+		var aggregationsToWrite = new List<TimeSeriesDataAggregationStoreItem>();
 
 		var stopwatch = new Stopwatch();
 
@@ -116,7 +118,7 @@ internal class DataSync : LoopInterval
 			databaseDeviceDataSourceInstances.Count);
 		foreach (var databaseDeviceDataSourceInstanceGroup in
 				databaseDeviceDataSourceInstances
-				.GroupBy(ddsi => ddsi.LastAggregationHourWrittenUtc ?? DateTime.MinValue)
+				.GroupBy(ddsi => ddsi.DataCompleteToUtc ?? DateTime.MinValue)
 			)
 		{
 			var lastAggregationHourWrittenUtc = new DateTimeOffset(databaseDeviceDataSourceInstanceGroup.Key, TimeSpan.Zero);
@@ -130,7 +132,7 @@ internal class DataSync : LoopInterval
 				var batchIndex = databaseDeviceDataSourceInstanceGroupBatch.Key;
 
 				var instanceIdList = databaseDeviceDataSourceInstanceGroupBatch
-					.Select(t => t.item.Id)
+					.Select(t => t.item.LogicMonitorId)
 					.ToList();
 
 				var rangeDescription = $"Batch {batchIndex + 1}: {instanceIdList.Count} instances starting {databaseDeviceDataSourceInstanceGroup.Key:yyyy-MM-dd HH:mm:ss}: {string.Join(",", instanceIdList)}...";
@@ -303,10 +305,9 @@ internal class DataSync : LoopInterval
 										.Select(chunkedData =>
 										{
 											var periodStart = (blockStart + TimeSpan.FromSeconds(chunkedData.Key * dataSourceAggregationDuration.TotalSeconds)).UtcDateTime;
-											return new DeviceDataSourceInstanceAggregatedDataBulkWriteModel
+											return new TimeSeriesDataAggregationStoreItem
 											{
-												DeviceDataSourceInstanceId = deviceDataSourceInstanceIdAsInt,
-												DataPointId = databaseDataPoint.DatamartId,
+												DataPointId = databaseDataPoint.Id,
 												PeriodStart = periodStart,
 												PeriodEnd = periodStart.Add(dataSourceAggregationDuration),
 												DataCount = chunkedData.Count(d => d.Value != null),
@@ -334,11 +335,9 @@ internal class DataSync : LoopInterval
 								{
 									await AggregationWriter.WriteAggregations(
 										sqlConnection,
-										configuration.SqlCommandTimeoutSeconds,
-										configuration.SqlBulkCopyTimeoutSeconds,
+										aggregationsToWrite,
 										deviceDataSourceInstanceIdAsInt,
 										blockToWrite.Key,
-										blockToWrite,
 										logger)
 										.ConfigureAwait(false);
 								}

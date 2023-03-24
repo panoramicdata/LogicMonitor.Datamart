@@ -39,7 +39,7 @@ internal class AlertSync : LoopInterval
 			// Ordered for predictability
 			databaseDeviceIds = await context
 						.Devices
-						.Select(d => d.Id)
+						.Select(d => d.LogicMonitorId)
 						.OrderBy(id => id)
 						.ToListAsync(cancellationToken: cancellationToken)
 						.ConfigureAwait(false);
@@ -89,7 +89,7 @@ internal class AlertSync : LoopInterval
 				{
 					using var context = new Context(_datamartClient.DbContextOptions);
 					// Get the device
-					var device = await context.Devices.SingleOrDefaultAsync(d => d.Id == deviceId, cancellationToken: cancellationToken).ConfigureAwait(false);
+					var device = await context.Devices.SingleOrDefaultAsync(d => d.LogicMonitorId == deviceId, cancellationToken: cancellationToken).ConfigureAwait(false);
 
 					// Build up the list of alerts in memory, then delete the table contents and re-add.
 					alertsToBulkInsert.Clear();
@@ -152,7 +152,7 @@ internal class AlertSync : LoopInterval
 							// Is it already in the database?
 							var databaseAlert = await context
 								.Alerts
-								.SingleOrDefaultAsync(asi => asi.Id == networkAlert.Id, cancellationToken: cancellationToken)
+								.SingleOrDefaultAsync(asi => asi.LogicMonitorId == networkAlert.Id, cancellationToken: cancellationToken)
 								.ConfigureAwait(false);
 							sqlFetch.Stop();
 
@@ -348,7 +348,7 @@ internal class AlertSync : LoopInterval
 		}
 	}
 
-	private async Task<int> GetMonitorObjectGroupIdAsync(MemoryCache cache, Context monitorObjectGroupContext, Alert networkAlert, int index)
+	private async Task<Guid> GetMonitorObjectGroupIdAsync(MemoryCache cache, Context monitorObjectGroupContext, Alert networkAlert, int index)
 	{
 		var key = $"{networkAlert.MonitorObjectType}:{networkAlert.MonitorObjectGroups[index].FullPath}";
 		var result = await cache.GetOrCreateAsync(key, async _ =>
@@ -368,14 +368,14 @@ internal class AlertSync : LoopInterval
 				monitorObjectGroupContext.MonitorObjectGroups.Add(databaseEntry);
 				await monitorObjectGroupContext.SaveChangesAsync().ConfigureAwait(false);
 				Logger.LogInformation(
-					"Added new MonitorObjectGroup {DatabaseEntryMonitoredObjectType}:{DatabaseEntryFullPath} with id {DatabaseEntryDatamartId}",
+					"Added new MonitorObjectGroup {DatabaseEntryMonitoredObjectType}:{DatabaseEntryFullPath} with id {DatabaseEntryId}",
 					databaseEntry.MonitoredObjectType,
 					databaseEntry.FullPath,
-					databaseEntry.DatamartId
+					databaseEntry.Id
 					);
 			}
 
-			return databaseEntry.DatamartId;
+			return databaseEntry.Id;
 		}).ConfigureAwait(false);
 		return result;
 	}

@@ -6,8 +6,11 @@ public class DataSourceProfile : Profile
 	{
 		CreateMap<DataSource, DataSourceStoreItem>()
 			.ForMember(
-				dest => dest.DatamartId,
+				dest => dest.Id,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.LogicMonitorId,
+				opts => opts.MapFrom(src => src.Id))
 			.ForMember(
 				dest => dest.DatamartCreatedUtc,
 				opts => opts.Ignore())
@@ -25,6 +28,9 @@ public class DataSourceProfile : Profile
 				opts => opts.Ignore())
 			;
 		CreateMap<DataSourceStoreItem, DataSource>()
+			.ForMember(
+				dest => dest.Id,
+				opts => opts.MapFrom(src => src.LogicMonitorId))
 			.ForMember(
 				dest => dest.AgdMethod,
 				opts => opts.Ignore())
