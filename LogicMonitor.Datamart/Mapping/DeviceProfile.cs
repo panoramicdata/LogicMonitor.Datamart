@@ -47,6 +47,51 @@ public class DeviceProfile : Profile
 			.ForMember(
 				dest => dest.Property5,
 				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 5)))
+			.ForMember(
+				dest => dest.Property6,
+				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 6)))
+			.ForMember(
+				dest => dest.Property7,
+				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 7)))
+			.ForMember(
+				dest => dest.Property8,
+				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 8)))
+			.ForMember(
+				dest => dest.Property9,
+				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 9)))
+			.ForMember(
+				dest => dest.Property10,
+				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 10)))
+			.ForMember(
+				dest => dest.Property11,
+				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 11)))
+			.ForMember(
+				dest => dest.Property12,
+				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 12)))
+			.ForMember(
+				dest => dest.Property13,
+				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 13)))
+			.ForMember(
+				dest => dest.Property14,
+				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 14)))
+			.ForMember(
+				dest => dest.Property15,
+				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 15)))
+			.ForMember(
+				dest => dest.Property16,
+				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 16)))
+			.ForMember(
+				dest => dest.Property17,
+				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 17)))
+			.ForMember(
+				dest => dest.Property18,
+				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 18)))
+			.ForMember(
+				dest => dest.Property19,
+				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 19)))
+			.ForMember(
+				dest => dest.Property20,
+				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 20)))
 			;
 
 		CreateMap<DeviceStoreItem, Device>()

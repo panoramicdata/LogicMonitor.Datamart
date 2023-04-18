@@ -232,6 +232,26 @@ internal class LowResolutionDataSync : LoopInterval
 						Centile75 = CalculatePercentile(line.Data, 75),
 						Centile90 = CalculatePercentile(line.Data, 90),
 						Centile95 = CalculatePercentile(line.Data, 95),
+						NormalCount = CountAtAlertLevel(
+							line.Data,
+							databaseDeviceDataSourceInstance.EffectiveAlertExpression,
+							CountAlertLevel.Normal
+						),
+						WarningCount = CountAtAlertLevel(
+							line.Data,
+							databaseDeviceDataSourceInstance.EffectiveAlertExpression,
+							CountAlertLevel.Warning
+						),
+						ErrorCount = CountAtAlertLevel(
+							line.Data,
+							databaseDeviceDataSourceInstance.EffectiveAlertExpression,
+							CountAlertLevel.Error
+						),
+						CriticalCount = CountAtAlertLevel(
+							line.Data,
+							databaseDeviceDataSourceInstance.EffectiveAlertExpression,
+							CountAlertLevel.Critical
+						),
 					};
 					aggregationsToWrite.Add(bulkWriteModel);
 				}

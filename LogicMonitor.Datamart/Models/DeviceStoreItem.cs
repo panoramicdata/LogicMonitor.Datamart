@@ -106,6 +106,37 @@ public class DeviceStoreItem : IdentifiedStoreItem
 	public string? Property4 { get; set; } = string.Empty;
 
 	public string? Property5 { get; set; } = string.Empty;
+
+	public string? Property6 { get; set; } = string.Empty;
+
+	public string? Property7 { get; set; } = string.Empty;
+
+	public string? Property8 { get; set; } = string.Empty;
+
+	public string? Property9 { get; set; } = string.Empty;
+
+	public string? Property10 { get; set; } = string.Empty;
+
+	public string? Property11 { get; set; } = string.Empty;
+
+	public string? Property12 { get; set; } = string.Empty;
+
+	public string? Property13 { get; set; } = string.Empty;
+
+	public string? Property14 { get; set; } = string.Empty;
+
+	public string? Property15 { get; set; } = string.Empty;
+
+	public string? Property16 { get; set; } = string.Empty;
+
+	public string? Property17 { get; set; } = string.Empty;
+
+	public string? Property18 { get; set; } = string.Empty;
+
+	public string? Property19 { get; set; } = string.Empty;
+
+	public string? Property20 { get; set; } = string.Empty;
+
 	//public List<DevicePropertyStoreItem> SystemProperties { get; set; }
 	//public List<DevicePropertyStoreItem> CustomProperties { get; set; }
 }

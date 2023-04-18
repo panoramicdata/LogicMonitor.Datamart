@@ -2,7 +2,7 @@
 
 public static class CustomPropertyHandler
 {
-	private const int MaxPropertyCount = 5;
+	private const int MaxPropertyCount = 20;
 	private static List<string>? _propertyNames;
 
 	internal static void Configure(List<string> propertyNames)

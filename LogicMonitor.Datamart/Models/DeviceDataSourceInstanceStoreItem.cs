@@ -47,4 +47,10 @@ public class DeviceDataSourceInstanceStoreItem : IdentifiedStoreItem
 	/// If present, this is the UTC timestamp when a dimension update query was made to LogicMonitor and this instance was not returned
 	/// </summary>
 	public DateTime? LastWentMissingUtc { get; set; }
+
+	/// <summary>
+	/// The effective alert expression, which is the alert expression from the DataSource, or the parent DeviceGroup or the Instance, in that order
+	/// Note that timezones and time-dependent expressions are not supported
+	/// </summary>
+	public string EffectiveAlertExpression { get; set; } = string.Empty;
 }
