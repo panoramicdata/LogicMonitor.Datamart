@@ -291,7 +291,7 @@ internal class LowResolutionDataSync : LoopInterval
 	{
 		if (string.IsNullOrEmpty(effectiveAlertExpression))
 		{
-			return 0;
+			return countAlertLevel == CountAlertLevel.Normal ? data.Count(d => d.HasValue) : 0;
 		}
 
 		// The alert expression is in the form "> 1 2 3", where the first symbol represents the

@@ -2,21 +2,25 @@
 
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
-		<CodeAnalysisRuleSet>..\Rosylnator.ruleset</CodeAnalysisRuleSet>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<Authors>Panoramic Data Limited</Authors>
 		<Copyright>Copyright © Panoramic Data Limited 2021-2023</Copyright>
+		<PackageProjectUrl>https://github.com/panoramicdata/LogicMonitor.Datamart/</PackageProjectUrl>
 		<PackageIcon>Icon.png</PackageIcon>
 		<Description>LogicMonitor Datamart</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageTags>LogicMonitor Datamart</PackageTags>
+		<PackageTags>LogicMonitor API Datamart</PackageTags>
 		<PackageReleaseNotes>
 			Updated LogicMonitor.Api to 3.183.44
 		</PackageReleaseNotes>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
-		<EnableNETAnalyzers>true</EnableNETAnalyzers>
 		<AnalysisMode>All</AnalysisMode>
+		<AnalysisLevel>latest-recommended</AnalysisLevel>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/panoramicdata/LogicMonitor.Datamart/</RepositoryUrl>
 	</PropertyGroup>
 
 	<ItemGroup>
