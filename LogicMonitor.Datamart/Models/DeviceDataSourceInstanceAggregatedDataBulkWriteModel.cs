@@ -41,4 +41,12 @@ public class TimeSeriesDataAggregationStoreItem
 	public int DataCount { get; set; }
 
 	public int NoDataCount { get; set; }
+
+	public int NormalCount { get; set; }
+
+	public int WarningCount { get; set; }
+
+	public int ErrorCount { get; set; }
+
+	public int CriticalCount { get; set; }
 }

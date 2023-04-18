@@ -162,6 +162,10 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 			row["SumSquared"] = aggregation.SumSquared;
 			row["DataCount"] = aggregation.DataCount;
 			row["NoDataCount"] = aggregation.NoDataCount;
+			row["NormalCount"] = aggregation.NormalCount;
+			row["WarningCount"] = aggregation.WarningCount;
+			row["ErrorCount"] = aggregation.ErrorCount;
+			row["CriticalCount"] = aggregation.CriticalCount;
 			table.Rows.Add(row);
 		}
 

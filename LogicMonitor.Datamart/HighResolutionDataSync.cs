@@ -312,6 +312,13 @@ internal class HighResolutionDataSync : LoopInterval
 												PeriodEnd = periodStart.Add(dataSourceAggregationDuration),
 												DataCount = chunkedData.Count(d => d.Value != null),
 												NoDataCount = chunkedData.Count(d => d.Value == null),
+
+												// TODO - implement this
+												NormalCount = 0,
+												WarningCount = 0,
+												ErrorCount = 0,
+												CriticalCount = 0,
+
 												Sum = chunkedData.Sum(d => d.Value ?? 0),
 												SumSquared = chunkedData.Sum(d => d.Value == null ? 0 : d.Value.Value * d.Value.Value),
 												Max = chunkedData.Max(d => d.Value),

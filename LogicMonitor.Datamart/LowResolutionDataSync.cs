@@ -274,4 +274,14 @@ internal class LowResolutionDataSync : LoopInterval
 
 		logger.LogInformation("Syncing data complete.");
 	}
+
+	/// <summary>
+	/// TODO - implement this
+	/// </summary>
+	/// <param name="data"></param>
+	/// <param name="effectiveAlertExpression"></param>
+	/// <param name="normal"></param>
+	/// <returns></returns>
+	private int CountAtAlertLevel(double?[] data, string effectiveAlertExpression, CountAlertLevel normal)
+		=> 0;
 }
