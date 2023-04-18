@@ -38,6 +38,9 @@ public class DeviceDataSourceInstanceProfile : Profile
 			.ForMember(
 				dest => dest.SdtStatus,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.EffectiveAlertExpression,
+				opts => opts.Ignore())
 			;
 
 		CreateMap<DeviceDataSourceInstanceStoreItem, DeviceDataSourceInstance>()
