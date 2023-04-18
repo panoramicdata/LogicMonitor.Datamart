@@ -21,13 +21,13 @@ public class CollectorProfile : Profile
 				dest => dest.LogicMonitorDeviceId,
 				opts => opts.MapFrom(src => src.DeviceId))
 			.ForMember(
-				dest => dest.DatamartCreatedUtc,
+				dest => dest.DatamartCreated,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.DatamartLastModifiedUtc,
+				dest => dest.DatamartLastModified,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.DatamartLastObservedUtc,
+				dest => dest.DatamartLastObserved,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.Name,

@@ -46,13 +46,29 @@ public abstract class TestWithOutput
 					{
 						new DataPointConfigurationItem
 							{
-								Name = "InMBps",
+								Name = "InMbps",
 								MeasurementUnit = "MBps",
 							},
 						new DataPointConfigurationItem
 							{
-								Name = "OutMBps",
+								Name = "OutMbps",
 								MeasurementUnit = "MBps",
+							}
+					},
+				},
+				new DataSourceConfigurationItem{
+					Name = "Non_Existent",
+					DataPoints = new List<DataPointConfigurationItem>
+					{
+						new DataPointConfigurationItem
+							{
+								Name = "Blah",
+								MeasurementUnit = "Grains",
+							},
+						new DataPointConfigurationItem
+							{
+								Name = "Foo",
+								MeasurementUnit = "Chains",
 							}
 					},
 				}

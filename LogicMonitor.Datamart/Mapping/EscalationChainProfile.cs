@@ -15,13 +15,13 @@ public class EscalationChainProfile : Profile
 				dest => dest.AlertRules,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.DatamartCreatedUtc,
+				dest => dest.DatamartCreated,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.DatamartLastModifiedUtc,
+				dest => dest.DatamartLastModified,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.DatamartLastObservedUtc,
+				dest => dest.DatamartLastObserved,
 				opts => opts.Ignore())
 			;
 		CreateMap<EscalationChainStoreItem, EscalationChain>()

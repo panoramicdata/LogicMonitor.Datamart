@@ -49,7 +49,7 @@ internal class LowResolutionDataSync : LoopInterval
 			.Include(ddsi => ddsi.DeviceDataSource.DataSource)
 			.Include(ddsi => ddsi.DeviceDataSource.Device)
 			.Where(ddsi =>
-				ddsi.LastWentMissingUtc == null
+				ddsi.LastWentMissing == null
 				&& dataSourceIds.Contains(ddsi.DeviceDataSource.DataSource.LogicMonitorId)
 			)
 			// To make debugging a little more deterministic, order by the Device and then its instances
@@ -162,9 +162,9 @@ internal class LowResolutionDataSync : LoopInterval
 
 		foreach (var databaseDeviceDataSourceInstance in databaseDeviceDataSourceInstances)
 		{
-			var lastAggregationHourWrittenUtc = databaseDeviceDataSourceInstance.DataCompleteToUtc is null
+			var lastAggregationHourWrittenUtc = databaseDeviceDataSourceInstance.DataCompleteTo is null
 				? configuration.StartDateTimeUtc
-				: new DateTimeOffset(databaseDeviceDataSourceInstance.DataCompleteToUtc.Value, TimeSpan.Zero);
+				: databaseDeviceDataSourceInstance.DataCompleteTo.Value;
 
 			// Ensure that this is on a month boundary
 			lastAggregationHourWrittenUtc = new DateTimeOffset(
@@ -176,7 +176,7 @@ internal class LowResolutionDataSync : LoopInterval
 			var startDateTime = lastAggregationHourWrittenUtc;
 			var endDateTime = lastAggregationHourWrittenUtc.AddMonths(1);
 
-			while (endDateTime < DateTime.UtcNow)
+			while (endDateTime < DateTimeOffset.UtcNow)
 			{
 				var graphData = await datamartClient
 					.GetGraphDataAsync(
@@ -194,7 +194,8 @@ internal class LowResolutionDataSync : LoopInterval
 				// Get the configuration for this DataSourceName
 				var dataSourceConfigurationItem = configuration
 					.DataSources
-					.SingleOrDefault(dsci => dsci.Name == graphData.DataSourceName);
+					.SingleOrDefault(dsci => dsci.Name == databaseDeviceDataSourceInstance.DeviceDataSource.DataSource.Name)
+					?? throw new InvalidOperationException($"Could not find configuration for DataSource {databaseDeviceDataSourceInstance.DeviceDataSource.DataSource.Name}.");
 
 				foreach (var dataPoint in dataSourceConfigurationItem.DataPoints)
 				{
@@ -218,7 +219,7 @@ internal class LowResolutionDataSync : LoopInterval
 						PeriodEnd = endDateTime.UtcDateTime,
 						DataCount = line.Data.Count(d => d.HasValue),
 						NoDataCount = line.Data.Count(d => !d.HasValue),
-						Sum = line.Data.Sum(d => d.HasValue ? d.Value : 0),
+						Sum = line.Data.Sum(d => d ?? 0),
 						SumSquared = line.Data.Sum(d => d.HasValue ? d.Value * d.Value : 0),
 						Max = line.Data.Where(d => d != null).DefaultIfEmpty(null).Max(),
 						Min = line.Data.Where(d => d != null).DefaultIfEmpty(null).Min(),
@@ -234,29 +235,29 @@ internal class LowResolutionDataSync : LoopInterval
 						Centile95 = CalculatePercentile(line.Data, 95),
 						NormalCount = CountAtAlertLevel(
 							line.Data,
-							databaseDeviceDataSourceInstance.EffectiveAlertExpression,
+							dataPointStoreItem.GlobalAlertExpression,
 							CountAlertLevel.Normal
 						),
 						WarningCount = CountAtAlertLevel(
 							line.Data,
-							databaseDeviceDataSourceInstance.EffectiveAlertExpression,
+							dataPointStoreItem.GlobalAlertExpression,
 							CountAlertLevel.Warning
 						),
 						ErrorCount = CountAtAlertLevel(
 							line.Data,
-							databaseDeviceDataSourceInstance.EffectiveAlertExpression,
+							dataPointStoreItem.GlobalAlertExpression,
 							CountAlertLevel.Error
 						),
 						CriticalCount = CountAtAlertLevel(
 							line.Data,
-							databaseDeviceDataSourceInstance.EffectiveAlertExpression,
+							dataPointStoreItem.GlobalAlertExpression,
 							CountAlertLevel.Critical
 						),
 					};
 					aggregationsToWrite.Add(bulkWriteModel);
 				}
 
-				databaseDeviceDataSourceInstance.DataCompleteToUtc = endDateTime.UtcDateTime;
+				databaseDeviceDataSourceInstance.DataCompleteTo = endDateTime;
 				startDateTime = startDateTime.AddMonths(1);
 				endDateTime = endDateTime.AddMonths(1);
 			}
@@ -265,11 +266,11 @@ internal class LowResolutionDataSync : LoopInterval
 				.BulkInsertAsync(aggregationsToWrite, cancellationToken: cancellationToken)
 				.ConfigureAwait(false);
 
-			aggregationsToWrite.Clear();
-
 			await context
 				.SaveChangesAsync(cancellationToken)
 				.ConfigureAwait(false);
+
+			aggregationsToWrite.Clear();
 		}
 
 		logger.LogInformation("Syncing data complete.");
@@ -280,8 +281,100 @@ internal class LowResolutionDataSync : LoopInterval
 	/// </summary>
 	/// <param name="data"></param>
 	/// <param name="effectiveAlertExpression"></param>
-	/// <param name="normal"></param>
+	/// <param name="countAlertLevel"></param>
 	/// <returns></returns>
-	private int CountAtAlertLevel(double?[] data, string effectiveAlertExpression, CountAlertLevel normal)
-		=> 0;
+	private static int? CountAtAlertLevel(
+		double?[] data,
+		string effectiveAlertExpression,
+		CountAlertLevel countAlertLevel
+	)
+	{
+		if (string.IsNullOrEmpty(effectiveAlertExpression))
+		{
+			return 0;
+		}
+
+		// The alert expression is in the form "> 1 2 3", where the first symbol represents the
+		// type of the inequality, the first value represents the warning level, the optional next value
+		// represents the error level, and the optional next value represents the critical level.
+		// Count the data values that meet the expression at the count alert level
+
+		var symbol = effectiveAlertExpression.Split(' ')[0];
+
+		var alertLevels = effectiveAlertExpression
+			.Split(' ')
+			.Skip(1)
+			.Where(x => double.TryParse(x, out var _))
+			.Select(double.Parse)
+			.ToArray();
+
+		var criticalLevel = alertLevels.Length == 3 ? alertLevels[2] : (double?)null;
+		var errorLevel = alertLevels.Length >= 2 ? alertLevels[1] : (double?)null;
+		var warningLevel = alertLevels.Length >= 1 ? alertLevels[0] : (double?)null;
+
+		switch (countAlertLevel)
+		{
+			case CountAlertLevel.Critical:
+				if (criticalLevel == null)
+				{
+					return 0;
+				}
+
+				return symbol switch
+				{
+					">" => data.Count(d => d.HasValue && d.Value > criticalLevel),
+					">=" => data.Count(d => d.HasValue && d.Value >= criticalLevel),
+					"<" => data.Count(d => d.HasValue && d.Value < criticalLevel),
+					"<=" => data.Count(d => d.HasValue && d.Value <= criticalLevel),
+					"=" => data.Count(d => d.HasValue && d.Value == criticalLevel),
+					"!=" => data.Count(d => d.HasValue && d.Value != criticalLevel),
+					_ => null,
+				};
+			case CountAlertLevel.Error:
+				return symbol switch
+				{
+					">" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value <= criticalLevel) && d.Value > errorLevel),
+					">=" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value < criticalLevel) && d.Value >= errorLevel),
+					"<" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value >= criticalLevel) && d.Value < errorLevel),
+					"<=" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value > criticalLevel) && d.Value <= errorLevel),
+					"=" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value != criticalLevel) && d.Value == errorLevel),
+					"!=" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value == criticalLevel) && d.Value != errorLevel),
+					_ => null,
+				};
+			case CountAlertLevel.Warning:
+				if (alertLevels.Length == 0)
+				{
+					return 0;
+				}
+
+				return symbol switch
+				{
+					">" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value <= criticalLevel) && (errorLevel == null || d.Value <= errorLevel) && d.Value > warningLevel),
+					">=" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value < criticalLevel) && (errorLevel == null || d.Value < errorLevel) && d.Value >= warningLevel),
+					"<" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value >= criticalLevel) && (errorLevel == null || d.Value >= errorLevel) && d.Value < warningLevel),
+					"<=" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value > criticalLevel) && (errorLevel == null || d.Value > errorLevel) && d.Value <= warningLevel),
+					"=" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value != criticalLevel) && (errorLevel == null || d.Value != errorLevel) && d.Value == warningLevel),
+					"!=" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value == criticalLevel) && (errorLevel == null || d.Value == errorLevel) && d.Value != warningLevel),
+					_ => null,
+				};
+			case CountAlertLevel.Normal:
+				if (alertLevels.Length == 0)
+				{
+					return data.Count(d => d.HasValue);
+				}
+
+				return symbol switch
+				{
+					">" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value <= criticalLevel) && (errorLevel == null || d.Value <= errorLevel) && (warningLevel == null || d.Value <= warningLevel)),
+					">=" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value < criticalLevel) && (errorLevel == null || d.Value < errorLevel) && (errorLevel == null || d.Value < warningLevel)),
+					"<" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value >= criticalLevel) && (errorLevel == null || d.Value >= errorLevel) && (errorLevel == null || d.Value >= warningLevel)),
+					"<=" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value > criticalLevel) && (errorLevel == null || d.Value > errorLevel) && (errorLevel == null || d.Value > warningLevel)),
+					"=" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value != criticalLevel) && (errorLevel == null || d.Value != errorLevel) && (errorLevel == null || d.Value != warningLevel)),
+					"!=" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value == criticalLevel) && (errorLevel == null || d.Value == errorLevel) && (errorLevel == null || d.Value == warningLevel)),
+					_ => null,
+				};
+			default:
+				throw new ArgumentException($"Unexpected {nameof(CountAlertLevel)} '{countAlertLevel}'");
+		}
+	}
 }

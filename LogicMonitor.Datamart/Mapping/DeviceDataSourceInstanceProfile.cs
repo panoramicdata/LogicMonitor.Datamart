@@ -15,31 +15,28 @@ public class DeviceDataSourceInstanceProfile : Profile
 				dest => dest.DeviceDataSourceId,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.DatamartCreatedUtc,
+				dest => dest.DatamartCreated,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.DatamartLastModifiedUtc,
+				dest => dest.DatamartLastModified,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.DatamartLastObservedUtc,
+				dest => dest.DatamartLastObserved,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.DeviceDataSource,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.DataCompleteToUtc,
+				dest => dest.DataCompleteTo,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.LastWentMissingUtc,
+				dest => dest.LastWentMissing,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.SdtAt,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.SdtStatus,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.EffectiveAlertExpression,
 				opts => opts.Ignore())
 			;
 

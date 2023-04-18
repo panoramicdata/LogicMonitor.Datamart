@@ -25,8 +25,8 @@ public class AlertProfile : Profile
 				.ForMember(dest => dest.Id, opts => opts.Ignore())
 
 				// Handled manually and by EF during save as appropriate
-				.ForMember(dest => dest.DatamartCreatedUtc, opts => opts.Ignore())
-				.ForMember(dest => dest.DatamartLastModifiedUtc, opts => opts.Ignore())
+				.ForMember(dest => dest.DatamartCreated, opts => opts.Ignore())
+				.ForMember(dest => dest.DatamartLastModified, opts => opts.Ignore())
 
 				// The following can come in as 0, which means unassigned
 				.ForMember(

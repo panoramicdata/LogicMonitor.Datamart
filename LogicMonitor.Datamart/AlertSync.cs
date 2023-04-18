@@ -161,8 +161,8 @@ internal class AlertSync : LoopInterval
 								// No.  We will bulk insert
 								var newStoreItem = DatamartClient.MapperInstance.Map<Alert, AlertStoreItem>(networkAlert);
 								var utcNow = DateTimeOffset.UtcNow;
-								newStoreItem.DatamartCreatedUtc = utcNow.UtcDateTime;
-								newStoreItem.DatamartLastModifiedUtc = utcNow.UtcDateTime;
+								newStoreItem.DatamartCreated = utcNow;
+								newStoreItem.DatamartLastModified = utcNow;
 								await SetMonitorObjectGroupIdsAsync(monitorObjectGroupContext, networkAlert, newStoreItem, memoryCache).ConfigureAwait(false);
 								alertsToBulkInsert[networkAlert.Id] = newStoreItem;
 								updateAlertStats.New++;

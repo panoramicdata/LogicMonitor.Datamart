@@ -6,7 +6,7 @@ public static class DbSetExtension
 			this DbSet<TStore> dbSet,
 			Context context,
 			TApi apiItem,
-			DateTime lastObservedUtc,
+			DateTimeOffset lastObservedUtc,
 			ILogger logger,
 			CancellationToken cancellationToken
 		)
@@ -47,7 +47,7 @@ public static class DbSetExtension
 				cancellationToken
 				).ConfigureAwait(false);
 
-			storeItem.DatamartLastObservedUtc = lastObservedUtc;
+			storeItem.DatamartLastObserved = lastObservedUtc.UtcDateTime;
 			return;
 		}
 		// No, this is new
@@ -71,7 +71,7 @@ public static class DbSetExtension
 			cancellationToken
 			).ConfigureAwait(false);
 
-		storeItem.DatamartLastObservedUtc = lastObservedUtc;
+		storeItem.DatamartLastObserved = lastObservedUtc.UtcDateTime;
 		dbSet.Add(storeItem);
 	}
 
@@ -166,19 +166,21 @@ public static class DbSetExtension
 		var storeItem = dbSet.AsQueryable().Where(si => si.LogicMonitorId == data.Id).FirstOrDefault();
 		var mappedStoreItem = DatamartClient.MapperInstance.Map<Alert, AlertStoreItem>(data);
 
+		var utcNow = DateTimeOffset.UtcNow;
+
 		if (storeItem != null)
 		{
 			// Keep the existing Guid
 			mappedStoreItem.Id = storeItem.Id;
 			context.Entry(storeItem).CurrentValues.SetValues(mappedStoreItem);
 			context.Entry(storeItem).State = EntityState.Modified;
-			mappedStoreItem.DatamartLastModifiedUtc = DateTime.UtcNow;
+			mappedStoreItem.DatamartLastModified = utcNow;
 			return;
 		}
 		else
 		{
-			mappedStoreItem.DatamartCreatedUtc = DateTime.UtcNow;
-			mappedStoreItem.DatamartLastModifiedUtc = DateTime.UtcNow;
+			mappedStoreItem.DatamartCreated = utcNow;
+			mappedStoreItem.DatamartLastModified = utcNow;
 		}
 
 		dbSet.Add(mappedStoreItem);

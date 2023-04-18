@@ -344,7 +344,7 @@ public class DatamartClient : LogicMonitorClient
 		var dbSet = action(context);
 
 		// Fetch the items from the LogicMonitor API
-		var lastObservedUtc = DateTime.UtcNow;
+		var lastObservedUtc = DateTimeOffset.UtcNow;
 		var apiItems = await GetAllAsync<TApi>(cancellationToken: cancellationToken)
 			.ConfigureAwait(false);
 		logger.LogDebug(
@@ -459,7 +459,8 @@ public class DatamartClient : LogicMonitorClient
 						Name = apiDataPoint.Name,
 						Description = apiDataPoint.Description,
 						LogicMonitorId = apiDataPoint.Id,
-						MeasurementUnit = configDataPoint.MeasurementUnit
+						MeasurementUnit = configDataPoint.MeasurementUnit,
+						GlobalAlertExpression = apiDataPoint.AlertExpression
 					});
 
 					_logger.LogInformation(
@@ -471,11 +472,14 @@ public class DatamartClient : LogicMonitorClient
 						.SaveChangesAsync()
 						.ConfigureAwait(false);
 				}
-				// Update the measurement unit?
-				else if (databaseDataSourceDataPointModel.MeasurementUnit != configDataPoint.MeasurementUnit)
+				// Update the measurement unit or Global Alert Expression?
+				else if (
+					databaseDataSourceDataPointModel.MeasurementUnit != configDataPoint.MeasurementUnit
+					|| databaseDataSourceDataPointModel.GlobalAlertExpression != apiDataPoint.AlertExpression)
 				{
 					// Yes
 					databaseDataSourceDataPointModel.MeasurementUnit = configDataPoint.MeasurementUnit;
+					databaseDataSourceDataPointModel.GlobalAlertExpression = apiDataPoint.AlertExpression;
 					await context
 						.SaveChangesAsync()
 						.ConfigureAwait(false);
@@ -812,7 +816,7 @@ public class DatamartClient : LogicMonitorClient
 			// It is now in the database context
 
 			// Fetch the DeviceDataSourceInstances
-			var instanceFetchDateTimeUtc = DateTime.UtcNow;
+			var instanceFetchDateTimeUtc = DateTimeOffset.UtcNow;
 			var apiDeviceDataSourceInstances = await GetAllDeviceDataSourceInstancesAsync(
 					device.Id,
 					deviceDataSource.Id,
@@ -845,7 +849,7 @@ public class DatamartClient : LogicMonitorClient
 					// Update the existing entry using AutoMapper
 					MapperInstance.Map(apiDeviceDataSourceInstance, databaseDeviceDataSourceInstance);
 					databaseDeviceDataSourceInstance.DeviceDataSourceId = deviceDataSourceStoreItem.Id;
-					databaseDeviceDataSourceInstance.LastWentMissingUtc = null;
+					databaseDeviceDataSourceInstance.LastWentMissing = null;
 				}
 				// It is now in the database context
 			}
@@ -856,7 +860,7 @@ public class DatamartClient : LogicMonitorClient
 					.DeviceDataSourceInstances
 					.Include(ddsi => ddsi.DeviceDataSource.DataSource)
 					.Include(ddsi => ddsi.DeviceDataSource.Device)
-					.Where(ddsi => ddsi.DeviceDataSource.Device.LogicMonitorId == device.Id && ddsi.DeviceDataSource.DataSource.LogicMonitorId == dataSource.Id && ddsi.LastWentMissingUtc == null)
+					.Where(ddsi => ddsi.DeviceDataSource.Device.LogicMonitorId == device.Id && ddsi.DeviceDataSource.DataSource.LogicMonitorId == dataSource.Id && ddsi.LastWentMissing == null)
 					.Select(ddsi => ddsi.LogicMonitorId)
 					.ToListAsync(cancellationToken: cancellationToken)
 					.ConfigureAwait(false));
@@ -881,7 +885,7 @@ public class DatamartClient : LogicMonitorClient
 						continue;
 					}
 
-					databaseDeviceDataSourceInstance.LastWentMissingUtc = DateTime.UtcNow;
+					databaseDeviceDataSourceInstance.LastWentMissing = DateTimeOffset.UtcNow;
 				}
 
 				markedMissing += deviceDatasourceInstanceIdsToMarkMissing.Count;

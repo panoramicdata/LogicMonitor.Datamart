@@ -9,7 +9,7 @@ public abstract class StoreItem
 	[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
 	public Guid Id { get; set; }
 
-	public DateTime DatamartCreatedUtc { get; set; }
+	public DateTimeOffset DatamartCreated { get; set; }
 
-	public DateTime DatamartLastModifiedUtc { get; set; }
+	public DateTimeOffset DatamartLastModified { get; set; }
 }

@@ -49,7 +49,7 @@ internal class HighResolutionDataSync : LoopInterval
 			.Include(ddsi => ddsi.DeviceDataSource.DataSource)
 			.Include(ddsi => ddsi.DeviceDataSource.Device)
 			.Where(ddsi =>
-				ddsi.LastWentMissingUtc == null
+				ddsi.LastWentMissing == null
 				&& dataSourceIds.Contains(ddsi.DeviceDataSource.DataSource.LogicMonitorId)
 			)
 			// To make debugging a little more deterministic, order by the Device and then its instances
@@ -118,10 +118,10 @@ internal class HighResolutionDataSync : LoopInterval
 			databaseDeviceDataSourceInstances.Count);
 		foreach (var databaseDeviceDataSourceInstanceGroup in
 				databaseDeviceDataSourceInstances
-				.GroupBy(ddsi => ddsi.DataCompleteToUtc ?? DateTime.MinValue)
+				.GroupBy(ddsi => ddsi.DataCompleteTo ?? DateTimeOffset.MinValue)
 			)
 		{
-			var lastAggregationHourWrittenUtc = new DateTimeOffset(databaseDeviceDataSourceInstanceGroup.Key, TimeSpan.Zero);
+			var lastAggregationHourWrittenUtc = databaseDeviceDataSourceInstanceGroup.Key;
 
 			// Handle that groups of LastAggregationHourWrittenUtc need to be batched to deal with the LogicMonitor restriction
 

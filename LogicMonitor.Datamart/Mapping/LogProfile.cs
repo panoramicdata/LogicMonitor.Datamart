@@ -12,10 +12,10 @@ public class LogProfile : Profile
 				dest => dest.LogicMonitorId,
 				opts => opts.MapFrom(src => src.Id))
 			.ForMember(
-				dest => dest.DatamartCreatedUtc,
+				dest => dest.DatamartCreated,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.DatamartLastModifiedUtc,
+				dest => dest.DatamartLastModified,
 				opts => opts.Ignore())
 
 			.AfterMap<TruncateMappingAction<LogItem, LogStoreItem>>()

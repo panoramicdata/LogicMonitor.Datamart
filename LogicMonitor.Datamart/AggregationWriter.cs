@@ -118,7 +118,7 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 		SqlConnection sqlConnection,
 		IEnumerable<TimeSeriesDataAggregationStoreItem> aggregations,
 		int deviceDataSourceInstanceId,
-		DateTime key,
+		DateTimeOffset key,
 		ILogger logger)
 	{
 		var tableName = await EnsureTableExistsAsync(sqlConnection, key)
@@ -227,7 +227,7 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 		SqlConnection sqlConnection,
 		int sqlCommandTimeoutSeconds,
 		int deviceDataSourceInstanceId,
-		DateTime lastAggregationHourWrittenUtc,
+		DateTimeOffset lastAggregationHourWrittenUtc,
 		SqlTransaction transaction)
 	{
 		const string sql = "update DeviceDataSourceInstances set LastAggregationHourWrittenUtc=@LastAggregationHourWrittenUtc where id=@Id";

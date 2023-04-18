@@ -122,7 +122,7 @@ public class Context : DbContext
 
 		// DeviceDataSourceInstance indexes
 		modelBuilder.Entity<DeviceDataSourceInstanceStoreItem>()
-			.HasIndex(ddsi => ddsi.LastWentMissingUtc);
+			.HasIndex(ddsi => ddsi.LastWentMissing);
 
 		// Relational stuff
 		modelBuilder.Entity<DeviceDataSourceInstanceStoreItem>()
@@ -212,7 +212,7 @@ public class Context : DbContext
 
 	private void UpdateTimestamps()
 	{
-		var utcNow = DateTime.UtcNow;
+		var utcNow = DateTimeOffset.UtcNow;
 		foreach (var changedEntity in ChangeTracker.Entries())
 		{
 			if (changedEntity.Entity is StoreItem entity)
@@ -220,12 +220,12 @@ public class Context : DbContext
 				switch (changedEntity.State)
 				{
 					case EntityState.Added:
-						entity.DatamartCreatedUtc = utcNow;
-						entity.DatamartLastModifiedUtc = utcNow;
+						entity.DatamartCreated = utcNow;
+						entity.DatamartLastModified = utcNow;
 						break;
 
 					case EntityState.Modified:
-						entity.DatamartLastModifiedUtc = utcNow;
+						entity.DatamartLastModified = utcNow;
 						break;
 				}
 			}

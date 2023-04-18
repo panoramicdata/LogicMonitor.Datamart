@@ -6,9 +6,9 @@ public class TimeSeriesDataAggregationStoreItem
 
 	public Guid DataPointId { get; set; }
 
-	public DateTime PeriodStart { get; set; }
+	public DateTimeOffset PeriodStart { get; set; }
 
-	public DateTime PeriodEnd { get; set; }
+	public DateTimeOffset PeriodEnd { get; set; }
 
 	public double? Centile05 { get; set; }
 
@@ -42,11 +42,11 @@ public class TimeSeriesDataAggregationStoreItem
 
 	public int NoDataCount { get; set; }
 
-	public int NormalCount { get; set; }
+	public int? NormalCount { get; set; }
 
-	public int WarningCount { get; set; }
+	public int? WarningCount { get; set; }
 
-	public int ErrorCount { get; set; }
+	public int? ErrorCount { get; set; }
 
-	public int CriticalCount { get; set; }
+	public int? CriticalCount { get; set; }
 }

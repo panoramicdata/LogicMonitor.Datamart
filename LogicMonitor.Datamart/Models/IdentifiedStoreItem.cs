@@ -10,5 +10,5 @@ public abstract class IdentifiedStoreItem : StoreItem
 	/// <summary>
 	/// When the Item was last observed
 	/// </summary>
-	public DateTime DatamartLastObservedUtc { get; set; } = DateTime.MinValue;
+	public DateTimeOffset DatamartLastObserved { get; set; } = DateTimeOffset.MinValue;
 }

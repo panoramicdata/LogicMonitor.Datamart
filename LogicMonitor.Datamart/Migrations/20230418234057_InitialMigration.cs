@@ -17,10 +17,10 @@ namespace LogicMonitor.Datamart.Migrations
 					Description = table.Column<string>(type: "text", nullable: false),
 					CreatedOnTimeStampSeconds = table.Column<long>(type: "bigint", nullable: false),
 					CollectorCount = table.Column<int>(type: "integer", nullable: false),
-					DatamartCreatedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-					DatamartLastModifiedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+					DatamartCreated = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+					DatamartLastModified = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
 					LogicMonitorId = table.Column<int>(type: "integer", nullable: false),
-					DatamartLastObservedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+					DatamartLastObserved = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
 				},
 				constraints: table =>
 				{
@@ -34,10 +34,10 @@ namespace LogicMonitor.Datamart.Migrations
 					Id = table.Column<Guid>(type: "uuid", nullable: false),
 					Name = table.Column<string>(type: "text", nullable: false),
 					Description = table.Column<string>(type: "text", nullable: false),
-					DatamartCreatedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-					DatamartLastModifiedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+					DatamartCreated = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+					DatamartLastModified = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
 					LogicMonitorId = table.Column<int>(type: "integer", nullable: false),
-					DatamartLastObservedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+					DatamartLastObserved = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
 				},
 				constraints: table =>
 				{
@@ -51,10 +51,10 @@ namespace LogicMonitor.Datamart.Migrations
 					Id = table.Column<Guid>(type: "uuid", nullable: false),
 					Name = table.Column<string>(type: "text", nullable: false),
 					Description = table.Column<string>(type: "text", nullable: false),
-					DatamartCreatedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-					DatamartLastModifiedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+					DatamartCreated = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+					DatamartLastModified = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
 					LogicMonitorId = table.Column<int>(type: "integer", nullable: false),
-					DatamartLastObservedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+					DatamartLastObserved = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
 				},
 				constraints: table =>
 				{
@@ -105,10 +105,10 @@ namespace LogicMonitor.Datamart.Migrations
 					ParentId = table.Column<int>(type: "integer", nullable: false),
 					SdtStatus = table.Column<int>(type: "integer", nullable: false),
 					UserPermission = table.Column<int>(type: "integer", nullable: false),
-					DatamartCreatedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-					DatamartLastModifiedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+					DatamartCreated = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+					DatamartLastModified = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
 					LogicMonitorId = table.Column<int>(type: "integer", nullable: false),
-					DatamartLastObservedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+					DatamartLastObserved = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
 				},
 				constraints: table =>
 				{
@@ -126,10 +126,10 @@ namespace LogicMonitor.Datamart.Migrations
 					ThrottlingPeriodMinutes = table.Column<int>(type: "integer", nullable: false),
 					ThrottlingAlertCount = table.Column<int>(type: "integer", nullable: false),
 					InAlerting = table.Column<bool>(type: "boolean", nullable: false),
-					DatamartCreatedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-					DatamartLastModifiedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+					DatamartCreated = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+					DatamartLastModified = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
 					LogicMonitorId = table.Column<int>(type: "integer", nullable: false),
-					DatamartLastObservedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+					DatamartLastObserved = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
 				},
 				constraints: table =>
 				{
@@ -143,10 +143,10 @@ namespace LogicMonitor.Datamart.Migrations
 					Id = table.Column<Guid>(type: "uuid", nullable: false),
 					Name = table.Column<string>(type: "text", nullable: false),
 					Description = table.Column<string>(type: "text", nullable: false),
-					DatamartCreatedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-					DatamartLastModifiedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+					DatamartCreated = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+					DatamartLastModified = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
 					LogicMonitorId = table.Column<int>(type: "integer", nullable: false),
-					DatamartLastObservedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+					DatamartLastObserved = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
 				},
 				constraints: table =>
 				{
@@ -164,8 +164,8 @@ namespace LogicMonitor.Datamart.Migrations
 					SessionId = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
 					Description = table.Column<string>(type: "text", nullable: false),
 					IpAddress = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-					DatamartCreatedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-					DatamartLastModifiedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+					DatamartCreated = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+					DatamartLastModified = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
 				},
 				constraints: table =>
 				{
@@ -179,8 +179,8 @@ namespace LogicMonitor.Datamart.Migrations
 					Id = table.Column<Guid>(type: "uuid", nullable: false),
 					FullPath = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
 					MonitoredObjectType = table.Column<int>(type: "integer", nullable: false),
-					DatamartCreatedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-					DatamartLastModifiedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+					DatamartCreated = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+					DatamartLastModified = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
 				},
 				constraints: table =>
 				{
@@ -193,8 +193,8 @@ namespace LogicMonitor.Datamart.Migrations
 				{
 					Id = table.Column<Guid>(type: "uuid", nullable: false),
 					DataPointId = table.Column<Guid>(type: "uuid", nullable: false),
-					PeriodStart = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-					PeriodEnd = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+					PeriodStart = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+					PeriodEnd = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
 					Centile05 = table.Column<double>(type: "double precision", nullable: true),
 					Centile10 = table.Column<double>(type: "double precision", nullable: true),
 					Centile25 = table.Column<double>(type: "double precision", nullable: true),
@@ -210,7 +210,11 @@ namespace LogicMonitor.Datamart.Migrations
 					Sum = table.Column<double>(type: "double precision", nullable: false),
 					SumSquared = table.Column<double>(type: "double precision", nullable: false),
 					DataCount = table.Column<int>(type: "integer", nullable: false),
-					NoDataCount = table.Column<int>(type: "integer", nullable: false)
+					NoDataCount = table.Column<int>(type: "integer", nullable: false),
+					NormalCount = table.Column<int>(type: "integer", nullable: true),
+					WarningCount = table.Column<int>(type: "integer", nullable: true),
+					ErrorCount = table.Column<int>(type: "integer", nullable: true),
+					CriticalCount = table.Column<int>(type: "integer", nullable: true)
 				},
 				constraints: table =>
 				{
@@ -238,10 +242,10 @@ namespace LogicMonitor.Datamart.Migrations
 					WebsiteCount = table.Column<int>(type: "integer", nullable: false),
 					StopMonitoring = table.Column<bool>(type: "boolean", nullable: true),
 					UserPermissionString = table.Column<int>(type: "integer", nullable: false),
-					DatamartCreatedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-					DatamartLastModifiedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+					DatamartCreated = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+					DatamartLastModified = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
 					LogicMonitorId = table.Column<int>(type: "integer", nullable: false),
-					DatamartLastObservedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+					DatamartLastObserved = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
 				},
 				constraints: table =>
 				{
@@ -313,10 +317,10 @@ namespace LogicMonitor.Datamart.Migrations
 					WatchdogUpdatedOnLocal = table.Column<string>(type: "text", nullable: false),
 					WatchdogUpdatedOnSeconds = table.Column<long>(type: "bigint", nullable: true),
 					WrapperConfiguration = table.Column<string>(type: "text", nullable: false),
-					DatamartCreatedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-					DatamartLastModifiedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+					DatamartCreated = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+					DatamartLastModified = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
 					LogicMonitorId = table.Column<int>(type: "integer", nullable: false),
-					DatamartLastObservedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+					DatamartLastObserved = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
 				},
 				constraints: table =>
 				{
@@ -338,10 +342,11 @@ namespace LogicMonitor.Datamart.Migrations
 					Name = table.Column<string>(type: "text", nullable: false),
 					Description = table.Column<string>(type: "text", nullable: false),
 					MeasurementUnit = table.Column<string>(type: "text", nullable: false),
-					DatamartCreatedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-					DatamartLastModifiedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+					GlobalAlertExpression = table.Column<string>(type: "text", nullable: false),
+					DatamartCreated = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+					DatamartLastModified = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
 					LogicMonitorId = table.Column<int>(type: "integer", nullable: false),
-					DatamartLastObservedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+					DatamartLastObserved = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
 				},
 				constraints: table =>
 				{
@@ -370,10 +375,10 @@ namespace LogicMonitor.Datamart.Migrations
 					EscalationChainIntervalMinutes = table.Column<int>(type: "integer", nullable: false),
 					SuppressAlertClear = table.Column<bool>(type: "boolean", nullable: false),
 					SuppressAlertAckSdt = table.Column<bool>(type: "boolean", nullable: false),
-					DatamartCreatedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-					DatamartLastModifiedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+					DatamartCreated = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+					DatamartLastModified = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
 					LogicMonitorId = table.Column<int>(type: "integer", nullable: false),
-					DatamartLastObservedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+					DatamartLastObserved = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
 				},
 				constraints: table =>
 				{
@@ -426,10 +431,10 @@ namespace LogicMonitor.Datamart.Migrations
 					UseDefaultLocationSetting = table.Column<bool>(type: "boolean", nullable: false),
 					UserPermissionString = table.Column<int>(type: "integer", nullable: false),
 					Status = table.Column<int>(type: "integer", nullable: false),
-					DatamartCreatedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-					DatamartLastModifiedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+					DatamartCreated = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+					DatamartLastModified = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
 					LogicMonitorId = table.Column<int>(type: "integer", nullable: false),
-					DatamartLastObservedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+					DatamartLastObserved = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
 				},
 				constraints: table =>
 				{
@@ -494,10 +499,25 @@ namespace LogicMonitor.Datamart.Migrations
 					Property3 = table.Column<string>(type: "text", nullable: true),
 					Property4 = table.Column<string>(type: "text", nullable: true),
 					Property5 = table.Column<string>(type: "text", nullable: true),
-					DatamartCreatedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-					DatamartLastModifiedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+					Property6 = table.Column<string>(type: "text", nullable: true),
+					Property7 = table.Column<string>(type: "text", nullable: true),
+					Property8 = table.Column<string>(type: "text", nullable: true),
+					Property9 = table.Column<string>(type: "text", nullable: true),
+					Property10 = table.Column<string>(type: "text", nullable: true),
+					Property11 = table.Column<string>(type: "text", nullable: true),
+					Property12 = table.Column<string>(type: "text", nullable: true),
+					Property13 = table.Column<string>(type: "text", nullable: true),
+					Property14 = table.Column<string>(type: "text", nullable: true),
+					Property15 = table.Column<string>(type: "text", nullable: true),
+					Property16 = table.Column<string>(type: "text", nullable: true),
+					Property17 = table.Column<string>(type: "text", nullable: true),
+					Property18 = table.Column<string>(type: "text", nullable: true),
+					Property19 = table.Column<string>(type: "text", nullable: true),
+					Property20 = table.Column<string>(type: "text", nullable: true),
+					DatamartCreated = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+					DatamartLastModified = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
 					LogicMonitorId = table.Column<int>(type: "integer", nullable: false),
-					DatamartLastObservedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+					DatamartLastObserved = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
 				},
 				constraints: table =>
 				{
@@ -575,8 +595,8 @@ namespace LogicMonitor.Datamart.Migrations
 					IsAnomaly = table.Column<bool>(type: "boolean", nullable: false),
 					Suppressor = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
 					SuppressedDescending = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-					DatamartCreatedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-					DatamartLastModifiedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+					DatamartCreated = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+					DatamartLastModified = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
 				},
 				constraints: table =>
 				{
@@ -659,10 +679,10 @@ namespace LogicMonitor.Datamart.Migrations
 					AssignedOnSeconds = table.Column<long>(type: "bigint", nullable: false),
 					CreatedOnSeconds = table.Column<long>(type: "bigint", nullable: false),
 					UpdatedOnSeconds = table.Column<long>(type: "bigint", nullable: false),
-					DatamartCreatedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-					DatamartLastModifiedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+					DatamartCreated = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+					DatamartLastModified = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
 					LogicMonitorId = table.Column<int>(type: "integer", nullable: false),
-					DatamartLastObservedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+					DatamartLastObserved = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
 				},
 				constraints: table =>
 				{
@@ -702,12 +722,12 @@ namespace LogicMonitor.Datamart.Migrations
 					SdtAt = table.Column<string>(type: "text", nullable: true),
 					WildValue = table.Column<string>(type: "text", nullable: false),
 					WildValue2 = table.Column<string>(type: "text", nullable: false),
-					DataCompleteToUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-					LastWentMissingUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-					DatamartCreatedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-					DatamartLastModifiedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+					DataCompleteTo = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+					LastWentMissing = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+					DatamartCreated = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+					DatamartLastModified = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
 					LogicMonitorId = table.Column<int>(type: "integer", nullable: false),
-					DatamartLastObservedUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+					DatamartLastObserved = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
 				},
 				constraints: table =>
 				{
@@ -887,9 +907,9 @@ namespace LogicMonitor.Datamart.Migrations
 				column: "DeviceDataSourceId");
 
 			migrationBuilder.CreateIndex(
-				name: "IX_DeviceDataSourceInstances_LastWentMissingUtc",
+				name: "IX_DeviceDataSourceInstances_LastWentMissing",
 				table: "DeviceDataSourceInstances",
-				column: "LastWentMissingUtc");
+				column: "LastWentMissing");
 
 			migrationBuilder.CreateIndex(
 				name: "IX_DeviceDataSources_DataSourceId",

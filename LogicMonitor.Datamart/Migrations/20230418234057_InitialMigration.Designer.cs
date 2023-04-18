@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LogicMonitor.Datamart.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20230418132403_AddedDeviceProperties")]
-    partial class AddedDeviceProperties
+    [Migration("20230418234057_InitialMigration")]
+    partial class InitialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -43,13 +43,13 @@ namespace LogicMonitor.Datamart.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("DatamartCreatedUtc")
+                    b.Property<DateTimeOffset>("DatamartCreated")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastModifiedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastModified")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastObservedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastObserved")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
@@ -180,10 +180,10 @@ namespace LogicMonitor.Datamart.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<DateTime>("DatamartCreatedUtc")
+                    b.Property<DateTimeOffset>("DatamartCreated")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastModifiedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastModified")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("DependencyRole")
@@ -424,13 +424,13 @@ namespace LogicMonitor.Datamart.Migrations
                     b.Property<long>("CreatedOnTimeStampSeconds")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTime>("DatamartCreatedUtc")
+                    b.Property<DateTimeOffset>("DatamartCreated")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastModifiedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastModified")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastObservedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastObserved")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
@@ -519,13 +519,13 @@ namespace LogicMonitor.Datamart.Migrations
                     b.Property<string>("Credential2")
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("DatamartCreatedUtc")
+                    b.Property<DateTimeOffset>("DatamartCreated")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastModifiedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastModified")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastObservedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastObserved")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
@@ -680,13 +680,13 @@ namespace LogicMonitor.Datamart.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("DatamartCreatedUtc")
+                    b.Property<DateTimeOffset>("DatamartCreated")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastModifiedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastModified")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastObservedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastObserved")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
@@ -714,16 +714,20 @@ namespace LogicMonitor.Datamart.Migrations
                     b.Property<Guid>("DataSourceId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("DatamartCreatedUtc")
+                    b.Property<DateTimeOffset>("DatamartCreated")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastModifiedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastModified")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastObservedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastObserved")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("GlobalAlertExpression")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -751,13 +755,13 @@ namespace LogicMonitor.Datamart.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("DatamartCreatedUtc")
+                    b.Property<DateTimeOffset>("DatamartCreated")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastModifiedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastModified")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastObservedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastObserved")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
@@ -791,16 +795,16 @@ namespace LogicMonitor.Datamart.Migrations
                     b.Property<int>("AlertStatusPriority")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime?>("DataCompleteToUtc")
+                    b.Property<DateTimeOffset?>("DataCompleteTo")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartCreatedUtc")
+                    b.Property<DateTimeOffset>("DatamartCreated")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastModifiedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastModified")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastObservedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastObserved")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("DeviceDataSourceId")
@@ -810,10 +814,6 @@ namespace LogicMonitor.Datamart.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("DisplayName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("EffectiveAlertExpression")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -830,7 +830,7 @@ namespace LogicMonitor.Datamart.Migrations
                     b.Property<long>("LastUpdatedTimeSeconds")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTime?>("LastWentMissingUtc")
+                    b.Property<DateTimeOffset?>("LastWentMissing")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("LockDescription")
@@ -860,7 +860,7 @@ namespace LogicMonitor.Datamart.Migrations
 
                     b.HasIndex("DeviceDataSourceId");
 
-                    b.HasIndex("LastWentMissingUtc");
+                    b.HasIndex("LastWentMissing");
 
                     b.ToTable("DeviceDataSourceInstances");
                 });
@@ -880,13 +880,13 @@ namespace LogicMonitor.Datamart.Migrations
                     b.Property<Guid>("DataSourceId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("DatamartCreatedUtc")
+                    b.Property<DateTimeOffset>("DatamartCreated")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastModifiedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastModified")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastObservedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastObserved")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("DeviceId")
@@ -968,13 +968,13 @@ namespace LogicMonitor.Datamart.Migrations
                     b.Property<int?>("CreatedOnTimestampUtc")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("DatamartCreatedUtc")
+                    b.Property<DateTimeOffset>("DatamartCreated")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastModifiedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastModified")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastObservedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastObserved")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("DefaultAgentId")
@@ -1099,13 +1099,13 @@ namespace LogicMonitor.Datamart.Migrations
                     b.Property<int>("CurrentCollectorId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("DatamartCreatedUtc")
+                    b.Property<DateTimeOffset>("DatamartCreated")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastModifiedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastModified")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastObservedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastObserved")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<long>("DeletedTimeinMs")
@@ -1278,13 +1278,13 @@ namespace LogicMonitor.Datamart.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("DatamartCreatedUtc")
+                    b.Property<DateTimeOffset>("DatamartCreated")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastModifiedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastModified")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastObservedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastObserved")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
@@ -1321,13 +1321,13 @@ namespace LogicMonitor.Datamart.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("DatamartCreatedUtc")
+                    b.Property<DateTimeOffset>("DatamartCreated")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastModifiedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastModified")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastObservedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastObserved")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
@@ -1352,10 +1352,10 @@ namespace LogicMonitor.Datamart.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("DatamartCreatedUtc")
+                    b.Property<DateTimeOffset>("DatamartCreated")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastModifiedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastModified")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
@@ -1395,10 +1395,10 @@ namespace LogicMonitor.Datamart.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("DatamartCreatedUtc")
+                    b.Property<DateTimeOffset>("DatamartCreated")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastModifiedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastModified")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("FullPath")
@@ -1440,7 +1440,7 @@ namespace LogicMonitor.Datamart.Migrations
                     b.Property<double?>("Centile95")
                         .HasColumnType("double precision");
 
-                    b.Property<int>("CriticalCount")
+                    b.Property<int?>("CriticalCount")
                         .HasColumnType("integer");
 
                     b.Property<int>("DataCount")
@@ -1449,7 +1449,7 @@ namespace LogicMonitor.Datamart.Migrations
                     b.Property<Guid>("DataPointId")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("ErrorCount")
+                    b.Property<int?>("ErrorCount")
                         .HasColumnType("integer");
 
                     b.Property<double?>("First")
@@ -1473,13 +1473,13 @@ namespace LogicMonitor.Datamart.Migrations
                     b.Property<int>("NoDataCount")
                         .HasColumnType("integer");
 
-                    b.Property<int>("NormalCount")
+                    b.Property<int?>("NormalCount")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("PeriodEnd")
+                    b.Property<DateTimeOffset>("PeriodEnd")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("PeriodStart")
+                    b.Property<DateTimeOffset>("PeriodStart")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<double>("Sum")
@@ -1488,7 +1488,7 @@ namespace LogicMonitor.Datamart.Migrations
                     b.Property<double>("SumSquared")
                         .HasColumnType("double precision");
 
-                    b.Property<int>("WarningCount")
+                    b.Property<int?>("WarningCount")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -1511,13 +1511,13 @@ namespace LogicMonitor.Datamart.Migrations
                     b.Property<int>("AlertStatusPriority")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("DatamartCreatedUtc")
+                    b.Property<DateTimeOffset>("DatamartCreated")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastModifiedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastModified")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastObservedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastObserved")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
@@ -1591,13 +1591,13 @@ namespace LogicMonitor.Datamart.Migrations
                     b.Property<int>("Count")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("DatamartCreatedUtc")
+                    b.Property<DateTimeOffset>("DatamartCreated")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastModifiedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastModified")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DatamartLastObservedUtc")
+                    b.Property<DateTimeOffset>("DatamartLastObserved")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")

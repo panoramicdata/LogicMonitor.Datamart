@@ -12,13 +12,13 @@ public class DataSourceProfile : Profile
 				dest => dest.LogicMonitorId,
 				opts => opts.MapFrom(src => src.Id))
 			.ForMember(
-				dest => dest.DatamartCreatedUtc,
+				dest => dest.DatamartCreated,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.DatamartLastModifiedUtc,
+				dest => dest.DatamartLastModified,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.DatamartLastObservedUtc,
+				dest => dest.DatamartLastObserved,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.DeviceDataSources,
