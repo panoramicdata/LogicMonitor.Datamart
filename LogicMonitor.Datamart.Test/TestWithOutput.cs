@@ -95,6 +95,7 @@ public abstract class TestWithOutput
 
 		Configuration.DatabaseType = configuration.DatabaseType;
 		Configuration.DatabaseServerName = configuration.DatabaseServer;
+		Configuration.DatabaseServerPort = configuration.DatabaseServerPort;
 		Configuration.DatabaseName = configuration.DatabaseName;
 		Configuration.DatabaseUsername = configuration.DatabaseUsername;
 		Configuration.DatabasePassword = configuration.DatabasePassword;

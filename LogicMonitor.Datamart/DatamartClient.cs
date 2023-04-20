@@ -42,6 +42,7 @@ public class DatamartClient : LogicMonitorClient
 					{
 						ConnectionString =
 						$"server={configuration.DatabaseServerName};" +
+						$"port={(configuration.DatabaseServerPort ?? 1433)};" +
 						$"database={configuration.DatabaseName};" +
 						(
 							string.IsNullOrWhiteSpace(configuration.DatabaseUsername)
@@ -58,6 +59,7 @@ public class DatamartClient : LogicMonitorClient
 				dbContextOptionsBuilder
 					.UseNpgsql(
 						$"Server={configuration.DatabaseServerName};" +
+						$"Port={(configuration.DatabaseServerPort ?? 5432)};" +
 						$"Database={configuration.DatabaseName};" +
 						$"Uid={configuration.DatabaseUsername};" +
 						$"Pwd={configuration.DatabasePassword};",

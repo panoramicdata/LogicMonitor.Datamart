@@ -44,6 +44,11 @@ public class Configuration
 	public string DatabaseServerName { get; set; } = null!;
 
 	/// <summary>
+	/// The Database server name
+	/// </summary>
+	public int? DatabaseServerPort { get; set; }
+
+	/// <summary>
 	/// The Database name
 	/// </summary>
 	public string DatabaseName { get; set; } = null!;
@@ -83,42 +88,47 @@ public class Configuration
 	{
 		if (string.IsNullOrWhiteSpace(Name))
 		{
-			throw new ConfigurationException("Configuration name not set.");
+			throw new ConfigurationException($"Configuration {nameof(Name)} not set.");
 		}
 
 		if (StartDateTimeUtc.Minute != 0 || StartDateTimeUtc.Second != 0 || StartDateTimeUtc.Millisecond != 0)
 		{
-			throw new ConfigurationException("StartDateTime should always be on a UTC DateTime hour boundary.");
+			throw new ConfigurationException($"{nameof(StartDateTimeUtc)} should always be on a UTC DateTime hour boundary.");
 		}
 
 		if (DateTimeOffset.UtcNow < StartDateTimeUtc)
 		{
-			throw new ConfigurationException("StartDateTime should not be in the future.");
+			throw new ConfigurationException($"{nameof(StartDateTimeUtc)} should not be in the future.");
 		}
 
 		if (LateArrivingDataWindowHours <= 0)
 		{
-			throw new ConfigurationException("LateArrivingDataWindowHours should be a positive integer.");
+			throw new ConfigurationException($"{nameof(LateArrivingDataWindowHours)} should be a positive integer.");
 		}
 
 		if (LogicMonitorClientOptions == null)
 		{
-			throw new ConfigurationException("LogicMonitor client options not set.");
+			throw new ConfigurationException($"{nameof(LogicMonitorClientOptions)} not set.");
 		}
 
 		if (DatabaseType == DatabaseType.Unknown)
 		{
-			throw new ConfigurationException("DatabaseType not set.");
+			throw new ConfigurationException($"{nameof(DatabaseType)} not set.");
 		}
 
 		if (string.IsNullOrWhiteSpace(DatabaseServerName))
 		{
-			throw new ConfigurationException("DatabaseServerName not set.");
+			throw new ConfigurationException($"{nameof(DatabaseServerName)} not set.");
+		}
+
+		if (DatabaseServerPort <= 0)
+		{
+			throw new ConfigurationException($"{nameof(DatabaseServerPort)} not set.");
 		}
 
 		if (string.IsNullOrWhiteSpace(DatabaseName))
 		{
-			throw new ConfigurationException("DatabaseName not set.");
+			throw new ConfigurationException($"{nameof(DatabaseName)} not set.");
 		}
 
 		if (DeviceDataSourceInstanceBatchSize < 1 || DeviceDataSourceInstanceBatchSize > 100)

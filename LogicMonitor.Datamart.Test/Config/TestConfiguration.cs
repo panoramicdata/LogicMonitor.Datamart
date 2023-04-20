@@ -12,9 +12,14 @@ public class TestConfiguration
 	public LogicMonitorCredentials LogicMonitorCredentials { get; set; }
 
 	/// <summary>
-	/// ServerName
+	/// Server name
 	/// </summary>
 	public string DatabaseServer { get; set; }
+
+	/// <summary>
+	/// Server port
+	/// </summary>
+	public int? DatabaseServerPort { get; set; }
 
 	/// <summary>
 	/// DatabaseName
