@@ -46,7 +46,13 @@ internal class DimensionSync : LoopInterval
 		}
 		catch (Exception ex)
 		{
-			Logger.LogError(ex, $"An unexpected error occurred during the {nameof(DimensionSync)}: '{{Message}}' using '{{Configuration}}'.  Stack trace: {{StackTrace}}", ex.Message, ex.StackTrace);
+			Logger.LogError(
+				ex,
+				$"An unexpected error occurred during the {nameof(DimensionSync)}: '{{Message}}' using '{{Configuration}}'.  Stack trace: {{StackTrace}}",
+				ex.Message,
+				_configuration.ToString(),
+				ex.StackTrace
+			);
 		}
 	}
 
