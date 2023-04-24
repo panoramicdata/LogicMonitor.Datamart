@@ -48,8 +48,9 @@ internal abstract class LoopInterval
 				// This shouldn't generally happen so if it does, dump the entire exception ex which will include inner exceptions
 				Logger.LogError(
 					ex,
-					"An unexpected error occurred during the LoopInterval: {Message}",
-					ex.Message);
+					"An unexpected error occurred during the LoopInterval: '{Message}'.  Stack trace: {StackTrace}",
+					ex.Message,
+					ex.StackTrace);
 			}
 
 			stopwatch.Stop();

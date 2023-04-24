@@ -160,4 +160,7 @@ public class Configuration
 				throw new ConfigurationException($"Invalid AggregationDurationMinutes {aggregationDurationMinutes} for {level} '{name}'.");
 		}
 	}
+
+	public override string ToString()
+		=> $"{Name} ({DatabaseType} {DatabaseServerName}:{DatabaseServerPort}/{DatabaseName} password: {new string('*', DatabasePassword.Length)})";
 }

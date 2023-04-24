@@ -30,17 +30,24 @@ internal class DimensionSync : LoopInterval
 
 	public override async Task ExecuteAsync(CancellationToken cancellationToken)
 	{
-		// Top level
-		await SyncTopLevelDimensionsAsync(cancellationToken)
-			.ConfigureAwait(false);
+		try
+		{
+			// Top level
+			await SyncTopLevelDimensionsAsync(cancellationToken)
+				.ConfigureAwait(false);
 
-		// Second level
-		await SyncSecondLevelDimensionsAsync(cancellationToken)
-			.ConfigureAwait(false);
+			// Second level
+			await SyncSecondLevelDimensionsAsync(cancellationToken)
+				.ConfigureAwait(false);
 
-		// DeviceDataSources and DeviceDataSourceInstances
-		await SyncThirdLevelDimensionsAsync(cancellationToken)
-			.ConfigureAwait(false);
+			// DeviceDataSources and DeviceDataSourceInstances
+			await SyncThirdLevelDimensionsAsync(cancellationToken)
+				.ConfigureAwait(false);
+		}
+		catch (Exception ex)
+		{
+			Logger.LogError(ex, $"An unexpected error occurred during the {nameof(DimensionSync)}: '{{Message}}' using '{{Configuration}}'.  Stack trace: {{StackTrace}}", ex.Message, ex.StackTrace);
+		}
 	}
 
 	private async Task SyncThirdLevelDimensionsAsync(CancellationToken cancellationToken)
