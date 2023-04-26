@@ -84,6 +84,8 @@ public class Configuration
 
 	public DatamartClientMode Mode { get; set; } = DatamartClientMode.HighResolution;
 
+	public bool DimensionSyncHaltOnError { get; set; } = true;
+
 	public void Validate()
 	{
 		if (string.IsNullOrWhiteSpace(Name))
