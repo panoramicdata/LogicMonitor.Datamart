@@ -18,6 +18,8 @@ public class DataSourceConfigurationItem
 	/// </summary>
 	public List<DataPointConfigurationItem> DataPoints { get; set; }
 
+	public string AppliesTo { get; set; } = string.Empty;
+
 	public void Validate()
 	{
 		if (string.IsNullOrWhiteSpace(Name))

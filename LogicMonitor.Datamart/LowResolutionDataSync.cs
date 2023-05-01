@@ -44,25 +44,27 @@ internal class LowResolutionDataSync : LoopInterval
 			.ConvertAll(ds => ds.LogicMonitorId);
 
 		// Get the database instances for those DataSources, excluding ones where LastWentMissingUtc is set
-		var databaseDeviceDataSourceInstances = await context
-			.DeviceDataSourceInstances
-			.Include(ddsi => ddsi.DeviceDataSource.DataSource)
-			.Include(ddsi => ddsi.DeviceDataSource.Device)
+		var databaseDeviceDataSourceInstanceDataPoints = await context
+			.DeviceDataSourceInstanceDataPoints
+			.Include(ddsidp => ddsidp.DeviceDataSourceInstance!.DeviceDataSourceInstanceDataPoints)
+			.Include(ddsidp => ddsidp.DeviceDataSourceInstance!.DeviceDataSource!.DataSource)
+			.Include(ddsidp => ddsidp.DeviceDataSourceInstance!.DeviceDataSource!.Device)
+			.Include(ddsidp => ddsidp.DataSourceDataPoint)
 			.Where(ddsi =>
-				ddsi.LastWentMissing == null
-				&& dataSourceIds.Contains(ddsi.DeviceDataSource.DataSource.LogicMonitorId)
+				ddsi.DeviceDataSourceInstance!.LastWentMissing == null
+				&& dataSourceIds.Contains(ddsi.DeviceDataSourceInstance!.DeviceDataSource!.DataSource!.LogicMonitorId)
 			)
 			// To make debugging a little more deterministic, order by the Device and then its instances
-			.OrderBy(ddsi => ddsi.DeviceDataSourceId)
+			.OrderBy(ddsi => ddsi.DeviceDataSourceInstance!.DeviceDataSourceId)
 			.ThenBy(ddsi => ddsi.LogicMonitorId)
 			.ToListAsync(cancellationToken: cancellationToken)
 			.ConfigureAwait(false);
 
 		// If there aren't any, log and return
-		if (!databaseDeviceDataSourceInstances.Any())
+		if (!databaseDeviceDataSourceInstanceDataPoints.Any())
 		{
 			Logger.LogWarning(
-				"Found no DeviceDataSourceInstances in the databases for DeviceDataSource names {Names}. Check dimensions have been synced.",
+				"Found no DeviceDataSourceInstanceDataPoints in the databases for DeviceDataSource names {Names}. Check dimensions have been synced.",
 				string.Join(", ", deviceDataSourceNames));
 			return;
 		}
@@ -80,7 +82,7 @@ internal class LowResolutionDataSync : LoopInterval
 				context,
 				_configuration,
 				Logger,
-				databaseDeviceDataSourceInstances,
+				databaseDeviceDataSourceInstanceDataPoints,
 				cancellationToken)
 				.ConfigureAwait(false);
 		}
@@ -133,7 +135,7 @@ internal class LowResolutionDataSync : LoopInterval
 		Context context,
 		Configuration configuration,
 		ILogger logger,
-		List<DeviceDataSourceInstanceStoreItem> databaseDeviceDataSourceInstances,
+		List<DeviceDataSourceInstanceDataPointStoreItem> databaseDeviceDataSourceInstanceDataPoints,
 		CancellationToken cancellationToken)
 	{
 		// To ignore a period of uncertainty whether the Collector has been
@@ -148,10 +150,10 @@ internal class LowResolutionDataSync : LoopInterval
 
 		// Get data for each instance
 		logger.LogInformation(
-			"Syncing {InstanceCount} DeviceDataSourceInstances...",
-			databaseDeviceDataSourceInstances.Count
+			"Syncing {DeviceDataSourceInstanceDataPointCount} DataPoints across {InstanceCount} DeviceDataSourceInstances...",
+			databaseDeviceDataSourceInstanceDataPoints.Count,
+			databaseDeviceDataSourceInstanceDataPoints.Select(ddsidp => ddsidp.DeviceDataSourceInstanceId).Distinct().Count()
 		);
-
 
 		var dataPointStoreItems = await context
 			.DataSourceDataPoints
@@ -160,8 +162,9 @@ internal class LowResolutionDataSync : LoopInterval
 			.ToListAsync(cancellationToken)
 			.ConfigureAwait(false);
 
-		foreach (var databaseDeviceDataSourceInstance in databaseDeviceDataSourceInstances)
+		foreach (var databaseDeviceDataSourceInstanceGroup in databaseDeviceDataSourceInstanceDataPoints.GroupBy(ddsidp => ddsidp.DeviceDataSourceInstance))
 		{
+			DeviceDataSourceInstanceStoreItem databaseDeviceDataSourceInstance = databaseDeviceDataSourceInstanceGroup.Key!;
 			var lastAggregationHourWrittenUtc = databaseDeviceDataSourceInstance.DataCompleteTo is null
 				? configuration.StartDateTimeUtc
 				: databaseDeviceDataSourceInstance.DataCompleteTo.Value;
@@ -191,20 +194,30 @@ internal class LowResolutionDataSync : LoopInterval
 						cancellationToken)
 					.ConfigureAwait(false);
 
+				string dataSourceName = databaseDeviceDataSourceInstance!.DeviceDataSource!.DataSource!.Name;
+
 				// Get the configuration for this DataSourceName
 				var dataSourceConfigurationItem = configuration
 					.DataSources
-					.SingleOrDefault(dsci => dsci.Name == databaseDeviceDataSourceInstance.DeviceDataSource.DataSource.Name)
-					?? throw new InvalidOperationException($"Could not find configuration for DataSource {databaseDeviceDataSourceInstance.DeviceDataSource.DataSource.Name}.");
+					.SingleOrDefault(dsci =>
+					{
+						return dsci.Name == dataSourceName;
+					})
+					?? throw new InvalidOperationException($"Could not find configuration for DataSource {dataSourceName}.");
 
-				foreach (var dataPoint in dataSourceConfigurationItem.DataPoints)
+				foreach (var databaseDeviceDataSourceInstanceDataPoint in databaseDeviceDataSourceInstanceGroup)
 				{
+					string dataPointName = databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint!.Name;
+
 					var line = graphData
 						.Lines
-						.SingleOrDefault(dp => dp.Legend == dataPoint.Name);
+						.SingleOrDefault(dp =>
+						{
+							return dp.Legend == dataPointName;
+						});
 
 					var dataPointStoreItem = dataPointStoreItems
-						.SingleOrDefault(dp => dp.Name == dataPoint.Name && dp.DataSource!.Name == dataSourceConfigurationItem.Name);
+						.SingleOrDefault(dp => dp.Name == dataPointName && dp.DataSource!.Name == dataSourceConfigurationItem.Name);
 
 					if (line is null || dataPointStoreItem is null)
 					{
@@ -214,7 +227,7 @@ internal class LowResolutionDataSync : LoopInterval
 					var bulkWriteModel = new TimeSeriesDataAggregationStoreItem
 					{
 						Id = Guid.NewGuid(),
-						DataPointId = dataPointStoreItem.Id,
+						DeviceDataSourceInstanceDataPointId = databaseDeviceDataSourceInstanceDataPoint.Id,
 						PeriodStart = startDateTime.UtcDateTime,
 						PeriodEnd = endDateTime.UtcDateTime,
 						DataCount = line.Data.Count(d => d.HasValue),

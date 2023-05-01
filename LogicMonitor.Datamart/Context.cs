@@ -19,6 +19,7 @@ public class Context : DbContext
 	public DbSet<CollectorGroupStoreItem> CollectorGroups { get; set; } = null!;
 	public DbSet<ConfigSourceStoreItem> ConfigSources { get; set; } = null!;
 	public DbSet<DataSourceStoreItem> DataSources { get; set; } = null!;
+	public DbSet<DeviceDataSourceInstanceDataPointStoreItem> DeviceDataSourceInstanceDataPoints { get; set; } = null!;
 	public DbSet<DataSourceDataPointStoreItem> DataSourceDataPoints { get; set; } = null!;
 	public DbSet<DeviceDataSourceStoreItem> DeviceDataSources { get; set; } = null!;
 	public DbSet<DeviceDataSourceInstanceStoreItem> DeviceDataSourceInstances { get; set; } = null!;
@@ -196,6 +197,7 @@ public class Context : DbContext
 			.WithMany(wsg => wsg.Websites)
 			.OnDelete(DeleteBehavior.Restrict);
 	}
+
 	protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 	{
 		if (!optionsBuilder.IsConfigured)

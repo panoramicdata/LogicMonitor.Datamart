@@ -4,7 +4,9 @@ public class TimeSeriesDataAggregationStoreItem
 {
 	public Guid Id { get; set; }
 
-	public Guid DataPointId { get; set; }
+	public Guid DeviceDataSourceInstanceDataPointId { get; set; }
+
+	public DeviceDataSourceInstanceDataPointStoreItem DeviceDataSourceInstanceDataPoint { get; set; } = null!;
 
 	public DateTimeOffset PeriodStart { get; set; }
 

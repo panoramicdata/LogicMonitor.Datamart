@@ -47,4 +47,6 @@ public class DeviceDataSourceInstanceStoreItem : IdentifiedStoreItem
 	/// If present, this is the UTC timestamp when a dimension update query was made to LogicMonitor and this instance was not returned
 	/// </summary>
 	public DateTimeOffset? LastWentMissing { get; set; }
+
+	public ICollection<DeviceDataSourceInstanceDataPointStoreItem> DeviceDataSourceInstanceDataPoints { get; set; } = null!;
 }

@@ -268,17 +268,6 @@ public class DatamartClient : LogicMonitorClient
 		return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
 	}
 
-	public Task SyncHighResolutionDataAsync(
-		int desiredMaxIntervalMinutes,
-		CancellationToken cancellationToken)
-	{
-		var sync = new HighResolutionDataSync(
-			this,
-			_configuration,
-			_loggerFactory);
-		return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
-	}
-
 	public Task SyncLowResolutionDataAsync(
 		int desiredMaxIntervalMinutes,
 		CancellationToken cancellationToken)
@@ -748,16 +737,37 @@ public class DatamartClient : LogicMonitorClient
 			?? throw new InvalidOperationException($"DataSource {dataSourceName} does not exist.");
 		// We have the DataSource
 
+		using var context = new Context(DbContextOptions);
+
+		var dataSourceDataPoints = await SyncDataSourceDataPointsAsync(
+				dataSource,
+				context,
+				dataSourceSpecification,
+				logger,
+				cancellationToken
+			)
+			.ConfigureAwait(false);
+
 		// Get the Devices that match the appliesTo function on the DataSource
 		var appliesToMatches = await GetAppliesToAsync(dataSource.AppliesTo, cancellationToken)
 			.ConfigureAwait(false);
+
+		// Further constrain the appliesToMatches if requested
+		if (!string.IsNullOrWhiteSpace(dataSourceSpecification.AppliesTo))
+		{
+			var requestedAppliesToMatches = await GetAppliesToAsync(dataSourceSpecification.AppliesTo, cancellationToken)
+				.ConfigureAwait(false);
+
+			appliesToMatches = appliesToMatches
+				.Where(a => requestedAppliesToMatches.Any(r => r.Id == a.Id))
+				.ToList();
+		}
 
 		logger.LogDebug(
 			"Syncing {DataSourceName} instances for {AppliesToMatchesCount} devices",
 			dataSourceName,
 			appliesToMatches.Count);
 
-		using var context = new Context(DbContextOptions);
 		var markedMissing = 0;
 
 		// Not all of these will have instances
@@ -854,15 +864,32 @@ public class DatamartClient : LogicMonitorClient
 					databaseDeviceDataSourceInstance.LastWentMissing = null;
 				}
 				// It is now in the database context
+
+				// Get the DeviceDataSourceInstanceDataPoints
+				var deviceDataSourceInstanceDataPoints = await context
+					.DeviceDataSourceInstanceDataPoints
+					.Where(ddsidp => ddsidp.DeviceDataSourceInstanceId == databaseDeviceDataSourceInstance.Id)
+					.ToListAsync(cancellationToken);
+
+				foreach (var dataSourceDataPoint in dataSourceDataPoints.Where(dsdp => !deviceDataSourceInstanceDataPoints.Any(ddsidp => ddsidp.DeviceDataSourceInstanceId == databaseDeviceDataSourceInstance.Id && ddsidp.DataSourceDataPointId == dsdp.Id)))
+				{
+					context
+					.DeviceDataSourceInstanceDataPoints
+					.Add(new DeviceDataSourceInstanceDataPointStoreItem
+					{
+						DeviceDataSourceInstanceId = databaseDeviceDataSourceInstance.Id,
+						DataSourceDataPointId = dataSourceDataPoint.Id
+					});
+				}
 			}
 
 			// It's possible that there are entries in the database that are no longer brought back from the API, due to instances being deleted by Active Discovery/manual deletion
 			// Get all database instances where the
 			var databaseDeviceDataSourceInstanceIdsThatShouldHaveComeBackFromApi = new HashSet<int>(await context
 					.DeviceDataSourceInstances
-					.Include(ddsi => ddsi.DeviceDataSource.DataSource)
-					.Include(ddsi => ddsi.DeviceDataSource.Device)
-					.Where(ddsi => ddsi.DeviceDataSource.Device.LogicMonitorId == device.Id && ddsi.DeviceDataSource.DataSource.LogicMonitorId == dataSource.Id && ddsi.LastWentMissing == null)
+					.Include(ddsi => ddsi.DeviceDataSource!.DataSource)
+					.Include(ddsi => ddsi.DeviceDataSource!.Device)
+					.Where(ddsi => ddsi.DeviceDataSource!.Device!.LogicMonitorId == device.Id && ddsi.DeviceDataSource!.DataSource!.LogicMonitorId == dataSource.Id && ddsi.LastWentMissing == null)
 					.Select(ddsi => ddsi.LogicMonitorId)
 					.ToListAsync(cancellationToken: cancellationToken)
 					.ConfigureAwait(false));
@@ -908,5 +935,58 @@ public class DatamartClient : LogicMonitorClient
 			added,
 			modified,
 			markedMissing);
+	}
+
+	internal async Task<List<DataSourceDataPointStoreItem>> SyncDataSourceDataPointsAsync(
+		DataSource dataSource,
+		Context context,
+		DataSourceConfigurationItem dataSourceSpecification,
+		ILogger logger,
+		CancellationToken cancellationToken
+	)
+	{
+		var logicMonitorDataSourceDataPoints = dataSource.DataSourceDataPoints;
+		var configDataSourceDataPoints = dataSourceSpecification.DataPoints;
+
+		var dataSourceDataPointStoreItems = new List<DataSourceDataPointStoreItem>();
+
+		// Make sure that they are present in the database
+		foreach (var configDataSourceDataPoint in configDataSourceDataPoints)
+		{
+			var logicMonitorDataSourceDataPoint = logicMonitorDataSourceDataPoints
+				.SingleOrDefault(dp => dp.Name == configDataSourceDataPoint.Name);
+
+			if (logicMonitorDataSourceDataPoint is null)
+			{
+				logger.LogError(
+					$"No such LogicMonitor {nameof(DataPoint)} '{{ConfigDataSourceDataPoint}}' on {nameof(DataSource)} '{{DataSourceName}}'",
+					configDataSourceDataPoint,
+					dataSource.Name
+				);
+				continue;
+			}
+			// We have a match
+
+			// Ensure that this DataPoint exists in the database
+			var databaseDataPoint = await context
+				.DataSourceDataPoints
+				.SingleOrDefaultAsync(dp => dp.Name == logicMonitorDataSourceDataPoint.Name, cancellationToken: cancellationToken)
+				.ConfigureAwait(false);
+
+			if (databaseDataPoint is null)
+			{
+				// Add it to the database
+				databaseDataPoint = MapperInstance.Map<DataSourceDataPointStoreItem>(logicMonitorDataSourceDataPoint);
+				context.DataSourceDataPoints.Add(databaseDataPoint);
+			}
+
+			dataSourceDataPointStoreItems.Add(databaseDataPoint);
+		}
+
+		await context
+			.SaveChangesAsync(cancellationToken)
+			.ConfigureAwait(false);
+
+		return dataSourceDataPointStoreItems;
 	}
 }
