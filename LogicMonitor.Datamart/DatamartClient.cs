@@ -733,16 +733,15 @@ public class DatamartClient : LogicMonitorClient
 	{
 		var dataSourceName = dataSourceSpecification.Name;
 
-		// Get the DataSource
-		var dataSource = await GetDataSourceByUniqueNameAsync(dataSourceName, cancellationToken)
-			.ConfigureAwait(false)
-			?? throw new InvalidOperationException($"DataSource {dataSourceName} does not exist.");
-		// We have the DataSource
-
 		using var context = new Context(DbContextOptions);
 
+		var databaseDataSource = await context
+			.DataSources
+			.SingleOrDefaultAsync(ds => ds.Name == dataSourceName, cancellationToken)
+			.ConfigureAwait(false) ?? throw new InvalidOperationException($"Could not find DataSource '{dataSourceName}' in database.");
+
 		var dataSourceDataPoints = await SyncDataSourceDataPointsAsync(
-				dataSource,
+				databaseDataSource,
 				context,
 				dataSourceSpecification,
 				logger,
@@ -751,7 +750,7 @@ public class DatamartClient : LogicMonitorClient
 			.ConfigureAwait(false);
 
 		// Get the Devices that match the appliesTo function on the DataSource
-		var appliesToMatches = await GetAppliesToAsync(dataSource.AppliesTo, cancellationToken)
+		var appliesToMatches = await GetAppliesToAsync(databaseDataSource.AppliesTo, cancellationToken)
 			.ConfigureAwait(false);
 
 		// Further constrain the appliesToMatches if requested
@@ -782,7 +781,7 @@ public class DatamartClient : LogicMonitorClient
 			// Get the DeviceDataSource
 			var deviceDataSource = await GetDeviceDataSourceByDeviceIdAndDataSourceIdAsync(
 					device.Id,
-					dataSource.Id,
+					databaseDataSource.LogicMonitorId,
 					cancellationToken
 				)
 				.ConfigureAwait(false);
@@ -891,7 +890,7 @@ public class DatamartClient : LogicMonitorClient
 					.DeviceDataSourceInstances
 					.Include(ddsi => ddsi.DeviceDataSource!.DataSource)
 					.Include(ddsi => ddsi.DeviceDataSource!.Device)
-					.Where(ddsi => ddsi.DeviceDataSource!.Device!.LogicMonitorId == device.Id && ddsi.DeviceDataSource!.DataSource!.LogicMonitorId == dataSource.Id && ddsi.LastWentMissing == null)
+					.Where(ddsi => ddsi.DeviceDataSource!.Device!.LogicMonitorId == device.Id && ddsi.DeviceDataSource!.DataSourceId == databaseDataSource.Id && ddsi.LastWentMissing == null)
 					.Select(ddsi => ddsi.LogicMonitorId)
 					.ToListAsync(cancellationToken: cancellationToken)
 					.ConfigureAwait(false));
@@ -940,14 +939,13 @@ public class DatamartClient : LogicMonitorClient
 	}
 
 	internal async Task<List<DataSourceDataPointStoreItem>> SyncDataSourceDataPointsAsync(
-		DataSource dataSource,
+		DataSourceStoreItem dataSource,
 		Context context,
 		DataSourceConfigurationItem dataSourceSpecification,
 		ILogger logger,
 		CancellationToken cancellationToken
 	)
 	{
-		var logicMonitorDataSourceDataPoints = dataSource.DataSourceDataPoints;
 		var configDataSourceDataPoints = dataSourceSpecification.DataPoints;
 
 		var dataSourceDataPointStoreItems = new List<DataSourceDataPointStoreItem>();
@@ -955,20 +953,6 @@ public class DatamartClient : LogicMonitorClient
 		// Make sure that they are present in the database
 		foreach (var configDataSourceDataPoint in configDataSourceDataPoints)
 		{
-			var logicMonitorDataSourceDataPoint = logicMonitorDataSourceDataPoints
-				.SingleOrDefault(dp => dp.Name == configDataSourceDataPoint.Name);
-
-			if (logicMonitorDataSourceDataPoint is null && string.IsNullOrWhiteSpace(configDataSourceDataPoint.Calculation))
-			{
-				logger.LogError(
-					$"No such LogicMonitor {nameof(DataPoint)} '{{ConfigDataSourceDataPoint}}' on {nameof(DataSource)} '{{DataSourceName}}'",
-					configDataSourceDataPoint,
-					dataSource.Name
-				);
-				continue;
-			}
-			// We have a match
-
 			// Ensure that this DataPoint exists in the database
 			var databaseDataPoint = await context
 				.DataSourceDataPoints
@@ -978,7 +962,7 @@ public class DatamartClient : LogicMonitorClient
 			if (databaseDataPoint is null)
 			{
 				// Add it to the database
-				databaseDataPoint = MapperInstance.Map<DataSourceDataPointStoreItem>(logicMonitorDataSourceDataPoint);
+				databaseDataPoint = MapperInstance.Map<DataSourceDataPointStoreItem>(configDataSourceDataPoint);
 				context.DataSourceDataPoints.Add(databaseDataPoint);
 			}
 
