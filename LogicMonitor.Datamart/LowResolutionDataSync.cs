@@ -1,5 +1,6 @@
 ﻿using LogicMonitor.Api.Data;
 using LogicMonitor.Api.Time;
+using PanoramicData.NCalcExtensions;
 
 namespace LogicMonitor.Datamart;
 
@@ -181,19 +182,6 @@ internal class LowResolutionDataSync : LoopInterval
 
 			while (endDateTime < DateTimeOffset.UtcNow)
 			{
-				var graphData = await datamartClient
-					.GetGraphDataAsync(
-						new DeviceDataSourceInstanceGraphDataRequest
-						{
-							DeviceDataSourceInstanceId = databaseDeviceDataSourceInstance.LogicMonitorId,
-							StartDateTime = startDateTime.UtcDateTime,
-							EndDateTime = endDateTime.UtcDateTime,
-							TimePeriod = TimePeriod.Zoom,
-							DataSourceGraphId = -1,
-						},
-						cancellationToken)
-					.ConfigureAwait(false);
-
 				string dataSourceName = databaseDeviceDataSourceInstance!.DeviceDataSource!.DataSource!.Name;
 
 				// Get the configuration for this DataSourceName
@@ -209,64 +197,144 @@ internal class LowResolutionDataSync : LoopInterval
 				{
 					string dataPointName = databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint!.Name;
 
-					var line = graphData
-						.Lines
-						.SingleOrDefault(dp =>
-						{
-							return dp.Legend == dataPointName;
-						});
+
+					TimeSeriesDataAggregationStoreItem bulkWriteModel;
 
 					var dataPointStoreItem = dataPointStoreItems
 						.SingleOrDefault(dp => dp.Name == dataPointName && dp.DataSource!.Name == dataSourceConfigurationItem.Name);
 
-					if (line is null || dataPointStoreItem is null)
+					var graphData = await datamartClient
+						.GetGraphDataAsync(
+							new DeviceDataSourceInstanceGraphDataRequest
+							{
+								DeviceDataSourceInstanceId = databaseDeviceDataSourceInstance.LogicMonitorId,
+								StartDateTime = startDateTime.UtcDateTime,
+								EndDateTime = endDateTime.UtcDateTime,
+								TimePeriod = TimePeriod.Zoom,
+								DataSourceGraphId = -1,
+							},
+							cancellationToken)
+						.ConfigureAwait(false);
+
+					if (string.IsNullOrWhiteSpace(databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint.Calculation))
 					{
-						continue;
+						var line = graphData
+							.Lines
+							.SingleOrDefault(dp =>
+							{
+								return dp.Legend == dataPointName;
+							});
+
+						if (line is null || dataPointStoreItem is null)
+						{
+							continue;
+						}
+
+						bulkWriteModel = new TimeSeriesDataAggregationStoreItem
+						{
+							Id = Guid.NewGuid(),
+							DeviceDataSourceInstanceDataPointId = databaseDeviceDataSourceInstanceDataPoint.Id,
+							PeriodStart = startDateTime.UtcDateTime,
+							PeriodEnd = endDateTime.UtcDateTime,
+							DataCount = line.Data.Count(d => d.HasValue),
+							NoDataCount = line.Data.Count(d => !d.HasValue),
+							Sum = line.Data.Sum(d => d ?? 0),
+							SumSquared = line.Data.Sum(d => d.HasValue ? d.Value * d.Value : 0),
+							Max = line.Data.Where(d => d != null).DefaultIfEmpty(null).Max(),
+							Min = line.Data.Where(d => d != null).DefaultIfEmpty(null).Min(),
+							First = line.Data.Where(d => d != null).DefaultIfEmpty(null).First(),
+							Last = line.Data.Where(d => d != null).DefaultIfEmpty(null).Last(),
+							FirstWithData = line.Data.Where(d => d != null).DefaultIfEmpty(null).First(),
+							LastWithData = line.Data.Where(d => d != null).DefaultIfEmpty(null).Last(),
+							Centile05 = CalculatePercentile(line.Data, 5),
+							Centile10 = CalculatePercentile(line.Data, 10),
+							Centile25 = CalculatePercentile(line.Data, 25),
+							Centile75 = CalculatePercentile(line.Data, 75),
+							Centile90 = CalculatePercentile(line.Data, 90),
+							Centile95 = CalculatePercentile(line.Data, 95),
+							NormalCount = CountAtAlertLevel(
+								line.Data,
+								dataPointStoreItem.GlobalAlertExpression,
+								CountAlertLevel.Normal
+							),
+							WarningCount = CountAtAlertLevel(
+								line.Data,
+								dataPointStoreItem.GlobalAlertExpression,
+								CountAlertLevel.Warning
+							),
+							ErrorCount = CountAtAlertLevel(
+								line.Data,
+								dataPointStoreItem.GlobalAlertExpression,
+								CountAlertLevel.Error
+							),
+							CriticalCount = CountAtAlertLevel(
+								line.Data,
+								dataPointStoreItem.GlobalAlertExpression,
+								CountAlertLevel.Critical
+							),
+						};
+					}
+					else
+					{
+						var expression = new ExtendedExpression(databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint.Calculation);
+						var lineData = graphData.TimeStamps.Select((ts, index) =>
+						{
+							expression.Parameters.Clear();
+							foreach (var line in graphData.Lines)
+							{
+								expression.Parameters.Add(line.Legend, line.Data[index]);
+							}
+
+							return expression.Evaluate() as double?;
+						})
+						.ToArray();
+
+						bulkWriteModel = new TimeSeriesDataAggregationStoreItem
+						{
+							Id = Guid.NewGuid(),
+							DeviceDataSourceInstanceDataPointId = databaseDeviceDataSourceInstanceDataPoint.Id,
+							PeriodStart = startDateTime.UtcDateTime,
+							PeriodEnd = endDateTime.UtcDateTime,
+							DataCount = lineData.Count(d => d.HasValue),
+							NoDataCount = lineData.Count(d => !d.HasValue),
+							Sum = lineData.Sum(d => d ?? 0),
+							SumSquared = lineData.Sum(d => d.HasValue ? d.Value * d.Value : 0),
+							Max = lineData.Where(d => d != null).DefaultIfEmpty(null).Max(),
+							Min = lineData.Where(d => d != null).DefaultIfEmpty(null).Min(),
+							First = lineData.Where(d => d != null).DefaultIfEmpty(null).First(),
+							Last = lineData.Where(d => d != null).DefaultIfEmpty(null).Last(),
+							FirstWithData = lineData.Where(d => d != null).DefaultIfEmpty(null).First(),
+							LastWithData = lineData.Where(d => d != null).DefaultIfEmpty(null).Last(),
+							Centile05 = CalculatePercentile(lineData, 5),
+							Centile10 = CalculatePercentile(lineData, 10),
+							Centile25 = CalculatePercentile(lineData, 25),
+							Centile75 = CalculatePercentile(lineData, 75),
+							Centile90 = CalculatePercentile(lineData, 90),
+							Centile95 = CalculatePercentile(lineData, 95),
+							NormalCount = CountAtAlertLevel(
+								lineData,
+								dataPointStoreItem.GlobalAlertExpression,
+								CountAlertLevel.Normal
+							),
+							WarningCount = CountAtAlertLevel(
+								lineData,
+								dataPointStoreItem.GlobalAlertExpression,
+								CountAlertLevel.Warning
+							),
+							ErrorCount = CountAtAlertLevel(
+								lineData,
+								dataPointStoreItem.GlobalAlertExpression,
+								CountAlertLevel.Error
+							),
+							CriticalCount = CountAtAlertLevel(
+								lineData,
+								dataPointStoreItem.GlobalAlertExpression,
+								CountAlertLevel.Critical
+							),
+						};
 					}
 
-					var bulkWriteModel = new TimeSeriesDataAggregationStoreItem
-					{
-						Id = Guid.NewGuid(),
-						DeviceDataSourceInstanceDataPointId = databaseDeviceDataSourceInstanceDataPoint.Id,
-						PeriodStart = startDateTime.UtcDateTime,
-						PeriodEnd = endDateTime.UtcDateTime,
-						DataCount = line.Data.Count(d => d.HasValue),
-						NoDataCount = line.Data.Count(d => !d.HasValue),
-						Sum = line.Data.Sum(d => d ?? 0),
-						SumSquared = line.Data.Sum(d => d.HasValue ? d.Value * d.Value : 0),
-						Max = line.Data.Where(d => d != null).DefaultIfEmpty(null).Max(),
-						Min = line.Data.Where(d => d != null).DefaultIfEmpty(null).Min(),
-						First = line.Data.Where(d => d != null).DefaultIfEmpty(null).First(),
-						Last = line.Data.Where(d => d != null).DefaultIfEmpty(null).Last(),
-						FirstWithData = line.Data.Where(d => d != null).DefaultIfEmpty(null).First(),
-						LastWithData = line.Data.Where(d => d != null).DefaultIfEmpty(null).Last(),
-						Centile05 = CalculatePercentile(line.Data, 5),
-						Centile10 = CalculatePercentile(line.Data, 10),
-						Centile25 = CalculatePercentile(line.Data, 25),
-						Centile75 = CalculatePercentile(line.Data, 75),
-						Centile90 = CalculatePercentile(line.Data, 90),
-						Centile95 = CalculatePercentile(line.Data, 95),
-						NormalCount = CountAtAlertLevel(
-							line.Data,
-							dataPointStoreItem.GlobalAlertExpression,
-							CountAlertLevel.Normal
-						),
-						WarningCount = CountAtAlertLevel(
-							line.Data,
-							dataPointStoreItem.GlobalAlertExpression,
-							CountAlertLevel.Warning
-						),
-						ErrorCount = CountAtAlertLevel(
-							line.Data,
-							dataPointStoreItem.GlobalAlertExpression,
-							CountAlertLevel.Error
-						),
-						CriticalCount = CountAtAlertLevel(
-							line.Data,
-							dataPointStoreItem.GlobalAlertExpression,
-							CountAlertLevel.Critical
-						),
-					};
+
 					aggregationsToWrite.Add(bulkWriteModel);
 				}
 

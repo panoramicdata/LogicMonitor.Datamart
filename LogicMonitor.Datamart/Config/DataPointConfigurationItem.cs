@@ -8,7 +8,7 @@ namespace LogicMonitor.Datamart.Config;
 public class DataPointConfigurationItem
 {
 	/// <summary>
-	/// The LogicMonitor unique DataSource name (or the name if it's a caluclation)
+	/// The LogicMonitor unique DataSource name (or the name if it's a calculation)
 	/// </summary>
 	public string Name { get; set; } = string.Empty;
 
@@ -21,6 +21,11 @@ public class DataPointConfigurationItem
 	/// The measurement unit to report to downstream systems
 	/// </summary>
 	public string MeasurementUnit { get; set; } = string.Empty;
+
+	/// <summary>
+	/// The
+	/// </summary>
+	public string GlobalAlertExpression { get; set; } = string.Empty;
 
 	/// <summary>
 	/// The

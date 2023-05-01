@@ -14,8 +14,6 @@ public class DataSourceStoreItem : IdentifiedStoreItem
 
 	public string AppliesTo { get; set; } = string.Empty;
 
-	public string Collector { get; set; } = string.Empty;
-
 	public string CollectionMethod { get; set; } = string.Empty;
 
 	public string AuditVersion { get; set; } = string.Empty;

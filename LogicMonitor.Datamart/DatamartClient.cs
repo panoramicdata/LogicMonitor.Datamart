@@ -466,16 +466,23 @@ public class DatamartClient : LogicMonitorClient
 						.ConfigureAwait(false);
 				}
 				// Update the measurement unit or Global Alert Expression?
-				else if (
-					databaseDataSourceDataPointModel.MeasurementUnit != configDataPoint.MeasurementUnit
-					|| databaseDataSourceDataPointModel.GlobalAlertExpression != apiDataPoint.AlertExpression)
+				else
 				{
-					// Yes
-					databaseDataSourceDataPointModel.MeasurementUnit = configDataPoint.MeasurementUnit;
-					databaseDataSourceDataPointModel.GlobalAlertExpression = apiDataPoint.AlertExpression;
-					await context
-						.SaveChangesAsync()
-						.ConfigureAwait(false);
+					string configMeasurementUnit = configDataPoint.MeasurementUnit;
+					string alertExpression = !string.IsNullOrWhiteSpace(configDataPoint.GlobalAlertExpression)
+						? configDataPoint.GlobalAlertExpression
+						: apiDataPoint.AlertExpression;
+					if (
+						databaseDataSourceDataPointModel.MeasurementUnit != configMeasurementUnit
+						|| databaseDataSourceDataPointModel.GlobalAlertExpression != alertExpression)
+					{
+						// Yes
+						databaseDataSourceDataPointModel.MeasurementUnit = configMeasurementUnit;
+						databaseDataSourceDataPointModel.GlobalAlertExpression = apiDataPoint.AlertExpression;
+						await context
+							.SaveChangesAsync()
+							.ConfigureAwait(false);
+					}
 				}
 			}
 		}
@@ -963,6 +970,7 @@ public class DatamartClient : LogicMonitorClient
 			{
 				// Add it to the database
 				databaseDataPoint = MapperInstance.Map<DataSourceDataPointStoreItem>(configDataSourceDataPoint);
+				databaseDataPoint.DataSourceId = dataSource.Id;
 				context.DataSourceDataPoints.Add(databaseDataPoint);
 			}
 
