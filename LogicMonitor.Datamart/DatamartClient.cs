@@ -441,6 +441,11 @@ public class DatamartClient : LogicMonitorClient
 					.DataSourceDataPoints
 					.SingleOrDefaultAsync(dsdp => dsdp.DataSource.Name == apiDataSource.Name && dsdp.Name == configDataPoint.Name)
 					.ConfigureAwait(false);
+
+				string alertExpression = !string.IsNullOrWhiteSpace(configDataPoint.GlobalAlertExpression)
+					? configDataPoint.GlobalAlertExpression
+					: apiDataPoint.AlertExpression;
+
 				if (databaseDataSourceDataPointModel == null)
 				{
 					// No. Add it to the database
@@ -453,7 +458,7 @@ public class DatamartClient : LogicMonitorClient
 							: apiDataPoint.Description,
 						LogicMonitorId = apiDataPoint.Id,
 						MeasurementUnit = configDataPoint.MeasurementUnit,
-						GlobalAlertExpression = apiDataPoint.AlertExpression
+						GlobalAlertExpression = alertExpression
 					});
 
 					_logger.LogInformation(
@@ -468,16 +473,12 @@ public class DatamartClient : LogicMonitorClient
 				// Update the measurement unit or Global Alert Expression?
 				else
 				{
-					string configMeasurementUnit = configDataPoint.MeasurementUnit;
-					string alertExpression = !string.IsNullOrWhiteSpace(configDataPoint.GlobalAlertExpression)
-						? configDataPoint.GlobalAlertExpression
-						: apiDataPoint.AlertExpression;
 					if (
-						databaseDataSourceDataPointModel.MeasurementUnit != configMeasurementUnit
+						databaseDataSourceDataPointModel.MeasurementUnit != configDataPoint.MeasurementUnit
 						|| databaseDataSourceDataPointModel.GlobalAlertExpression != alertExpression)
 					{
 						// Yes
-						databaseDataSourceDataPointModel.MeasurementUnit = configMeasurementUnit;
+						databaseDataSourceDataPointModel.MeasurementUnit = configDataPoint.MeasurementUnit;
 						databaseDataSourceDataPointModel.GlobalAlertExpression = apiDataPoint.AlertExpression;
 						await context
 							.SaveChangesAsync()
