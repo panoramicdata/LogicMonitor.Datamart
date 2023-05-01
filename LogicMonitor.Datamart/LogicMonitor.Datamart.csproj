@@ -38,6 +38,7 @@
 		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="7.0.0" />
 		<PackageReference Include="Nerdbank.GitVersioning" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.4" />
+		<PackageReference Include="PanoramicData.NCalcExtensions" Version="1.20.55" />
 		<PackageReference Include="SecurityCodeScan.VS2019" Version="5.6.7">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

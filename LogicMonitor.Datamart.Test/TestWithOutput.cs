@@ -53,6 +53,14 @@ public abstract class TestWithOutput
 							{
 								Name = "OutMbps",
 								MeasurementUnit = "MBps",
+							},
+						new DataPointConfigurationItem
+							{
+								Name = "OutGbps",
+								Calculation = "OutMbps / 1024",
+								MeasurementUnit = "GBps",
+								Tags = "Calculated",
+								Description = "We calculate the Outbound bandwidth in Gbps as: OutMbps / 1024",
 							}
 					},
 				},

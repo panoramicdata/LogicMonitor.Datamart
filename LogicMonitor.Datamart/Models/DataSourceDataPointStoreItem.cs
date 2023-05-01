@@ -14,5 +14,9 @@ public class DataSourceDataPointStoreItem : IdentifiedStoreItem
 
 	public string GlobalAlertExpression { get; set; } = string.Empty;
 
+	public string Calculation { get; set; } = string.Empty;
+
+	public string Tags { get; set; } = string.Empty;
+
 	public ICollection<DeviceDataSourceInstanceDataPointStoreItem> DeviceDataSourceInstanceDataPoints { get; set; } = null!;
 }

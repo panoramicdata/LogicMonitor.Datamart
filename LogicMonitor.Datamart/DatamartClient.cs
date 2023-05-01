@@ -448,7 +448,9 @@ public class DatamartClient : LogicMonitorClient
 					{
 						DataSource = databaseDataSource,
 						Name = apiDataPoint.Name,
-						Description = apiDataPoint.Description,
+						Description = string.IsNullOrWhiteSpace(configDataPoint.Description)
+							? configDataPoint.Description
+							: apiDataPoint.Description,
 						LogicMonitorId = apiDataPoint.Id,
 						MeasurementUnit = configDataPoint.MeasurementUnit,
 						GlobalAlertExpression = apiDataPoint.AlertExpression
@@ -956,7 +958,7 @@ public class DatamartClient : LogicMonitorClient
 			var logicMonitorDataSourceDataPoint = logicMonitorDataSourceDataPoints
 				.SingleOrDefault(dp => dp.Name == configDataSourceDataPoint.Name);
 
-			if (logicMonitorDataSourceDataPoint is null)
+			if (logicMonitorDataSourceDataPoint is null && string.IsNullOrWhiteSpace(configDataSourceDataPoint.Calculation))
 			{
 				logger.LogError(
 					$"No such LogicMonitor {nameof(DataPoint)} '{{ConfigDataSourceDataPoint}}' on {nameof(DataSource)} '{{DataSourceName}}'",
@@ -970,7 +972,7 @@ public class DatamartClient : LogicMonitorClient
 			// Ensure that this DataPoint exists in the database
 			var databaseDataPoint = await context
 				.DataSourceDataPoints
-				.SingleOrDefaultAsync(dp => dp.Name == logicMonitorDataSourceDataPoint.Name, cancellationToken: cancellationToken)
+				.SingleOrDefaultAsync(dp => dp.Name == configDataSourceDataPoint.Name, cancellationToken: cancellationToken)
 				.ConfigureAwait(false);
 
 			if (databaseDataPoint is null)
