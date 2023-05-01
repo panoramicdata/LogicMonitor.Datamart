@@ -202,7 +202,7 @@ public class Context : DbContext
 	{
 		if (!optionsBuilder.IsConfigured)
 		{
-			optionsBuilder.UseNpgsql("Server=127.0.0.1;Port=5432;Database=LogicMonitorDataMart_panoramicdata;User Id=postgres;Password=Pan0ramic!;");
+			optionsBuilder.UseNpgsql("Server=127.0.0.1;Port=5432;Database=XXX;User Id=XXX;Password=XXX;");
 		}
 	}
 
