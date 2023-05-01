@@ -93,29 +93,22 @@ internal class LowResolutionDataSync : LoopInterval
 		}
 	}
 
-	public static double? CalculatePercentile(double?[] values, int n)
+	public static double? CalculatePercentile(double[] values, int n)
 	{
-		// remove null values from the list
-		var nonNullValues = values
-			.Where(v => v.HasValue)
-			.Select(v => v.Value)
-			.OrderBy(v => v)
-			.ToList();
-
 		// return null if the list is empty
-		if (nonNullValues.Count == 0)
+		if (values.Length == 0)
 		{
 			return null;
 		}
 
 		// calculate the index of the value at the nth percentile
-		double index = ((n / 100.0) * (nonNullValues.Count - 1));
+		double index = ((n / 100.0) * (values.Length - 1));
 
 		// check if the index is an integer
 		if (index % 1 == 0)
 		{
 			// if the index is an integer, return the corresponding value
-			return nonNullValues[(int)index];
+			return values[(int)index];
 		}
 		else
 		{
@@ -123,8 +116,8 @@ internal class LowResolutionDataSync : LoopInterval
 			int floorIndex = (int)Math.Floor(index);
 			int ceilIndex = (int)Math.Ceiling(index);
 
-			double floorValue = nonNullValues[floorIndex];
-			double ceilValue = nonNullValues[ceilIndex];
+			double floorValue = values[floorIndex];
+			double ceilValue = values[ceilIndex];
 
 			return floorValue + ((index - floorIndex) * (ceilValue - floorValue));
 		}
@@ -180,23 +173,27 @@ internal class LowResolutionDataSync : LoopInterval
 			var startDateTime = lastAggregationHourWrittenUtc;
 			var endDateTime = lastAggregationHourWrittenUtc.AddMonths(1);
 
-			while (endDateTime < DateTimeOffset.UtcNow)
+			if (endDateTime >= utcNow)
 			{
-				string dataSourceName = databaseDeviceDataSourceInstance!.DeviceDataSource!.DataSource!.Name;
+				continue;
+			}
 
-				// Get the configuration for this DataSourceName
-				var dataSourceConfigurationItem = configuration
-					.DataSources
-					.SingleOrDefault(dsci =>
-					{
-						return dsci.Name == dataSourceName;
-					})
-					?? throw new InvalidOperationException($"Could not find configuration for DataSource {dataSourceName}.");
+			string dataSourceName = databaseDeviceDataSourceInstance!.DeviceDataSource!.DataSource!.Name;
 
+			// Get the configuration for this DataSourceName
+			var dataSourceConfigurationItem = configuration
+				.DataSources
+				.SingleOrDefault(dsci =>
+				{
+					return dsci.Name == dataSourceName;
+				})
+				?? throw new InvalidOperationException($"Could not find configuration for DataSource {dataSourceName}.");
+
+			while (endDateTime < utcNow)
+			{
 				foreach (var databaseDeviceDataSourceInstanceDataPoint in databaseDeviceDataSourceInstanceGroup)
 				{
 					string dataPointName = databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint!.Name;
-
 
 					TimeSeriesDataAggregationStoreItem bulkWriteModel;
 
@@ -230,6 +227,13 @@ internal class LowResolutionDataSync : LoopInterval
 							continue;
 						}
 
+						// Calculate and sort non-null values
+						var sortedNonNullValues = line.Data
+							.Where(v => v.HasValue)
+							.Select(v => v.Value)
+							.OrderBy(v => v)
+							.ToArray();
+
 						bulkWriteModel = new TimeSeriesDataAggregationStoreItem
 						{
 							Id = Guid.NewGuid(),
@@ -246,12 +250,12 @@ internal class LowResolutionDataSync : LoopInterval
 							Last = line.Data.Where(d => d != null).DefaultIfEmpty(null).Last(),
 							FirstWithData = line.Data.Where(d => d != null).DefaultIfEmpty(null).First(),
 							LastWithData = line.Data.Where(d => d != null).DefaultIfEmpty(null).Last(),
-							Centile05 = CalculatePercentile(line.Data, 5),
-							Centile10 = CalculatePercentile(line.Data, 10),
-							Centile25 = CalculatePercentile(line.Data, 25),
-							Centile75 = CalculatePercentile(line.Data, 75),
-							Centile90 = CalculatePercentile(line.Data, 90),
-							Centile95 = CalculatePercentile(line.Data, 95),
+							Centile05 = CalculatePercentile(sortedNonNullValues, 5),
+							Centile10 = CalculatePercentile(sortedNonNullValues, 10),
+							Centile25 = CalculatePercentile(sortedNonNullValues, 25),
+							Centile75 = CalculatePercentile(sortedNonNullValues, 75),
+							Centile90 = CalculatePercentile(sortedNonNullValues, 90),
+							Centile95 = CalculatePercentile(sortedNonNullValues, 95),
 							NormalCount = CountAtAlertLevel(
 								line.Data,
 								dataPointStoreItem.GlobalAlertExpression,
@@ -289,6 +293,13 @@ internal class LowResolutionDataSync : LoopInterval
 						})
 						.ToArray();
 
+						// Calculate and sort non-null values
+						var sortedNonNullValues = lineData
+							.Where(v => v.HasValue)
+							.Select(v => v.Value)
+							.OrderBy(v => v)
+							.ToArray();
+
 						bulkWriteModel = new TimeSeriesDataAggregationStoreItem
 						{
 							Id = Guid.NewGuid(),
@@ -305,12 +316,12 @@ internal class LowResolutionDataSync : LoopInterval
 							Last = lineData.Where(d => d != null).DefaultIfEmpty(null).Last(),
 							FirstWithData = lineData.Where(d => d != null).DefaultIfEmpty(null).First(),
 							LastWithData = lineData.Where(d => d != null).DefaultIfEmpty(null).Last(),
-							Centile05 = CalculatePercentile(lineData, 5),
-							Centile10 = CalculatePercentile(lineData, 10),
-							Centile25 = CalculatePercentile(lineData, 25),
-							Centile75 = CalculatePercentile(lineData, 75),
-							Centile90 = CalculatePercentile(lineData, 90),
-							Centile95 = CalculatePercentile(lineData, 95),
+							Centile05 = CalculatePercentile(sortedNonNullValues, 5),
+							Centile10 = CalculatePercentile(sortedNonNullValues, 10),
+							Centile25 = CalculatePercentile(sortedNonNullValues, 25),
+							Centile75 = CalculatePercentile(sortedNonNullValues, 75),
+							Centile90 = CalculatePercentile(sortedNonNullValues, 90),
+							Centile95 = CalculatePercentile(sortedNonNullValues, 95),
 							NormalCount = CountAtAlertLevel(
 								lineData,
 								dataPointStoreItem.GlobalAlertExpression,
