@@ -19,6 +19,7 @@ public class Context : DbContext
 	public DbSet<CollectorGroupStoreItem> CollectorGroups { get; set; } = null!;
 	public DbSet<ConfigSourceStoreItem> ConfigSources { get; set; } = null!;
 	public DbSet<DataSourceStoreItem> DataSources { get; set; } = null!;
+	public DbSet<DeviceDataSourceInstanceDataPointStoreItem> DeviceDataSourceInstanceDataPoints { get; set; } = null!;
 	public DbSet<DataSourceDataPointStoreItem> DataSourceDataPoints { get; set; } = null!;
 	public DbSet<DeviceDataSourceStoreItem> DeviceDataSources { get; set; } = null!;
 	public DbSet<DeviceDataSourceInstanceStoreItem> DeviceDataSourceInstances { get; set; } = null!;
@@ -196,11 +197,12 @@ public class Context : DbContext
 			.WithMany(wsg => wsg.Websites)
 			.OnDelete(DeleteBehavior.Restrict);
 	}
+
 	protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 	{
 		if (!optionsBuilder.IsConfigured)
 		{
-			optionsBuilder.UseNpgsql("Server=127.0.0.1;Port=5432;Database=XXX;User Id=XXX;Password=XXX;");
+			optionsBuilder.UseNpgsql("Server=127.0.0.1;Port=5432;Database=LogicMonitorDataMart_panoramicdata;User Id=postgres;Password=Pan0ramic!;");
 		}
 	}
 

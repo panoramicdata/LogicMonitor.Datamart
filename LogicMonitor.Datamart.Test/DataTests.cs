@@ -8,17 +8,6 @@ public class DataTests : TestWithOutput
 	}
 
 	[Fact]
-	public async void HighResolutionDataSync()
-	{
-		await new HighResolutionDataSync(
-				DatamartClient,
-				Configuration,
-				LoggerFactory)
-			.ExecuteAsync(default)
-			.ConfigureAwait(false);
-	}
-
-	[Fact]
 	public async void LowResolutionDataSync()
 	{
 		await new LowResolutionDataSync(

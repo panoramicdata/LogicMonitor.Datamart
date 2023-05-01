@@ -2,11 +2,9 @@
 
 public class DataSourceDataPointStoreItem : IdentifiedStoreItem
 {
-	// Navigation properties
-	public DataSourceStoreItem? DataSource { get; set; }
-
-	// Database properties
 	public Guid DataSourceId { get; set; }
+
+	public DataSourceStoreItem DataSource { get; set; } = null!;
 
 	public string Name { get; set; } = string.Empty;
 
@@ -15,4 +13,6 @@ public class DataSourceDataPointStoreItem : IdentifiedStoreItem
 	public string MeasurementUnit { get; set; } = string.Empty;
 
 	public string GlobalAlertExpression { get; set; } = string.Empty;
+
+	public ICollection<DeviceDataSourceInstanceDataPointStoreItem> DeviceDataSourceInstanceDataPoints { get; set; } = null!;
 }

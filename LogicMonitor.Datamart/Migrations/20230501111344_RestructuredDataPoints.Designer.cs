@@ -3,6 +3,7 @@ using System;
 using LogicMonitor.Datamart;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LogicMonitor.Datamart.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20230501111344_RestructuredDataPoints")]
+    partial class RestructuredDataPoints
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -82,7 +85,7 @@ namespace LogicMonitor.Datamart.Migrations
 
                     b.HasIndex("EscalationChainId");
 
-                    b.ToTable("AlertRules", (string)null);
+                    b.ToTable("AlertRules");
                 });
 
             modelBuilder.Entity("LogicMonitor.Datamart.Models.AlertStoreItem", b =>
@@ -406,7 +409,7 @@ namespace LogicMonitor.Datamart.Migrations
 
                     NpgsqlIndexBuilderExtensions.IncludeProperties(b.HasIndex("StartOnSeconds", "EndOnSeconds", "IsCleared", "InScheduledDownTime", "MonitorObjectGroup0Id", "MonitorObjectGroup1Id", "MonitorObjectGroup2Id", "MonitorObjectGroup3Id", "MonitorObjectGroup4Id", "MonitorObjectGroup5Id", "MonitorObjectGroup6Id", "MonitorObjectGroup7Id", "MonitorObjectGroup8Id", "MonitorObjectGroup9Id"), new[] { "Id", "Severity", "ClearValue", "MonitorObjectId", "ResourceTemplateName", "InstanceId", "InstanceName" });
 
-                    b.ToTable("Alerts", (string)null);
+                    b.ToTable("Alerts");
                 });
 
             modelBuilder.Entity("LogicMonitor.Datamart.Models.CollectorGroupStoreItem", b =>
@@ -443,7 +446,7 @@ namespace LogicMonitor.Datamart.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("CollectorGroups", (string)null);
+                    b.ToTable("CollectorGroups");
                 });
 
             modelBuilder.Entity("LogicMonitor.Datamart.Models.CollectorStoreItem", b =>
@@ -668,7 +671,7 @@ namespace LogicMonitor.Datamart.Migrations
 
                     b.HasIndex("CollectorGroupId");
 
-                    b.ToTable("Collectors", (string)null);
+                    b.ToTable("Collectors");
                 });
 
             modelBuilder.Entity("LogicMonitor.Datamart.Models.ConfigSourceStoreItem", b =>
@@ -699,7 +702,7 @@ namespace LogicMonitor.Datamart.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ConfigSources", (string)null);
+                    b.ToTable("ConfigSources");
                 });
 
             modelBuilder.Entity("LogicMonitor.Datamart.Models.DataSourceDataPointStoreItem", b =>
@@ -743,7 +746,7 @@ namespace LogicMonitor.Datamart.Migrations
 
                     b.HasIndex("DataSourceId");
 
-                    b.ToTable("DataSourceDataPoints", (string)null);
+                    b.ToTable("DataSourceDataPoints");
                 });
 
             modelBuilder.Entity("LogicMonitor.Datamart.Models.DataSourceStoreItem", b =>
@@ -774,7 +777,7 @@ namespace LogicMonitor.Datamart.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("DataSources", (string)null);
+                    b.ToTable("DataSources");
                 });
 
             modelBuilder.Entity("LogicMonitor.Datamart.Models.DeviceDataSourceInstanceDataPointStoreItem", b =>
@@ -812,7 +815,7 @@ namespace LogicMonitor.Datamart.Migrations
 
                     b.HasIndex("DeviceDataSourceInstanceId");
 
-                    b.ToTable("DeviceDataSourceInstanceDataPoints", (string)null);
+                    b.ToTable("DeviceDataSourceInstanceDataPoints");
                 });
 
             modelBuilder.Entity("LogicMonitor.Datamart.Models.DeviceDataSourceInstanceStoreItem", b =>
@@ -897,7 +900,7 @@ namespace LogicMonitor.Datamart.Migrations
 
                     b.HasIndex("LastWentMissing");
 
-                    b.ToTable("DeviceDataSourceInstances", (string)null);
+                    b.ToTable("DeviceDataSourceInstances");
                 });
 
             modelBuilder.Entity("LogicMonitor.Datamart.Models.DeviceDataSourceStoreItem", b =>
@@ -939,7 +942,7 @@ namespace LogicMonitor.Datamart.Migrations
 
                     b.HasIndex("DeviceId");
 
-                    b.ToTable("DeviceDataSources", (string)null);
+                    b.ToTable("DeviceDataSources");
                 });
 
             modelBuilder.Entity("LogicMonitor.Datamart.Models.DeviceGroupStoreItem", b =>
@@ -1088,7 +1091,7 @@ namespace LogicMonitor.Datamart.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("DeviceGroups", (string)null);
+                    b.ToTable("DeviceGroups");
                 });
 
             modelBuilder.Entity("LogicMonitor.Datamart.Models.DeviceStoreItem", b =>
@@ -1304,7 +1307,7 @@ namespace LogicMonitor.Datamart.Migrations
 
                     b.HasIndex("PreferredCollectorId");
 
-                    b.ToTable("Devices", (string)null);
+                    b.ToTable("Devices");
                 });
 
             modelBuilder.Entity("LogicMonitor.Datamart.Models.EscalationChainStoreItem", b =>
@@ -1347,7 +1350,7 @@ namespace LogicMonitor.Datamart.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("EscalationChains", (string)null);
+                    b.ToTable("EscalationChains");
                 });
 
             modelBuilder.Entity("LogicMonitor.Datamart.Models.EventSourceStoreItem", b =>
@@ -1378,7 +1381,7 @@ namespace LogicMonitor.Datamart.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("EventSources", (string)null);
+                    b.ToTable("EventSources");
                 });
 
             modelBuilder.Entity("LogicMonitor.Datamart.Models.LogStoreItem", b =>
@@ -1421,7 +1424,7 @@ namespace LogicMonitor.Datamart.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("LogItems", (string)null);
+                    b.ToTable("LogItems");
                 });
 
             modelBuilder.Entity("LogicMonitor.Datamart.Models.MonitorObjectGroupStoreItem", b =>
@@ -1448,7 +1451,7 @@ namespace LogicMonitor.Datamart.Migrations
 
                     b.HasIndex("FullPath", "MonitoredObjectType");
 
-                    b.ToTable("MonitorObjectGroups", (string)null);
+                    b.ToTable("MonitorObjectGroups");
                 });
 
             modelBuilder.Entity("LogicMonitor.Datamart.Models.TimeSeriesDataAggregationStoreItem", b =>
@@ -1530,7 +1533,7 @@ namespace LogicMonitor.Datamart.Migrations
 
                     b.HasIndex("DeviceDataSourceInstanceDataPointId");
 
-                    b.ToTable("TimeSeriesDataAggregations", (string)null);
+                    b.ToTable("TimeSeriesDataAggregations");
                 });
 
             modelBuilder.Entity("LogicMonitor.Datamart.Models.WebsiteGroupStoreItem", b =>
@@ -1604,7 +1607,7 @@ namespace LogicMonitor.Datamart.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("WebsiteGroups", (string)null);
+                    b.ToTable("WebsiteGroups");
                 });
 
             modelBuilder.Entity("LogicMonitor.Datamart.Models.WebsiteStoreItem", b =>
@@ -1737,7 +1740,7 @@ namespace LogicMonitor.Datamart.Migrations
 
                     b.HasIndex("WebsiteGroupId");
 
-                    b.ToTable("Websites", (string)null);
+                    b.ToTable("Websites");
                 });
 
             modelBuilder.Entity("LogicMonitor.Datamart.Models.AlertRuleStoreItem", b =>
