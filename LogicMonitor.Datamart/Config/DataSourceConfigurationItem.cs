@@ -5,7 +5,7 @@ public class DataSourceConfigurationItem
 	/// <summary>
 	/// The DataSource name
 	/// </summary>
-	public string Name { get; set; }
+	public string Name { get; set; } = string.Empty;
 
 	///// <summary>
 	///// The aggregation duration override in minutes
@@ -16,7 +16,7 @@ public class DataSourceConfigurationItem
 	/// <summary>
 	/// The list of DataPoints which we are interested in for this DataSource
 	/// </summary>
-	public List<DataPointConfigurationItem> DataPoints { get; set; }
+	public List<DataPointConfigurationItem> DataPoints { get; set; } = new();
 
 	public string AppliesTo { get; set; } = string.Empty;
 

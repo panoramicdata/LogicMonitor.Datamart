@@ -17,6 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		LICENSE = LICENSE
 		LogicMonitor.Datamart.sln.vsspell = LogicMonitor.Datamart.sln.vsspell
 		LogicMonitor.Datamart.sln.vsspell.dic = LogicMonitor.Datamart.sln.vsspell.dic
+		Migrations.md = Migrations.md
 		README.md = README.md
 		Rosylnator.ruleset = Rosylnator.ruleset
 		version.json = version.json

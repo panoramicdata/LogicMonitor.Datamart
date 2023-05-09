@@ -743,6 +743,10 @@ namespace LogicMonitor.Datamart.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("PercentageAvailabilityCalculation")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Tags")
                         .IsRequired()
                         .HasColumnType("text");
@@ -1495,6 +1499,9 @@ namespace LogicMonitor.Datamart.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<double?>("AvailabilityPercent")
+                        .HasColumnType("double precision");
+
                     b.Property<double?>("Centile05")
                         .HasColumnType("double precision");
 
@@ -1502,6 +1509,9 @@ namespace LogicMonitor.Datamart.Migrations
                         .HasColumnType("double precision");
 
                     b.Property<double?>("Centile25")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("Centile50")
                         .HasColumnType("double precision");
 
                     b.Property<double?>("Centile75")

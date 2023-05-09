@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LogicMonitor.Datamart.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20230418234057_InitialMigration")]
+    [Migration("20230509092429_InitialMigration")]
     partial class InitialMigration
     {
         /// <inheritdoc />
@@ -20,7 +20,7 @@ namespace LogicMonitor.Datamart.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.4")
+                .HasAnnotation("ProductVersion", "7.0.5")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -711,6 +711,10 @@ namespace LogicMonitor.Datamart.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Calculation")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<Guid>("DataSourceId")
                         .HasColumnType("uuid");
 
@@ -742,6 +746,14 @@ namespace LogicMonitor.Datamart.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("PercentageAvailabilityCalculation")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Tags")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("DataSourceId");
@@ -754,6 +766,18 @@ namespace LogicMonitor.Datamart.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<string>("AppliesTo")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("AuditVersion")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CollectionMethod")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<DateTimeOffset>("DatamartCreated")
                         .HasColumnType("timestamp with time zone");
@@ -768,6 +792,13 @@ namespace LogicMonitor.Datamart.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("HasMultiInstances")
+                        .HasColumnType("boolean");
+
                     b.Property<int>("LogicMonitorId")
                         .HasColumnType("integer");
 
@@ -775,9 +806,58 @@ namespace LogicMonitor.Datamart.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("PollingIntervalSeconds")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Technology")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Version")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.ToTable("DataSources");
+                });
+
+            modelBuilder.Entity("LogicMonitor.Datamart.Models.DeviceDataSourceInstanceDataPointStoreItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("DataSourceDataPointId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("DataSourceStoreItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("DatamartCreated")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("DatamartLastModified")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("DatamartLastObserved")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("DeviceDataSourceInstanceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("LogicMonitorId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DataSourceDataPointId");
+
+                    b.HasIndex("DataSourceStoreItemId");
+
+                    b.HasIndex("DeviceDataSourceInstanceId");
+
+                    b.ToTable("DeviceDataSourceInstanceDataPoints");
                 });
 
             modelBuilder.Entity("LogicMonitor.Datamart.Models.DeviceDataSourceInstanceStoreItem", b =>
@@ -1422,6 +1502,9 @@ namespace LogicMonitor.Datamart.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<double?>("AvailabilityPercent")
+                        .HasColumnType("double precision");
+
                     b.Property<double?>("Centile05")
                         .HasColumnType("double precision");
 
@@ -1429,6 +1512,9 @@ namespace LogicMonitor.Datamart.Migrations
                         .HasColumnType("double precision");
 
                     b.Property<double?>("Centile25")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("Centile50")
                         .HasColumnType("double precision");
 
                     b.Property<double?>("Centile75")
@@ -1446,7 +1532,7 @@ namespace LogicMonitor.Datamart.Migrations
                     b.Property<int>("DataCount")
                         .HasColumnType("integer");
 
-                    b.Property<Guid>("DataPointId")
+                    b.Property<Guid>("DeviceDataSourceInstanceDataPointId")
                         .HasColumnType("uuid");
 
                     b.Property<int?>("ErrorCount")
@@ -1492,6 +1578,8 @@ namespace LogicMonitor.Datamart.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DeviceDataSourceInstanceDataPointId");
 
                     b.ToTable("TimeSeriesDataAggregations");
                 });
@@ -1808,12 +1896,35 @@ namespace LogicMonitor.Datamart.Migrations
             modelBuilder.Entity("LogicMonitor.Datamart.Models.DataSourceDataPointStoreItem", b =>
                 {
                     b.HasOne("LogicMonitor.Datamart.Models.DataSourceStoreItem", "DataSource")
-                        .WithMany("DataPoints")
+                        .WithMany()
                         .HasForeignKey("DataSourceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("DataSource");
+                });
+
+            modelBuilder.Entity("LogicMonitor.Datamart.Models.DeviceDataSourceInstanceDataPointStoreItem", b =>
+                {
+                    b.HasOne("LogicMonitor.Datamart.Models.DataSourceDataPointStoreItem", "DataSourceDataPoint")
+                        .WithMany("DeviceDataSourceInstanceDataPoints")
+                        .HasForeignKey("DataSourceDataPointId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LogicMonitor.Datamart.Models.DataSourceStoreItem", null)
+                        .WithMany("DataPoints")
+                        .HasForeignKey("DataSourceStoreItemId");
+
+                    b.HasOne("LogicMonitor.Datamart.Models.DeviceDataSourceInstanceStoreItem", "DeviceDataSourceInstance")
+                        .WithMany("DeviceDataSourceInstanceDataPoints")
+                        .HasForeignKey("DeviceDataSourceInstanceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DataSourceDataPoint");
+
+                    b.Navigation("DeviceDataSourceInstance");
                 });
 
             modelBuilder.Entity("LogicMonitor.Datamart.Models.DeviceDataSourceInstanceStoreItem", b =>
@@ -1855,6 +1966,17 @@ namespace LogicMonitor.Datamart.Migrations
                     b.Navigation("PreferredCollector");
                 });
 
+            modelBuilder.Entity("LogicMonitor.Datamart.Models.TimeSeriesDataAggregationStoreItem", b =>
+                {
+                    b.HasOne("LogicMonitor.Datamart.Models.DeviceDataSourceInstanceDataPointStoreItem", "DeviceDataSourceInstanceDataPoint")
+                        .WithMany("TimeSeriesDataAggregations")
+                        .HasForeignKey("DeviceDataSourceInstanceDataPointId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DeviceDataSourceInstanceDataPoint");
+                });
+
             modelBuilder.Entity("LogicMonitor.Datamart.Models.WebsiteStoreItem", b =>
                 {
                     b.HasOne("LogicMonitor.Datamart.Models.WebsiteGroupStoreItem", "WebsiteGroup")
@@ -1881,11 +2003,26 @@ namespace LogicMonitor.Datamart.Migrations
                     b.Navigation("Devices");
                 });
 
+            modelBuilder.Entity("LogicMonitor.Datamart.Models.DataSourceDataPointStoreItem", b =>
+                {
+                    b.Navigation("DeviceDataSourceInstanceDataPoints");
+                });
+
             modelBuilder.Entity("LogicMonitor.Datamart.Models.DataSourceStoreItem", b =>
                 {
                     b.Navigation("DataPoints");
 
                     b.Navigation("DeviceDataSources");
+                });
+
+            modelBuilder.Entity("LogicMonitor.Datamart.Models.DeviceDataSourceInstanceDataPointStoreItem", b =>
+                {
+                    b.Navigation("TimeSeriesDataAggregations");
+                });
+
+            modelBuilder.Entity("LogicMonitor.Datamart.Models.DeviceDataSourceInstanceStoreItem", b =>
+                {
+                    b.Navigation("DeviceDataSourceInstanceDataPoints");
                 });
 
             modelBuilder.Entity("LogicMonitor.Datamart.Models.DeviceDataSourceStoreItem", b =>

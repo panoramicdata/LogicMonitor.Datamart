@@ -65,7 +65,7 @@ public class DataSourceProfile : Profile
 				dest => dest.AutoDiscoveryWindowsScript,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.Collector,
+				dest => dest.CollectionMethod,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.CollectionMethod,

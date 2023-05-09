@@ -7,6 +7,7 @@ namespace LogicMonitor.Datamart;
 internal class LowResolutionDataSync : LoopInterval
 {
 	private static readonly TimeSpan EightHours = TimeSpan.FromHours(8);
+	private const int DeviceDownTimeWindowSeconds = 300;
 
 	private readonly DatamartClient _datamartClient;
 	private readonly Configuration _configuration;
@@ -156,6 +157,10 @@ internal class LowResolutionDataSync : LoopInterval
 			.ToListAsync(cancellationToken)
 			.ConfigureAwait(false);
 
+		// Disable caching
+		var oldCacheState = datamartClient.UseCache;
+		datamartClient.UseCache = false;
+
 		foreach (var databaseDeviceDataSourceInstanceGroup in databaseDeviceDataSourceInstanceDataPoints.GroupBy(ddsidp => ddsidp.DeviceDataSourceInstance))
 		{
 			DeviceDataSourceInstanceStoreItem databaseDeviceDataSourceInstance = databaseDeviceDataSourceInstanceGroup.Key!;
@@ -191,6 +196,7 @@ internal class LowResolutionDataSync : LoopInterval
 
 			while (endDateTime < utcNow)
 			{
+
 				foreach (var databaseDeviceDataSourceInstanceDataPoint in databaseDeviceDataSourceInstanceGroup)
 				{
 					string dataPointName = databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint!.Name;
@@ -213,9 +219,10 @@ internal class LowResolutionDataSync : LoopInterval
 							cancellationToken)
 						.ConfigureAwait(false);
 
+					Line? line;
 					if (string.IsNullOrWhiteSpace(databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint.Calculation))
 					{
-						var line = graphData
+						line = graphData
 							.Lines
 							.SingleOrDefault(dp =>
 							{
@@ -226,62 +233,12 @@ internal class LowResolutionDataSync : LoopInterval
 						{
 							continue;
 						}
-
-						// Calculate and sort non-null values
-						var sortedNonNullValues = line.Data
-							.Where(v => v.HasValue)
-							.Select(v => v.Value)
-							.OrderBy(v => v)
-							.ToArray();
-
-						bulkWriteModel = new TimeSeriesDataAggregationStoreItem
-						{
-							Id = Guid.NewGuid(),
-							DeviceDataSourceInstanceDataPointId = databaseDeviceDataSourceInstanceDataPoint.Id,
-							PeriodStart = startDateTime.UtcDateTime,
-							PeriodEnd = endDateTime.UtcDateTime,
-							DataCount = line.Data.Count(d => d.HasValue),
-							NoDataCount = line.Data.Count(d => !d.HasValue),
-							Sum = line.Data.Sum(d => d ?? 0),
-							SumSquared = line.Data.Sum(d => d.HasValue ? d.Value * d.Value : 0),
-							Max = line.Data.Where(d => d != null).DefaultIfEmpty(null).Max(),
-							Min = line.Data.Where(d => d != null).DefaultIfEmpty(null).Min(),
-							First = line.Data.Where(d => d != null).DefaultIfEmpty(null).First(),
-							Last = line.Data.Where(d => d != null).DefaultIfEmpty(null).Last(),
-							FirstWithData = line.Data.Where(d => d != null).DefaultIfEmpty(null).First(),
-							LastWithData = line.Data.Where(d => d != null).DefaultIfEmpty(null).Last(),
-							Centile05 = CalculatePercentile(sortedNonNullValues, 5),
-							Centile10 = CalculatePercentile(sortedNonNullValues, 10),
-							Centile25 = CalculatePercentile(sortedNonNullValues, 25),
-							Centile75 = CalculatePercentile(sortedNonNullValues, 75),
-							Centile90 = CalculatePercentile(sortedNonNullValues, 90),
-							Centile95 = CalculatePercentile(sortedNonNullValues, 95),
-							NormalCount = CountAtAlertLevel(
-								line.Data,
-								dataPointStoreItem.GlobalAlertExpression,
-								CountAlertLevel.Normal
-							),
-							WarningCount = CountAtAlertLevel(
-								line.Data,
-								dataPointStoreItem.GlobalAlertExpression,
-								CountAlertLevel.Warning
-							),
-							ErrorCount = CountAtAlertLevel(
-								line.Data,
-								dataPointStoreItem.GlobalAlertExpression,
-								CountAlertLevel.Error
-							),
-							CriticalCount = CountAtAlertLevel(
-								line.Data,
-								dataPointStoreItem.GlobalAlertExpression,
-								CountAlertLevel.Critical
-							),
-						};
 					}
 					else
 					{
 						var expression = new ExtendedExpression(databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint.Calculation);
-						var lineData = graphData.TimeStamps.Select((ts, index) =>
+						line = new Line();
+						line.Data = graphData.TimeStamps.Select((ts, index) =>
 						{
 							expression.Parameters.Clear();
 							foreach (var line in graphData.Lines)
@@ -292,59 +249,64 @@ internal class LowResolutionDataSync : LoopInterval
 							return expression.Evaluate() as double?;
 						})
 						.ToArray();
-
-						// Calculate and sort non-null values
-						var sortedNonNullValues = lineData
-							.Where(v => v.HasValue)
-							.Select(v => v.Value)
-							.OrderBy(v => v)
-							.ToArray();
-
-						bulkWriteModel = new TimeSeriesDataAggregationStoreItem
-						{
-							Id = Guid.NewGuid(),
-							DeviceDataSourceInstanceDataPointId = databaseDeviceDataSourceInstanceDataPoint.Id,
-							PeriodStart = startDateTime.UtcDateTime,
-							PeriodEnd = endDateTime.UtcDateTime,
-							DataCount = lineData.Count(d => d.HasValue),
-							NoDataCount = lineData.Count(d => !d.HasValue),
-							Sum = lineData.Sum(d => d ?? 0),
-							SumSquared = lineData.Sum(d => d.HasValue ? d.Value * d.Value : 0),
-							Max = lineData.Where(d => d != null).DefaultIfEmpty(null).Max(),
-							Min = lineData.Where(d => d != null).DefaultIfEmpty(null).Min(),
-							First = lineData.Where(d => d != null).DefaultIfEmpty(null).First(),
-							Last = lineData.Where(d => d != null).DefaultIfEmpty(null).Last(),
-							FirstWithData = lineData.Where(d => d != null).DefaultIfEmpty(null).First(),
-							LastWithData = lineData.Where(d => d != null).DefaultIfEmpty(null).Last(),
-							Centile05 = CalculatePercentile(sortedNonNullValues, 5),
-							Centile10 = CalculatePercentile(sortedNonNullValues, 10),
-							Centile25 = CalculatePercentile(sortedNonNullValues, 25),
-							Centile75 = CalculatePercentile(sortedNonNullValues, 75),
-							Centile90 = CalculatePercentile(sortedNonNullValues, 90),
-							Centile95 = CalculatePercentile(sortedNonNullValues, 95),
-							NormalCount = CountAtAlertLevel(
-								lineData,
-								dataPointStoreItem.GlobalAlertExpression,
-								CountAlertLevel.Normal
-							),
-							WarningCount = CountAtAlertLevel(
-								lineData,
-								dataPointStoreItem.GlobalAlertExpression,
-								CountAlertLevel.Warning
-							),
-							ErrorCount = CountAtAlertLevel(
-								lineData,
-								dataPointStoreItem.GlobalAlertExpression,
-								CountAlertLevel.Error
-							),
-							CriticalCount = CountAtAlertLevel(
-								lineData,
-								dataPointStoreItem.GlobalAlertExpression,
-								CountAlertLevel.Critical
-							),
-						};
 					}
 
+					// Calculate and sort non-null values
+					var sortedNonNullValues = line.Data
+						.Where(v => v.HasValue)
+						.Select(v => v.Value)
+						.OrderBy(v => v)
+						.ToArray();
+
+					bulkWriteModel = new TimeSeriesDataAggregationStoreItem
+					{
+						Id = Guid.NewGuid(),
+						DeviceDataSourceInstanceDataPointId = databaseDeviceDataSourceInstanceDataPoint.Id,
+						PeriodStart = startDateTime.UtcDateTime,
+						PeriodEnd = endDateTime.UtcDateTime,
+						DataCount = line.Data.Count(d => d.HasValue),
+						NoDataCount = line.Data.Count(d => !d.HasValue),
+						Sum = line.Data.Sum(d => d ?? 0),
+						SumSquared = line.Data.Sum(d => d.HasValue ? d.Value * d.Value : 0),
+						Max = line.Data.Where(d => d != null).DefaultIfEmpty(null).Max(),
+						Min = line.Data.Where(d => d != null).DefaultIfEmpty(null).Min(),
+						First = line.Data.Where(d => d != null).DefaultIfEmpty(null).First(),
+						Last = line.Data.Where(d => d != null).DefaultIfEmpty(null).Last(),
+						FirstWithData = line.Data.Where(d => d != null).DefaultIfEmpty(null).First(),
+						LastWithData = line.Data.Where(d => d != null).DefaultIfEmpty(null).Last(),
+						Centile05 = CalculatePercentile(sortedNonNullValues, 5),
+						Centile10 = CalculatePercentile(sortedNonNullValues, 10),
+						Centile25 = CalculatePercentile(sortedNonNullValues, 25),
+						Centile50 = CalculatePercentile(sortedNonNullValues, 50),
+						Centile75 = CalculatePercentile(sortedNonNullValues, 75),
+						Centile90 = CalculatePercentile(sortedNonNullValues, 90),
+						Centile95 = CalculatePercentile(sortedNonNullValues, 95),
+						NormalCount = CountAtAlertLevel(
+							line.Data,
+							dataPointStoreItem.GlobalAlertExpression,
+							CountAlertLevel.Normal
+						),
+						WarningCount = CountAtAlertLevel(
+							line.Data,
+							dataPointStoreItem.GlobalAlertExpression,
+							CountAlertLevel.Warning
+						),
+						ErrorCount = CountAtAlertLevel(
+							line.Data,
+							dataPointStoreItem.GlobalAlertExpression,
+							CountAlertLevel.Error
+						),
+						CriticalCount = CountAtAlertLevel(
+							line.Data,
+							dataPointStoreItem.GlobalAlertExpression,
+							CountAlertLevel.Critical
+						),
+						// IMPORTANT! This must be calculated last as this process can reverse the array.
+						AvailabilityPercent = CalculatePercentageAvailability(
+							line.Data,
+							dataPointStoreItem.PercentageAvailabilityCalculation
+						),
+					};
 
 					aggregationsToWrite.Add(bulkWriteModel);
 				}
@@ -365,7 +327,60 @@ internal class LowResolutionDataSync : LoopInterval
 			aggregationsToWrite.Clear();
 		}
 
+		// Re-enable caching
+		datamartClient.UseCache = oldCacheState;
+
 		logger.LogInformation("Syncing data complete.");
+	}
+
+	private double? CalculatePercentageAvailability(
+		double?[] values,
+		string percentageAvailabilityCalculation
+	)
+	{
+		if (string.IsNullOrWhiteSpace(percentageAvailabilityCalculation))
+		{
+			return null;
+		}
+
+		if (percentageAvailabilityCalculation != "PercentUpTime")
+		{
+			return null;
+		}
+
+		var reversedValues = values.Reverse();
+		var previousDoubleValue = double.NaN;
+		var upTimeCount = 0;
+		var downTimeCount = 0;
+		foreach (var value in reversedValues)
+		{
+			if (value is double doubleValue)
+			{
+				previousDoubleValue = doubleValue;
+				upTimeCount++;
+			}
+			else
+			{
+				if (double.IsNaN(previousDoubleValue) || previousDoubleValue < DeviceDownTimeWindowSeconds)
+				{
+					downTimeCount++;
+				}
+				else
+				{
+					upTimeCount++;
+				}
+			}
+		}
+
+		var totalCount = upTimeCount + downTimeCount;
+
+		if (totalCount == 0)
+		{
+			// If there aren't any values, return 100%.
+			return 100;
+		}
+
+		return 100 * upTimeCount / totalCount;
 	}
 
 	/// <summary>

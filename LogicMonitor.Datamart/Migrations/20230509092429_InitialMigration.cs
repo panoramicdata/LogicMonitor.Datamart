@@ -51,6 +51,14 @@ namespace LogicMonitor.Datamart.Migrations
 					Id = table.Column<Guid>(type: "uuid", nullable: false),
 					Name = table.Column<string>(type: "text", nullable: false),
 					Description = table.Column<string>(type: "text", nullable: false),
+					AppliesTo = table.Column<string>(type: "text", nullable: false),
+					CollectionMethod = table.Column<string>(type: "text", nullable: false),
+					AuditVersion = table.Column<string>(type: "text", nullable: false),
+					Version = table.Column<string>(type: "text", nullable: false),
+					DisplayName = table.Column<string>(type: "text", nullable: false),
+					HasMultiInstances = table.Column<bool>(type: "boolean", nullable: false),
+					PollingIntervalSeconds = table.Column<int>(type: "integer", nullable: false),
+					Technology = table.Column<string>(type: "text", nullable: false),
 					DatamartCreated = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
 					DatamartLastModified = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
 					LogicMonitorId = table.Column<int>(type: "integer", nullable: false),
@@ -188,40 +196,6 @@ namespace LogicMonitor.Datamart.Migrations
 				});
 
 			migrationBuilder.CreateTable(
-				name: "TimeSeriesDataAggregations",
-				columns: table => new
-				{
-					Id = table.Column<Guid>(type: "uuid", nullable: false),
-					DataPointId = table.Column<Guid>(type: "uuid", nullable: false),
-					PeriodStart = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-					PeriodEnd = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-					Centile05 = table.Column<double>(type: "double precision", nullable: true),
-					Centile10 = table.Column<double>(type: "double precision", nullable: true),
-					Centile25 = table.Column<double>(type: "double precision", nullable: true),
-					Centile75 = table.Column<double>(type: "double precision", nullable: true),
-					Centile90 = table.Column<double>(type: "double precision", nullable: true),
-					Centile95 = table.Column<double>(type: "double precision", nullable: true),
-					First = table.Column<double>(type: "double precision", nullable: true),
-					Last = table.Column<double>(type: "double precision", nullable: true),
-					FirstWithData = table.Column<double>(type: "double precision", nullable: true),
-					LastWithData = table.Column<double>(type: "double precision", nullable: true),
-					Min = table.Column<double>(type: "double precision", nullable: true),
-					Max = table.Column<double>(type: "double precision", nullable: true),
-					Sum = table.Column<double>(type: "double precision", nullable: false),
-					SumSquared = table.Column<double>(type: "double precision", nullable: false),
-					DataCount = table.Column<int>(type: "integer", nullable: false),
-					NoDataCount = table.Column<int>(type: "integer", nullable: false),
-					NormalCount = table.Column<int>(type: "integer", nullable: true),
-					WarningCount = table.Column<int>(type: "integer", nullable: true),
-					ErrorCount = table.Column<int>(type: "integer", nullable: true),
-					CriticalCount = table.Column<int>(type: "integer", nullable: true)
-				},
-				constraints: table =>
-				{
-					table.PrimaryKey("PK_TimeSeriesDataAggregations", x => x.Id);
-				});
-
-			migrationBuilder.CreateTable(
 				name: "WebsiteGroups",
 				columns: table => new
 				{
@@ -343,6 +317,9 @@ namespace LogicMonitor.Datamart.Migrations
 					Description = table.Column<string>(type: "text", nullable: false),
 					MeasurementUnit = table.Column<string>(type: "text", nullable: false),
 					GlobalAlertExpression = table.Column<string>(type: "text", nullable: false),
+					Calculation = table.Column<string>(type: "text", nullable: false),
+					PercentageAvailabilityCalculation = table.Column<string>(type: "text", nullable: false),
+					Tags = table.Column<string>(type: "text", nullable: false),
 					DatamartCreated = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
 					DatamartLastModified = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
 					LogicMonitorId = table.Column<int>(type: "integer", nullable: false),
@@ -740,6 +717,83 @@ namespace LogicMonitor.Datamart.Migrations
 						onDelete: ReferentialAction.Restrict);
 				});
 
+			migrationBuilder.CreateTable(
+				name: "DeviceDataSourceInstanceDataPoints",
+				columns: table => new
+				{
+					Id = table.Column<Guid>(type: "uuid", nullable: false),
+					DeviceDataSourceInstanceId = table.Column<Guid>(type: "uuid", nullable: false),
+					DataSourceDataPointId = table.Column<Guid>(type: "uuid", nullable: false),
+					DataSourceStoreItemId = table.Column<Guid>(type: "uuid", nullable: true),
+					DatamartCreated = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+					DatamartLastModified = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+					LogicMonitorId = table.Column<int>(type: "integer", nullable: false),
+					DatamartLastObserved = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+				},
+				constraints: table =>
+				{
+					table.PrimaryKey("PK_DeviceDataSourceInstanceDataPoints", x => x.Id);
+					table.ForeignKey(
+						name: "FK_DeviceDataSourceInstanceDataPoints_DataSourceDataPoints_Dat~",
+						column: x => x.DataSourceDataPointId,
+						principalTable: "DataSourceDataPoints",
+						principalColumn: "Id",
+						onDelete: ReferentialAction.Cascade);
+					table.ForeignKey(
+						name: "FK_DeviceDataSourceInstanceDataPoints_DataSources_DataSourceSt~",
+						column: x => x.DataSourceStoreItemId,
+						principalTable: "DataSources",
+						principalColumn: "Id");
+					table.ForeignKey(
+						name: "FK_DeviceDataSourceInstanceDataPoints_DeviceDataSourceInstance~",
+						column: x => x.DeviceDataSourceInstanceId,
+						principalTable: "DeviceDataSourceInstances",
+						principalColumn: "Id",
+						onDelete: ReferentialAction.Cascade);
+				});
+
+			migrationBuilder.CreateTable(
+				name: "TimeSeriesDataAggregations",
+				columns: table => new
+				{
+					Id = table.Column<Guid>(type: "uuid", nullable: false),
+					DeviceDataSourceInstanceDataPointId = table.Column<Guid>(type: "uuid", nullable: false),
+					PeriodStart = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+					PeriodEnd = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+					Centile05 = table.Column<double>(type: "double precision", nullable: true),
+					Centile10 = table.Column<double>(type: "double precision", nullable: true),
+					Centile25 = table.Column<double>(type: "double precision", nullable: true),
+					Centile50 = table.Column<double>(type: "double precision", nullable: true),
+					Centile75 = table.Column<double>(type: "double precision", nullable: true),
+					Centile90 = table.Column<double>(type: "double precision", nullable: true),
+					Centile95 = table.Column<double>(type: "double precision", nullable: true),
+					AvailabilityPercent = table.Column<double>(type: "double precision", nullable: true),
+					First = table.Column<double>(type: "double precision", nullable: true),
+					Last = table.Column<double>(type: "double precision", nullable: true),
+					FirstWithData = table.Column<double>(type: "double precision", nullable: true),
+					LastWithData = table.Column<double>(type: "double precision", nullable: true),
+					Min = table.Column<double>(type: "double precision", nullable: true),
+					Max = table.Column<double>(type: "double precision", nullable: true),
+					Sum = table.Column<double>(type: "double precision", nullable: false),
+					SumSquared = table.Column<double>(type: "double precision", nullable: false),
+					DataCount = table.Column<int>(type: "integer", nullable: false),
+					NoDataCount = table.Column<int>(type: "integer", nullable: false),
+					NormalCount = table.Column<int>(type: "integer", nullable: true),
+					WarningCount = table.Column<int>(type: "integer", nullable: true),
+					ErrorCount = table.Column<int>(type: "integer", nullable: true),
+					CriticalCount = table.Column<int>(type: "integer", nullable: true)
+				},
+				constraints: table =>
+				{
+					table.PrimaryKey("PK_TimeSeriesDataAggregations", x => x.Id);
+					table.ForeignKey(
+						name: "FK_TimeSeriesDataAggregations_DeviceDataSourceInstanceDataPoin~",
+						column: x => x.DeviceDataSourceInstanceDataPointId,
+						principalTable: "DeviceDataSourceInstanceDataPoints",
+						principalColumn: "Id",
+						onDelete: ReferentialAction.Cascade);
+				});
+
 			migrationBuilder.CreateIndex(
 				name: "IX_AlertRules_EscalationChainId",
 				table: "AlertRules",
@@ -902,6 +956,21 @@ namespace LogicMonitor.Datamart.Migrations
 				column: "DataSourceId");
 
 			migrationBuilder.CreateIndex(
+				name: "IX_DeviceDataSourceInstanceDataPoints_DataSourceDataPointId",
+				table: "DeviceDataSourceInstanceDataPoints",
+				column: "DataSourceDataPointId");
+
+			migrationBuilder.CreateIndex(
+				name: "IX_DeviceDataSourceInstanceDataPoints_DataSourceStoreItemId",
+				table: "DeviceDataSourceInstanceDataPoints",
+				column: "DataSourceStoreItemId");
+
+			migrationBuilder.CreateIndex(
+				name: "IX_DeviceDataSourceInstanceDataPoints_DeviceDataSourceInstance~",
+				table: "DeviceDataSourceInstanceDataPoints",
+				column: "DeviceDataSourceInstanceId");
+
+			migrationBuilder.CreateIndex(
 				name: "IX_DeviceDataSourceInstances_DeviceDataSourceId",
 				table: "DeviceDataSourceInstances",
 				column: "DeviceDataSourceId");
@@ -932,6 +1001,11 @@ namespace LogicMonitor.Datamart.Migrations
 				columns: new[] { "FullPath", "MonitoredObjectType" });
 
 			migrationBuilder.CreateIndex(
+				name: "IX_TimeSeriesDataAggregations_DeviceDataSourceInstanceDataPoin~",
+				table: "TimeSeriesDataAggregations",
+				column: "DeviceDataSourceInstanceDataPointId");
+
+			migrationBuilder.CreateIndex(
 				name: "IX_Websites_WebsiteGroupId",
 				table: "Websites",
 				column: "WebsiteGroupId");
@@ -945,12 +1019,6 @@ namespace LogicMonitor.Datamart.Migrations
 
 			migrationBuilder.DropTable(
 				name: "ConfigSources");
-
-			migrationBuilder.DropTable(
-				name: "DataSourceDataPoints");
-
-			migrationBuilder.DropTable(
-				name: "DeviceDataSourceInstances");
 
 			migrationBuilder.DropTable(
 				name: "DeviceGroups");
@@ -974,13 +1042,22 @@ namespace LogicMonitor.Datamart.Migrations
 				name: "MonitorObjectGroups");
 
 			migrationBuilder.DropTable(
-				name: "DeviceDataSources");
+				name: "DeviceDataSourceInstanceDataPoints");
 
 			migrationBuilder.DropTable(
 				name: "WebsiteGroups");
 
 			migrationBuilder.DropTable(
 				name: "EscalationChains");
+
+			migrationBuilder.DropTable(
+				name: "DataSourceDataPoints");
+
+			migrationBuilder.DropTable(
+				name: "DeviceDataSourceInstances");
+
+			migrationBuilder.DropTable(
+				name: "DeviceDataSources");
 
 			migrationBuilder.DropTable(
 				name: "DataSources");

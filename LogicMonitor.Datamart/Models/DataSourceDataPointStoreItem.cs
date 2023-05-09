@@ -16,6 +16,8 @@ public class DataSourceDataPointStoreItem : IdentifiedStoreItem
 
 	public string Calculation { get; set; } = string.Empty;
 
+	public string PercentageAvailabilityCalculation { get; set; } = string.Empty;
+
 	public string Tags { get; set; } = string.Empty;
 
 	public ICollection<DeviceDataSourceInstanceDataPointStoreItem> DeviceDataSourceInstanceDataPoints { get; set; } = null!;

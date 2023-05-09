@@ -23,6 +23,11 @@ public class DataPointConfigurationItem
 	public string MeasurementUnit { get; set; } = string.Empty;
 
 	/// <summary>
+	/// The means of calculating the percentage availability
+	/// </summary>
+	public string PercentageAvailabilityCalculation { get; set; } = string.Empty;
+
+	/// <summary>
 	/// The
 	/// </summary>
 	public string GlobalAlertExpression { get; set; } = string.Empty;

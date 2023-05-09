@@ -80,6 +80,18 @@ public abstract class TestWithOutput
 								MeasurementUnit = "Chains",
 							}
 					},
+				},
+				new DataSourceConfigurationItem{
+					Name = "HostStatus",
+					DataPoints = new List<DataPointConfigurationItem>
+					{
+						new DataPointConfigurationItem
+							{
+								Name = "idleInterval",
+								MeasurementUnit = "Seconds",
+								PercentageAvailabilityCalculation = "PercentUpTime"
+							},
+					},
 				}
 			}
 	};
@@ -99,7 +111,7 @@ public abstract class TestWithOutput
 			Account = logicMonitorCredentials.Account,
 			AccessId = logicMonitorCredentials.AccessId,
 			AccessKey = logicMonitorCredentials.AccessKey,
-			Logger = loggerFactory.CreateLogger<LogicMonitorClient>()
+			Logger = loggerFactory.CreateLogger<LogicMonitorClient>(),
 		};
 
 		Configuration.DatabaseType = configuration.DatabaseType;

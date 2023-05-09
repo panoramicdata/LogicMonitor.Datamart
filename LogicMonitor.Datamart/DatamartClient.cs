@@ -420,14 +420,14 @@ public class DatamartClient : LogicMonitorClient
 			// Consider each DataPoint in the config
 			foreach (var configDataPoint in configDataSourceSpecification.DataPoints)
 			{
-				// Is it present in the API DataSource
+				// Is it present in the API DataSource?
 				var apiDataPoint = apiDataSource
 					.DataSourceDataPoints
 					.SingleOrDefault(dp => dp.Name == configDataPoint.Name);
-				if (apiDataPoint == null)
+				if (apiDataPoint == null && string.IsNullOrWhiteSpace(configDataPoint.Calculation))
 				{
 					_logger.LogError(
-						"For LogicMonitor instance '{LogicMonitorAccount}', DataSource '{DataSourceName}': could not find configured DataPoint '{ConfigDataPointName}'. Available DataPoints: {DataPoints}",
+						"For LogicMonitor instance '{LogicMonitorAccount}', DataSource '{DataSourceName}': could not find configured DataPoint '{ConfigDataPointName}' when not using calculations. Either specify a calculation, or use one of the following available DataPoints: {DataPoints}",
 						_configuration.LogicMonitorClientOptions.Account,
 						dataSourceName,
 						configDataPoint.Name,
@@ -436,56 +436,69 @@ public class DatamartClient : LogicMonitorClient
 					continue;
 				}
 
+				string globalAlertExpression = string.IsNullOrWhiteSpace(configDataPoint.GlobalAlertExpression)
+					? apiDataPoint?.AlertExpression ?? string.Empty
+					: configDataPoint.GlobalAlertExpression;
+
+				string description = string.IsNullOrWhiteSpace(configDataPoint.Description)
+					? apiDataPoint?.Description ?? string.Empty
+					: configDataPoint.Description;
+
 				// Is it in the database?
 				var databaseDataSourceDataPointModel = await context
 					.DataSourceDataPoints
 					.SingleOrDefaultAsync(dsdp => dsdp.DataSource.Name == apiDataSource.Name && dsdp.Name == configDataPoint.Name)
 					.ConfigureAwait(false);
 
-				string alertExpression = !string.IsNullOrWhiteSpace(configDataPoint.GlobalAlertExpression)
-					? configDataPoint.GlobalAlertExpression
-					: apiDataPoint.AlertExpression;
-
-				if (databaseDataSourceDataPointModel == null)
+				if (databaseDataSourceDataPointModel is null)
 				{
 					// No. Add it to the database
-					var dataSourceDataPointStoreItem = context.DataSourceDataPoints.Add(new DataSourceDataPointStoreItem
-					{
-						DataSource = databaseDataSource,
-						Name = apiDataPoint.Name,
-						Description = string.IsNullOrWhiteSpace(configDataPoint.Description)
-							? configDataPoint.Description
-							: apiDataPoint.Description,
-						LogicMonitorId = apiDataPoint.Id,
-						MeasurementUnit = configDataPoint.MeasurementUnit,
-						GlobalAlertExpression = alertExpression
-					});
-
 					_logger.LogInformation(
 						"For LogicMonitor instance {LogicMonitorAccount}, for {DataSourceName}, added datapoint {ConfigDataPointName} to database.",
 						_configuration.LogicMonitorClientOptions.Account,
 						dataSourceName,
 						configDataPoint.Name);
-					await context
-						.SaveChangesAsync()
-						.ConfigureAwait(false);
+
+					var dataSourceDataPointStoreItem = context.DataSourceDataPoints.Add(new DataSourceDataPointStoreItem
+					{
+						DataSource = databaseDataSource,
+						Name = configDataPoint.Name,
+						LogicMonitorId = apiDataPoint?.Id ?? 0,
+
+						// API/Config
+						Description = description,
+						GlobalAlertExpression = globalAlertExpression,
+
+						// Config only
+						MeasurementUnit = configDataPoint.MeasurementUnit,
+						Calculation = configDataPoint.Calculation,
+						PercentageAvailabilityCalculation = configDataPoint.PercentageAvailabilityCalculation,
+						Tags = configDataPoint.Tags,
+					});
 				}
-				// Update the measurement unit or Global Alert Expression?
 				else
 				{
-					if (
-						databaseDataSourceDataPointModel.MeasurementUnit != configDataPoint.MeasurementUnit
-						|| databaseDataSourceDataPointModel.GlobalAlertExpression != alertExpression)
-					{
-						// Yes
-						databaseDataSourceDataPointModel.MeasurementUnit = configDataPoint.MeasurementUnit;
-						databaseDataSourceDataPointModel.GlobalAlertExpression = apiDataPoint.AlertExpression;
-						await context
-							.SaveChangesAsync()
-							.ConfigureAwait(false);
-					}
+					// Update everything, even if it hasn't changed
+
+					// API/Config
+					databaseDataSourceDataPointModel.Description = description;
+					databaseDataSourceDataPointModel.GlobalAlertExpression = globalAlertExpression;
+
+					// Config only
+					databaseDataSourceDataPointModel.MeasurementUnit = configDataPoint.MeasurementUnit;
+					databaseDataSourceDataPointModel.Calculation = configDataPoint.Calculation;
+					databaseDataSourceDataPointModel.PercentageAvailabilityCalculation = configDataPoint.PercentageAvailabilityCalculation;
+					databaseDataSourceDataPointModel.Tags = configDataPoint.Tags;
 				}
+
+				await context
+					.SaveChangesAsync()
+					.ConfigureAwait(false);
 			}
+
+			// TODO - remove old DataPoints and associated data.
+			// This will cascade delete, so may take a long time.
+			// Consider adjusting the command timeout.
 		}
 	}
 

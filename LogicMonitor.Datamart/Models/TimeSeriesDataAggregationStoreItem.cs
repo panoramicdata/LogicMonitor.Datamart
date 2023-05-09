@@ -18,11 +18,15 @@ public class TimeSeriesDataAggregationStoreItem
 
 	public double? Centile25 { get; set; }
 
+	public double? Centile50 { get; set; }
+
 	public double? Centile75 { get; set; }
 
 	public double? Centile90 { get; set; }
 
 	public double? Centile95 { get; set; }
+
+	public double? AvailabilityPercent { get; set; }
 
 	public double? First { get; set; }
 
