@@ -78,6 +78,7 @@ internal class LowResolutionDataSync : LoopInterval
 
 			var deviceCount = devices.Count;
 			var deviceIndex = 0;
+			var failedDeviceDisplayNames = new List<string>();
 			// For each device, get the list of DeviceDataSourceInstanceDataPoints
 			foreach (var device in devices)
 			{
@@ -86,7 +87,7 @@ internal class LowResolutionDataSync : LoopInterval
 				Logger.LogInformation(
 					"Getting DeviceDataSourceInstanceDataPoints for {DatabaseName}: {DeviceName} ({DeviceIndex}/{DeviceCount})...",
 					_configuration.DatabaseName,
-					device.Name,
+					device.DisplayName,
 					deviceIndex,
 					deviceCount
 				);
@@ -112,7 +113,7 @@ internal class LowResolutionDataSync : LoopInterval
 				Logger.LogDebug(
 					"Getting DeviceDataSourceInstanceDataPoints for {DatabaseName}: {DeviceName} ({DeviceIndex}/{DeviceCount}) complete.  Found {DeviceDataSourceInstanceDataPointCount}.",
 					_configuration.DatabaseName,
-					device.Name,
+					device.DisplayName,
 					deviceIndex,
 					deviceCount,
 					databaseDeviceDataSourceInstanceDataPointsCount
@@ -128,26 +129,63 @@ internal class LowResolutionDataSync : LoopInterval
 				Logger.LogInformation(
 					"Writing aggregations for {DatabaseName}: {DeviceName} ({DeviceIndex}/{DeviceCount}) for {DatabaseDeviceDataSourceInstanceDataPointsCount} DeviceDataSourceInstanceDataPoints...",
 					_configuration.DatabaseName,
-					device.Name,
+					device.DisplayName,
 					deviceIndex,
 					deviceCount,
 					databaseDeviceDataSourceInstanceDataPointsCount
 					);
-				await GetAndWriteAggregationsAsync(
-					_datamartClient,
-					context,
-					_configuration,
-					Logger,
-					databaseDeviceDataSourceInstanceDataPoints,
-					cancellationToken)
-					.ConfigureAwait(false);
-				Logger.LogDebug(
-					"Writing aggregations for {DatabaseName}: {DeviceName} ({DeviceIndex}/{DeviceCount}) complete.",
-					_configuration.DatabaseName,
-					device.Name,
-					deviceIndex,
-					deviceCount
+				try
+				{
+					await GetAndWriteAggregationsAsync(
+						_datamartClient,
+						context,
+						_configuration,
+						Logger,
+						databaseDeviceDataSourceInstanceDataPoints,
+						cancellationToken)
+						.ConfigureAwait(false);
+					Logger.LogDebug(
+						"Writing aggregations for {DatabaseName}: {DeviceName} ({DeviceIndex}/{DeviceCount}) complete.",
+						_configuration.DatabaseName,
+						device.DisplayName,
+						deviceIndex,
+						deviceCount
+						);
+				}
+				catch (Exception ex)
+				{
+					Logger.LogError(
+						ex,
+						"Writing aggregations for {DatabaseName}: {DeviceName} ({DeviceIndex}/{DeviceCount}) failed.",
+						_configuration.DatabaseName,
+						device.DisplayName,
+						deviceIndex,
+						deviceCount
 					);
+					failedDeviceDisplayNames.Add(device.DisplayName);
+				}
+			}
+
+			if (failedDeviceDisplayNames.Count == 0)
+			{
+				Logger.LogInformation(
+					"Aggregations written for {DatabaseName}: ({ErrorCount} failed devices).",
+					_configuration.DatabaseName,
+					failedDeviceDisplayNames.Count
+				);
+			}
+			else
+			{
+				Logger.LogError(
+					"Aggregations written for {DatabaseName}: ({ErrorCount} failed devices). Failed devices (up to 10): {FailedDeviceDisplayNames}",
+					_configuration.DatabaseName,
+					failedDeviceDisplayNames.Count,
+					failedDeviceDisplayNames.Count switch
+					{
+						1 => failedDeviceDisplayNames[0],
+						_ => $"{string.Join(", ", failedDeviceDisplayNames.Take(10))}"
+					}
+				);
 			}
 		}
 		finally
