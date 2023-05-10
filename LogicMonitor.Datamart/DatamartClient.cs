@@ -394,7 +394,7 @@ public class DatamartClient : LogicMonitorClient
 			if (apiDataSource is null)
 			{
 				// May not happen if the config references a non-existent DataSource
-				_logger.LogError(
+				_logger.LogWarning(
 					"For LogicMonitor instance {LogicMonitorAccount}, expected to find LogicMonitor API DataSource called '{DataSourceName}', but it was missing.",
 					_configuration.LogicMonitorClientOptions.Account,
 					dataSourceName);
@@ -426,7 +426,7 @@ public class DatamartClient : LogicMonitorClient
 					.SingleOrDefault(dp => dp.Name == configDataPoint.Name);
 				if (apiDataPoint == null && string.IsNullOrWhiteSpace(configDataPoint.Calculation))
 				{
-					_logger.LogError(
+					_logger.LogWarning(
 						"For LogicMonitor instance '{LogicMonitorAccount}', DataSource '{DataSourceName}': could not find configured DataPoint '{ConfigDataPointName}' when not using calculations. Either specify a calculation, or use one of the following available DataPoints: {DataPoints}",
 						_configuration.LogicMonitorClientOptions.Account,
 						dataSourceName,
