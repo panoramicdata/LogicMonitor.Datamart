@@ -1,3 +1,8 @@
+[*]
+# VSSPELL: Spell checker settings from LogicMonitor.Datamart.sln.vsspell
+vsspell_section_id = 6c0cbb2ad10949d1b6cf974d7e199711
+vsspell_ignored_words_6c0cbb2ad10949d1b6cf974d7e199711 = File:LogicMonitor.Datamart.sln.vsspell.dic
+
 # You can modify the rules from these initially generated values to suit your own policies
 # You can learn more about editorconfig here: https://docs.microsoft.com/en-us/visualstudio/ide/editorconfig-code-style-settings-reference
 [*.cs]
