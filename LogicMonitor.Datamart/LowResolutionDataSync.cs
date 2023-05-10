@@ -24,54 +24,43 @@ internal class LowResolutionDataSync : LoopInterval
 
 	public override async Task ExecuteAsync(CancellationToken cancellationToken)
 	{
-		Logger.LogInformation("Data sync started...");
+		Logger.LogInformation(
+			"Data sync started for {DatabaseName}...",
+			_configuration.DatabaseName
+			);
 
 		using var context = new Context(_datamartClient.DbContextOptions);
 		// Use the database as a reference for what should be loaded in to ensure referential integrity between the data and the DeviceDataSourceInstance
 
 		// Get the configured DataSource names
-		Logger.LogInformation("Getting reference data...");
-		var deviceDataSourceNames = _configuration.DataSources
+		Logger.LogInformation(
+			"Getting reference data for {DatabaseName}: DataSources...",
+			_configuration.DatabaseName
+		);
+		var dataSourceNames = _configuration.DataSources
 			.ConvertAll(dsci => dsci.Name);
 
 		// Get the database DataSources for those names
 		var matchingDatabaseDataSources = await context
 			.DataSources
-			.Where(ds => deviceDataSourceNames.Contains(ds.Name))
+			.Where(ds => dataSourceNames.Contains(ds.Name))
 			.ToListAsync(cancellationToken: cancellationToken)
 			.ConfigureAwait(false);
+		Logger.LogInformation(
+			"Getting reference data for {DatabaseName}: DataSources - found {DatabaseDataSourceCount}",
+			_configuration.DatabaseName,
+			matchingDatabaseDataSources.Count
+		);
 
 		// Get the LogicMonitor Ids for those DataSources
 		var dataSourceIds = matchingDatabaseDataSources
 			.ConvertAll(ds => ds.LogicMonitorId);
 
 		// Get the database instances for those DataSources, excluding ones where LastWentMissingUtc is set
-		var databaseDeviceDataSourceInstanceDataPoints = await context
-			.DeviceDataSourceInstanceDataPoints
-			.Include(ddsidp => ddsidp.DeviceDataSourceInstance!.DeviceDataSourceInstanceDataPoints)
-			.Include(ddsidp => ddsidp.DeviceDataSourceInstance!.DeviceDataSource!.DataSource)
-			.Include(ddsidp => ddsidp.DeviceDataSourceInstance!.DeviceDataSource!.Device)
-			.Include(ddsidp => ddsidp.DataSourceDataPoint)
-			.Where(ddsi =>
-				ddsi.DeviceDataSourceInstance!.LastWentMissing == null
-				&& dataSourceIds.Contains(ddsi.DeviceDataSourceInstance!.DeviceDataSource!.DataSource!.LogicMonitorId)
-			)
-			// To make debugging a little more deterministic, order by the Device and then its instances
-			.OrderBy(ddsi => ddsi.DeviceDataSourceInstance!.DeviceDataSourceId)
-			.ThenBy(ddsi => ddsi.LogicMonitorId)
-			.ToListAsync(cancellationToken: cancellationToken)
-			.ConfigureAwait(false);
-
-		// If there aren't any, log and return
-		if (!databaseDeviceDataSourceInstanceDataPoints.Any())
-		{
-			Logger.LogWarning(
-				"Found no DeviceDataSourceInstanceDataPoints in the databases for DeviceDataSource names {Names}. Check dimensions have been synced.",
-				string.Join(", ", deviceDataSourceNames));
-			return;
-		}
-		// We have the database deviceDataSourceInstances for the configured DataSources
-
+		Logger.LogInformation(
+			"Getting reference data for {DatabaseName}: DeviceDataSourceInstanceDataPoints...",
+			_configuration.DatabaseName
+		);
 		// Clear out the PortalClient Cache, otherwise we remember all the data values for no reason
 		_datamartClient.ClearCache();
 		var oldCacheState = _datamartClient.UseCache;
@@ -79,14 +68,87 @@ internal class LowResolutionDataSync : LoopInterval
 
 		try
 		{
-			await GetAndWriteAggregationsAsync(
-				_datamartClient,
-				context,
-				_configuration,
-				Logger,
-				databaseDeviceDataSourceInstanceDataPoints,
-				cancellationToken)
+			// IMPORTANT: This must be done per device, as doing all at once causes database timeouts
+
+			// Get a list of devices
+			var devices = await context
+				.Devices
+				.ToListAsync(cancellationToken: cancellationToken)
 				.ConfigureAwait(false);
+
+			var deviceCount = devices.Count;
+			var deviceIndex = 0;
+			// For each device, get the list of DeviceDataSourceInstanceDataPoints
+			foreach (var device in devices)
+			{
+				deviceIndex++;
+
+				Logger.LogInformation(
+					"Getting DeviceDataSourceInstanceDataPoints for {DatabaseName}: {DeviceName} ({DeviceIndex}/{DeviceCount})...",
+					_configuration.DatabaseName,
+					device.Name,
+					deviceIndex,
+					deviceCount
+				);
+
+				var databaseDeviceDataSourceInstanceDataPoints = await context
+					.DeviceDataSourceInstanceDataPoints
+					.Include(ddsidp => ddsidp.DeviceDataSourceInstance!.DeviceDataSource!.DataSource)
+					.Include(ddsidp => ddsidp.DeviceDataSourceInstance!.DeviceDataSource!.Device)
+					.Include(ddsidp => ddsidp.DataSourceDataPoint)
+					.Where(ddsi =>
+						ddsi.DeviceDataSourceInstance!.DeviceDataSource!.DeviceId == device.Id
+						&& ddsi.DeviceDataSourceInstance!.LastWentMissing == null
+						&& dataSourceIds.Contains(ddsi.DeviceDataSourceInstance!.DeviceDataSource!.DataSource!.LogicMonitorId)
+					)
+					// To make debugging a little more deterministic, order by the Device and then its instances
+					.OrderBy(ddsi => ddsi.DeviceDataSourceInstance!.DeviceDataSourceId)
+					.ThenBy(ddsi => ddsi.LogicMonitorId)
+					.ToListAsync(cancellationToken: cancellationToken)
+					.ConfigureAwait(false);
+
+				var databaseDeviceDataSourceInstanceDataPointsCount = databaseDeviceDataSourceInstanceDataPoints.Count;
+
+				Logger.LogDebug(
+					"Getting DeviceDataSourceInstanceDataPoints for {DatabaseName}: {DeviceName} ({DeviceIndex}/{DeviceCount}) complete.  Found {DeviceDataSourceInstanceDataPointCount}.",
+					_configuration.DatabaseName,
+					device.Name,
+					deviceIndex,
+					deviceCount,
+					databaseDeviceDataSourceInstanceDataPointsCount
+					);
+
+				// If there aren't any, log and return
+				if (databaseDeviceDataSourceInstanceDataPointsCount == 0)
+				{
+					continue;
+				}
+				// We have the database deviceDataSourceInstances for the configured DataSources
+
+				Logger.LogInformation(
+					"Writing aggregations for {DatabaseName}: {DeviceName} ({DeviceIndex}/{DeviceCount}) for {DatabaseDeviceDataSourceInstanceDataPointsCount} DeviceDataSourceInstanceDataPoints...",
+					_configuration.DatabaseName,
+					device.Name,
+					deviceIndex,
+					deviceCount,
+					databaseDeviceDataSourceInstanceDataPointsCount
+					);
+				await GetAndWriteAggregationsAsync(
+					_datamartClient,
+					context,
+					_configuration,
+					Logger,
+					databaseDeviceDataSourceInstanceDataPoints,
+					cancellationToken)
+					.ConfigureAwait(false);
+				Logger.LogDebug(
+					"Writing aggregations for {DatabaseName}: {DeviceName} ({DeviceIndex}/{DeviceCount}) complete.",
+					_configuration.DatabaseName,
+					device.Name,
+					deviceIndex,
+					deviceCount
+					);
+			}
 		}
 		finally
 		{

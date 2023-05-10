@@ -63,7 +63,7 @@ public class DatamartClient : LogicMonitorClient
 						$"Database={configuration.DatabaseName};" +
 						$"Uid={configuration.DatabaseUsername};" +
 						$"Pwd={configuration.DatabasePassword};",
-						npgsqlOptions => npgsqlOptions.EnableRetryOnFailure(50)
+						npgsqlOptions => npgsqlOptions.EnableRetryOnFailure(5)
 					);
 				break;
 			case DatabaseType.InMemory:
