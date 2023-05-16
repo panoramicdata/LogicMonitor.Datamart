@@ -5,6 +5,7 @@ namespace LogicMonitor.Datamart;
 internal static class AggregationWriter
 {
 	internal static string TableNamePrefix = "DeviceDataSourceInstanceAggregatedData";
+
 	internal static int SqlTimeoutSeconds = 100;
 
 	public static string GetTableName(DateTimeOffset start)
