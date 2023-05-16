@@ -474,6 +474,16 @@ public class DatamartClient : LogicMonitorClient
 						Calculation = configDataPoint.Calculation,
 						PercentageAvailabilityCalculation = configDataPoint.PercentageAvailabilityCalculation,
 						Tags = configDataPoint.Tags,
+						Property1 = configDataPoint.Property1,
+						Property2 = configDataPoint.Property2,
+						Property3 = configDataPoint.Property3,
+						Property4 = configDataPoint.Property4,
+						Property5 = configDataPoint.Property5,
+						Property6 = configDataPoint.Property6,
+						Property7 = configDataPoint.Property7,
+						Property8 = configDataPoint.Property8,
+						Property9 = configDataPoint.Property9,
+						Property10 = configDataPoint.Property10,
 					});
 				}
 				else
@@ -489,6 +499,16 @@ public class DatamartClient : LogicMonitorClient
 					databaseDataSourceDataPointModel.Calculation = configDataPoint.Calculation;
 					databaseDataSourceDataPointModel.PercentageAvailabilityCalculation = configDataPoint.PercentageAvailabilityCalculation;
 					databaseDataSourceDataPointModel.Tags = configDataPoint.Tags;
+					databaseDataSourceDataPointModel.Property1 = configDataPoint.Property1;
+					databaseDataSourceDataPointModel.Property2 = configDataPoint.Property2;
+					databaseDataSourceDataPointModel.Property3 = configDataPoint.Property3;
+					databaseDataSourceDataPointModel.Property4 = configDataPoint.Property4;
+					databaseDataSourceDataPointModel.Property5 = configDataPoint.Property5;
+					databaseDataSourceDataPointModel.Property6 = configDataPoint.Property6;
+					databaseDataSourceDataPointModel.Property7 = configDataPoint.Property7;
+					databaseDataSourceDataPointModel.Property8 = configDataPoint.Property8;
+					databaseDataSourceDataPointModel.Property9 = configDataPoint.Property9;
+					databaseDataSourceDataPointModel.Property10 = configDataPoint.Property10;
 				}
 
 				await context
