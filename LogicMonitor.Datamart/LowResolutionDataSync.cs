@@ -156,11 +156,13 @@ internal class LowResolutionDataSync : LoopInterval
 				{
 					Logger.LogError(
 						ex,
-						"Writing aggregations for {DatabaseName}: {DeviceName} ({DeviceIndex}/{DeviceCount}) failed.",
+						"Writing aggregations for {DatabaseName}: {DeviceName} ({DeviceIndex}/{DeviceCount}) failed: '{Message}' ||| {StackTrace}",
 						_configuration.DatabaseName,
 						device.DisplayName,
 						deviceIndex,
-						deviceCount
+						deviceCount,
+						ex.Message,
+						ex.StackTrace
 					);
 					failedDeviceDisplayNames.Add(device.DisplayName);
 				}
