@@ -259,6 +259,14 @@ internal class LowResolutionDataSync : LoopInterval
 			.ToListAsync(cancellationToken)
 			.ConfigureAwait(false);
 
+		await ResetForResyncAsync(
+			context,
+			logger,
+			databaseDeviceDataSourceInstanceDataPoints,
+			dataPointStoreItems,
+			cancellationToken)
+			.ConfigureAwait(false);
+
 		// Disable caching
 		var oldCacheState = datamartClient.UseCache;
 		datamartClient.UseCache = false;
@@ -285,6 +293,7 @@ internal class LowResolutionDataSync : LoopInterval
 			}
 
 			string dataSourceName = databaseDeviceDataSourceInstanceDataPoint.DeviceDataSourceInstance!.DeviceDataSource!.DataSource!.Name;
+			string dataPointName = databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint!.Name;
 
 			// Get the configuration for this DataSourceName
 			var dataSourceConfigurationItem = configuration
@@ -295,14 +304,12 @@ internal class LowResolutionDataSync : LoopInterval
 				})
 				?? throw new InvalidOperationException($"Could not find configuration for DataSource {dataSourceName}.");
 
+			var dataPointStoreItem = dataPointStoreItems
+				.SingleOrDefault(dp => dp.Name == dataPointName && dp.DataSource!.Name == dataSourceConfigurationItem.Name);
+
 			while (endDateTime < utcNow)
 			{
-				string dataPointName = databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint!.Name;
-
 				TimeSeriesDataAggregationStoreItem bulkWriteModel;
-
-				var dataPointStoreItem = dataPointStoreItems
-					.SingleOrDefault(dp => dp.Name == dataPointName && dp.DataSource!.Name == dataSourceConfigurationItem.Name);
 
 				var graphData = await datamartClient
 					.GetGraphDataAsync(
@@ -428,6 +435,44 @@ internal class LowResolutionDataSync : LoopInterval
 		datamartClient.UseCache = oldCacheState;
 
 		logger.LogInformation("Syncing data complete.");
+	}
+
+	private static async Task ResetForResyncAsync(Context context, ILogger logger, List<DeviceDataSourceInstanceDataPointStoreItem> databaseDeviceDataSourceInstanceDataPoints, List<DataSourceDataPointStoreItem> dataPointStoreItems, CancellationToken cancellationToken)
+	{
+		// Get the list of DataSourceDataPoints that we're resyncing
+		var resyncDataPointStoreItems = dataPointStoreItems
+			.Where(dsdp => dsdp.ResyncTimeSeriesData)
+			.ToList();
+
+		if (resyncDataPointStoreItems.Count > 0)
+		{
+			logger.LogInformation(
+				"Resyncing {ResyncDataPointStoreItemCount} DataPoints...",
+				resyncDataPointStoreItems.Count
+			);
+
+			var databaseDeviceDataSourceInstanceDataPointsToResync = databaseDeviceDataSourceInstanceDataPoints
+				.Where(ddsidp => resyncDataPointStoreItems.Any(dsdp => dsdp.Id == ddsidp.DataSourceDataPointId))
+				.ToList();
+
+			// Reset their Time cursor
+			foreach (var databaseDeviceDataSourceInstanceDataPoint in databaseDeviceDataSourceInstanceDataPointsToResync)
+			{
+				databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo = null;
+			}
+
+			// Remove any related aggregations using the Bulk extensions
+			var aggregationStoreItemsToRemove = await context
+				.TimeSeriesDataAggregations
+				.Where(tsda => databaseDeviceDataSourceInstanceDataPointsToResync.Any(ddsidp => ddsidp.Id == tsda.DeviceDataSourceInstanceDataPointId))
+				.BatchDeleteAsync(cancellationToken)
+				.ConfigureAwait(false);
+
+			// Save Changes
+			await context
+				.SaveChangesAsync(cancellationToken)
+				.ConfigureAwait(false);
+		}
 	}
 
 	private double? CalculatePercentageAvailability(

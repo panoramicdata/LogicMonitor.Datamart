@@ -92,6 +92,13 @@ public class DataPointConfigurationItem
 	/// </summary>
 	public string Property10 { get; set; } = string.Empty;
 
+
+	/// <summary>
+	/// If true, the DataPoint will be resynced even if it is not out of sync
+	/// This will remove all old data and replace it with new data
+	/// </summary>
+	public bool ResyncTimeSeriesData { get; set; }
+
 	/// <summary>
 	/// Validate the DataPoint
 	/// </summary>

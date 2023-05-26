@@ -36,7 +36,8 @@ public abstract class TestWithOutput
 						new DataPointConfigurationItem
 							{
 								Name= "ProcessorQueueLength",
-								MeasurementUnit = "count"
+								MeasurementUnit = "count",
+								ResyncTimeSeriesData = true
 							}
 					},
 				},
