@@ -437,9 +437,15 @@ internal class LowResolutionDataSync : LoopInterval
 		logger.LogInformation("Syncing data complete.");
 	}
 
-	private static async Task ResetForResyncAsync(Context context, ILogger logger, List<DeviceDataSourceInstanceDataPointStoreItem> databaseDeviceDataSourceInstanceDataPoints, List<DataSourceDataPointStoreItem> dataPointStoreItems, CancellationToken cancellationToken)
+	private static async Task ResetForResyncAsync(
+		Context context,
+		ILogger logger,
+		List<DeviceDataSourceInstanceDataPointStoreItem> databaseDeviceDataSourceInstanceDataPoints,
+		List<DataSourceDataPointStoreItem> dataPointStoreItems,
+		CancellationToken cancellationToken
+	)
 	{
-		// Get the list of DataSourceDataPoints that we're resyncing
+		// Get the list of DataSourceDataPoints that we're re-syncing
 		var resyncDataPointStoreItems = dataPointStoreItems
 			.Where(dsdp => dsdp.ResyncTimeSeriesData)
 			.ToList();
@@ -447,7 +453,7 @@ internal class LowResolutionDataSync : LoopInterval
 		if (resyncDataPointStoreItems.Count > 0)
 		{
 			logger.LogInformation(
-				"Resyncing {ResyncDataPointStoreItemCount} DataPoints...",
+				"Re-syncing {ResyncDataPointStoreItemCount} DataPoints...",
 				resyncDataPointStoreItems.Count
 			);
 
@@ -459,14 +465,14 @@ internal class LowResolutionDataSync : LoopInterval
 			foreach (var databaseDeviceDataSourceInstanceDataPoint in databaseDeviceDataSourceInstanceDataPointsToResync)
 			{
 				databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo = null;
-			}
 
-			// Remove any related aggregations using the Bulk extensions
-			var aggregationStoreItemsToRemove = await context
-				.TimeSeriesDataAggregations
-				.Where(tsda => databaseDeviceDataSourceInstanceDataPointsToResync.Any(ddsidp => ddsidp.Id == tsda.DeviceDataSourceInstanceDataPointId))
-				.BatchDeleteAsync(cancellationToken)
-				.ConfigureAwait(false);
+				// Remove any related aggregations using the Bulk extensions
+				var aggregationStoreItemsToRemove = await context
+					.TimeSeriesDataAggregations
+					.Where(tsda => tsda.DeviceDataSourceInstanceDataPointId == databaseDeviceDataSourceInstanceDataPoint.Id)
+					.BatchDeleteAsync(cancellationToken)
+					.ConfigureAwait(false);
+			}
 
 			// Save Changes
 			await context

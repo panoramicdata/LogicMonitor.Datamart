@@ -1010,6 +1010,28 @@ public class DatamartClient : LogicMonitorClient
 				context.DataSourceDataPoints.Add(databaseDataPoint);
 			}
 
+			databaseDataPoint.ResyncTimeSeriesData = configDataSourceDataPoint.ResyncTimeSeriesData;
+			databaseDataPoint.MeasurementUnit = configDataSourceDataPoint.MeasurementUnit;
+			databaseDataPoint.Calculation = configDataSourceDataPoint.Calculation;
+			databaseDataPoint.PercentageAvailabilityCalculation = configDataSourceDataPoint.PercentageAvailabilityCalculation;
+			databaseDataPoint.Property1 = configDataSourceDataPoint.Property1;
+			databaseDataPoint.Property2 = configDataSourceDataPoint.Property2;
+			databaseDataPoint.Property3 = configDataSourceDataPoint.Property3;
+			databaseDataPoint.Property4 = configDataSourceDataPoint.Property4;
+			databaseDataPoint.Property5 = configDataSourceDataPoint.Property5;
+			databaseDataPoint.Property6 = configDataSourceDataPoint.Property6;
+			databaseDataPoint.Property7 = configDataSourceDataPoint.Property7;
+			databaseDataPoint.Property8 = configDataSourceDataPoint.Property8;
+			databaseDataPoint.Property9 = configDataSourceDataPoint.Property9;
+			databaseDataPoint.Property10 = configDataSourceDataPoint.Property10;
+			databaseDataPoint.Tags = configDataSourceDataPoint.Tags;
+
+			// Only update the description if it is not null or whitespace
+			if (!string.IsNullOrWhiteSpace(configDataSourceDataPoint.Description))
+			{
+				databaseDataPoint.Description = configDataSourceDataPoint.Description;
+			}
+
 			dataSourceDataPointStoreItems.Add(databaseDataPoint);
 		}
 

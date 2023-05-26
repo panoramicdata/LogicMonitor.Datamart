@@ -32,12 +32,12 @@ public abstract class TestWithOutput
 							{
 								Name = "CPUBusyPercent",
 								MeasurementUnit = "%",
+								ResyncTimeSeriesData = true
 							},
 						new DataPointConfigurationItem
 							{
 								Name= "ProcessorQueueLength",
-								MeasurementUnit = "count",
-								ResyncTimeSeriesData = true
+								MeasurementUnit = "count"
 							}
 					},
 				},
