@@ -787,7 +787,6 @@ public class DatamartClient : LogicMonitorClient
 				databaseDataSource,
 				context,
 				dataSourceSpecification,
-				logger,
 				cancellationToken
 			)
 			.ConfigureAwait(false);
@@ -985,7 +984,6 @@ public class DatamartClient : LogicMonitorClient
 		DataSourceStoreItem dataSource,
 		Context context,
 		DataSourceConfigurationItem dataSourceSpecification,
-		ILogger logger,
 		CancellationToken cancellationToken
 	)
 	{
