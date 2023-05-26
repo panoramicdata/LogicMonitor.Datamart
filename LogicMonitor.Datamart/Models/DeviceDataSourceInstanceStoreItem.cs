@@ -39,11 +39,6 @@ public class DeviceDataSourceInstanceStoreItem : IdentifiedStoreItem
 	public string WildValue2 { get; set; } = string.Empty;
 
 	/// <summary>
-	/// The last hour for which we have written complete aggregations for this
-	/// </summary>
-	public DateTimeOffset? DataCompleteTo { get; set; }
-
-	/// <summary>
 	/// If present, this is the UTC timestamp when a dimension update query was made to LogicMonitor and this instance was not returned
 	/// </summary>
 	public DateTimeOffset? LastWentMissing { get; set; }

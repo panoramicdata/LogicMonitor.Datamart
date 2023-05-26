@@ -14,5 +14,10 @@ public class DeviceDataSourceInstanceDataPointStoreItem : IdentifiedStoreItem
 	// Database properties
 	public Guid DataSourceDataPointId { get; set; }
 
+	/// <summary>
+	/// The last hour for which we have written complete aggregations for this DataPoint store item
+	/// </summary>
+	public DateTimeOffset? DataCompleteTo { get; set; }
+
 	public ICollection<TimeSeriesDataAggregationStoreItem> TimeSeriesDataAggregations { get; set; } = null!;
 }

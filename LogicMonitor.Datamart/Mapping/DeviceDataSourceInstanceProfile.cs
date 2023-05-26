@@ -66,9 +66,6 @@ public class DeviceDataSourceInstanceProfile : Profile
 				dest => dest.DeviceDataSourceInstanceDataPoints,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.DataCompleteTo,
-				opts => opts.Ignore())
-			.ForMember(
 				dest => dest.LastWentMissing,
 				opts => opts.Ignore())
 			.ForMember(
