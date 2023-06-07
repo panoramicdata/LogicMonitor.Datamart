@@ -67,6 +67,9 @@ public class DeviceGroupProfile : Profile
 			.ForMember(
 				dest => dest.SaasTestResultCode,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.ServicesTemplatesId,
+				opts => opts.Ignore())
 			;
 	}
 }

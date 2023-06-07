@@ -188,6 +188,9 @@ public class DeviceProfile : Profile
 			.ForMember(
 				dest => dest.RolePrivileges,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.Op,
+				opts => opts.Ignore())
 			;
 	}
 }
