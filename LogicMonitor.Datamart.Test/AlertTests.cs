@@ -29,7 +29,7 @@ public class AlertTests : TestWithOutput
 			.DifferentialLoopTaskAsync(default)
 			.ConfigureAwait(false);
 
-		Assert.NotNull(updatedAlertStats);
+		updatedAlertStats.Should().NotBeNull();
 	}
 
 	[Fact]
@@ -60,6 +60,6 @@ public class AlertTests : TestWithOutput
 			null,
 			true
 			).ConfigureAwait(false);
-		Assert.NotNull(result);
+		result.Should().NotBeNull();
 	}
 }

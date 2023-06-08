@@ -102,10 +102,10 @@ public class AlertStoreItem : StoreItem
 	public int? ResourceTemplateId { get; set; }
 
 	[MaxLength(10)]
-	public string ResourceTemplateType { get; set; } = string.Empty;
+	public string? ResourceTemplateType { get; set; }
 
 	[MaxLength(50)]
-	public string ResourceTemplateName { get; set; } = string.Empty;
+	public string? ResourceTemplateName { get; set; }
 
 	public int InstanceId { get; set; }
 
@@ -154,13 +154,13 @@ public class AlertStoreItem : StoreItem
 	/// The dependency role
 	/// </summary>
 	[MaxLength(50)]
-	public string DependencyRole { get; set; } = string.Empty;
+	public string? DependencyRole { get; set; }
 
 	/// <summary>
 	/// The dependency routing state
 	/// </summary>
 	[MaxLength(50)]
-	public string DependencyRoutingState { get; set; } = string.Empty;
+	public string? DependencyRoutingState { get; set; }
 
 	/// <summary>
 	/// Whether or not the alert is dynamic threshold based
@@ -172,7 +172,7 @@ public class AlertStoreItem : StoreItem
 	/// The description for dynamic threshold based alert
 	/// </summary>
 	[MaxLength(50)]
-	public string ActiveDiscoveryAlertDescription { get; set; } = string.Empty;
+	public string? ActiveDiscoveryAlertDescription { get; set; }
 
 	/// <summary>
 	/// Indicates the anomaly alert, value can be true/false/null. If alert value lies within confidence band then false, otherwise true. If confidence band is not available then value will be null.
@@ -183,11 +183,11 @@ public class AlertStoreItem : StoreItem
 	/// The component (Ex SDT, HostClusterAlert) which suppressed the alert
 	/// </summary>
 	[MaxLength(50)]
-	public string Suppressor { get; set; } = string.Empty;
+	public string? Suppressor { get; set; }
 
 	/// <summary>
 	/// The description for suppressed alert
 	/// </summary>
 	[MaxLength(50)]
-	public string SuppressedDescending { get; set; } = string.Empty;
+	public string? SuppressedDescending { get; set; }
 }

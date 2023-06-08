@@ -89,7 +89,10 @@ internal class AlertSync : LoopInterval
 				{
 					using var context = new Context(_datamartClient.DbContextOptions);
 					// Get the device
-					var device = await context.Devices.SingleOrDefaultAsync(d => d.LogicMonitorId == deviceId, cancellationToken: cancellationToken).ConfigureAwait(false);
+					var device = await context
+						.Devices
+						.SingleOrDefaultAsync(d => d.LogicMonitorId == deviceId, cancellationToken: cancellationToken)
+						.ConfigureAwait(false);
 
 					// Build up the list of alerts in memory, then delete the table contents and re-add.
 					alertsToBulkInsert.Clear();
@@ -265,10 +268,11 @@ internal class AlertSync : LoopInterval
 				catch (Exception e)
 				{
 					Logger.LogWarning(
+						e,
 						"Failed to retrieve alerts for {DatamartClientAccountName} : Id={DeviceId} due to {Message}",
 						_datamartClient.AccountName,
 						deviceId,
-						e.Message
+						e.Message + (e.InnerException != null ? $" with InnerException {e.InnerException.Message}" : string.Empty)
 						);
 				}
 			}
