@@ -481,7 +481,69 @@ internal class LowResolutionDataSync : LoopInterval
 		}
 	}
 
-	private double? CalculatePercentageAvailability(
+	public static double? CalculatePercentageAvailability(
+	double?[] values,
+	string percentageAvailabilityCalculation
+)
+	{
+		if (string.IsNullOrWhiteSpace(percentageAvailabilityCalculation))
+		{
+			return null;
+		}
+
+		if (percentageAvailabilityCalculation != "PercentUpTime")
+		{
+			return null;
+		}
+
+		var reversedValues = values.Reverse();
+		var previousDoubleValue = double.NaN;
+		var upTimeCount = 0;
+		var downTimeCount = 0;
+		var ambiguousCount = 0;
+		var isAmbiguous = true;
+		foreach (var value in reversedValues)
+		{
+			if (value is double doubleValue)
+			{
+				previousDoubleValue = doubleValue;
+				upTimeCount += ambiguousCount;
+				ambiguousCount = 0;
+				upTimeCount++;
+				isAmbiguous = false;
+			}
+			else
+			{
+				if (double.IsNaN(previousDoubleValue) || previousDoubleValue < DeviceDownTimeWindowSeconds)
+				{
+					if (isAmbiguous)
+					{
+						ambiguousCount++;
+					}
+					else
+					{
+						downTimeCount++;
+					}
+				}
+				else
+				{
+					upTimeCount++;
+				}
+			}
+		}
+
+		var totalCount = upTimeCount + downTimeCount;
+
+		if (totalCount == 0)
+		{
+			// If there aren't any values, return null.
+			return null;
+		}
+
+		return 100 * upTimeCount / totalCount;
+	}
+
+	public static double? CalculatePercentageAvailabilityOld(
 		double?[] values,
 		string percentageAvailabilityCalculation
 	)
