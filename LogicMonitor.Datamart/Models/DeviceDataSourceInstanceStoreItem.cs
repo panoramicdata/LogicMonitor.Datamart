@@ -14,6 +14,8 @@ public class DeviceDataSourceInstanceStoreItem : IdentifiedStoreItem
 
 	public int AlertStatusPriority { get; set; }
 
+	public string Description { get; set; } = string.Empty;
+
 	public bool DisableAlerting { get; set; }
 
 	public string DisplayName { get; set; } = string.Empty;
@@ -27,6 +29,8 @@ public class DeviceDataSourceInstanceStoreItem : IdentifiedStoreItem
 	public long LastUpdatedTimeSeconds { get; set; }
 
 	public bool LockDescription { get; set; }
+
+	public bool Name { get; set; }
 
 	public bool StopMonitoring { get; set; }
 

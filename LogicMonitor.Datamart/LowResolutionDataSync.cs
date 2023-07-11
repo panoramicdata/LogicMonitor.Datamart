@@ -141,6 +141,7 @@ internal class LowResolutionDataSync : LoopInterval
 						context,
 						_configuration,
 						Logger,
+						device,
 						databaseDeviceDataSourceInstanceDataPoints,
 						cancellationToken)
 						.ConfigureAwait(false);
@@ -232,6 +233,7 @@ internal class LowResolutionDataSync : LoopInterval
 		Context context,
 		Configuration configuration,
 		ILogger logger,
+		DeviceStoreItem device,
 		List<DeviceDataSourceInstanceDataPointStoreItem> databaseDeviceDataSourceInstanceDataPoints,
 		CancellationToken cancellationToken)
 	{
@@ -323,6 +325,21 @@ internal class LowResolutionDataSync : LoopInterval
 						},
 						cancellationToken)
 					.ConfigureAwait(false);
+
+				// Remove all DataPoint values before the device was added to LogicMonitor
+				foreach (var graphDataLine in graphData.Lines)
+				{
+					graphDataLine.Data = graphDataLine.Data
+						.Where((dp, index) =>
+												{
+													return graphData.TimeStamps[index] >= device.CreatedOnSeconds * 1000;
+												})
+						.ToArray();
+				}
+
+				graphData.TimeStamps = graphData.TimeStamps
+					.Where(ts => ts >= device.CreatedOnSeconds * 1000)
+					.ToList();
 
 				Line? line;
 				if (string.IsNullOrWhiteSpace(databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint.Calculation))

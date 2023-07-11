@@ -119,12 +119,6 @@ public class DeviceDataSourceInstanceProfile : Profile
 			.ForMember(
 				dest => dest.GroupsDisabledThisSource,
 				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Name,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Description,
-				opts => opts.Ignore())
 		;
 	}
 }
