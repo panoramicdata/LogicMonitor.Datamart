@@ -14,6 +14,12 @@ public class DataSourceConfigurationItem
 	//public int? AggregationDurationMinutes { get; set; }
 
 	/// <summary>
+	/// The NCalc to execute when determining whether to include a DeviceDataSourceInstance
+	/// All properties of the DeviceDataSourceInstance are available for the calculation
+	/// </summary>
+	public string InstanceInclusionExpression { get; set; } = "true";
+
+	/// <summary>
 	/// The list of DataPoints which we are interested in for this DataSource
 	/// </summary>
 	public List<DataPointConfigurationItem> DataPoints { get; set; } = new();

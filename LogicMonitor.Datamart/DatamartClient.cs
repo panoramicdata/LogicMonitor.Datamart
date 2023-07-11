@@ -1,3 +1,5 @@
+using PanoramicData.NCalcExtensions;
+
 namespace LogicMonitor.Datamart;
 
 public class DatamartClient : LogicMonitorClient
@@ -811,6 +813,9 @@ public class DatamartClient : LogicMonitorClient
 			dataSourceName,
 			appliesToMatches.Count);
 
+		var instanceProperties = typeof(DeviceDataSourceInstance)
+			.GetProperties();
+
 		var markedMissing = 0;
 
 		// Not all of these will have instances
@@ -883,6 +888,39 @@ public class DatamartClient : LogicMonitorClient
 			await context
 				.SaveChangesAsync(cancellationToken)
 				.ConfigureAwait(false);
+
+			// Remove any instances that do not match the DataSourceConfigurationItem's InstanceInclusionExpression
+			if (!string.IsNullOrWhiteSpace(dataSourceSpecification.InstanceInclusionExpression) && dataSourceSpecification.InstanceInclusionExpression != "true")
+			{
+				var instanceInclusionExpression = new ExtendedExpression(dataSourceSpecification.InstanceInclusionExpression);
+
+				apiDeviceDataSourceInstances = apiDeviceDataSourceInstances
+					.Where(i =>
+					{
+						foreach (var instanceProperty in instanceProperties)
+						{
+							instanceInclusionExpression.Parameters[instanceProperty.Name] = instanceProperty.GetValue(i) ?? string.Empty;
+						}
+
+						foreach (var instanceCustomProperty in i.CustomProperties)
+						{
+							instanceInclusionExpression.Parameters[instanceCustomProperty.Name] = instanceCustomProperty.Value ?? string.Empty;
+						}
+
+						try
+						{
+							return instanceInclusionExpression.Evaluate() as bool? ?? true;
+						}
+						catch (Exception e)
+						{
+							logger.LogError(e, "Error evaluating InstanceInclusionExpression '{InstanceInclusionExpression}' for {DeviceName} instance {InstanceName}", dataSourceSpecification.InstanceInclusionExpression, device.Name, i.Name);
+
+							// Default to true
+							return true;
+						}
+					})
+					.ToList();
+			}
 
 			foreach (var apiDeviceDataSourceInstance in apiDeviceDataSourceInstances)
 			{
