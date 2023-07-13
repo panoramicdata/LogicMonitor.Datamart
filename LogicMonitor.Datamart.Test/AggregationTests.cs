@@ -28,4 +28,33 @@ public class AggregationTests
 			.Should()
 			.BeNull();
 	}
+
+	/// <summary>
+	/// This test aims to have a realistic number of data points
+	/// The shape of the input data is as follows:
+	/// |/__/|
+	/// So a ramp from 0 to 5000, then a flat set of nulls representing 50 of the time, then a ramp for 0 back up to 5000
+	/// </summary>
+	[Fact]
+	public void PercentageUptimeTest_LargeDatapointCount()
+	{
+		var values = new List<double?>();
+		for (var i = 0; i < 5000; i++)
+		{
+			values.Add(i);
+		}
+		for (var i = 0; i < 10000; i++)
+		{
+			values.Add(null);
+		}
+		for (var i = 0; i < 5000; i++)
+		{
+			values.Add(i);
+		}
+
+		LowResolutionDataSync
+			.CalculatePercentageAvailability(values.ToArray(), "PercentUpTime")
+			.Should()
+			.Be(50);
+	}
 }
