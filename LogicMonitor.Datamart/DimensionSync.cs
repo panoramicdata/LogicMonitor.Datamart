@@ -33,6 +33,10 @@ internal class DimensionSync : LoopInterval
 	{
 		try
 		{
+			await _datamartClient
+				.EnsureDatabaseCreatedAndSchemaUpdatedAsync(cancellationToken)
+				.ConfigureAwait(false);
+
 			// Top level
 			await SyncTopLevelDimensionsAsync(_configuration.DimensionSyncHaltOnError, cancellationToken)
 				.ConfigureAwait(false);
