@@ -110,7 +110,19 @@ public abstract class TestWithOutput
 					{
 						new DataPointConfigurationItem
 							{
-								Name = "idleInterval",
+								Name = "Uptime",
+								MeasurementUnit = "Seconds",
+								PercentageAvailabilityCalculation = "PercentUpTime"
+							},
+					},
+				},
+				new DataSourceConfigurationItem{
+					Name = "WinSystemUptime",
+					DataPoints = new List<DataPointConfigurationItem>
+					{
+						new DataPointConfigurationItem
+							{
+								Name = "UptimeSeconds",
 								MeasurementUnit = "Seconds",
 								PercentageAvailabilityCalculation = "PercentUpTime"
 							},
