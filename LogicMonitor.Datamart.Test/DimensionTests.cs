@@ -1,3 +1,5 @@
+using LogicMonitor.Api.LogicModules;
+
 namespace LogicMonitor.Datamart.Test;
 
 public class DimensionTests : TestWithOutput
@@ -12,6 +14,11 @@ public class DimensionTests : TestWithOutput
 		await new DimensionSync(
 				DatamartClient,
 				Configuration,
+				new List<string>
+				{
+					nameof(Device),
+					nameof(DeviceDataSourceInstance),
+				},
 				LoggerFactory)
 			.ExecuteAsync(default)
 			.ConfigureAwait(false);

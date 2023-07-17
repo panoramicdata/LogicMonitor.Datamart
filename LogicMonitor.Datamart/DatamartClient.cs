@@ -897,14 +897,28 @@ public class DatamartClient : LogicMonitorClient
 				apiDeviceDataSourceInstances = apiDeviceDataSourceInstances
 					.Where(i =>
 					{
-						foreach (var instanceProperty in instanceProperties)
+						try
 						{
-							instanceInclusionExpression.Parameters[instanceProperty.Name] = instanceProperty.GetValue(i) ?? string.Empty;
+							foreach (var instanceProperty in instanceProperties)
+							{
+								instanceInclusionExpression.Parameters[instanceProperty.Name] = instanceProperty.GetValue(i) ?? string.Empty;
+							}
+						}
+						catch (Exception e)
+						{
+							logger.LogError(e, "Error setting InstanceInclusionExpression parameters for {DeviceName} instance {InstanceName}", device.Name, i.Name);
 						}
 
-						foreach (var instanceCustomProperty in i.CustomProperties)
+						try
 						{
-							instanceInclusionExpression.Parameters[instanceCustomProperty.Name] = instanceCustomProperty.Value ?? string.Empty;
+							foreach (var instanceCustomProperty in i.CustomProperties)
+							{
+								instanceInclusionExpression.Parameters[instanceCustomProperty.Name] = instanceCustomProperty.Value ?? string.Empty;
+							}
+						}
+						catch (Exception e)
+						{
+							logger.LogError(e, "Error setting InstanceInclusionExpression parameters for {DeviceName} instance {InstanceName} custom properties", device.Name, i.Name);
 						}
 
 						try

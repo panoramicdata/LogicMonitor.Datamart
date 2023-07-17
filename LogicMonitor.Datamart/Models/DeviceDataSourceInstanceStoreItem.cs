@@ -30,7 +30,7 @@ public class DeviceDataSourceInstanceStoreItem : IdentifiedStoreItem
 
 	public bool LockDescription { get; set; }
 
-	public bool Name { get; set; }
+	public string Name { get; set; } = string.Empty;
 
 	public bool StopMonitoring { get; set; }
 

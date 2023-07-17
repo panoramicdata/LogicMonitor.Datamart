@@ -331,9 +331,9 @@ internal class LowResolutionDataSync : LoopInterval
 				{
 					graphDataLine.Data = graphDataLine.Data
 						.Where((dp, index) =>
-												{
-													return graphData.TimeStamps[index] >= device.CreatedOnSeconds * 1000;
-												})
+							{
+								return graphData.TimeStamps[index] >= device.CreatedOnSeconds * 1000;
+							})
 						.ToArray();
 				}
 
@@ -509,6 +509,11 @@ internal class LowResolutionDataSync : LoopInterval
 		}
 
 		if (percentageAvailabilityCalculation != "PercentUpTime")
+		{
+			return null;
+		}
+
+		if (values.Length == 0)
 		{
 			return null;
 		}

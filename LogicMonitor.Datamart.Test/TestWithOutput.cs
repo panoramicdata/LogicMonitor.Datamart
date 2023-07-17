@@ -43,6 +43,7 @@ public abstract class TestWithOutput
 				},
 				new DataSourceConfigurationItem{
 					Name = "SNMP_Network_Interfaces",
+					InstanceInclusionExpression = "Description != ''",
 					DataPoints = new List<DataPointConfigurationItem>
 					{
 						new DataPointConfigurationItem
@@ -94,6 +95,17 @@ public abstract class TestWithOutput
 				},
 				new DataSourceConfigurationItem{
 					Name = "HostStatus",
+					DataPoints = new List<DataPointConfigurationItem>
+					{
+						new DataPointConfigurationItem
+							{
+								Name = "idleInterval",
+								MeasurementUnit = "Seconds",
+							},
+					},
+				},
+				new DataSourceConfigurationItem{
+					Name = "SNMP_Host_Uptime",
 					DataPoints = new List<DataPointConfigurationItem>
 					{
 						new DataPointConfigurationItem
