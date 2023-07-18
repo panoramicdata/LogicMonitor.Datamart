@@ -29,7 +29,7 @@ public class DataTests : TestWithOutput
 		var endDateTime = new DateTimeOffset(DateTimeOffset.UtcNow.Date, TimeSpan.Zero);
 		var startDateTime = endDateTime.AddHours(-8);
 
-		string dataPointName = "PercentUpTime";
+		string dataPointName = "everyOtherHourSecondOfHour";
 
 		var dataPointStoreItem = new DataSourceDataPointStoreItem
 		{
