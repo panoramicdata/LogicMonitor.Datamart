@@ -43,10 +43,12 @@ public class AggregationTests
 		{
 			values.Add(i);
 		}
+
 		for (var i = 0; i < 10000; i++)
 		{
 			values.Add(null);
 		}
+
 		for (var i = 0; i < 5000; i++)
 		{
 			values.Add(i);

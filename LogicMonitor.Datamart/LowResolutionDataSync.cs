@@ -254,7 +254,7 @@ internal class LowResolutionDataSync : LoopInterval
 			databaseDeviceDataSourceInstanceDataPoints.Select(ddsidp => ddsidp.DeviceDataSourceInstanceId).Distinct().Count()
 		);
 
-		var dataPointStoreItems = await context
+		var dataSourceDataPointStoreItems = await context
 			.DataSourceDataPoints
 			.Include(dsdp => dsdp.DataSource)
 			.AsNoTracking()
@@ -265,7 +265,7 @@ internal class LowResolutionDataSync : LoopInterval
 			context,
 			logger,
 			databaseDeviceDataSourceInstanceDataPoints,
-			dataPointStoreItems,
+			dataSourceDataPointStoreItems,
 			cancellationToken)
 			.ConfigureAwait(false);
 
@@ -306,129 +306,26 @@ internal class LowResolutionDataSync : LoopInterval
 				})
 				?? throw new InvalidOperationException($"Could not find configuration for DataSource {dataSourceName}.");
 
-			var dataPointStoreItem = dataPointStoreItems
+			var dataSourceDataPointStoreItem = dataSourceDataPointStoreItems
 				.SingleOrDefault(dp => dp.Name == dataPointName && dp.DataSource!.Name == dataSourceConfigurationItem.Name);
 
 			while (endDateTime < utcNow)
 			{
-				TimeSeriesDataAggregationStoreItem bulkWriteModel;
+				var bulkWriteModel = await GetTimeSeriesDataAggregationStoreItemAsync(
+					datamartClient,
+					device,
+					databaseDeviceDataSourceInstanceDataPoint,
+					startDateTime,
+					endDateTime,
+					dataPointName,
+					dataSourceDataPointStoreItem,
+					cancellationToken
+				);
 
-				var graphData = await datamartClient
-					.GetGraphDataAsync(
-						new DeviceDataSourceInstanceGraphDataRequest
-						{
-							DeviceDataSourceInstanceId = databaseDeviceDataSourceInstanceDataPoint.DeviceDataSourceInstance.LogicMonitorId,
-							StartDateTime = startDateTime.UtcDateTime,
-							EndDateTime = endDateTime.UtcDateTime,
-							TimePeriod = TimePeriod.Zoom,
-							DataSourceGraphId = -1,
-						},
-						cancellationToken)
-					.ConfigureAwait(false);
-
-				// Remove all DataPoint values before the device was added to LogicMonitor
-				foreach (var graphDataLine in graphData.Lines)
+				if (bulkWriteModel is null)
 				{
-					graphDataLine.Data = graphDataLine.Data
-						.Where((dp, index) =>
-							{
-								return graphData.TimeStamps[index] >= device.CreatedOnSeconds * 1000;
-							})
-						.ToArray();
+					continue;
 				}
-
-				graphData.TimeStamps = graphData.TimeStamps
-					.Where(ts => ts >= device.CreatedOnSeconds * 1000)
-					.ToList();
-
-				Line? line;
-				if (string.IsNullOrWhiteSpace(databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint.Calculation))
-				{
-					line = graphData
-						.Lines
-						.SingleOrDefault(dp =>
-						{
-							return dp.Legend == dataPointName;
-						});
-
-					if (line is null || dataPointStoreItem is null)
-					{
-						continue;
-					}
-				}
-				else
-				{
-					var expression = new ExtendedExpression(databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint.Calculation);
-					line = new Line();
-					line.Data = graphData.TimeStamps.Select((ts, index) =>
-					{
-						expression.Parameters.Clear();
-						foreach (var line in graphData.Lines)
-						{
-							expression.Parameters.Add(line.Legend, line.Data[index]);
-						}
-
-						return expression.Evaluate() as double?;
-					})
-					.ToArray();
-				}
-
-				// Calculate and sort non-null values
-				var sortedNonNullValues = line.Data
-					.Where(v => v.HasValue)
-					.Select(v => v.Value)
-					.OrderBy(v => v)
-					.ToArray();
-
-				bulkWriteModel = new TimeSeriesDataAggregationStoreItem
-				{
-					Id = Guid.NewGuid(),
-					DeviceDataSourceInstanceDataPointId = databaseDeviceDataSourceInstanceDataPoint.Id,
-					PeriodStart = startDateTime.UtcDateTime,
-					PeriodEnd = endDateTime.UtcDateTime,
-					DataCount = line.Data.Count(d => d.HasValue),
-					NoDataCount = line.Data.Count(d => !d.HasValue),
-					Sum = line.Data.Sum(d => d ?? 0),
-					SumSquared = line.Data.Sum(d => d.HasValue ? d.Value * d.Value : 0),
-					Max = line.Data.Where(d => d != null).DefaultIfEmpty(null).Max(),
-					Min = line.Data.Where(d => d != null).DefaultIfEmpty(null).Min(),
-					First = line.Data.Where(d => d != null).DefaultIfEmpty(null).First(),
-					Last = line.Data.Where(d => d != null).DefaultIfEmpty(null).Last(),
-					FirstWithData = line.Data.Where(d => d != null).DefaultIfEmpty(null).First(),
-					LastWithData = line.Data.Where(d => d != null).DefaultIfEmpty(null).Last(),
-					Centile05 = CalculatePercentile(sortedNonNullValues, 5),
-					Centile10 = CalculatePercentile(sortedNonNullValues, 10),
-					Centile25 = CalculatePercentile(sortedNonNullValues, 25),
-					Centile50 = CalculatePercentile(sortedNonNullValues, 50),
-					Centile75 = CalculatePercentile(sortedNonNullValues, 75),
-					Centile90 = CalculatePercentile(sortedNonNullValues, 90),
-					Centile95 = CalculatePercentile(sortedNonNullValues, 95),
-					NormalCount = CountAtAlertLevel(
-						line.Data,
-						dataPointStoreItem.GlobalAlertExpression,
-						CountAlertLevel.Normal
-					),
-					WarningCount = CountAtAlertLevel(
-						line.Data,
-						dataPointStoreItem.GlobalAlertExpression,
-						CountAlertLevel.Warning
-					),
-					ErrorCount = CountAtAlertLevel(
-						line.Data,
-						dataPointStoreItem.GlobalAlertExpression,
-						CountAlertLevel.Error
-					),
-					CriticalCount = CountAtAlertLevel(
-						line.Data,
-						dataPointStoreItem.GlobalAlertExpression,
-						CountAlertLevel.Critical
-					),
-					// IMPORTANT! This must be calculated last as this process can reverse the array.
-					AvailabilityPercent = CalculatePercentageAvailability(
-						line.Data,
-						dataPointStoreItem.PercentageAvailabilityCalculation
-					),
-				};
 
 				aggregationsToWrite.Add(bulkWriteModel);
 
@@ -452,6 +349,138 @@ internal class LowResolutionDataSync : LoopInterval
 		datamartClient.UseCache = oldCacheState;
 
 		logger.LogInformation("Syncing data complete.");
+	}
+
+	internal static async Task<TimeSeriesDataAggregationStoreItem?> GetTimeSeriesDataAggregationStoreItemAsync(
+		DatamartClient datamartClient,
+		DeviceStoreItem device,
+		DeviceDataSourceInstanceDataPointStoreItem databaseDeviceDataSourceInstanceDataPoint,
+		DateTimeOffset startDateTime,
+		DateTimeOffset endDateTime,
+		string dataPointName,
+		DataSourceDataPointStoreItem? dataPointStoreItem,
+		CancellationToken cancellationToken)
+	{
+		TimeSeriesDataAggregationStoreItem bulkWriteModel;
+
+		var graphData = await datamartClient
+			.GetGraphDataAsync(
+				new DeviceDataSourceInstanceGraphDataRequest
+				{
+					DeviceDataSourceInstanceId = databaseDeviceDataSourceInstanceDataPoint.DeviceDataSourceInstance.LogicMonitorId,
+					StartDateTime = startDateTime.UtcDateTime,
+					EndDateTime = endDateTime.UtcDateTime,
+					TimePeriod = TimePeriod.Zoom,
+					DataSourceGraphId = -1,
+				},
+				cancellationToken)
+			.ConfigureAwait(false);
+
+		// Remove all DataPoint values before the device was added to LogicMonitor
+		foreach (var graphDataLine in graphData.Lines)
+		{
+			graphDataLine.Data = graphDataLine.Data
+			.Where((dp, index) =>
+			{
+				return graphData.TimeStamps[index] >= device.CreatedOnSeconds * 1000;
+			})
+				.ToArray();
+		}
+
+		graphData.TimeStamps = graphData.TimeStamps
+			.Where(ts => ts >= device.CreatedOnSeconds * 1000)
+			.ToList();
+
+		Line? line;
+		if (string.IsNullOrWhiteSpace(databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint.Calculation))
+		{
+			line = graphData
+				.Lines
+				.SingleOrDefault(dp =>
+				{
+					return dp.Legend == dataPointName;
+				});
+
+			if (line is null || dataPointStoreItem is null)
+			{
+				return null;
+			}
+		}
+		else
+		{
+			var expression = new ExtendedExpression(databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint.Calculation);
+			line = new Line();
+			line.Data = graphData.TimeStamps.Select((ts, index) =>
+			{
+				expression.Parameters.Clear();
+				foreach (var line in graphData.Lines)
+				{
+					expression.Parameters.Add(line.Legend, line.Data[index]);
+				}
+
+				return expression.Evaluate() as double?;
+			})
+			.ToArray();
+		}
+
+		// Calculate and sort non-null values
+		var sortedNonNullValues = line.Data
+			.Where(v => v.HasValue)
+			.Select(v => v.Value)
+			.OrderBy(v => v)
+			.ToArray();
+
+		bulkWriteModel = new TimeSeriesDataAggregationStoreItem
+		{
+			Id = Guid.NewGuid(),
+			DeviceDataSourceInstanceDataPointId = databaseDeviceDataSourceInstanceDataPoint.Id,
+			PeriodStart = startDateTime.UtcDateTime,
+			PeriodEnd = endDateTime.UtcDateTime,
+			DataCount = line.Data.Count(d => d.HasValue),
+			NoDataCount = line.Data.Count(d => !d.HasValue),
+			Sum = line.Data.Sum(d => d ?? 0),
+			SumSquared = line.Data.Sum(d => d.HasValue ? d.Value * d.Value : 0),
+			Max = line.Data.Where(d => d != null).DefaultIfEmpty(null).Max(),
+			Min = line.Data.Where(d => d != null).DefaultIfEmpty(null).Min(),
+			First = line.Data.DefaultIfEmpty(null).First(),
+			Last = line.Data.DefaultIfEmpty(null).Last(),
+			FirstWithData = line.Data.Where(d => d != null).DefaultIfEmpty(null).First(),
+			LastWithData = line.Data.Where(d => d != null).DefaultIfEmpty(null).Last(),
+			Centile05 = CalculatePercentile(sortedNonNullValues, 5),
+			Centile10 = CalculatePercentile(sortedNonNullValues, 10),
+			Centile25 = CalculatePercentile(sortedNonNullValues, 25),
+			Centile50 = CalculatePercentile(sortedNonNullValues, 50),
+			Centile75 = CalculatePercentile(sortedNonNullValues, 75),
+			Centile90 = CalculatePercentile(sortedNonNullValues, 90),
+			Centile95 = CalculatePercentile(sortedNonNullValues, 95),
+			NormalCount = CountAtAlertLevel(
+				line.Data,
+				dataPointStoreItem.GlobalAlertExpression,
+				CountAlertLevel.Normal
+			),
+			WarningCount = CountAtAlertLevel(
+				line.Data,
+				dataPointStoreItem.GlobalAlertExpression,
+				CountAlertLevel.Warning
+			),
+			ErrorCount = CountAtAlertLevel(
+				line.Data,
+				dataPointStoreItem.GlobalAlertExpression,
+				CountAlertLevel.Error
+			),
+			CriticalCount = CountAtAlertLevel(
+				line.Data,
+				dataPointStoreItem.GlobalAlertExpression,
+				CountAlertLevel.Critical
+			),
+			// IMPORTANT! This must be calculated last as this process can reverse the array.
+			AvailabilityPercent = CalculatePercentageAvailability(
+				line.Data,
+				dataPointStoreItem.PercentageAvailabilityCalculation
+			),
+		};
+
+		return bulkWriteModel;
 	}
 
 	private static async Task ResetForResyncAsync(
@@ -499,9 +528,9 @@ internal class LowResolutionDataSync : LoopInterval
 	}
 
 	public static double? CalculatePercentageAvailability(
-	double?[] values,
-	string percentageAvailabilityCalculation
-)
+		double?[] values,
+		string percentageAvailabilityCalculation
+	)
 	{
 		if (string.IsNullOrWhiteSpace(percentageAvailabilityCalculation))
 		{
