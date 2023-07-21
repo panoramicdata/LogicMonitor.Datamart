@@ -19,17 +19,23 @@ public class DataTests : TestWithOutput
 		{
 			DeviceDataSourceInstance = new()
 			{
-				LogicMonitorId = 268954440
+				LogicMonitorId = 78121413
 			},
 			DataSourceDataPoint = new()
 			{
 			}
 		};
+		var utcNow = DateTimeOffset.UtcNow;
+		var endDateTime = new DateTimeOffset(utcNow.Year,
+			utcNow.Month,
+			1,
+			0,
+			0,
+			0,
+			TimeSpan.Zero);
+		var startDateTime = endDateTime.AddMonths(-1);
 
-		var endDateTime = new DateTimeOffset(DateTimeOffset.UtcNow.Date, TimeSpan.Zero);
-		var startDateTime = endDateTime.AddHours(-8);
-
-		string dataPointName = "everyOtherHourSecondOfHour";
+		string dataPointName = "Uptime";
 
 		var dataPointStoreItem = new DataSourceDataPointStoreItem
 		{
@@ -51,7 +57,7 @@ public class DataTests : TestWithOutput
 
 		result.Should().NotBeNull();
 		result.PeriodStart.Should().Be(startDateTime);
-		result.AvailabilityPercent.Should().BeApproximately(50, 5);
+		result.AvailabilityPercent.Should().BeApproximately(70, 5);
 	}
 
 	[Fact]

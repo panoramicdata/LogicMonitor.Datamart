@@ -7,7 +7,7 @@ namespace LogicMonitor.Datamart;
 internal class LowResolutionDataSync : LoopInterval
 {
 	private static readonly TimeSpan EightHours = TimeSpan.FromHours(8);
-	private const int DeviceDownTimeWindowSeconds = 300;
+	private const int DeviceDownTimeWindowSeconds = 3000;
 
 	private readonly DatamartClient _datamartClient;
 	private readonly Configuration _configuration;
@@ -275,74 +275,81 @@ internal class LowResolutionDataSync : LoopInterval
 
 		foreach (var databaseDeviceDataSourceInstanceDataPoint in databaseDeviceDataSourceInstanceDataPoints)
 		{
-			var lastAggregationHourWrittenUtc = databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo is null
-				? configuration.StartDateTimeUtc
-				: databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo.Value;
-
-			// Ensure that this is on a month boundary
-			lastAggregationHourWrittenUtc = new DateTimeOffset(
-				lastAggregationHourWrittenUtc.Year,
-				lastAggregationHourWrittenUtc.Month,
-				1, 0, 0, 0,
-				TimeSpan.Zero);
-
-			var startDateTime = lastAggregationHourWrittenUtc;
-			var endDateTime = lastAggregationHourWrittenUtc.AddMonths(1);
-
-			if (endDateTime >= utcNow)
+			try
 			{
-				continue;
-			}
+				var lastAggregationHourWrittenUtc = databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo is null
+					? configuration.StartDateTimeUtc
+					: databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo.Value;
 
-			string dataSourceName = databaseDeviceDataSourceInstanceDataPoint.DeviceDataSourceInstance!.DeviceDataSource!.DataSource!.Name;
-			string dataPointName = databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint!.Name;
+				// Ensure that this is on a month boundary
+				lastAggregationHourWrittenUtc = new DateTimeOffset(
+					lastAggregationHourWrittenUtc.Year,
+					lastAggregationHourWrittenUtc.Month,
+					1, 0, 0, 0,
+					TimeSpan.Zero);
 
-			// Get the configuration for this DataSourceName
-			var dataSourceConfigurationItem = configuration
-				.DataSources
-				.SingleOrDefault(dsci =>
-				{
-					return dsci.Name == dataSourceName;
-				})
-				?? throw new InvalidOperationException($"Could not find configuration for DataSource {dataSourceName}.");
+				var startDateTime = lastAggregationHourWrittenUtc;
+				var endDateTime = lastAggregationHourWrittenUtc.AddMonths(1);
 
-			var dataSourceDataPointStoreItem = dataSourceDataPointStoreItems
-				.SingleOrDefault(dp => dp.Name == dataPointName && dp.DataSource!.Name == dataSourceConfigurationItem.Name);
-
-			while (endDateTime < utcNow)
-			{
-				var bulkWriteModel = await GetTimeSeriesDataAggregationStoreItemAsync(
-					datamartClient,
-					device,
-					databaseDeviceDataSourceInstanceDataPoint,
-					startDateTime,
-					endDateTime,
-					dataPointName,
-					dataSourceDataPointStoreItem,
-					cancellationToken
-				);
-
-				if (bulkWriteModel is null)
+				if (endDateTime >= utcNow)
 				{
 					continue;
 				}
 
-				aggregationsToWrite.Add(bulkWriteModel);
+				string dataSourceName = databaseDeviceDataSourceInstanceDataPoint.DeviceDataSourceInstance!.DeviceDataSource!.DataSource!.Name;
+				string dataPointName = databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint!.Name;
 
-				databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo = endDateTime;
-				startDateTime = startDateTime.AddMonths(1);
-				endDateTime = endDateTime.AddMonths(1);
+				// Get the configuration for this DataSourceName
+				var dataSourceConfigurationItem = configuration
+					.DataSources
+					.SingleOrDefault(dsci =>
+					{
+						return dsci.Name == dataSourceName;
+					})
+					?? throw new InvalidOperationException($"Could not find configuration for DataSource {dataSourceName}.");
+
+				var dataSourceDataPointStoreItem = dataSourceDataPointStoreItems
+					.SingleOrDefault(dp => dp.Name == dataPointName && dp.DataSource!.Name == dataSourceConfigurationItem.Name);
+
+				while (endDateTime < utcNow)
+				{
+					var bulkWriteModel = await GetTimeSeriesDataAggregationStoreItemAsync(
+						datamartClient,
+						device,
+						databaseDeviceDataSourceInstanceDataPoint,
+						startDateTime,
+						endDateTime,
+						dataPointName,
+						dataSourceDataPointStoreItem,
+						cancellationToken
+					);
+
+					if (bulkWriteModel is null)
+					{
+						continue;
+					}
+
+					aggregationsToWrite.Add(bulkWriteModel);
+
+					databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo = endDateTime;
+					startDateTime = startDateTime.AddMonths(1);
+					endDateTime = endDateTime.AddMonths(1);
+				}
+
+				await context
+					.BulkInsertAsync(aggregationsToWrite, cancellationToken: cancellationToken)
+					.ConfigureAwait(false);
+
+				await context
+					.SaveChangesAsync(cancellationToken)
+					.ConfigureAwait(false);
+
+				aggregationsToWrite.Clear();
 			}
-
-			await context
-				.BulkInsertAsync(aggregationsToWrite, cancellationToken: cancellationToken)
-				.ConfigureAwait(false);
-
-			await context
-				.SaveChangesAsync(cancellationToken)
-				.ConfigureAwait(false);
-
-			aggregationsToWrite.Clear();
+			catch (Exception ex)
+			{
+				logger.LogError(ex, "Error syncing data for instance datapoint with id {DeviceDataSourceInstanceDataPointId}: {Message}.", databaseDeviceDataSourceInstanceDataPoint.Id, ex.Message);
+			}
 		}
 
 		// Re-enable caching
@@ -548,6 +555,7 @@ internal class LowResolutionDataSync : LoopInterval
 		}
 
 		var reversedValues = values.Reverse();
+		//var previousButOneDoubleValue = double.NaN;
 		var previousDoubleValue = double.NaN;
 		var upTimeCount = 0;
 		var downTimeCount = 0;
@@ -557,6 +565,7 @@ internal class LowResolutionDataSync : LoopInterval
 		{
 			if (value is double doubleValue)
 			{
+				//previousButOneDoubleValue = previousDoubleValue;
 				previousDoubleValue = doubleValue;
 				upTimeCount += ambiguousCount;
 				ambiguousCount = 0;
@@ -565,7 +574,15 @@ internal class LowResolutionDataSync : LoopInterval
 			}
 			else
 			{
-				if (double.IsNaN(previousDoubleValue) || previousDoubleValue < DeviceDownTimeWindowSeconds)
+				//double projectedValue = !double.IsNaN(previousDoubleValue) && !double.IsNaN(previousButOneDoubleValue)
+				//	? previousDoubleValue + (previousDoubleValue - previousButOneDoubleValue)
+				//	: double.NaN;
+
+				if (
+					double.IsNaN(previousDoubleValue)
+					|| previousDoubleValue < DeviceDownTimeWindowSeconds
+					//|| projectedValue < DeviceDownTimeWindowSeconds
+					)
 				{
 					if (isAmbiguous)
 					{
