@@ -1049,7 +1049,10 @@ public class DatamartClient : LogicMonitorClient
 			// Ensure that this DataPoint exists in the database
 			var databaseDataPoint = await context
 				.DataSourceDataPoints
-				.SingleOrDefaultAsync(dp => dp.Name == configDataSourceDataPoint.Name, cancellationToken: cancellationToken)
+				.SingleOrDefaultAsync(
+					dp => dp.DataSource.Name == dataSource.Name
+						  && dp.Name == configDataSourceDataPoint.Name,
+					cancellationToken: cancellationToken)
 				.ConfigureAwait(false);
 
 			if (databaseDataPoint is null)
