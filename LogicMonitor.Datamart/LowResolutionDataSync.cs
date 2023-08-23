@@ -296,8 +296,14 @@ internal class LowResolutionDataSync : LoopInterval
 					continue;
 				}
 
-				string dataSourceName = databaseDeviceDataSourceInstanceDataPoint.DeviceDataSourceInstance!.DeviceDataSource!.DataSource!.Name;
-				string dataPointName = databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint!.Name;
+				string dataSourceName = databaseDeviceDataSourceInstanceDataPoint
+					.DeviceDataSourceInstance!
+					.DeviceDataSource!
+					.DataSource!
+					.Name;
+				string dataPointName = databaseDeviceDataSourceInstanceDataPoint
+					.DataSourceDataPoint!
+					.Name;
 
 				// Get the configuration for this DataSourceName
 				var dataSourceConfigurationItem = configuration
@@ -309,7 +315,10 @@ internal class LowResolutionDataSync : LoopInterval
 					?? throw new InvalidOperationException($"Could not find configuration for DataSource {dataSourceName}.");
 
 				var dataSourceDataPointStoreItem = dataSourceDataPointStoreItems
-					.SingleOrDefault(dp => dp.Name == dataPointName && dp.DataSource!.Name == dataSourceConfigurationItem.Name);
+					.SingleOrDefault(dp =>
+						dp.Name == dataPointName
+						&& dp.DataSource!.Name == dataSourceConfigurationItem.Name
+					);
 
 				while (endDateTime < utcNow)
 				{
@@ -321,6 +330,7 @@ internal class LowResolutionDataSync : LoopInterval
 						endDateTime,
 						dataPointName,
 						dataSourceDataPointStoreItem,
+						logger,
 						cancellationToken
 					);
 
@@ -366,15 +376,26 @@ internal class LowResolutionDataSync : LoopInterval
 		DateTimeOffset endDateTime,
 		string dataPointName,
 		DataSourceDataPointStoreItem? dataPointStoreItem,
+		ILogger logger,
 		CancellationToken cancellationToken)
 	{
 		TimeSeriesDataAggregationStoreItem bulkWriteModel;
+
+		var deviceDataSourceInstanceId = databaseDeviceDataSourceInstanceDataPoint
+			.DeviceDataSourceInstance!
+			.LogicMonitorId;
+
+		logger.LogDebug(
+			"Getting graph data for DeviceDataSourceInstance {DeviceDataSourceInstanceId}...",
+			deviceDataSourceInstanceId);
 
 		var graphData = await datamartClient
 			.GetGraphDataAsync(
 				new DeviceDataSourceInstanceGraphDataRequest
 				{
-					DeviceDataSourceInstanceId = databaseDeviceDataSourceInstanceDataPoint.DeviceDataSourceInstance.LogicMonitorId,
+					DeviceDataSourceInstanceId = databaseDeviceDataSourceInstanceDataPoint
+						.DeviceDataSourceInstance
+						.LogicMonitorId,
 					StartDateTime = startDateTime.UtcDateTime,
 					EndDateTime = endDateTime.UtcDateTime,
 					TimePeriod = TimePeriod.Zoom,
@@ -382,6 +403,10 @@ internal class LowResolutionDataSync : LoopInterval
 				},
 				cancellationToken)
 			.ConfigureAwait(false);
+
+		logger.LogDebug(
+			"Getting graph data for DeviceDataSourceInstance {DeviceDataSourceInstanceId} complete.",
+			deviceDataSourceInstanceId);
 
 		// Remove all DataPoint values before the device was added to LogicMonitor
 		foreach (var graphDataLine in graphData.Lines)
@@ -391,7 +416,7 @@ internal class LowResolutionDataSync : LoopInterval
 			{
 				return graphData.TimeStamps[index] >= device.CreatedOnSeconds * 1000;
 			})
-				.ToArray();
+				.ToList();
 		}
 
 		graphData.TimeStamps = graphData.TimeStamps
@@ -427,7 +452,7 @@ internal class LowResolutionDataSync : LoopInterval
 
 				return expression.Evaluate() as double?;
 			})
-			.ToArray();
+			.ToList();
 		}
 
 		// Calculate and sort non-null values
@@ -535,7 +560,7 @@ internal class LowResolutionDataSync : LoopInterval
 	}
 
 	public static double? CalculatePercentageAvailability(
-		double?[] values,
+		List<double?> values,
 		string percentageAvailabilityCalculation
 	)
 	{
@@ -549,12 +574,12 @@ internal class LowResolutionDataSync : LoopInterval
 			return null;
 		}
 
-		if (values.Length == 0)
+		if (values.Count == 0)
 		{
 			return null;
 		}
 
-		var reversedValues = values.Reverse();
+		var reversedValues = values.ToArray().Reverse();
 		//var previousButOneDoubleValue = double.NaN;
 		var previousDoubleValue = double.NaN;
 		var upTimeCount = 0;
@@ -669,7 +694,7 @@ internal class LowResolutionDataSync : LoopInterval
 	/// <param name="countAlertLevel"></param>
 	/// <returns></returns>
 	private static int? CountAtAlertLevel(
-		double?[] data,
+		List<double?> data,
 		string effectiveAlertExpression,
 		CountAlertLevel countAlertLevel
 	)

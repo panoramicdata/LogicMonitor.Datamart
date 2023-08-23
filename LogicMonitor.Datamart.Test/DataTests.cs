@@ -52,6 +52,7 @@ public class DataTests : TestWithOutput
 			endDateTime,
 			dataPointName,
 			dataPointStoreItem,
+			LoggerFactory.CreateLogger<DataTests>(),
 			default)
 			.ConfigureAwait(false);
 
