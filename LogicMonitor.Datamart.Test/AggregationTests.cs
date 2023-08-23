@@ -1,4 +1,6 @@
-﻿namespace LogicMonitor.Datamart.Test;
+﻿using System.Linq;
+
+namespace LogicMonitor.Datamart.Test;
 public class AggregationTests
 {
 	[Theory]
@@ -19,12 +21,12 @@ public class AggregationTests
 	public void PercentageUptimeTest(double? expectedUptimePercent, params double?[] values)
 	{
 		LowResolutionDataSync
-			.CalculatePercentageAvailability(values, "PercentUpTime")
+			.CalculatePercentageAvailability(values.ToList(), "PercentUpTime")
 			.Should()
 			.Be(expectedUptimePercent);
 
 		LowResolutionDataSync
-			.CalculatePercentageAvailability(values, "xxx")
+			.CalculatePercentageAvailability(values.ToList(), "xxx")
 			.Should()
 			.BeNull();
 	}
@@ -55,7 +57,7 @@ public class AggregationTests
 		}
 
 		LowResolutionDataSync
-			.CalculatePercentageAvailability(values.ToArray(), "PercentUpTime")
+			.CalculatePercentageAvailability(values, "PercentUpTime")
 			.Should()
 			.Be(50);
 	}
