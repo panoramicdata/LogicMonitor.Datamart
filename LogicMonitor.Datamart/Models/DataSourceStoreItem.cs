@@ -27,4 +27,6 @@ public class DataSourceStoreItem : IdentifiedStoreItem
 	public int PollingIntervalSeconds { get; set; }
 
 	public string Technology { get; set; } = string.Empty;
+
+	public long? LastTimeSeriesDataSyncDurationMs { get; set; }
 }

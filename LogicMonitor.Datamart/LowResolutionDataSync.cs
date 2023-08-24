@@ -65,24 +65,27 @@ internal class LowResolutionDataSync : LoopInterval
 		_datamartClient.ClearCache();
 		var oldCacheState = _datamartClient.UseCache;
 		_datamartClient.UseCache = false;
+		var dataSourceStopwatches = new Dictionary<string, Stopwatch>();
 
 		try
 		{
 			// IMPORTANT: This must be done per device, as doing all at once causes database timeouts
 
 			// Get a list of devices
-			var devices = await context
+			var databaseDevices = await context
 				.Devices
 				.ToListAsync(cancellationToken: cancellationToken)
 				.ConfigureAwait(false);
 
-			var deviceCount = devices.Count;
+			var deviceCount = databaseDevices.Count;
 			var deviceIndex = 0;
 			var failedDeviceDisplayNames = new List<string>();
-			// For each device, get the list of DeviceDataSourceInstanceDataPoints
-			foreach (var device in devices)
+			var deviceStopwatch = new Stopwatch();
+			foreach (var device in databaseDevices)
 			{
 				deviceIndex++;
+
+				deviceStopwatch.Restart();
 
 				Logger.LogInformation(
 					"Getting DeviceDataSourceInstanceDataPoints for {DatabaseName}: {DeviceName} ({DeviceIndex}/{DeviceCount})...",
@@ -92,6 +95,7 @@ internal class LowResolutionDataSync : LoopInterval
 					deviceCount
 				);
 
+				// Get the list of DeviceDataSourceInstanceDataPoints
 				var databaseDeviceDataSourceInstanceDataPoints = await context
 					.DeviceDataSourceInstanceDataPoints
 					.Include(ddsidp => ddsidp.DeviceDataSourceInstance!.DeviceDataSource!.DataSource)
@@ -111,7 +115,7 @@ internal class LowResolutionDataSync : LoopInterval
 				var databaseDeviceDataSourceInstanceDataPointsCount = databaseDeviceDataSourceInstanceDataPoints.Count;
 
 				Logger.LogDebug(
-					"Getting DeviceDataSourceInstanceDataPoints for {DatabaseName}: {DeviceName} ({DeviceIndex}/{DeviceCount}) complete.  Found {DeviceDataSourceInstanceDataPointCount}.",
+					"Getting DeviceDataSourceInstanceDataPoints for {DatabaseName}: {DeviceName} ({DeviceIndex}/{DeviceCount}) complete.  Found {DeviceDataSourceInstanceDataPointCount} DeviceDataSourceInstanceDataPoints.",
 					_configuration.DatabaseName,
 					device.DisplayName,
 					deviceIndex,
@@ -143,6 +147,7 @@ internal class LowResolutionDataSync : LoopInterval
 						Logger,
 						device,
 						databaseDeviceDataSourceInstanceDataPoints,
+						dataSourceStopwatches,
 						cancellationToken)
 						.ConfigureAwait(false);
 					Logger.LogDebug(
@@ -167,6 +172,8 @@ internal class LowResolutionDataSync : LoopInterval
 					);
 					failedDeviceDisplayNames.Add(device.DisplayName);
 				}
+
+				device.LastTimeSeriesDataSyncDurationMs = deviceStopwatch.ElapsedMilliseconds;
 			}
 
 			if (failedDeviceDisplayNames.Count == 0)
@@ -194,6 +201,30 @@ internal class LowResolutionDataSync : LoopInterval
 		finally
 		{
 			_datamartClient.UseCache = oldCacheState;
+
+			foreach (var (dataSourceName, dataSourceStopwatch) in dataSourceStopwatches)
+			{
+				Logger.LogInformation(
+					"Aggregations written for {DatabaseName}: DataSource {DataSourceName} in ({DataSourceDuration}ms).",
+						_configuration.DatabaseName,
+						dataSourceName,
+						dataSourceStopwatch.ElapsedMilliseconds
+				);
+
+				var dataSource = await context
+					.DataSources
+					.SingleOrDefaultAsync(ds => ds.Name == dataSourceName, cancellationToken: cancellationToken)
+					.ConfigureAwait(false);
+
+				if (dataSource is not null)
+				{
+					dataSource.LastTimeSeriesDataSyncDurationMs = dataSourceStopwatch.ElapsedMilliseconds;
+				}
+			}
+
+			await context
+				.SaveChangesAsync(cancellationToken)
+				.ConfigureAwait(false);
 		}
 	}
 
@@ -235,6 +266,7 @@ internal class LowResolutionDataSync : LoopInterval
 		ILogger logger,
 		DeviceStoreItem device,
 		List<DeviceDataSourceInstanceDataPointStoreItem> databaseDeviceDataSourceInstanceDataPoints,
+		Dictionary<string, Stopwatch> dataSourceStopwatches,
 		CancellationToken cancellationToken)
 	{
 		// To ignore a period of uncertainty whether the Collector has been
@@ -272,11 +304,18 @@ internal class LowResolutionDataSync : LoopInterval
 		// Disable caching
 		var oldCacheState = datamartClient.UseCache;
 		datamartClient.UseCache = false;
-
+		var databaseDeviceDataSourceInstanceDataPointIndex = 0;
+		var databaseDeviceDataSourceInstanceDataPointCount = databaseDeviceDataSourceInstanceDataPoints.Count;
 		foreach (var databaseDeviceDataSourceInstanceDataPoint in databaseDeviceDataSourceInstanceDataPoints)
 		{
 			try
 			{
+				logger.LogDebug(
+					"Processing databaseDeviceDataSourceInstanceDataPoint {Index}/{Count}",
+					++databaseDeviceDataSourceInstanceDataPointIndex,
+					databaseDeviceDataSourceInstanceDataPointCount
+				);
+
 				var lastAggregationHourWrittenUtc = databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo is null
 					? configuration.StartDateTimeUtc
 					: databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo.Value;
@@ -301,60 +340,81 @@ internal class LowResolutionDataSync : LoopInterval
 					.DeviceDataSource!
 					.DataSource!
 					.Name;
-				string dataPointName = databaseDeviceDataSourceInstanceDataPoint
-					.DataSourceDataPoint!
-					.Name;
 
-				// Get the configuration for this DataSourceName
-				var dataSourceConfigurationItem = configuration
-					.DataSources
-					.SingleOrDefault(dsci =>
-					{
-						return dsci.Name == dataSourceName;
-					})
-					?? throw new InvalidOperationException($"Could not find configuration for DataSource {dataSourceName}.");
-
-				var dataSourceDataPointStoreItem = dataSourceDataPointStoreItems
-					.SingleOrDefault(dp =>
-						dp.Name == dataPointName
-						&& dp.DataSource!.Name == dataSourceConfigurationItem.Name
-					);
-
-				while (endDateTime < utcNow)
+				// Start the stopwatch for this DataSource
+				if (dataSourceStopwatches.TryGetValue(dataSourceName, out var dataSourceStopwatch))
 				{
-					var bulkWriteModel = await GetTimeSeriesDataAggregationStoreItemAsync(
-						datamartClient,
-						device,
-						databaseDeviceDataSourceInstanceDataPoint,
-						startDateTime,
-						endDateTime,
-						dataPointName,
-						dataSourceDataPointStoreItem,
-						logger,
-						cancellationToken
-					);
-
-					if (bulkWriteModel is null)
-					{
-						continue;
-					}
-
-					aggregationsToWrite.Add(bulkWriteModel);
-
-					databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo = endDateTime;
-					startDateTime = startDateTime.AddMonths(1);
-					endDateTime = endDateTime.AddMonths(1);
+					dataSourceStopwatch.Start();
+				}
+				else
+				{
+					dataSourceStopwatch = Stopwatch.StartNew();
+					dataSourceStopwatches[dataSourceName] = dataSourceStopwatch;
 				}
 
-				await context
-					.BulkInsertAsync(aggregationsToWrite, cancellationToken: cancellationToken)
-					.ConfigureAwait(false);
+				try
+				{
 
-				await context
-					.SaveChangesAsync(cancellationToken)
-					.ConfigureAwait(false);
+					string dataPointName = databaseDeviceDataSourceInstanceDataPoint
+						.DataSourceDataPoint!
+						.Name;
 
-				aggregationsToWrite.Clear();
+					// Get the configuration for this DataSourceName
+					var dataSourceConfigurationItem = configuration
+						.DataSources
+						.SingleOrDefault(dsci =>
+						{
+							return dsci.Name == dataSourceName;
+						})
+						?? throw new InvalidOperationException($"Could not find configuration for DataSource {dataSourceName}.");
+
+					var dataSourceDataPointStoreItem = dataSourceDataPointStoreItems
+						.SingleOrDefault(dp =>
+							dp.Name == dataPointName
+							&& dp.DataSource!.Name == dataSourceConfigurationItem.Name
+						);
+
+					while (endDateTime < utcNow)
+					{
+						var bulkWriteModel = await GetTimeSeriesDataAggregationStoreItemAsync(
+							datamartClient,
+							device,
+							databaseDeviceDataSourceInstanceDataPoint,
+							startDateTime,
+							endDateTime,
+							dataPointName,
+							dataSourceDataPointStoreItem,
+							logger,
+							cancellationToken
+						);
+
+						if (bulkWriteModel is null)
+						{
+							continue;
+						}
+
+						aggregationsToWrite.Add(bulkWriteModel);
+
+						databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo = endDateTime;
+						startDateTime = startDateTime.AddMonths(1);
+						endDateTime = endDateTime.AddMonths(1);
+					}
+
+					await context
+						.BulkInsertAsync(aggregationsToWrite, cancellationToken: cancellationToken)
+						.ConfigureAwait(false);
+
+					await context
+						.SaveChangesAsync(cancellationToken)
+						.ConfigureAwait(false);
+
+					aggregationsToWrite.Clear();
+				}
+				finally
+				{
+					// Stop the stopwatch for this DataSource
+					dataSourceStopwatch.Stop();
+				}
 			}
 			catch (Exception ex)
 			{
@@ -424,7 +484,7 @@ internal class LowResolutionDataSync : LoopInterval
 			.ToList();
 
 		Line? line;
-		if (string.IsNullOrWhiteSpace(databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint.Calculation))
+		if (string.IsNullOrWhiteSpace(databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint!.Calculation))
 		{
 			line = graphData
 				.Lines
@@ -435,7 +495,7 @@ internal class LowResolutionDataSync : LoopInterval
 
 			if (line is null || dataPointStoreItem is null)
 			{
-				return null;
+				throw new FormatException($"Could not find DataPoint '{dataPointName}' for DataSource '{databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint.DataSource.Name}'");
 			}
 		}
 		else

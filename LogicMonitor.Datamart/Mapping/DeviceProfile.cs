@@ -92,6 +92,9 @@ public class DeviceProfile : Profile
 			.ForMember(
 				dest => dest.Property20,
 				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 20)))
+			.ForMember(
+				dest => dest.LastTimeSeriesDataSyncDurationMs,
+				opts => opts.Ignore())
 			;
 
 		CreateMap<DeviceStoreItem, Device>()

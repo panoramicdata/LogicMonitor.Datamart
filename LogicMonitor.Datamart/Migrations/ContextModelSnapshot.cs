@@ -17,7 +17,7 @@ namespace LogicMonitor.Datamart.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.9")
+                .HasAnnotation("ProductVersion", "7.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -832,6 +832,9 @@ namespace LogicMonitor.Datamart.Migrations
                     b.Property<bool>("HasMultiInstances")
                         .HasColumnType("boolean");
 
+                    b.Property<long?>("LastTimeSeriesDataSyncDurationMs")
+                        .HasColumnType("bigint");
+
                     b.Property<int>("LogicMonitorId")
                         .HasColumnType("integer");
 
@@ -1278,6 +1281,9 @@ namespace LogicMonitor.Datamart.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<long?>("LastRawDataTimeSeconds")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("LastTimeSeriesDataSyncDurationMs")
                         .HasColumnType("bigint");
 
                     b.Property<string>("Link")

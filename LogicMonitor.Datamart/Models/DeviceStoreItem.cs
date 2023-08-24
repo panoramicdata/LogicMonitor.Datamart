@@ -137,6 +137,5 @@ public class DeviceStoreItem : IdentifiedStoreItem
 
 	public string? Property20 { get; set; } = string.Empty;
 
-	//public List<DevicePropertyStoreItem> SystemProperties { get; set; }
-	//public List<DevicePropertyStoreItem> CustomProperties { get; set; }
+	public long? LastTimeSeriesDataSyncDurationMs { get; set; }
 }

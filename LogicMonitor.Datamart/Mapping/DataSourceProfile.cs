@@ -26,7 +26,11 @@ public class DataSourceProfile : Profile
 			.ForMember(
 				dest => dest.DataPoints,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.LastTimeSeriesDataSyncDurationMs,
+				opts => opts.Ignore())
 			;
+
 		CreateMap<DataSourceStoreItem, DataSource>()
 			.ForMember(
 				dest => dest.Id,
