@@ -17,8 +17,10 @@ public class LogProfile : Profile
 			.ForMember(
 				dest => dest.DatamartLastModified,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.UserName,
+				opts => opts.MapFrom(src => src.PerformedByUsername))
 
-			.AfterMap<TruncateMappingAction<LogItem, LogStoreItem>>()
-			;
+			.AfterMap<TruncateMappingAction<LogItem, LogStoreItem>>();
 	}
 }
