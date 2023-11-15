@@ -23,11 +23,10 @@ public class DimensionTests : TestWithOutput
 		await new DimensionSync(
 				DatamartClient,
 				Configuration,
-				new List<string>
-				{
+				[
 					nameof(Device),
 					nameof(DeviceDataSourceInstance),
-				},
+				],
 				LoggerFactory)
 			.ExecuteAsync(default)
 			.ConfigureAwait(true);

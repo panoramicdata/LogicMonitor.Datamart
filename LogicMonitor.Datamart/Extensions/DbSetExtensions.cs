@@ -13,15 +13,8 @@ public static class DbSetExtension
 		where TApi : IdentifiedItem
 		where TStore : IdentifiedStoreItem
 	{
-		if (dbSet == null)
-		{
-			throw new ArgumentNullException(nameof(dbSet));
-		}
-
-		if (apiItem == null)
-		{
-			throw new ArgumentNullException(nameof(apiItem));
-		}
+		ArgumentNullException.ThrowIfNull(dbSet);
+		ArgumentNullException.ThrowIfNull(apiItem);
 
 		// Do we have it already?
 		var storeItem = dbSet

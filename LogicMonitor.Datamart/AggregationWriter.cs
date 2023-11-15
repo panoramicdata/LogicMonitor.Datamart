@@ -18,10 +18,7 @@ internal static class AggregationWriter
 		SqlConnection sqlConnection,
 		DateTimeOffset start)
 	{
-		if (sqlConnection == null)
-		{
-			throw new ArgumentNullException(nameof(sqlConnection));
-		}
+		ArgumentNullException.ThrowIfNull(sqlConnection);
 
 		var tableName = GetTableName(start);
 		var tableCreationSql = @"
@@ -61,10 +58,7 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 		DateTimeOffset start,
 		ILogger logger)
 	{
-		if (dbContextOptions == null)
-		{
-			throw new ArgumentNullException(nameof(dbContextOptions));
-		}
+		ArgumentNullException.ThrowIfNull(dbContextOptions);
 
 		using var dbContext = new Context(dbContextOptions);
 		var tableName = GetTableName(start);
@@ -81,10 +75,7 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 	/// </summary>
 	internal static async Task<List<string>> GetTablesAsync(DbContextOptions<Context> dbContextOptions)
 	{
-		if (dbContextOptions == null)
-		{
-			throw new ArgumentNullException(nameof(dbContextOptions));
-		}
+		ArgumentNullException.ThrowIfNull(dbContextOptions);
 
 		var tableNames = new List<string>();
 		using (var dbContext = new Context(dbContextOptions))
