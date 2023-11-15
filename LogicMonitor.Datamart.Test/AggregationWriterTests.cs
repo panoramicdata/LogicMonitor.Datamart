@@ -7,7 +7,7 @@ public class AggregationWriterTests : TestWithOutput
 	}
 
 	[Fact]
-	public async Task ListCreateAndRemoveAggreationTableForAPeriod_ValidRequest_TableExists()
+	public async Task ListCreateAndRemoveAggregationTableForAPeriod_ValidRequest_TableExists()
 	{
 		var testAggregationPeriod = DateTimeOffset.Parse("2018-10-11 13:00", null, DateTimeStyles.AssumeUniversal);
 		var tableName = AggregationWriter.GetTableName(testAggregationPeriod);
