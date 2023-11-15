@@ -1,11 +1,7 @@
 ﻿namespace LogicMonitor.Datamart.Test;
 
-public class AggregationWriterTests : TestWithOutput
+public class AggregationWriterTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTestOutputHelper)
 {
-	public AggregationWriterTests(ITestOutputHelper iTestOutputHelper) : base(iTestOutputHelper)
-	{
-	}
-
 	[Fact]
 	public async Task ListCreateAndRemoveAggregationTableForAPeriod_ValidRequest_TableExists()
 	{
