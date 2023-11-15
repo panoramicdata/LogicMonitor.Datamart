@@ -52,7 +52,7 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 			.ConfigureAwait(true);
 
 		result.Should().NotBeNull();
-		result.PeriodStart.Should().Be(startDateTime);
+		result!.PeriodStart.Should().Be(startDateTime);
 		result.AvailabilityPercent.Should().BeApproximately(70, 5);
 	}
 
