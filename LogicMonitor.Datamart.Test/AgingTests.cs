@@ -12,7 +12,7 @@ public class AgingTests : TestWithOutput
 				5,
 				LoggerFactory)
 			.ExecuteAsync(default)
-			.ConfigureAwait(false);
+			.ConfigureAwait(true);
 
 	[Fact]
 	public void DetermineTablesToAge_GivenList_CorrectResult()

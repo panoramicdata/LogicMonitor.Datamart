@@ -54,7 +54,7 @@ public class DataTests : TestWithOutput
 			dataPointStoreItem,
 			LoggerFactory.CreateLogger<DataTests>(),
 			default)
-			.ConfigureAwait(false);
+			.ConfigureAwait(true);
 
 		result.Should().NotBeNull();
 		result.PeriodStart.Should().Be(startDateTime);
@@ -69,6 +69,6 @@ public class DataTests : TestWithOutput
 				Configuration,
 				LoggerFactory)
 			.ExecuteAsync(default)
-			.ConfigureAwait(false);
+			.ConfigureAwait(true);
 	}
 }

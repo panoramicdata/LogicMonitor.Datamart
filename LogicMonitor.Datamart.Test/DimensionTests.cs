@@ -30,6 +30,6 @@ public class DimensionTests : TestWithOutput
 				},
 				LoggerFactory)
 			.ExecuteAsync(default)
-			.ConfigureAwait(false);
+			.ConfigureAwait(true);
 	}
 }

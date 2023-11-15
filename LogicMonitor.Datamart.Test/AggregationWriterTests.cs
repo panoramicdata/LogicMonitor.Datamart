@@ -13,30 +13,30 @@ public class AggregationWriterTests : TestWithOutput
 		var tableName = AggregationWriter.GetTableName(testAggregationPeriod);
 
 		// Try and remove the table if it already exists
-		if ((await DatamartClient.GetAggregationTablesAsync().ConfigureAwait(false)).Contains(tableName))
+		if ((await DatamartClient.GetAggregationTablesAsync().ConfigureAwait(true)).Contains(tableName))
 		{
 			await DatamartClient
 				.DropAggregationTableAsync(testAggregationPeriod)
-				.ConfigureAwait(false);
+				.ConfigureAwait(true);
 		}
 
 		// Assert the table does not exist
-		(await DatamartClient.GetAggregationTablesAsync().ConfigureAwait(false)).Should().NotContain(tableName);
+		(await DatamartClient.GetAggregationTablesAsync().ConfigureAwait(true)).Should().NotContain(tableName);
 
 		// Create the table
 		await DatamartClient
 			.EnsureTableExistsAsync(testAggregationPeriod)
-			.ConfigureAwait(false);
+			.ConfigureAwait(true);
 
 		// Check the table is there
-		(await DatamartClient.GetAggregationTablesAsync().ConfigureAwait(false)).Should().Contain(tableName);
+		(await DatamartClient.GetAggregationTablesAsync().ConfigureAwait(true)).Should().Contain(tableName);
 
 		// Tidy up by removing the table
 		await DatamartClient
 		  .DropAggregationTableAsync(testAggregationPeriod)
-		  .ConfigureAwait(false);
+		  .ConfigureAwait(true);
 
 		// Check it's no longer there
-		(await DatamartClient.GetAggregationTablesAsync().ConfigureAwait(false)).Should().NotContain(tableName);
+		(await DatamartClient.GetAggregationTablesAsync().ConfigureAwait(true)).Should().NotContain(tableName);
 	}
 }

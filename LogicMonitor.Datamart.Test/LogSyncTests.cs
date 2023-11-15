@@ -18,6 +18,6 @@ public class LogSyncTests : TestWithOutput
 				startDateTimeUtc,
 				LoggerFactory)
 			.ExecuteAsync(default)
-			.ConfigureAwait(false);
+			.ConfigureAwait(true);
 	}
 }

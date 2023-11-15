@@ -13,7 +13,7 @@ public class AlertTests : TestWithOutput
 
 		await DatamartClient
 			.AddOrUpdate<Device, DeviceStoreItem>(context => context.Devices, LoggerFactory.CreateLogger(nameof(AlertTests)), default)
-			.ConfigureAwait(false);
+			.ConfigureAwait(true);
 	}
 
 	[Fact]
@@ -27,7 +27,7 @@ public class AlertTests : TestWithOutput
 				startDateTimeUtc,
 				LoggerFactory)
 			.DifferentialLoopTaskAsync(default)
-			.ConfigureAwait(false);
+			.ConfigureAwait(true);
 
 		updatedAlertStats.Should().NotBeNull();
 	}
@@ -59,7 +59,7 @@ public class AlertTests : TestWithOutput
 			new SdtFilter(),
 			null,
 			true
-			).ConfigureAwait(false);
+			).ConfigureAwait(true);
 		result.Should().NotBeNull();
 	}
 }
