@@ -1,12 +1,7 @@
 ﻿namespace LogicMonitor.Datamart.Test;
 
-public class LogSyncTests : TestWithOutput
+public class LogSyncTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTestOutputHelper)
 {
-	public LogSyncTests(ITestOutputHelper iTestOutputHelper)
-	 : base(iTestOutputHelper)
-	{
-	}
-
 	[Fact]
 	public async void GetLogs()
 	{

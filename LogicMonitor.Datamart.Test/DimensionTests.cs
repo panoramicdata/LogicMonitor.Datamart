@@ -3,12 +3,8 @@ using System.Linq;
 
 namespace LogicMonitor.Datamart.Test;
 
-public class DimensionTests : TestWithOutput
+public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTestOutputHelper)
 {
-	public DimensionTests(ITestOutputHelper iTestOutputHelper) : base(iTestOutputHelper)
-	{
-	}
-
 	[Fact]
 	public void Arrays_ReverseAsExpected()
 	{

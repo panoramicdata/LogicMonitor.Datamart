@@ -1,8 +1,7 @@
 ﻿namespace LogicMonitor.Datamart.Test;
 
-public class AgingTests : TestWithOutput
+public class AgingTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTestOutputHelper)
 {
-	public AgingTests(ITestOutputHelper iTestOutputHelper) : base(iTestOutputHelper) { }
 
 	// Age - retaining 5 days
 	[Fact]

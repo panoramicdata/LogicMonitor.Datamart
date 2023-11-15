@@ -2,13 +2,8 @@
 
 namespace LogicMonitor.Datamart.Test;
 
-public class AutoMapperTruncateTests : TestWithOutput
+public class AutoMapperTruncateTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTestOutputHelper)
 {
-	public AutoMapperTruncateTests(ITestOutputHelper iTestOutputHelper)
-	 : base(iTestOutputHelper)
-	{
-	}
-
 	[Fact]
 	public void Test()
 	{

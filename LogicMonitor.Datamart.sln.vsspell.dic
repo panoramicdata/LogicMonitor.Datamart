@@ -21,6 +21,7 @@ dotnet
 editorconfig
 ef
 Guid
+hacky
 healthcheck
 inline
 Installshield
@@ -44,6 +45,7 @@ timestamp
 tinyint
 Uid
 username
+UTC
 workflows
 wwwroot
 xtype

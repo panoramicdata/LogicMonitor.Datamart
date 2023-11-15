@@ -1,11 +1,7 @@
 namespace LogicMonitor.Datamart.Test;
 
-public class AlertTests : TestWithOutput
+public class AlertTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTestOutputHelper)
 {
-	public AlertTests(ITestOutputHelper iTestOutputHelper) : base(iTestOutputHelper)
-	{
-	}
-
 	[Fact]
 	public async void UpdateDevices()
 	{
