@@ -25,14 +25,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Include="..\README.md" Pack="true" PackagePath="\"/>
+		<None Include="..\README.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="AutoMapper" Version="12.0.1" />
-		<PackageReference Include="EFCore.BulkExtensions" Version="8.0.0-rc.1.2" />
+		<PackageReference Include="EFCore.BulkExtensions" Version="8.0.0" />
 		<PackageReference Include="Humanizer.Core" Version="2.14.1" />
-		<PackageReference Include="LogicMonitor.Api" Version="3.191.28" />
+		<PackageReference Include="LogicMonitor.Api" Version="3.196.1" />
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.0-preview3.23201.1" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
@@ -42,8 +42,8 @@
 		</PackageReference>
 		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.0" />
 		<PackageReference Include="Nerdbank.GitVersioning" />
-		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.0-rc.2" />
-		<PackageReference Include="PanoramicData.NCalcExtensions" Version="1.20.127" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.0" />
+		<PackageReference Include="PanoramicData.NCalcExtensions" Version="1.20.130" />
 		<PackageReference Include="SecurityCodeScan.VS2019" Version="5.6.7">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

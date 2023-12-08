@@ -30,7 +30,7 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 			TimeSpan.Zero);
 		var startDateTime = endDateTime.AddMonths(-1);
 
-		string dataPointName = "Uptime";
+		var dataPointName = "Uptime";
 
 		var dataPointStoreItem = new DataSourceDataPointStoreItem
 		{

@@ -27,4 +27,18 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 			.ExecuteAsync(default)
 			.ConfigureAwait(true);
 	}
+
+	[Fact]
+	public async Task GetDataSources_RunsSuccessFully()
+	{
+		await new DimensionSync(
+				DatamartClient,
+				Configuration,
+				[
+					nameof(DataSource),
+				],
+				LoggerFactory)
+			.ExecuteAsync(default)
+			.ConfigureAwait(true);
+	}
 }

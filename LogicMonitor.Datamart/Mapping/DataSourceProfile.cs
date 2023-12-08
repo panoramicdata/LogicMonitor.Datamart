@@ -29,6 +29,24 @@ public class DataSourceProfile : Profile
 			.ForMember(
 				dest => dest.LastTimeSeriesDataSyncDurationMs,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.InstallationMetadataTargetLastPublishedId,
+				opts => opts.MapFrom(src => src.InstallationMetadata.TargetLastPublishedId))
+			.ForMember(
+				dest => dest.InstallationMetadataTargetLastPublishedVersion,
+				opts => opts.MapFrom(src => src.InstallationMetadata.TargetLastPublishedVersion))
+			.ForMember(
+				dest => dest.InstallationMetadataTargetLastPublishedChecksum,
+				opts => opts.MapFrom(src => src.InstallationMetadata.TargetLastPublishedChecksum))
+			.ForMember(
+				dest => dest.InstallationMetadataLogicModuleId,
+				opts => opts.MapFrom(src => src.InstallationMetadata.LocalModuleId))
+			.ForMember(
+				dest => dest.CollectionAttributeName,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.CollectionAttributeIp,
+				opts => opts.Ignore())
 			;
 
 		CreateMap<DataSourceStoreItem, DataSource>()
