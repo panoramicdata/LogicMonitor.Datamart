@@ -486,7 +486,8 @@ public class DatamartClient : LogicMonitorClient
 						Property8 = configDataPoint.Property8,
 						Property9 = configDataPoint.Property9,
 						Property10 = configDataPoint.Property10,
-						ResyncTimeSeriesData = configDataPoint.ResyncTimeSeriesData
+						ResyncTimeSeriesData = configDataPoint.ResyncTimeSeriesData,
+						Condition = configDataPoint.Condition
 					});
 				}
 				else
@@ -513,6 +514,7 @@ public class DatamartClient : LogicMonitorClient
 					databaseDataSourceDataPointModel.Property9 = configDataPoint.Property9;
 					databaseDataSourceDataPointModel.Property10 = configDataPoint.Property10;
 					databaseDataSourceDataPointModel.ResyncTimeSeriesData = configDataPoint.ResyncTimeSeriesData;
+					databaseDataSourceDataPointModel.Condition = configDataPoint.Condition;
 				}
 
 				await context

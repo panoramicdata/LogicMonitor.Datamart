@@ -76,5 +76,10 @@ public class DataSourceDataPointStoreItem : IdentifiedStoreItem
 	/// </summary>
 	public bool ResyncTimeSeriesData { get; set; }
 
+	/// <summary>
+	/// A condition which must be fulfilled in order to do the sync
+	/// </summary>
+	public string Condition { get; set; } = string.Empty;
+
 	public ICollection<DeviceDataSourceInstanceDataPointStoreItem> DeviceDataSourceInstanceDataPoints { get; set; } = null!;
 }
