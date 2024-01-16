@@ -970,13 +970,18 @@ public class DatamartClient : LogicMonitorClient
 
 				foreach (var dataSourceDataPoint in dataSourceDataPoints.Where(dsdp => !deviceDataSourceInstanceDataPoints.Any(ddsidp => ddsidp.DeviceDataSourceInstanceId == databaseDeviceDataSourceInstance.Id && ddsidp.DataSourceDataPointId == dsdp.Id)))
 				{
-					context
-					.DeviceDataSourceInstanceDataPoints
-					.Add(new DeviceDataSourceInstanceDataPointStoreItem
+					// Is Condition "true"? just add it
+					if (EvaluateConditionProperty(dataSourceDataPoint.Condition, apiDeviceDataSourceInstance, logger))
 					{
-						DeviceDataSourceInstanceId = databaseDeviceDataSourceInstance.Id,
-						DataSourceDataPointId = dataSourceDataPoint.Id
-					});
+						// Add to the database
+						context
+						.DeviceDataSourceInstanceDataPoints
+						.Add(new DeviceDataSourceInstanceDataPointStoreItem
+						{
+							DeviceDataSourceInstanceId = databaseDeviceDataSourceInstance.Id,
+							DataSourceDataPointId = dataSourceDataPoint.Id
+						});
+					}
 				}
 			}
 
@@ -1034,6 +1039,49 @@ public class DatamartClient : LogicMonitorClient
 			markedMissing);
 	}
 
+	private static bool EvaluateConditionProperty(string condition, DeviceDataSourceInstance ddsi, ILogger logger)
+	{
+		if (string.Equals(condition, "true", StringComparison.OrdinalIgnoreCase) ||
+			string.IsNullOrWhiteSpace(condition))
+		{
+			return true;
+		}
+
+		try
+		{
+			// Add all the properties on the DDSI into the NCalc expression
+			var inclusionExpression = new ExtendedExpression(condition);
+
+			foreach (var property in ddsi.AutoProperties)
+			{
+				inclusionExpression.Parameters[property.Name] = property.Value;
+			}
+
+			foreach (var property in ddsi.CustomProperties)
+			{
+				inclusionExpression.Parameters[property.Name] = property.Value;
+			}
+
+			foreach (var property in ddsi.SystemProperties)
+			{
+				inclusionExpression.Parameters[property.Name] = property.Value;
+			}
+
+			return inclusionExpression.Evaluate() as bool? ?? true;
+		}
+		catch (Exception e)
+		{
+			logger.LogError(e, "Error evaluating DeviceDataSourceInstance Condition '{Condition}' for {DeviceName} instance {InstanceName} due to {Message}",
+				condition,
+				ddsi.DeviceDisplayName,
+				ddsi.DisplayName,
+				e.Message);
+
+			// Default to true
+			return true;
+		}
+	}
+
 	internal async Task<List<DataSourceDataPointStoreItem>> SyncDataSourceDataPointsAsync(
 		DataSourceStoreItem dataSource,
 		Context context,
@@ -1080,6 +1128,7 @@ public class DatamartClient : LogicMonitorClient
 			databaseDataPoint.Property9 = configDataSourceDataPoint.Property9;
 			databaseDataPoint.Property10 = configDataSourceDataPoint.Property10;
 			databaseDataPoint.Tags = configDataSourceDataPoint.Tags;
+			databaseDataPoint.Condition = configDataSourceDataPoint.Condition;
 
 			// Only update the description if it is not null or whitespace
 			if (!string.IsNullOrWhiteSpace(configDataSourceDataPoint.Description))

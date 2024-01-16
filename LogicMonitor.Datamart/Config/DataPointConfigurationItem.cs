@@ -102,7 +102,7 @@ public class DataPointConfigurationItem
 	/// <summary>
 	/// A condition which must be fulfilled in order to do the sync
 	/// </summary>
-	public string Condition { get; set; } = string.Empty;
+	public string Condition { get; set; } = "true";
 
 	/// <summary>
 	/// Validate the DataPoint

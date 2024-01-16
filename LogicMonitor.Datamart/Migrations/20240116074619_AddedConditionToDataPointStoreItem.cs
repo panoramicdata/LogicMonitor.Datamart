@@ -15,7 +15,7 @@ namespace LogicMonitor.Datamart.Migrations
                 table: "DataSourceDataPoints",
                 type: "text",
                 nullable: false,
-                defaultValue: "");
+                defaultValue: "true");
         }
 
         /// <inheritdoc />
