@@ -970,7 +970,6 @@ public class DatamartClient : LogicMonitorClient
 
 				foreach (var dataSourceDataPoint in dataSourceDataPoints.Where(dsdp => !deviceDataSourceInstanceDataPoints.Any(ddsidp => ddsidp.DeviceDataSourceInstanceId == databaseDeviceDataSourceInstance.Id && ddsidp.DataSourceDataPointId == dsdp.Id)))
 				{
-					// Is Condition "true"? just add it
 					if (EvaluateConditionProperty(dataSourceDataPoint.Condition, apiDeviceDataSourceInstance, logger))
 					{
 						// Add to the database
