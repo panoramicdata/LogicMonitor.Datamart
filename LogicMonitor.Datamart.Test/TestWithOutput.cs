@@ -101,7 +101,7 @@ public abstract class TestWithOutput
 					{
 						new DataPointConfigurationItem
 						{
-							Condition = "isSet('xxx')",
+							//Condition = "isSet('xxx')",
 							Name = "idleInterval",
 							MeasurementUnit = "Seconds",
 						}
