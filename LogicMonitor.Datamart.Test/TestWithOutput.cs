@@ -11,14 +11,16 @@ public abstract class TestWithOutput
 		Name = "Test",
 		AggregationDurationMinutes = 15,
 		LateArrivingDataWindowHours = 2,
-		StartDateTimeUtc = new DateTimeOffset(
+		StartDateTimeUtc =
+		new DateTimeOffset(
 			TwelveHoursAgo.Year,
 			1,
 			1,
 			0,
 			0,
 			0,
-			TimeSpan.Zero).UtcDateTime,
+			TimeSpan.Zero)
+		.UtcDateTime,
 
 		DeviceProperties = new List<string> { "fix.url", "ReportMagic", "location", "customer.code" },
 
@@ -29,17 +31,17 @@ public abstract class TestWithOutput
 					DataPoints = new List<DataPointConfigurationItem>
 					{
 						new DataPointConfigurationItem
-							{
-								Name = "CPUBusyPercent",
-								MeasurementUnit = "%",
-								ResyncTimeSeriesData = true
-							},
+						{
+							Name = "CPUBusyPercent",
+							MeasurementUnit = "%",
+							ResyncTimeSeriesData = true
+						},
 						new DataPointConfigurationItem
-							{
-								Name= "ProcessorQueueLength",
-								MeasurementUnit = "count"
-							}
-					},
+						{
+							Name= "ProcessorQueueLength",
+							MeasurementUnit = "count"
+						}
+					}
 				},
 				//new DataSourceConfigurationItem{
 				//	Name = "SNMP_Network_Interfaces",
@@ -82,51 +84,52 @@ public abstract class TestWithOutput
 					DataPoints = new List<DataPointConfigurationItem>
 					{
 						new DataPointConfigurationItem
-							{
-								Name = "Blah",
-								MeasurementUnit = "Grains",
-							},
+						{
+							Name = "Blah",
+							MeasurementUnit = "Grains",
+						},
 						new DataPointConfigurationItem
-							{
-								Name = "Foo",
-								MeasurementUnit = "Chains",
-							}
-					},
+						{
+							Name = "Foo",
+							MeasurementUnit = "Chains",
+						}
+					}
 				},
 				new DataSourceConfigurationItem{
 					Name = "HostStatus",
 					DataPoints = new List<DataPointConfigurationItem>
 					{
 						new DataPointConfigurationItem
-							{
-								Name = "idleInterval",
-								MeasurementUnit = "Seconds",
-							},
-					},
+						{
+							Condition = "isSet('xxx')",
+							Name = "idleInterval",
+							MeasurementUnit = "Seconds",
+						}
+					}
 				},
 				new DataSourceConfigurationItem{
 					Name = "SNMP_Host_Uptime",
 					DataPoints = new List<DataPointConfigurationItem>
 					{
 						new DataPointConfigurationItem
-							{
-								Name = "Uptime",
-								MeasurementUnit = "Seconds",
-								PercentageAvailabilityCalculation = "PercentUpTime"
-							},
-					},
+						{
+							Name = "Uptime",
+							MeasurementUnit = "Seconds",
+							PercentageAvailabilityCalculation = "PercentUpTime"
+						}
+					}
 				},
 				new DataSourceConfigurationItem{
 					Name = "WinSystemUptime",
 					DataPoints = new List<DataPointConfigurationItem>
 					{
 						new DataPointConfigurationItem
-							{
-								Name = "UptimeSeconds",
-								MeasurementUnit = "Seconds",
-								PercentageAvailabilityCalculation = "PercentUpTime"
-							},
-					},
+						{
+							Name = "UptimeSeconds",
+							MeasurementUnit = "Seconds",
+							PercentageAvailabilityCalculation = "PercentUpTime"
+						}
+					}
 				}
 			}
 	};
