@@ -68,6 +68,12 @@ public class CollectorStoreItem : IdentifiedStoreItem
 
 	public bool IsDown { get; set; }
 
+	public bool IsEncoded { get; set; }
+
+	public bool IsLmLogsEnabled { get; set; }
+
+	public bool IsLmLogsSyslogEnabled { get; set; }
+
 	public string LastSentNotificationOnLocal { get; set; } = string.Empty;
 
 	public int LastSentNotificationOnTimeStampUtc { get; set; }
@@ -81,6 +87,8 @@ public class CollectorStoreItem : IdentifiedStoreItem
 	public int NextRecipient { get; set; }
 
 	public string? OnetimeDowngradeInfo { get; set; }
+
+	public string OtelVerison { get; set; } = string.Empty;
 
 	public string Platform { get; set; } = string.Empty;
 
