@@ -970,7 +970,7 @@ public class DatamartClient : LogicMonitorClient
 
 				foreach (var dataSourceDataPoint in dataSourceDataPoints.Where(dsdp => !deviceDataSourceInstanceDataPoints.Any(ddsidp => ddsidp.DeviceDataSourceInstanceId == databaseDeviceDataSourceInstance.Id && ddsidp.DataSourceDataPointId == dsdp.Id)))
 				{
-					if (EvaluateConditionProperty(dataSourceDataPoint.Condition, apiDeviceDataSourceInstance, logger))
+					if (EvaluateConditionProperty(dataSourceDataPoint.Condition, device, apiDeviceDataSourceInstance, logger))
 					{
 						// Add to the database
 						context
@@ -1038,7 +1038,7 @@ public class DatamartClient : LogicMonitorClient
 			markedMissing);
 	}
 
-	private static bool EvaluateConditionProperty(string condition, DeviceDataSourceInstance ddsi, ILogger logger)
+	private static bool EvaluateConditionProperty(string condition, Device device, DeviceDataSourceInstance ddsi, ILogger logger)
 	{
 		if (string.Equals(condition, "true", StringComparison.OrdinalIgnoreCase) ||
 			string.IsNullOrWhiteSpace(condition))
@@ -1051,6 +1051,23 @@ public class DatamartClient : LogicMonitorClient
 			// Add all the properties on the DDSI into the NCalc expression
 			var inclusionExpression = new ExtendedExpression(condition);
 
+			// Device
+			foreach (var property in device.AutoProperties)
+			{
+				inclusionExpression.Parameters[property.Name] = property.Value;
+			}
+
+			foreach (var property in device.CustomProperties)
+			{
+				inclusionExpression.Parameters[property.Name] = property.Value;
+			}
+
+			foreach (var property in device.SystemProperties)
+			{
+				inclusionExpression.Parameters[property.Name] = property.Value;
+			}
+
+			// Device Data Source Instance
 			foreach (var property in ddsi.AutoProperties)
 			{
 				inclusionExpression.Parameters[property.Name] = property.Value;
