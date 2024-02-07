@@ -795,6 +795,8 @@ public class DatamartClient : LogicMonitorClient
 			)
 			.ConfigureAwait(false);
 
+		var conditions = dataSourceSpecification.DataPoints.Select(dp => dp.Condition).ToList();
+
 		// Get the Devices that match the appliesTo function on the DataSource
 		var appliesToMatches = await GetAppliesToAsync(databaseDataSource.AppliesTo, cancellationToken)
 			.ConfigureAwait(false);
@@ -968,9 +970,10 @@ public class DatamartClient : LogicMonitorClient
 					.Where(ddsidp => ddsidp.DeviceDataSourceInstanceId == databaseDeviceDataSourceInstance.Id)
 					.ToListAsync(cancellationToken);
 
+				var index = 0;
 				foreach (var dataSourceDataPoint in dataSourceDataPoints.Where(dsdp => !deviceDataSourceInstanceDataPoints.Any(ddsidp => ddsidp.DeviceDataSourceInstanceId == databaseDeviceDataSourceInstance.Id && ddsidp.DataSourceDataPointId == dsdp.Id)))
 				{
-					if (EvaluateConditionProperty(dataSourceDataPoint.Condition, device, apiDeviceDataSourceInstance, logger))
+					if (EvaluateConditionProperty(conditions[index++], device, apiDeviceDataSourceInstance, logger))
 					{
 						// Add to the database
 						context
