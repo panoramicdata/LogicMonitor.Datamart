@@ -1,0 +1,260 @@
+﻿using Microsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+namespace LogicMonitor.Datamart.Migrations
+{
+    /// <inheritdoc />
+    public partial class MovedPropertiesAndConditionToDataSourceDataPointInstanceStoreItem : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropColumn(
+                name: "Condition",
+                table: "DataSourceDataPoints");
+
+            migrationBuilder.DropColumn(
+                name: "Property1",
+                table: "DataSourceDataPoints");
+
+            migrationBuilder.DropColumn(
+                name: "Property10",
+                table: "DataSourceDataPoints");
+
+            migrationBuilder.DropColumn(
+                name: "Property2",
+                table: "DataSourceDataPoints");
+
+            migrationBuilder.DropColumn(
+                name: "Property3",
+                table: "DataSourceDataPoints");
+
+            migrationBuilder.DropColumn(
+                name: "Property4",
+                table: "DataSourceDataPoints");
+
+            migrationBuilder.DropColumn(
+                name: "Property5",
+                table: "DataSourceDataPoints");
+
+            migrationBuilder.DropColumn(
+                name: "Property6",
+                table: "DataSourceDataPoints");
+
+            migrationBuilder.DropColumn(
+                name: "Property7",
+                table: "DataSourceDataPoints");
+
+            migrationBuilder.DropColumn(
+                name: "Property8",
+                table: "DataSourceDataPoints");
+
+            migrationBuilder.DropColumn(
+                name: "Property9",
+                table: "DataSourceDataPoints");
+
+            migrationBuilder.AddColumn<string>(
+                name: "Condition",
+                table: "DeviceDataSourceInstanceDataPoints",
+                type: "text",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<string>(
+                name: "Property1",
+                table: "DeviceDataSourceInstanceDataPoints",
+                type: "text",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<string>(
+                name: "Property10",
+                table: "DeviceDataSourceInstanceDataPoints",
+                type: "text",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<string>(
+                name: "Property2",
+                table: "DeviceDataSourceInstanceDataPoints",
+                type: "text",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<string>(
+                name: "Property3",
+                table: "DeviceDataSourceInstanceDataPoints",
+                type: "text",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<string>(
+                name: "Property4",
+                table: "DeviceDataSourceInstanceDataPoints",
+                type: "text",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<string>(
+                name: "Property5",
+                table: "DeviceDataSourceInstanceDataPoints",
+                type: "text",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<string>(
+                name: "Property6",
+                table: "DeviceDataSourceInstanceDataPoints",
+                type: "text",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<string>(
+                name: "Property7",
+                table: "DeviceDataSourceInstanceDataPoints",
+                type: "text",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<string>(
+                name: "Property8",
+                table: "DeviceDataSourceInstanceDataPoints",
+                type: "text",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<string>(
+                name: "Property9",
+                table: "DeviceDataSourceInstanceDataPoints",
+                type: "text",
+                nullable: false,
+                defaultValue: "");
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropColumn(
+                name: "Condition",
+                table: "DeviceDataSourceInstanceDataPoints");
+
+            migrationBuilder.DropColumn(
+                name: "Property1",
+                table: "DeviceDataSourceInstanceDataPoints");
+
+            migrationBuilder.DropColumn(
+                name: "Property10",
+                table: "DeviceDataSourceInstanceDataPoints");
+
+            migrationBuilder.DropColumn(
+                name: "Property2",
+                table: "DeviceDataSourceInstanceDataPoints");
+
+            migrationBuilder.DropColumn(
+                name: "Property3",
+                table: "DeviceDataSourceInstanceDataPoints");
+
+            migrationBuilder.DropColumn(
+                name: "Property4",
+                table: "DeviceDataSourceInstanceDataPoints");
+
+            migrationBuilder.DropColumn(
+                name: "Property5",
+                table: "DeviceDataSourceInstanceDataPoints");
+
+            migrationBuilder.DropColumn(
+                name: "Property6",
+                table: "DeviceDataSourceInstanceDataPoints");
+
+            migrationBuilder.DropColumn(
+                name: "Property7",
+                table: "DeviceDataSourceInstanceDataPoints");
+
+            migrationBuilder.DropColumn(
+                name: "Property8",
+                table: "DeviceDataSourceInstanceDataPoints");
+
+            migrationBuilder.DropColumn(
+                name: "Property9",
+                table: "DeviceDataSourceInstanceDataPoints");
+
+            migrationBuilder.AddColumn<string>(
+                name: "Condition",
+                table: "DataSourceDataPoints",
+                type: "text",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<string>(
+                name: "Property1",
+                table: "DataSourceDataPoints",
+                type: "text",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<string>(
+                name: "Property10",
+                table: "DataSourceDataPoints",
+                type: "text",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<string>(
+                name: "Property2",
+                table: "DataSourceDataPoints",
+                type: "text",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<string>(
+                name: "Property3",
+                table: "DataSourceDataPoints",
+                type: "text",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<string>(
+                name: "Property4",
+                table: "DataSourceDataPoints",
+                type: "text",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<string>(
+                name: "Property5",
+                table: "DataSourceDataPoints",
+                type: "text",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<string>(
+                name: "Property6",
+                table: "DataSourceDataPoints",
+                type: "text",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<string>(
+                name: "Property7",
+                table: "DataSourceDataPoints",
+                type: "text",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<string>(
+                name: "Property8",
+                table: "DataSourceDataPoints",
+                type: "text",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<string>(
+                name: "Property9",
+                table: "DataSourceDataPoints",
+                type: "text",
+                nullable: false,
+                defaultValue: "");
+        }
+    }
+}

@@ -476,18 +476,7 @@ public class DatamartClient : LogicMonitorClient
 						Calculation = configDataPoint.Calculation,
 						PercentageAvailabilityCalculation = configDataPoint.PercentageAvailabilityCalculation,
 						Tags = configDataPoint.Tags,
-						Property1 = configDataPoint.Property1,
-						Property2 = configDataPoint.Property2,
-						Property3 = configDataPoint.Property3,
-						Property4 = configDataPoint.Property4,
-						Property5 = configDataPoint.Property5,
-						Property6 = configDataPoint.Property6,
-						Property7 = configDataPoint.Property7,
-						Property8 = configDataPoint.Property8,
-						Property9 = configDataPoint.Property9,
-						Property10 = configDataPoint.Property10,
-						ResyncTimeSeriesData = configDataPoint.ResyncTimeSeriesData,
-						Condition = configDataPoint.Condition
+						ResyncTimeSeriesData = configDataPoint.ResyncTimeSeriesData
 					});
 				}
 				else
@@ -503,18 +492,7 @@ public class DatamartClient : LogicMonitorClient
 					databaseDataSourceDataPointModel.Calculation = configDataPoint.Calculation;
 					databaseDataSourceDataPointModel.PercentageAvailabilityCalculation = configDataPoint.PercentageAvailabilityCalculation;
 					databaseDataSourceDataPointModel.Tags = configDataPoint.Tags;
-					databaseDataSourceDataPointModel.Property1 = configDataPoint.Property1;
-					databaseDataSourceDataPointModel.Property2 = configDataPoint.Property2;
-					databaseDataSourceDataPointModel.Property3 = configDataPoint.Property3;
-					databaseDataSourceDataPointModel.Property4 = configDataPoint.Property4;
-					databaseDataSourceDataPointModel.Property5 = configDataPoint.Property5;
-					databaseDataSourceDataPointModel.Property6 = configDataPoint.Property6;
-					databaseDataSourceDataPointModel.Property7 = configDataPoint.Property7;
-					databaseDataSourceDataPointModel.Property8 = configDataPoint.Property8;
-					databaseDataSourceDataPointModel.Property9 = configDataPoint.Property9;
-					databaseDataSourceDataPointModel.Property10 = configDataPoint.Property10;
 					databaseDataSourceDataPointModel.ResyncTimeSeriesData = configDataPoint.ResyncTimeSeriesData;
-					databaseDataSourceDataPointModel.Condition = configDataPoint.Condition;
 				}
 
 				await context
@@ -795,8 +773,6 @@ public class DatamartClient : LogicMonitorClient
 			)
 			.ConfigureAwait(false);
 
-		var conditions = dataSourceSpecification.DataPoints.Select(dp => dp.Condition).ToList();
-
 		// Get the Devices that match the appliesTo function on the DataSource
 		var appliesToMatches = await GetAppliesToAsync(databaseDataSource.AppliesTo, cancellationToken)
 			.ConfigureAwait(false);
@@ -973,7 +949,9 @@ public class DatamartClient : LogicMonitorClient
 				var index = 0;
 				foreach (var dataSourceDataPoint in dataSourceDataPoints.Where(dsdp => !deviceDataSourceInstanceDataPoints.Any(ddsidp => ddsidp.DeviceDataSourceInstanceId == databaseDeviceDataSourceInstance.Id && ddsidp.DataSourceDataPointId == dsdp.Id)))
 				{
-					if (EvaluateConditionProperty(conditions[index++], device, apiDeviceDataSourceInstance, logger))
+					var datapoint = dataSourceSpecification.DataPoints[index++];
+
+					if (EvaluateConditionProperty(datapoint.Condition, device, apiDeviceDataSourceInstance, logger))
 					{
 						// Add to the database
 						context
@@ -981,7 +959,18 @@ public class DatamartClient : LogicMonitorClient
 						.Add(new DeviceDataSourceInstanceDataPointStoreItem
 						{
 							DeviceDataSourceInstanceId = databaseDeviceDataSourceInstance.Id,
-							DataSourceDataPointId = dataSourceDataPoint.Id
+							DataSourceDataPointId = dataSourceDataPoint.Id,
+							Property1 = datapoint.Property1,
+							Property2 = datapoint.Property2,
+							Property3 = datapoint.Property3,
+							Property4 = datapoint.Property4,
+							Property5 = datapoint.Property5,
+							Property6 = datapoint.Property6,
+							Property7 = datapoint.Property7,
+							Property8 = datapoint.Property8,
+							Property9 = datapoint.Property9,
+							Property10 = datapoint.Property10,
+							Condition = datapoint.Condition
 						});
 					}
 				}
@@ -1101,7 +1090,7 @@ public class DatamartClient : LogicMonitorClient
 		}
 	}
 
-	internal async Task<List<DataSourceDataPointStoreItem>> SyncDataSourceDataPointsAsync(
+	internal static async Task<List<DataSourceDataPointStoreItem>> SyncDataSourceDataPointsAsync(
 		DataSourceStoreItem dataSource,
 		Context context,
 		DataSourceConfigurationItem dataSourceSpecification,
@@ -1136,18 +1125,7 @@ public class DatamartClient : LogicMonitorClient
 			databaseDataPoint.MeasurementUnit = configDataSourceDataPoint.MeasurementUnit;
 			databaseDataPoint.Calculation = configDataSourceDataPoint.Calculation;
 			databaseDataPoint.PercentageAvailabilityCalculation = configDataSourceDataPoint.PercentageAvailabilityCalculation;
-			databaseDataPoint.Property1 = configDataSourceDataPoint.Property1;
-			databaseDataPoint.Property2 = configDataSourceDataPoint.Property2;
-			databaseDataPoint.Property3 = configDataSourceDataPoint.Property3;
-			databaseDataPoint.Property4 = configDataSourceDataPoint.Property4;
-			databaseDataPoint.Property5 = configDataSourceDataPoint.Property5;
-			databaseDataPoint.Property6 = configDataSourceDataPoint.Property6;
-			databaseDataPoint.Property7 = configDataSourceDataPoint.Property7;
-			databaseDataPoint.Property8 = configDataSourceDataPoint.Property8;
-			databaseDataPoint.Property9 = configDataSourceDataPoint.Property9;
-			databaseDataPoint.Property10 = configDataSourceDataPoint.Property10;
 			databaseDataPoint.Tags = configDataSourceDataPoint.Tags;
-			databaseDataPoint.Condition = configDataSourceDataPoint.Condition;
 
 			// Only update the description if it is not null or whitespace
 			if (!string.IsNullOrWhiteSpace(configDataSourceDataPoint.Description))
