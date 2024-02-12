@@ -48,7 +48,7 @@ public class DataPointConfigurationItem
 	public string Property1 { get; set; } = string.Empty;
 
 	/// <summary>
-	/// Property 1
+	/// Property 2
 	/// </summary>
 	public string Property2 { get; set; } = string.Empty;
 
@@ -92,6 +92,55 @@ public class DataPointConfigurationItem
 	/// </summary>
 	public string Property10 { get; set; } = string.Empty;
 
+	/// <summary>
+	/// InstanceDatapointProperty 1
+	/// </summary>
+	public string InstanceDatapointProperty1 { get; set; } = string.Empty;
+
+	/// <summary>
+	/// InstanceDatapointProperty 2
+	/// </summary>
+	public string InstanceDatapointProperty2 { get; set; } = string.Empty;
+
+	/// <summary>
+	/// InstanceDatapointProperty 3
+	/// </summary>
+	public string InstanceDatapointProperty3 { get; set; } = string.Empty;
+
+	/// <summary>
+	/// InstanceDatapointProperty 4
+	/// </summary>
+	public string InstanceDatapointProperty4 { get; set; } = string.Empty;
+
+	/// <summary>
+	/// InstanceDatapointProperty 5
+	/// </summary>
+	public string InstanceDatapointProperty5 { get; set; } = string.Empty;
+
+	/// <summary>
+	/// InstanceDatapointProperty 6
+	/// </summary>
+	public string InstanceDatapointProperty6 { get; set; } = string.Empty;
+
+	/// <summary>
+	/// InstanceDatapointProperty 7
+	/// </summary>
+	public string InstanceDatapointProperty7 { get; set; } = string.Empty;
+
+	/// <summary>
+	/// InstanceDatapointProperty 8
+	/// </summary>
+	public string InstanceDatapointProperty8 { get; set; } = string.Empty;
+
+	/// <summary>
+	/// InstanceDatapointProperty 9
+	/// </summary>
+	public string InstanceDatapointProperty9 { get; set; } = string.Empty;
+
+	/// <summary>
+	/// InstanceDatapointProperty 10
+	/// </summary>
+	public string InstanceDatapointProperty10 { get; set; } = string.Empty;
 
 	/// <summary>
 	/// If true, the DataPoint will be resynced even if it is not out of sync
@@ -99,10 +148,10 @@ public class DataPointConfigurationItem
 	/// </summary>
 	public bool ResyncTimeSeriesData { get; set; }
 
-	/// <summary>
-	/// A condition which must be fulfilled in order to do the sync
-	/// </summary>
-	public string Condition { get; set; } = "true";
+	///// <summary>
+	///// A condition which must be fulfilled in order to do the sync
+	///// </summary>
+	//public string Condition { get; set; } = "true";
 
 	/// <summary>
 	/// Validate the DataPoint
