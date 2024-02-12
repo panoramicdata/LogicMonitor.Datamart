@@ -487,7 +487,6 @@ public class DatamartClient : LogicMonitorClient
 						Property9 = configDataPoint.Property9,
 						Property10 = configDataPoint.Property10,
 						ResyncTimeSeriesData = configDataPoint.ResyncTimeSeriesData,
-						//Condition = configDataPoint.Condition
 					});
 				}
 				else
@@ -514,7 +513,6 @@ public class DatamartClient : LogicMonitorClient
 					databaseDataSourceDataPointModel.Property9 = configDataPoint.Property9;
 					databaseDataSourceDataPointModel.Property10 = configDataPoint.Property10;
 					databaseDataSourceDataPointModel.ResyncTimeSeriesData = configDataPoint.ResyncTimeSeriesData;
-					//databaseDataSourceDataPointModel.Condition = configDataPoint.Condition;
 				}
 
 				await context
@@ -794,8 +792,6 @@ public class DatamartClient : LogicMonitorClient
 				cancellationToken
 			)
 			.ConfigureAwait(false);
-
-		//var conditions = dataSourceSpecification.DataPoints.Select(dp => dp.Condition).ToList();
 
 		// Get the Devices that match the appliesTo function on the DataSource
 		var appliesToMatches = await GetAppliesToAsync(databaseDataSource.AppliesTo, cancellationToken)
@@ -1171,7 +1167,6 @@ public class DatamartClient : LogicMonitorClient
 			databaseDataPoint.Property9 = configDataSourceDataPoint.Property9;
 			databaseDataPoint.Property10 = configDataSourceDataPoint.Property10;
 			databaseDataPoint.Tags = configDataSourceDataPoint.Tags;
-			//databaseDataPoint.Condition = configDataSourceDataPoint.Condition;
 
 			// Only update the description if it is not null or whitespace
 			if (!string.IsNullOrWhiteSpace(configDataSourceDataPoint.Description))

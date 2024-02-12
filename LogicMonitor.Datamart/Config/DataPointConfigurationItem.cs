@@ -148,11 +148,6 @@ public class DataPointConfigurationItem
 	/// </summary>
 	public bool ResyncTimeSeriesData { get; set; }
 
-	///// <summary>
-	///// A condition which must be fulfilled in order to do the sync
-	///// </summary>
-	//public string Condition { get; set; } = "true";
-
 	/// <summary>
 	/// Validate the DataPoint
 	/// </summary>
