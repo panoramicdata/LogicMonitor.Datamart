@@ -78,9 +78,6 @@ public class DeviceDataSourceInstanceProfile : Profile
 				dest => dest.InstanceProperty1,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.InstanceProperty1,
-				opts => opts.Ignore())
-			.ForMember(
 				dest => dest.InstanceProperty2,
 				opts => opts.Ignore())
 			.ForMember(
@@ -103,6 +100,9 @@ public class DeviceDataSourceInstanceProfile : Profile
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.InstanceProperty9,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.InstanceProperty10,
 				opts => opts.Ignore())
 			;
 
