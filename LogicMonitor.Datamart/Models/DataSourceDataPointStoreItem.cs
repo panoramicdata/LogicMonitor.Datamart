@@ -79,7 +79,7 @@ public class DataSourceDataPointStoreItem : IdentifiedStoreItem
 	/// <summary>
 	/// A condition which must be fulfilled in order to do the sync
 	/// </summary>
-	public string Condition { get; set; } = "true";
+	//public string Condition { get; set; } = "true";
 
 	public ICollection<DeviceDataSourceInstanceDataPointStoreItem> DeviceDataSourceInstanceDataPoints { get; set; } = null!;
 }
