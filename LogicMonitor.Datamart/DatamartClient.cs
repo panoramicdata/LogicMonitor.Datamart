@@ -979,9 +979,9 @@ public class DatamartClient : LogicMonitorClient
 					.ToListAsync(cancellationToken);
 
 				var index = 0;
-				foreach (var dataSourceDataPoint in dataSourceDataPoints.Where(dsdp => !deviceDataSourceInstanceDataPoints.Any(ddsidp => ddsidp.DeviceDataSourceInstanceId == databaseDeviceDataSourceInstance.Id && ddsidp.DataSourceDataPointId == dsdp.Id)))
+				foreach (var dataSourceDataPointId in dataSourceDataPoints.Select(dsdp => dsdp.Id))
 				{
-					//if (EvaluateConditionProperty(conditions[index++], device, apiDeviceDataSourceInstance, logger))
+					if (!deviceDataSourceInstanceDataPoints.Any(ddsidp => ddsidp.DeviceDataSourceInstanceId == databaseDeviceDataSourceInstance.Id && ddsidp.DataSourceDataPointId == dataSourceDataPointId))
 					{
 						// Add to the database
 						context
@@ -989,7 +989,7 @@ public class DatamartClient : LogicMonitorClient
 						.Add(new DeviceDataSourceInstanceDataPointStoreItem
 						{
 							DeviceDataSourceInstanceId = databaseDeviceDataSourceInstance.Id,
-							DataSourceDataPointId = dataSourceDataPoint.Id,
+							DataSourceDataPointId = dataSourceDataPointId,
 							InstanceDatapointProperty1 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty1, device, apiDeviceDataSourceInstance, logger),
 							InstanceDatapointProperty2 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty2, device, apiDeviceDataSourceInstance, logger),
 							InstanceDatapointProperty3 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty3, device, apiDeviceDataSourceInstance, logger),
@@ -1001,6 +1001,24 @@ public class DatamartClient : LogicMonitorClient
 							InstanceDatapointProperty9 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty9, device, apiDeviceDataSourceInstance, logger),
 							InstanceDatapointProperty10 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty10, device, apiDeviceDataSourceInstance, logger)
 						});
+					}
+					else
+					{
+						if (deviceDataSourceInstanceDataPoints.SingleOrDefault(
+							ddsidp => ddsidp.DeviceDataSourceInstanceId == databaseDeviceDataSourceInstance.Id && ddsidp.DataSourceDataPointId == dataSourceDataPointId)
+							is DeviceDataSourceInstanceDataPointStoreItem ddsipsi)
+						{
+							ddsipsi.InstanceDatapointProperty1 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty1, device, apiDeviceDataSourceInstance, logger);
+							ddsipsi.InstanceDatapointProperty2 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty2, device, apiDeviceDataSourceInstance, logger);
+							ddsipsi.InstanceDatapointProperty3 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty3, device, apiDeviceDataSourceInstance, logger);
+							ddsipsi.InstanceDatapointProperty4 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty4, device, apiDeviceDataSourceInstance, logger);
+							ddsipsi.InstanceDatapointProperty5 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty5, device, apiDeviceDataSourceInstance, logger);
+							ddsipsi.InstanceDatapointProperty6 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty6, device, apiDeviceDataSourceInstance, logger);
+							ddsipsi.InstanceDatapointProperty7 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty7, device, apiDeviceDataSourceInstance, logger);
+							ddsipsi.InstanceDatapointProperty8 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty8, device, apiDeviceDataSourceInstance, logger);
+							ddsipsi.InstanceDatapointProperty9 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty9, device, apiDeviceDataSourceInstance, logger);
+							ddsipsi.InstanceDatapointProperty10 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty10, device, apiDeviceDataSourceInstance, logger);
+						}
 					}
 
 					index++;
