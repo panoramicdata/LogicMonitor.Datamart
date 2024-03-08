@@ -40,6 +40,9 @@ public class WebsiteGroupProfile : Profile
 			.ForMember(
 				dest => dest.RolePrivileges,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.AlertingDisabledOn,
+				opts => opts.Ignore())
 			;
 	}
 }

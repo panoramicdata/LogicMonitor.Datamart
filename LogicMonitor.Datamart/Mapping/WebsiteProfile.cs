@@ -107,6 +107,9 @@ public class WebsiteProfile : Profile
 			.ForMember(
 				dest => dest.HttpSchema,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.AlertingDisabledOn,
+				opts => opts.Ignore())
 			;
 	}
 }
