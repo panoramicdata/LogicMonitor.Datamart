@@ -487,7 +487,6 @@ public class DatamartClient : LogicMonitorClient
 						Property9 = configDataPoint.Property9,
 						Property10 = configDataPoint.Property10,
 						ResyncTimeSeriesData = configDataPoint.ResyncTimeSeriesData,
-						Condition = configDataPoint.Condition
 					});
 				}
 				else
@@ -514,7 +513,6 @@ public class DatamartClient : LogicMonitorClient
 					databaseDataSourceDataPointModel.Property9 = configDataPoint.Property9;
 					databaseDataSourceDataPointModel.Property10 = configDataPoint.Property10;
 					databaseDataSourceDataPointModel.ResyncTimeSeriesData = configDataPoint.ResyncTimeSeriesData;
-					databaseDataSourceDataPointModel.Condition = configDataPoint.Condition;
 				}
 
 				await context
@@ -962,15 +960,28 @@ public class DatamartClient : LogicMonitorClient
 				}
 				// It is now in the database context
 
+				// Set the properties by using NCalc
+				databaseDeviceDataSourceInstance.InstanceProperty1 = EvaluateProperty(dataSourceSpecification.InstanceProperty1, device, apiDeviceDataSourceInstance, logger);
+				databaseDeviceDataSourceInstance.InstanceProperty2 = EvaluateProperty(dataSourceSpecification.InstanceProperty2, device, apiDeviceDataSourceInstance, logger);
+				databaseDeviceDataSourceInstance.InstanceProperty3 = EvaluateProperty(dataSourceSpecification.InstanceProperty3, device, apiDeviceDataSourceInstance, logger);
+				databaseDeviceDataSourceInstance.InstanceProperty4 = EvaluateProperty(dataSourceSpecification.InstanceProperty4, device, apiDeviceDataSourceInstance, logger);
+				databaseDeviceDataSourceInstance.InstanceProperty5 = EvaluateProperty(dataSourceSpecification.InstanceProperty5, device, apiDeviceDataSourceInstance, logger);
+				databaseDeviceDataSourceInstance.InstanceProperty6 = EvaluateProperty(dataSourceSpecification.InstanceProperty6, device, apiDeviceDataSourceInstance, logger);
+				databaseDeviceDataSourceInstance.InstanceProperty7 = EvaluateProperty(dataSourceSpecification.InstanceProperty7, device, apiDeviceDataSourceInstance, logger);
+				databaseDeviceDataSourceInstance.InstanceProperty8 = EvaluateProperty(dataSourceSpecification.InstanceProperty8, device, apiDeviceDataSourceInstance, logger);
+				databaseDeviceDataSourceInstance.InstanceProperty9 = EvaluateProperty(dataSourceSpecification.InstanceProperty9, device, apiDeviceDataSourceInstance, logger);
+				databaseDeviceDataSourceInstance.InstanceProperty10 = EvaluateProperty(dataSourceSpecification.InstanceProperty10, device, apiDeviceDataSourceInstance, logger);
+
 				// Get the DeviceDataSourceInstanceDataPoints
 				var deviceDataSourceInstanceDataPoints = await context
 					.DeviceDataSourceInstanceDataPoints
 					.Where(ddsidp => ddsidp.DeviceDataSourceInstanceId == databaseDeviceDataSourceInstance.Id)
 					.ToListAsync(cancellationToken);
 
-				foreach (var dataSourceDataPoint in dataSourceDataPoints.Where(dsdp => !deviceDataSourceInstanceDataPoints.Any(ddsidp => ddsidp.DeviceDataSourceInstanceId == databaseDeviceDataSourceInstance.Id && ddsidp.DataSourceDataPointId == dsdp.Id)))
+				var index = 0;
+				foreach (var dataSourceDataPointId in dataSourceDataPoints.Select(dsdp => dsdp.Id))
 				{
-					if (EvaluateConditionProperty(dataSourceDataPoint.Condition, apiDeviceDataSourceInstance, logger))
+					if (!deviceDataSourceInstanceDataPoints.Any(ddsidp => ddsidp.DeviceDataSourceInstanceId == databaseDeviceDataSourceInstance.Id && ddsidp.DataSourceDataPointId == dataSourceDataPointId))
 					{
 						// Add to the database
 						context
@@ -978,9 +989,39 @@ public class DatamartClient : LogicMonitorClient
 						.Add(new DeviceDataSourceInstanceDataPointStoreItem
 						{
 							DeviceDataSourceInstanceId = databaseDeviceDataSourceInstance.Id,
-							DataSourceDataPointId = dataSourceDataPoint.Id
+							DataSourceDataPointId = dataSourceDataPointId,
+							InstanceDatapointProperty1 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty1, device, apiDeviceDataSourceInstance, logger),
+							InstanceDatapointProperty2 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty2, device, apiDeviceDataSourceInstance, logger),
+							InstanceDatapointProperty3 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty3, device, apiDeviceDataSourceInstance, logger),
+							InstanceDatapointProperty4 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty4, device, apiDeviceDataSourceInstance, logger),
+							InstanceDatapointProperty5 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty5, device, apiDeviceDataSourceInstance, logger),
+							InstanceDatapointProperty6 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty6, device, apiDeviceDataSourceInstance, logger),
+							InstanceDatapointProperty7 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty7, device, apiDeviceDataSourceInstance, logger),
+							InstanceDatapointProperty8 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty8, device, apiDeviceDataSourceInstance, logger),
+							InstanceDatapointProperty9 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty9, device, apiDeviceDataSourceInstance, logger),
+							InstanceDatapointProperty10 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty10, device, apiDeviceDataSourceInstance, logger)
 						});
 					}
+					else
+					{
+						if (deviceDataSourceInstanceDataPoints.SingleOrDefault(
+							ddsidp => ddsidp.DeviceDataSourceInstanceId == databaseDeviceDataSourceInstance.Id && ddsidp.DataSourceDataPointId == dataSourceDataPointId)
+							is DeviceDataSourceInstanceDataPointStoreItem ddsipsi)
+						{
+							ddsipsi.InstanceDatapointProperty1 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty1, device, apiDeviceDataSourceInstance, logger);
+							ddsipsi.InstanceDatapointProperty2 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty2, device, apiDeviceDataSourceInstance, logger);
+							ddsipsi.InstanceDatapointProperty3 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty3, device, apiDeviceDataSourceInstance, logger);
+							ddsipsi.InstanceDatapointProperty4 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty4, device, apiDeviceDataSourceInstance, logger);
+							ddsipsi.InstanceDatapointProperty5 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty5, device, apiDeviceDataSourceInstance, logger);
+							ddsipsi.InstanceDatapointProperty6 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty6, device, apiDeviceDataSourceInstance, logger);
+							ddsipsi.InstanceDatapointProperty7 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty7, device, apiDeviceDataSourceInstance, logger);
+							ddsipsi.InstanceDatapointProperty8 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty8, device, apiDeviceDataSourceInstance, logger);
+							ddsipsi.InstanceDatapointProperty9 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty9, device, apiDeviceDataSourceInstance, logger);
+							ddsipsi.InstanceDatapointProperty10 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty10, device, apiDeviceDataSourceInstance, logger);
+						}
+					}
+
+					index++;
 				}
 			}
 
@@ -1038,12 +1079,12 @@ public class DatamartClient : LogicMonitorClient
 			markedMissing);
 	}
 
-	private static bool EvaluateConditionProperty(string condition, DeviceDataSourceInstance ddsi, ILogger logger)
+	private static string EvaluateProperty(string condition, Device device, DeviceDataSourceInstance ddsi, ILogger logger)
 	{
 		if (string.Equals(condition, "true", StringComparison.OrdinalIgnoreCase) ||
 			string.IsNullOrWhiteSpace(condition))
 		{
-			return true;
+			return string.Empty;
 		}
 
 		try
@@ -1051,6 +1092,23 @@ public class DatamartClient : LogicMonitorClient
 			// Add all the properties on the DDSI into the NCalc expression
 			var inclusionExpression = new ExtendedExpression(condition);
 
+			// Device
+			foreach (var property in device.AutoProperties)
+			{
+				inclusionExpression.Parameters[property.Name] = property.Value;
+			}
+
+			foreach (var property in device.CustomProperties)
+			{
+				inclusionExpression.Parameters[property.Name] = property.Value;
+			}
+
+			foreach (var property in device.SystemProperties)
+			{
+				inclusionExpression.Parameters[property.Name] = property.Value;
+			}
+
+			// Device Data Source Instance
 			foreach (var property in ddsi.AutoProperties)
 			{
 				inclusionExpression.Parameters[property.Name] = property.Value;
@@ -1066,7 +1124,7 @@ public class DatamartClient : LogicMonitorClient
 				inclusionExpression.Parameters[property.Name] = property.Value;
 			}
 
-			return inclusionExpression.Evaluate() as bool? ?? true;
+			return inclusionExpression.Evaluate()?.ToString() ?? string.Empty;
 		}
 		catch (Exception e)
 		{
@@ -1077,7 +1135,7 @@ public class DatamartClient : LogicMonitorClient
 				e.Message);
 
 			// Default to true
-			return true;
+			return string.Empty;
 		}
 	}
 
@@ -1127,7 +1185,6 @@ public class DatamartClient : LogicMonitorClient
 			databaseDataPoint.Property9 = configDataSourceDataPoint.Property9;
 			databaseDataPoint.Property10 = configDataSourceDataPoint.Property10;
 			databaseDataPoint.Tags = configDataSourceDataPoint.Tags;
-			databaseDataPoint.Condition = configDataSourceDataPoint.Condition;
 
 			// Only update the description if it is not null or whitespace
 			if (!string.IsNullOrWhiteSpace(configDataSourceDataPoint.Description))

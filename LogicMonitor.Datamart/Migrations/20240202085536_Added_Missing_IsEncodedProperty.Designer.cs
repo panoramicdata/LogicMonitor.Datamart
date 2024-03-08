@@ -3,6 +3,7 @@ using System;
 using LogicMonitor.Datamart;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LogicMonitor.Datamart.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20240202085536_Added_Missing_IsEncodedProperty")]
+    partial class Added_Missing_IsEncodedProperty
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -718,6 +721,10 @@ namespace LogicMonitor.Datamart.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Condition")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<Guid>("DataSourceId")
                         .HasColumnType("uuid");
 
@@ -975,46 +982,6 @@ namespace LogicMonitor.Datamart.Migrations
                     b.Property<Guid>("DeviceDataSourceInstanceId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("InstanceDatapointProperty1")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("InstanceDatapointProperty10")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("InstanceDatapointProperty2")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("InstanceDatapointProperty3")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("InstanceDatapointProperty4")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("InstanceDatapointProperty5")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("InstanceDatapointProperty6")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("InstanceDatapointProperty7")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("InstanceDatapointProperty8")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("InstanceDatapointProperty9")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<int>("LogicMonitorId")
                         .HasColumnType("integer");
 
@@ -1071,46 +1038,6 @@ namespace LogicMonitor.Datamart.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("GroupName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("InstanceProperty1")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("InstanceProperty10")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("InstanceProperty2")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("InstanceProperty3")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("InstanceProperty4")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("InstanceProperty5")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("InstanceProperty6")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("InstanceProperty7")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("InstanceProperty8")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("InstanceProperty9")
                         .IsRequired()
                         .HasColumnType("text");
 
