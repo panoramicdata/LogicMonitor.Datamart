@@ -26,6 +26,26 @@ public class DataSourceConfigurationItem
 
 	public string AppliesTo { get; set; } = string.Empty;
 
+	public string InstanceProperty1 { get; set; } = string.Empty;
+
+	public string InstanceProperty2 { get; set; } = string.Empty;
+
+	public string InstanceProperty3 { get; set; } = string.Empty;
+
+	public string InstanceProperty4 { get; set; } = string.Empty;
+
+	public string InstanceProperty5 { get; set; } = string.Empty;
+
+	public string InstanceProperty6 { get; set; } = string.Empty;
+
+	public string InstanceProperty7 { get; set; } = string.Empty;
+
+	public string InstanceProperty8 { get; set; } = string.Empty;
+
+	public string InstanceProperty9 { get; set; } = string.Empty;
+
+	public string InstanceProperty10 { get; set; } = string.Empty;
+
 	public void Validate()
 	{
 		if (string.IsNullOrWhiteSpace(Name))
