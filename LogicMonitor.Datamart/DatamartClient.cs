@@ -188,7 +188,7 @@ public class DatamartClient : LogicMonitorClient
 		where TApi : IdentifiedItem
 	{
 		using var context = new Context(DbContextOptions);
-		string typeName = typeof(TApi).Name;
+		var typeName = typeof(TApi).Name;
 		switch (typeName)
 		{
 			case nameof(Device):
@@ -438,11 +438,11 @@ public class DatamartClient : LogicMonitorClient
 					continue;
 				}
 
-				string globalAlertExpression = string.IsNullOrWhiteSpace(configDataPoint.GlobalAlertExpression)
+				var globalAlertExpression = string.IsNullOrWhiteSpace(configDataPoint.GlobalAlertExpression)
 					? apiDataPoint?.AlertExpression ?? string.Empty
 					: configDataPoint.GlobalAlertExpression;
 
-				string description = string.IsNullOrWhiteSpace(configDataPoint.Description)
+				var description = string.IsNullOrWhiteSpace(configDataPoint.Description)
 					? apiDataPoint?.Description ?? string.Empty
 					: configDataPoint.Description;
 
