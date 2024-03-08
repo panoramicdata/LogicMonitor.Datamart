@@ -22,14 +22,14 @@ public abstract class TestWithOutput
 			TimeSpan.Zero)
 		.UtcDateTime,
 
-		DeviceProperties = new List<string> { "fix.url", "ReportMagic", "location", "customer.code" },
+		DeviceProperties = ["fix.url", "ReportMagic", "location", "customer.code"],
 
-		DataSources = new List<DataSourceConfigurationItem>
-			{
+		DataSources =
+			[
 				new DataSourceConfigurationItem{
 					Name = "WinCPU",
-					DataPoints = new List<DataPointConfigurationItem>
-					{
+					DataPoints =
+					[
 						new DataPointConfigurationItem
 						{
 							Name = "CPUBusyPercent",
@@ -41,7 +41,7 @@ public abstract class TestWithOutput
 							Name= "ProcessorQueueLength",
 							MeasurementUnit = "count"
 						}
-					}
+					]
 				},
 				//new DataSourceConfigurationItem{
 				//	Name = "SNMP_Network_Interfaces",
@@ -81,8 +81,8 @@ public abstract class TestWithOutput
 				//},
 				new DataSourceConfigurationItem{
 					Name = "Non_Existent",
-					DataPoints = new List<DataPointConfigurationItem>
-					{
+					DataPoints =
+					[
 						new DataPointConfigurationItem
 						{
 							Name = "Blah",
@@ -93,45 +93,45 @@ public abstract class TestWithOutput
 							Name = "Foo",
 							MeasurementUnit = "Chains",
 						}
-					}
+					]
 				},
 				new DataSourceConfigurationItem{
 					Name = "HostStatus",
-					DataPoints = new List<DataPointConfigurationItem>
-					{
+					DataPoints =
+					[
 						new DataPointConfigurationItem
 						{
 							//Condition = "isSet('xxx')",
 							Name = "idleInterval",
 							MeasurementUnit = "Seconds",
 						}
-					}
+					]
 				},
 				new DataSourceConfigurationItem{
 					Name = "SNMP_Host_Uptime",
-					DataPoints = new List<DataPointConfigurationItem>
-					{
+					DataPoints =
+					[
 						new DataPointConfigurationItem
 						{
 							Name = "Uptime",
 							MeasurementUnit = "Seconds",
 							PercentageAvailabilityCalculation = "PercentUpTime"
 						}
-					}
+					]
 				},
 				new DataSourceConfigurationItem{
 					Name = "WinSystemUptime",
-					DataPoints = new List<DataPointConfigurationItem>
-					{
+					DataPoints =
+					[
 						new DataPointConfigurationItem
 						{
 							Name = "UptimeSeconds",
 							MeasurementUnit = "Seconds",
 							PercentageAvailabilityCalculation = "PercentUpTime"
 						}
-					}
+					]
 				}
-			}
+			]
 	};
 
 	protected TestWithOutput(ITestOutputHelper iTestOutputHelper)

@@ -49,10 +49,10 @@ internal class LogSync : LoopInterval
 			using var context = new Context(_datamartClient.DbContextOptions);
 			var filter = new Filter<LogItem>
 			{
-				FilterItems = new List<FilterItem<LogItem>>
-							{
+				FilterItems =
+							[
 								new Ge<LogItem>(nameof(LogItem.HappenedOnTimeStampUtc), timeCursor),
-							},
+							],
 				Order = new Order<LogItem>
 				{
 					Property = nameof(LogItem.HappenedOnTimeStampUtc),

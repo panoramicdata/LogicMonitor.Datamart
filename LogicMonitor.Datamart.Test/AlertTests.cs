@@ -41,7 +41,7 @@ public class AlertTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iT
 			null,
 			null,
 			new AckFilter(),
-			new List<string> { "PDL" },
+			["PDL"],
 			null,
 			null,
 			null,

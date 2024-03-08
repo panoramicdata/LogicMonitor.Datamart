@@ -10,7 +10,7 @@ public class Configuration
 	/// <summary>
 	/// The DataSources
 	/// </summary>
-	public List<DataSourceConfigurationItem> DataSources { get; set; } = new();
+	public List<DataSourceConfigurationItem> DataSources { get; set; } = [];
 
 	/// <summary>
 	/// The aggregation duration override in minutes
@@ -80,7 +80,7 @@ public class Configuration
 
 	public int DeviceDataSourceInstanceBatchSize { get; set; } = 100;
 
-	public List<string> DeviceProperties { get; set; } = new();
+	public List<string> DeviceProperties { get; set; } = [];
 
 	public DatamartClientMode Mode { get; set; } = DatamartClientMode.HighResolution;
 

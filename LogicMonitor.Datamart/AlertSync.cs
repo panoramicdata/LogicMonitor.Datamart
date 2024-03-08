@@ -115,11 +115,11 @@ internal class AlertSync : LoopInterval
 					{
 						var alertFilter = new Filter<Alert>
 						{
-							FilterItems = new List<FilterItem<Alert>>
-										{
+							FilterItems =
+										[
 											new Eq<Alert>(nameof(Alert.IsCleared), "*"),
 											new Gt<Alert>(nameof(Alert.EndOnSeconds), timeCursor),
-										},
+										],
 							Order = new Order<Alert>
 							{
 								Property = nameof(Alert.EndOnSeconds),
