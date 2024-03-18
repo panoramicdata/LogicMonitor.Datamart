@@ -27,6 +27,7 @@ public class Context : DbContext
 	public DbSet<EventSourceStoreItem> EventSources { get; set; } = null!;
 	public DbSet<DeviceStoreItem> Devices { get; set; } = null!;
 	public DbSet<DeviceGroupStoreItem> DeviceGroups { get; set; } = null!;
+	public DbSet<LogicModuleUpdateStoreItem> LogicModuleUpdates { get; set; } = null!;
 	public DbSet<LogStoreItem> LogItems { get; set; } = null!;
 	public DbSet<WebsiteStoreItem> Websites { get; set; } = null!;
 	public DbSet<WebsiteGroupStoreItem> WebsiteGroups { get; set; } = null!;

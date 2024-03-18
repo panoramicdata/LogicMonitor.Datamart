@@ -384,5 +384,32 @@ internal class DimensionSync : LoopInterval
 				}
 			}
 		}
+
+
+		if (_types is null || _types.Contains(nameof(LogicModuleUpdate)))
+		{
+			try
+			{
+				Logger.LogInformation($"Syncing {nameof(LogicModuleUpdate)}s...");
+				await _datamartClient
+				.AddOrUpdateLogicModuleUpdates(
+					context => context.LogicModuleUpdates,
+					Logger,
+					cancellationToken)
+				.ConfigureAwait(false);
+				Logger.LogInformation($"Syncing {nameof(LogicModuleUpdate)}s complete.");
+			}
+			catch (Exception e)
+			{
+				Logger.LogError(
+					e,
+					$"Could not sync {nameof(LogicModuleUpdate)}s due to {{Message}}", e.Message
+				);
+				if (haltOnError)
+				{
+					throw;
+				}
+			}
+		}
 	}
 }

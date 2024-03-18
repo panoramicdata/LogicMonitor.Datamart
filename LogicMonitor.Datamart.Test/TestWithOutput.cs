@@ -150,6 +150,7 @@ public abstract class TestWithOutput
 			AccessId = logicMonitorCredentials.AccessId,
 			AccessKey = logicMonitorCredentials.AccessKey,
 			Logger = loggerFactory.CreateLogger<LogicMonitorClient>(),
+			HttpClientTimeoutSeconds = 3600
 		};
 
 		Configuration.DatabaseType = configuration.DatabaseType;

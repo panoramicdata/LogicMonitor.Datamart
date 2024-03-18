@@ -2,7 +2,7 @@ namespace LogicMonitor.Datamart.Extensions;
 
 public static class DbSetExtension
 {
-	public static async Task AddOrUpdateIdentifiedItem<TApi, TStore>(
+	public static async Task AddOrUpdateIdentifiedItemAsync<TApi, TStore>(
 			this DbSet<TStore> dbSet,
 			Context context,
 			TApi apiItem,
@@ -63,6 +63,56 @@ public static class DbSetExtension
 			storeItem,
 			cancellationToken
 			).ConfigureAwait(false);
+
+		storeItem.DatamartLastObserved = lastObservedUtc.UtcDateTime;
+		dbSet.Add(storeItem);
+	}
+
+	public static void AddOrUpdateLogicModuleUpdate(
+			this DbSet<LogicModuleUpdateStoreItem> dbSet,
+			LogicModuleUpdate apiItem,
+			DateTimeOffset lastObservedUtc,
+			ILogger logger
+		)
+	{
+		ArgumentNullException.ThrowIfNull(dbSet);
+		ArgumentNullException.ThrowIfNull(apiItem);
+
+		// Do we have it already?
+		var storeItem = dbSet
+			.FirstOrDefault(si => si.CurrentUuid == apiItem.CurrentUuid);
+		if (storeItem is not null)
+		{
+			// Yes.  Update it
+			if (logger?.IsEnabled(LogLevel.Trace) == true)
+			{
+				logger.LogTrace("Updating existing {TypeName} with id {StoreItemId} ({StoreItemDatamartId})",
+					nameof(LogicModuleUpdateStoreItem),
+					storeItem.CurrentUuid,
+					storeItem.Id);
+			}
+			// Map from data onto the existing storeItem which EF internal tracker will work out whether anything changed
+			storeItem = DatamartClient.MapperInstance.Map(apiItem, storeItem);
+
+			// TODO - Update foreign keys
+
+			storeItem.DatamartLastObserved = lastObservedUtc.UtcDateTime;
+			return;
+		}
+		// No, this is new
+
+		if (logger?.IsEnabled(LogLevel.Trace) == true)
+		{
+			logger.LogTrace("Adding new {TypeName} with id {DataId}",
+				nameof(LogicModuleUpdateStoreItem),
+				apiItem.CurrentUuid
+				);
+		}
+
+		// Add a new entry
+		storeItem = DatamartClient.MapperInstance.Map<LogicModuleUpdate, LogicModuleUpdateStoreItem>(apiItem);
+
+		// TODO - Update foreign keys
 
 		storeItem.DatamartLastObserved = lastObservedUtc.UtcDateTime;
 		dbSet.Add(storeItem);

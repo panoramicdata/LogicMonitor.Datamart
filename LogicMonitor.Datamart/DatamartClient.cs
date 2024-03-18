@@ -348,7 +348,7 @@ public class DatamartClient : LogicMonitorClient
 		// Add/update all the items
 		foreach (var item in apiItems)
 		{
-			await dbSet.AddOrUpdateIdentifiedItem(
+			await dbSet.AddOrUpdateIdentifiedItemAsync(
 				context,
 				item,
 				lastObservedUtc,
@@ -375,6 +375,55 @@ public class DatamartClient : LogicMonitorClient
 			await UpdateDataPointsAsync(context, apiItems.Cast<DataSource>().ToList())
 				.ConfigureAwait(false);
 		}
+	}
+
+	/// <summary>
+	/// Add or Update the Database using the items already retrieved from the LogicMonitor API
+	/// </summary>
+	/// <typeparam name="TApi">The LogicMonitor API type</typeparam>
+	/// <typeparam name="TStore">The Database StoreItem type</typeparam>
+	/// <param name="action"></param>
+	/// <param name="cancellationToken"></param>
+	internal async Task AddOrUpdateLogicModuleUpdates(
+		Func<Context, DbSet<LogicModuleUpdateStoreItem>> action,
+		ILogger logger,
+		CancellationToken cancellationToken)
+	{
+		logger.LogDebug("{TypeName}: Loading entries...", nameof(LogicModuleUpdateStoreItem));
+
+		using var context = new Context(DbContextOptions);
+		// Get the right DbSet from the context
+		var dbSet = action(context);
+
+		// Fetch the items from the LogicMonitor API
+		var lastObservedUtc = DateTimeOffset.UtcNow;
+		var apiItems = await GetLogicModuleUpdatesAsync(LogicModuleType.All, cancellationToken: cancellationToken)
+			.ConfigureAwait(false);
+		logger.LogDebug(
+			"{TypeName}: Loaded {ApiItemsCount} items.",
+			nameof(LogicModuleUpdateStoreItem),
+			apiItems.Items.Count);
+
+		// Add/update all the items
+		foreach (var item in apiItems.Items)
+		{
+			dbSet.AddOrUpdateLogicModuleUpdate(
+				item,
+				lastObservedUtc,
+				logger);
+		}
+
+		// Calculate and log the stats
+		var added = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Added);
+		var modified = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Modified);
+		var total = context.ChangeTracker.Entries().Count();
+		var affectedRowCount = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+		logger.LogInformation(
+			"{TypeName}: Total {Total}; Added {Added}; Modified {Modified}.",
+			nameof(LogicModuleUpdateStoreItem),
+			total,
+			added,
+			modified);
 	}
 
 	/// <summary>
@@ -719,7 +768,7 @@ public class DatamartClient : LogicMonitorClient
 			.ConfigureAwait(false);
 
 	public static async Task<List<int>> GetAllCachedDeviceGroupIdsAsync(DbSet<DeviceGroupStoreItem> deviceGroups, string groupName)
-		=> (groupName ?? throw new ArgumentNullException(nameof(groupName))).EndsWith("*", StringComparison.Ordinal)
+		=> (groupName ?? throw new ArgumentNullException(nameof(groupName))).EndsWith('*')
 			? await deviceGroups
 				.Where(dg => dg.FullPath.StartsWith(groupName.TrimEnd('*'), StringComparison.Ordinal))
 				.Select(dg => dg.LogicMonitorId)
@@ -732,7 +781,7 @@ public class DatamartClient : LogicMonitorClient
 				.ConfigureAwait(false);
 
 	public static async Task<List<int>> GetAllCachedWebsiteGroupIdsAsync(DbSet<WebsiteGroupStoreItem> websiteGroups, string groupName)
-		=> (groupName ?? throw new ArgumentNullException(nameof(groupName))).EndsWith("*", StringComparison.Ordinal)
+		=> (groupName ?? throw new ArgumentNullException(nameof(groupName))).EndsWith('*')
 			? await websiteGroups
 				.Where(wg => wg.FullPath.StartsWith(groupName.TrimEnd('*'), StringComparison.Ordinal))
 				.Select(wg => wg.LogicMonitorId)

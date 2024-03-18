@@ -14,7 +14,7 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 	}
 
 	[Fact]
-	public async Task GetDimensions_RunsSuccessFully()
+	public async Task GetDimensions_DeviceAndDeviceDataSourceInstance_RunsSuccessFully()
 	{
 		await new DimensionSync(
 				DatamartClient,
@@ -22,6 +22,21 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 				[
 					nameof(Device),
 					nameof(DeviceDataSourceInstance),
+				],
+				LoggerFactory)
+			.ExecuteAsync(default)
+			.ConfigureAwait(true);
+	}
+
+	[Fact]
+	[Trait("Long Running Test", "")]
+	public async Task GetDimensions_LogicModuleUpdates_RunsSuccessFully()
+	{
+		await new DimensionSync(
+				DatamartClient,
+				Configuration,
+				[
+					nameof(LogicModuleUpdate),
 				],
 				LoggerFactory)
 			.ExecuteAsync(default)
