@@ -945,8 +945,6 @@ public class DatamartClient : LogicMonitorClient
 				{
 					// RM-16087 Update "DatamartLastObserved" to the date the sync noticed them, even if nothing was changed
 					instanceStoreItem.DatamartLastObserved = instanceObservedDateTimeUtc;
-
-					logger.LogDebug("Setting 'DatamartLastObserved' on DeviceDataSourceInstance with ID #{Id} to {Date}", instanceStoreItem.Id, instanceObservedDateTimeUtc);
 				}
 
 				// Those device data source instances NOT in the database will be added further on and "DatamartLastObserved" will be set there
@@ -1029,7 +1027,6 @@ public class DatamartClient : LogicMonitorClient
 
 				// RM-16087 Update "DatamartLastObserved" to the date the sync noticed them
 				databaseDeviceDataSourceInstance.DatamartLastObserved = instanceObservedDateTimeUtc;
-				logger.LogDebug("Setting 'DatamartLastObserved' on DeviceDataSourceInstance with ID #{Id} to {Date}", databaseDeviceDataSourceInstance.Id, instanceObservedDateTimeUtc);
 
 				// Set the properties by using NCalc
 				databaseDeviceDataSourceInstance.InstanceProperty1 = EvaluateProperty(dataSourceSpecification.InstanceProperty1, device, apiDeviceDataSourceInstance, logger);

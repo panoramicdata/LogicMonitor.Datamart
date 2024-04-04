@@ -87,13 +87,13 @@ internal class LowResolutionDataSync : LoopInterval
 
 				deviceStopwatch.Restart();
 
-				//Logger.LogInformation(
-				//	"Getting DeviceDataSourceInstanceDataPoints for {DatabaseName}: {DeviceName} ({DeviceIndex}/{DeviceCount})...",
-				//	_configuration.DatabaseName,
-				//	device.DisplayName,
-				//	deviceIndex,
-				//	deviceCount
-				//);
+				Logger.LogInformation(
+					"Getting DeviceDataSourceInstanceDataPoints for {DatabaseName}: {DeviceName} ({DeviceIndex}/{DeviceCount})...",
+					_configuration.DatabaseName,
+					device.DisplayName,
+					deviceIndex,
+					deviceCount
+				);
 
 				// Get the list of DeviceDataSourceInstanceDataPoints
 				var databaseDeviceDataSourceInstanceDataPoints = await context
@@ -114,14 +114,14 @@ internal class LowResolutionDataSync : LoopInterval
 
 				var databaseDeviceDataSourceInstanceDataPointsCount = databaseDeviceDataSourceInstanceDataPoints.Count;
 
-				//Logger.LogDebug(
-				//	"Getting DeviceDataSourceInstanceDataPoints for {DatabaseName}: {DeviceName} ({DeviceIndex}/{DeviceCount}) complete.  Found {DeviceDataSourceInstanceDataPointCount} DeviceDataSourceInstanceDataPoints.",
-				//	_configuration.DatabaseName,
-				//	device.DisplayName,
-				//	deviceIndex,
-				//	deviceCount,
-				//	databaseDeviceDataSourceInstanceDataPointsCount
-				//	);
+				Logger.LogDebug(
+					"Getting DeviceDataSourceInstanceDataPoints for {DatabaseName}: {DeviceName} ({DeviceIndex}/{DeviceCount}) complete.  Found {DeviceDataSourceInstanceDataPointCount} DeviceDataSourceInstanceDataPoints.",
+					_configuration.DatabaseName,
+					device.DisplayName,
+					deviceIndex,
+					deviceCount,
+					databaseDeviceDataSourceInstanceDataPointsCount
+					);
 
 				// If there aren't any, log and return
 				if (databaseDeviceDataSourceInstanceDataPointsCount == 0)
