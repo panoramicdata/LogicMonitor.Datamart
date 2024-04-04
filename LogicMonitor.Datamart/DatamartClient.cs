@@ -924,15 +924,29 @@ public class DatamartClient : LogicMonitorClient
 			deviceDataSourceStoreItem.DataSourceId = dataSourceStoreItem!.Id;
 			// It is now in the database context
 
-			// Fetch the DeviceDataSourceInstances
-			var instanceFetchDateTimeUtc = DateTimeOffset.UtcNow;
-			var apiDeviceDataSourceInstances = await GetAllDeviceDataSourceInstancesAsync(
+			// Fetch the DeviceDataSourceInstances from the API
+			var instanceObservedDateTimeUtc = DateTimeOffset.UtcNow;
+
+			var apiDeviceDataSourceInstances =
+				await GetAllDeviceDataSourceInstancesAsync(
 					device.Id,
 					deviceDataSource.Id,
 					new(),
-					cancellationToken
-				)
+					cancellationToken)
 				.ConfigureAwait(false);
+
+			// Update the DatamartLastObserved BEFORE we remove instances that do not match
+			foreach (var instance in apiDeviceDataSourceInstances)
+			{
+				if (await context
+					.DeviceDataSourceInstances
+					.SingleOrDefaultAsync(dddsi => dddsi.LogicMonitorId == instance.Id, cancellationToken: cancellationToken)
+					.ConfigureAwait(false) is DeviceDataSourceInstanceStoreItem instanceStoreItem)
+				{
+					// RM-16087 Update "DatamartLastObserved" to the date the sync noticed them, even if nothing was changed
+					instanceStoreItem.DatamartLastObserved = instanceObservedDateTimeUtc;
+				}
+			}
 
 			await context
 				.SaveChangesAsync(cancellationToken)
@@ -1008,9 +1022,6 @@ public class DatamartClient : LogicMonitorClient
 					databaseDeviceDataSourceInstance.LastWentMissing = null;
 				}
 				// It is now in the database context
-
-				// RM-16087 DatamartLastObserved should be set
-				databaseDeviceDataSourceInstance.DatamartLastObserved = DateTimeOffset.UtcNow;
 
 				// Set the properties by using NCalc
 				databaseDeviceDataSourceInstance.InstanceProperty1 = EvaluateProperty(dataSourceSpecification.InstanceProperty1, device, apiDeviceDataSourceInstance, logger);
