@@ -1009,6 +1009,9 @@ public class DatamartClient : LogicMonitorClient
 				}
 				// It is now in the database context
 
+				// RM-16087 DatamartLastObserved should be set
+				databaseDeviceDataSourceInstance.DatamartLastObserved = DateTimeOffset.UtcNow;
+
 				// Set the properties by using NCalc
 				databaseDeviceDataSourceInstance.InstanceProperty1 = EvaluateProperty(dataSourceSpecification.InstanceProperty1, device, apiDeviceDataSourceInstance, logger);
 				databaseDeviceDataSourceInstance.InstanceProperty2 = EvaluateProperty(dataSourceSpecification.InstanceProperty2, device, apiDeviceDataSourceInstance, logger);
