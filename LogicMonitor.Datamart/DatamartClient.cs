@@ -1072,9 +1072,8 @@ public class DatamartClient : LogicMonitorClient
 					}
 					else
 					{
-						if (deviceDataSourceInstanceDataPoints.SingleOrDefault(
-							ddsidp => ddsidp.DeviceDataSourceInstanceId == databaseDeviceDataSourceInstance.Id && ddsidp.DataSourceDataPointId == dataSourceDataPointId)
-							is DeviceDataSourceInstanceDataPointStoreItem ddsipsi)
+						// If (through error), there is more than one, each one should be updated.
+						foreach (var ddsipsi in deviceDataSourceInstanceDataPoints.Where(ddsidp => ddsidp.DeviceDataSourceInstanceId == databaseDeviceDataSourceInstance.Id && ddsidp.DataSourceDataPointId == dataSourceDataPointId))
 						{
 							ddsipsi.InstanceDatapointProperty1 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty1, device, apiDeviceDataSourceInstance, logger);
 							ddsipsi.InstanceDatapointProperty2 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty2, device, apiDeviceDataSourceInstance, logger);
