@@ -86,6 +86,9 @@ public class Configuration
 
 	public bool DimensionSyncHaltOnError { get; set; } = true;
 
+	// RM-16049 Ability to set a static UTC offset to apply to the reporting time period. Between -13 and 13 hours
+	public int MinutesOffset { get; set; }
+
 	public void Validate()
 	{
 		if (string.IsNullOrWhiteSpace(Name))
@@ -136,7 +139,13 @@ public class Configuration
 		if (DeviceDataSourceInstanceBatchSize < 1 || DeviceDataSourceInstanceBatchSize > 100)
 		{
 			// Do not exceed 100 for BatchSize as limited by the LogicMonitor DataFetch endpoint
-			throw new ConfigurationException("BatchSize should be in the range 1..100");
+			throw new ConfigurationException("BatchSize should be in the range 1..100.");
+		}
+
+		if (MinutesOffset < -780 || MinutesOffset > 780)
+		{
+			// RM-16049 states the permitted range of the UTC offset
+			throw new ConfigurationException($"{nameof(MinutesOffset)} should be in the range -780..780 (i.e. -13..13 hours).");
 		}
 
 		ValidateAggegationDuration(AggregationDurationMinutes, "configuration", Name);

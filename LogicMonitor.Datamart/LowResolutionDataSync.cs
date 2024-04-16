@@ -327,7 +327,7 @@ internal class LowResolutionDataSync : LoopInterval
 					1, 0, 0, 0,
 					TimeSpan.Zero);
 
-				var startDateTime = lastAggregationHourWrittenUtc;
+				var startDateTime = lastAggregationHourWrittenUtc.AddMinutes(configuration.MinutesOffset);		// RM-16049
 				var endDateTime = lastAggregationHourWrittenUtc.AddMonths(1);
 
 				if (endDateTime >= utcNow)
@@ -354,10 +354,7 @@ internal class LowResolutionDataSync : LoopInterval
 
 				try
 				{
-
-					string dataPointName = databaseDeviceDataSourceInstanceDataPoint
-						.DataSourceDataPoint!
-						.Name;
+					string dataPointName = databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint!.Name;
 
 					// Get the configuration for this DataSourceName
 					var dataSourceConfigurationItem = configuration
