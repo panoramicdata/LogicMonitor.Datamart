@@ -4,23 +4,16 @@ using PanoramicData.NCalcExtensions;
 
 namespace LogicMonitor.Datamart;
 
-internal class LowResolutionDataSync : LoopInterval
+internal class LowResolutionDataSync(
+	DatamartClient datamartClient,
+	Configuration configuration,
+	ILoggerFactory loggerFactory) : LoopInterval(nameof(LowResolutionDataSync), loggerFactory)
 {
 	private static readonly TimeSpan EightHours = TimeSpan.FromHours(8);
 	private const int DeviceDownTimeWindowSeconds = 3000;
 
-	private readonly DatamartClient _datamartClient;
-	private readonly Configuration _configuration;
-
-	public LowResolutionDataSync(
-		DatamartClient datamartClient,
-		Configuration configuration,
-		ILoggerFactory loggerFactory)
-		: base(nameof(LowResolutionDataSync), loggerFactory)
-	{
-		_datamartClient = datamartClient;
-		_configuration = configuration;
-	}
+	private readonly DatamartClient _datamartClient = datamartClient;
+	private readonly Configuration _configuration = configuration;
 
 	public override async Task ExecuteAsync(CancellationToken cancellationToken)
 	{
@@ -29,7 +22,7 @@ internal class LowResolutionDataSync : LoopInterval
 			_configuration.DatabaseName
 			);
 
-		using var context = new Context(_datamartClient.DbContextOptions);
+		using var context = _datamartClient.GetContext();
 		// Use the database as a reference for what should be loaded in to ensure referential integrity between the data and the DeviceDataSourceInstance
 
 		// Get the configured DataSource names
@@ -237,7 +230,7 @@ internal class LowResolutionDataSync : LoopInterval
 		}
 
 		// calculate the index of the value at the nth percentile
-		double index = ((n / 100.0) * (values.Length - 1));
+		var index = ((n / 100.0) * (values.Length - 1));
 
 		// check if the index is an integer
 		if (index % 1 == 0)
@@ -248,11 +241,11 @@ internal class LowResolutionDataSync : LoopInterval
 		else
 		{
 			// if the index is not an integer, interpolate between the two closest values
-			int floorIndex = (int)Math.Floor(index);
-			int ceilIndex = (int)Math.Ceiling(index);
+			var floorIndex = (int)Math.Floor(index);
+			var ceilIndex = (int)Math.Ceiling(index);
 
-			double floorValue = values[floorIndex];
-			double ceilValue = values[ceilIndex];
+			var floorValue = values[floorIndex];
+			var ceilValue = values[ceilIndex];
 
 			return floorValue + ((index - floorIndex) * (ceilValue - floorValue));
 		}
@@ -327,7 +320,7 @@ internal class LowResolutionDataSync : LoopInterval
 					1, 0, 0, 0,
 					TimeSpan.Zero);
 
-				var startDateTime = lastAggregationHourWrittenUtc.AddMinutes(configuration.MinutesOffset);		// RM-16049
+				var startDateTime = lastAggregationHourWrittenUtc.AddMinutes(configuration.MinutesOffset);      // RM-16049
 				var endDateTime = lastAggregationHourWrittenUtc.AddMonths(1);
 
 				if (endDateTime >= utcNow)
@@ -335,7 +328,7 @@ internal class LowResolutionDataSync : LoopInterval
 					continue;
 				}
 
-				string dataSourceName = databaseDeviceDataSourceInstanceDataPoint
+				var dataSourceName = databaseDeviceDataSourceInstanceDataPoint
 					.DeviceDataSourceInstance!
 					.DeviceDataSource!
 					.DataSource!
@@ -354,7 +347,7 @@ internal class LowResolutionDataSync : LoopInterval
 
 				try
 				{
-					string dataPointName = databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint!.Name;
+					var dataPointName = databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint!.Name;
 
 					// Get the configuration for this DataSourceName
 					var dataSourceConfigurationItem = configuration

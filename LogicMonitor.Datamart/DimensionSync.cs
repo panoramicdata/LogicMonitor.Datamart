@@ -46,7 +46,7 @@ internal class DimensionSync : LoopInterval
 				.ConfigureAwait(false);
 
 			// DeviceDataSources and DeviceDataSourceInstances
-			await SyncThirdLevelDimensionsAsync(_configuration.DimensionSyncHaltOnError, cancellationToken)
+			await SyncThirdLevelDimensionsAsync(cancellationToken)
 				.ConfigureAwait(false);
 		}
 		catch (Exception ex)
@@ -61,7 +61,7 @@ internal class DimensionSync : LoopInterval
 		}
 	}
 
-	private async Task SyncThirdLevelDimensionsAsync(bool dimensionSyncHaltOnError, CancellationToken cancellationToken)
+	private async Task SyncThirdLevelDimensionsAsync(CancellationToken cancellationToken)
 	{
 		if (_types is null || _types.Contains(nameof(DeviceDataSourceInstance)))
 		{

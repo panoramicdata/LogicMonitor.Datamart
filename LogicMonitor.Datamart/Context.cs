@@ -1,6 +1,5 @@
 namespace LogicMonitor.Datamart;
 
-// This is internal, we don't want to expose the EfContext outside the client
 public class Context : DbContext
 {
 	public Context()
@@ -197,14 +196,6 @@ public class Context : DbContext
 			.HasOne(ws => ws.WebsiteGroup)
 			.WithMany(wsg => wsg.Websites)
 			.OnDelete(DeleteBehavior.Restrict);
-	}
-
-	protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-	{
-		if (!optionsBuilder.IsConfigured)
-		{
-			optionsBuilder.UseNpgsql("Server=127.0.0.1;Port=5432;Database=XXX;User Id=XXX;Password=XXX;");
-		}
 	}
 
 	public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken)

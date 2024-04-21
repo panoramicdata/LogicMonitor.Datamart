@@ -1,4 +1,5 @@
 using LogicMonitor.Api.LogicModules;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 
 namespace LogicMonitor.Datamart.Test;
@@ -11,6 +12,17 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 		var values = new double?[] { 1, 2, null, 4 };
 		var reversedValues = values.Reverse().ToList();
 		reversedValues.Should().BeEquivalentTo(new double?[] { 4, null, 2, 1 });
+	}
+
+	[Fact]
+	public async Task GetDimensions_All_RunsSuccessFully()
+	{
+		await new DimensionSync(
+				DatamartClient,
+				Configuration,
+				LoggerFactory)
+			.ExecuteAsync(default)
+			.ConfigureAwait(true);
 	}
 
 	[Fact]

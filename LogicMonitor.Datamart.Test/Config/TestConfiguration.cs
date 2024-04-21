@@ -22,6 +22,11 @@ public class TestConfiguration
 	public int? DatabaseServerPort { get; set; }
 
 	/// <summary>
+	/// The Database server retry on failure count
+	/// </summary>
+	public int? DatabaseRetryOnFailureCount { get; set; }
+
+	/// <summary>
 	/// DatabaseName
 	/// </summary>
 	public string DatabaseName { get; set; }

@@ -159,6 +159,7 @@ public abstract class TestWithOutput
 		Configuration.DatabaseName = configuration.DatabaseName;
 		Configuration.DatabaseUsername = configuration.DatabaseUsername;
 		Configuration.DatabasePassword = configuration.DatabasePassword;
+		Configuration.DatabaseRetryOnFailureCount = configuration.DatabaseRetryOnFailureCount;
 		DatamartClient = new DatamartClient(
 			Configuration,
 			loggerFactory);

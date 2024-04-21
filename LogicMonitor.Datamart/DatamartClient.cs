@@ -42,19 +42,21 @@ public class DatamartClient : LogicMonitorClient
 				dbContextOptionsBuilder
 					.UseSqlServer(new DbConnectionStringBuilder
 					{
-						ConnectionString =
-						$"server={configuration.DatabaseServerName};" +
-						$"port={(configuration.DatabaseServerPort ?? 1433)};" +
-						$"database={configuration.DatabaseName};" +
-						(
-							string.IsNullOrWhiteSpace(configuration.DatabaseUsername)
-								? "Trusted_Connection=True;"
-								: $"User Id={configuration.DatabaseUsername};Password={configuration.DatabasePassword}"
-						) +
-						$"Application Name={ConnectionStringApplicationName};" +
-						"TrustServerCertificate=True"
+						ConnectionString = new SqlConnectionStringBuilder
+						{
+							TrustServerCertificate = true,
+							Encrypt = true,
+							ConnectTimeout = 30,
+							DataSource = $"{configuration.DatabaseServerName},{configuration.DatabaseServerPort ?? 1433}",
+							InitialCatalog = configuration.DatabaseName,
+							UserID = configuration.DatabaseUsername,
+							Password = configuration.DatabasePassword,
+							ApplicationName = ConnectionStringApplicationName
+						}.ToString()
 					}.ConnectionString,
-					opts => opts.CommandTimeout(configuration.SqlCommandTimeoutSeconds)
+					options => options
+						.CommandTimeout(configuration.SqlCommandTimeoutSeconds)
+						.EnableRetryOnFailure(configuration.DatabaseRetryOnFailureCount ?? 5)
 					);
 				break;
 			case DatabaseType.Postgres:
@@ -65,7 +67,8 @@ public class DatamartClient : LogicMonitorClient
 						$"Database={configuration.DatabaseName};" +
 						$"Uid={configuration.DatabaseUsername};" +
 						$"Pwd={configuration.DatabasePassword};",
-						npgsqlOptions => npgsqlOptions.EnableRetryOnFailure(5)
+						options => options
+							.EnableRetryOnFailure(configuration.DatabaseRetryOnFailureCount ?? 5)
 					);
 				break;
 			case DatabaseType.InMemory:
@@ -91,7 +94,7 @@ public class DatamartClient : LogicMonitorClient
 
 	public async Task<bool> IsDatabaseCreatedAsync(CancellationToken cancellationToken)
 	{
-		using var context = new Context(DbContextOptions);
+		using var context = GetContext();
 		return await context
 			.Database
 			.GetService<IRelationalDatabaseCreator>()
@@ -99,9 +102,17 @@ public class DatamartClient : LogicMonitorClient
 			.ConfigureAwait(false);
 	}
 
+	internal Context GetContext() => DatabaseType switch
+	{
+		DatabaseType.SqlServer => new SqlServerContext(DbContextOptions),
+		DatabaseType.Postgres => new NpgsqlContext(DbContextOptions),
+		DatabaseType.InMemory => new InMemoryContext(DbContextOptions),
+		_ => throw new NotSupportedException($"DatabaseType {DatabaseType} is not supported"),
+	};
+
 	public async Task<bool> IsDatabaseSchemaUpToDateAsync(CancellationToken cancellationToken)
 	{
-		using var context = new Context(DbContextOptions);
+		using var context = GetContext();
 		var exists = await context
 			.Database
 			.GetService<IRelationalDatabaseCreator>()
@@ -122,7 +133,7 @@ public class DatamartClient : LogicMonitorClient
 
 	public async Task EnsureDatabaseCreatedAndSchemaUpdatedAsync(CancellationToken cancellationToken)
 	{
-		using var migrationsContext = new Context(DbContextOptions);
+		using var migrationsContext = GetContext();
 
 		_logger.LogInformation("Applying migrations to database...");
 		await migrationsContext
@@ -135,7 +146,7 @@ public class DatamartClient : LogicMonitorClient
 
 	public async Task EnsureDatabaseDeletedAsync(CancellationToken cancellationToken)
 	{
-		using var context = new Context(DbContextOptions);
+		using var context = GetContext();
 		using var dbConnection = context.Database.GetDbConnection();
 		_logger.LogInformation(
 			"Deleting database {DbConnectionDatabase} on {DbConnectionDataSource}...",
@@ -176,7 +187,7 @@ public class DatamartClient : LogicMonitorClient
 
 	public async Task<List<T>> SqlListQuery<T>(string sql) where T : class, IHasEndpoint, new()
 	{
-		using var context = new Context(DbContextOptions);
+		using var context = GetContext();
 		return !context.Database.IsSqlServer()
 			? throw new NotSupportedException("Only SQL Server types support SQL queries.")
 			: await Task.FromResult(GetDbSet<T>(context)
@@ -187,7 +198,7 @@ public class DatamartClient : LogicMonitorClient
 	public async Task<TApi> GetCachedAsync<TApi>(int id, CancellationToken cancellationToken)
 		where TApi : IdentifiedItem
 	{
-		using var context = new Context(DbContextOptions);
+		using var context = GetContext();
 		var typeName = typeof(TApi).Name;
 		switch (typeName)
 		{
@@ -209,7 +220,7 @@ public class DatamartClient : LogicMonitorClient
 	public async Task<List<TApi>> GetAllCachedAsync<TApi>(CancellationToken cancellationToken)
 		where TApi : class, IHasEndpoint, new()
 	{
-		using var context = new Context(DbContextOptions);
+		using var context = GetContext();
 		var className = typeof(TApi).Name;
 		switch (className)
 		{
@@ -332,7 +343,7 @@ public class DatamartClient : LogicMonitorClient
 			"{TypeName}: Loading entries...",
 			typeof(TApi).Name);
 
-		using var context = new Context(DbContextOptions);
+		using var context = GetContext();
 		// Get the right DbSet from the context
 		var dbSet = action(context);
 
@@ -391,7 +402,7 @@ public class DatamartClient : LogicMonitorClient
 	{
 		logger.LogDebug("{TypeName}: Loading entries...", nameof(LogicModuleUpdateStoreItem));
 
-		using var context = new Context(DbContextOptions);
+		using var context = GetContext();
 		// Get the right DbSet from the context
 		var dbSet = action(context);
 
@@ -599,7 +610,7 @@ public class DatamartClient : LogicMonitorClient
 		bool isPercentageAvailability = false
 		)
 	{
-		using var context = new Context(DbContextOptions);
+		using var context = GetContext();
 		var queryable = context.Alerts.AsQueryable();
 
 		if (id != null)
@@ -804,7 +815,7 @@ public class DatamartClient : LogicMonitorClient
 
 	internal async Task<string> EnsureTableExistsAsync(DateTimeOffset testAggregationPeriod)
 	{
-		using var context = new Context(DbContextOptions);
+		using var context = GetContext();
 		using var dbConnection = context.Database.GetDbConnection();
 		using var sqlConnection = new SqlConnection(dbConnection.ConnectionString);
 		await sqlConnection
@@ -827,7 +838,7 @@ public class DatamartClient : LogicMonitorClient
 	{
 		var dataSourceName = dataSourceSpecification.Name;
 
-		using var context = new Context(DbContextOptions);
+		using var context = GetContext();
 
 		var databaseDataSource = await context
 			.DataSources

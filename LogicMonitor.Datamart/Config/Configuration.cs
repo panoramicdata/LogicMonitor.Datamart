@@ -49,6 +49,11 @@ public class Configuration
 	public int? DatabaseServerPort { get; set; }
 
 	/// <summary>
+	/// The Database retry on failure count
+	/// </summary>
+	public int? DatabaseRetryOnFailureCount { get; set; }
+
+	/// <summary>
 	/// The Database name
 	/// </summary>
 	public string DatabaseName { get; set; } = null!;

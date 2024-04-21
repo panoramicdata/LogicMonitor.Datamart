@@ -822,7 +822,7 @@ namespace LogicMonitor.Datamart.Migrations
 			migrationBuilder.CreateIndex(
 				name: "IX_Alerts_FasterPercentageAvailability",
 				table: "Alerts",
-				columns: new[] { "StartOnSeconds", "EndOnSeconds", "IsCleared", "InScheduledDownTime", "MonitorObjectGroup0Id", "MonitorObjectGroup1Id", "MonitorObjectGroup2Id", "MonitorObjectGroup3Id", "MonitorObjectGroup4Id", "MonitorObjectGroup5Id", "MonitorObjectGroup6Id", "MonitorObjectGroup7Id", "MonitorObjectGroup8Id", "MonitorObjectGroup9Id" })
+				columns: ["StartOnSeconds", "EndOnSeconds", "IsCleared", "InScheduledDownTime", "MonitorObjectGroup0Id", "MonitorObjectGroup1Id", "MonitorObjectGroup2Id", "MonitorObjectGroup3Id", "MonitorObjectGroup4Id", "MonitorObjectGroup5Id", "MonitorObjectGroup6Id", "MonitorObjectGroup7Id", "MonitorObjectGroup8Id", "MonitorObjectGroup9Id"])
 				.Annotation("Npgsql:IndexInclude", new[] { "Id", "Severity", "ClearValue", "MonitorObjectId", "ResourceTemplateName", "InstanceId", "InstanceName" });
 
 			migrationBuilder.CreateIndex(
@@ -998,7 +998,7 @@ namespace LogicMonitor.Datamart.Migrations
 			migrationBuilder.CreateIndex(
 				name: "IX_MonitorObjectGroups_FullPath_MonitoredObjectType",
 				table: "MonitorObjectGroups",
-				columns: new[] { "FullPath", "MonitoredObjectType" });
+				columns: ["FullPath", "MonitoredObjectType"]);
 
 			migrationBuilder.CreateIndex(
 				name: "IX_TimeSeriesDataAggregations_DeviceDataSourceInstanceDataPoin~",
