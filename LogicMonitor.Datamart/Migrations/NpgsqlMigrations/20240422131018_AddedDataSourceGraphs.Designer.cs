@@ -11,16 +11,16 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 {
-    [DbContext(typeof(Context))]
-    [Migration("20230717121119_ChangedInstanceNameToString")]
-    partial class ChangedInstanceNameToString
+    [DbContext(typeof(NpgsqlContext))]
+    [Migration("20240422131018_AddedDataSourceGraphs")]
+    partial class AddedDataSourceGraphs
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.9")
+                .HasAnnotation("ProductVersion", "8.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -553,6 +553,15 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
                     b.Property<bool>("IsDown")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsEncoded")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsLmLogsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsLmLogsSyslogEnabled")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("LastSentNotificationOnLocal")
                         .IsRequired()
                         .HasColumnType("text");
@@ -580,6 +589,10 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
                         .HasColumnType("integer");
 
                     b.Property<string>("OnetimeDowngradeInfo")
+                        .HasColumnType("text");
+
+                    b.Property<string>("OtelVerison")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Platform")
@@ -708,6 +721,12 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("DataSourceGraphId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("DataSourceGraphStoreItemId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("DataSourceId")
                         .HasColumnType("uuid");
 
@@ -792,9 +811,79 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("DataSourceGraphStoreItemId");
+
                     b.HasIndex("DataSourceId");
 
                     b.ToTable("DataSourceDataPoints");
+                });
+
+            modelBuilder.Entity("LogicMonitor.Datamart.Models.DataSourceGraphStoreItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("DataSourceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("DataSourceStoreItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("DatamartCreated")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("DatamartLastModified")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("DatamartLastObserved")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DisplayPriority")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Height")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsBase1024")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsRigid")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("LogicMonitorId")
+                        .HasColumnType("integer");
+
+                    b.Property<double?>("MaxValue")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("MinValue")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Timescale")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("VerticalLabel")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Width")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DataSourceStoreItemId");
+
+                    b.ToTable("DataSourceGraphs");
                 });
 
             modelBuilder.Entity("LogicMonitor.Datamart.Models.DataSourceStoreItem", b =>
@@ -809,6 +898,16 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 
                     b.Property<string>("AuditVersion")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Checksum")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CollectionAttributeIp")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CollectionAttributeName")
                         .HasColumnType("text");
 
                     b.Property<string>("CollectionMethod")
@@ -832,8 +931,67 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Group")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<bool>("HasMultiInstances")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("InstallationMetadataAuditedRegistryId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstallationMetadataAuditedVersion")
+                        .HasColumnType("text");
+
+                    b.Property<bool?>("InstallationMetadataIsChangedFromOrigin")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool?>("InstallationMetadataIsChangedFromTargetLastPublished")
+                        .HasColumnType("boolean");
+
+                    b.Property<int?>("InstallationMetadataLogicModuleId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("InstallationMetadataLogicModuleType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstallationMetadataOriginAuthorCompanyUuid")
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstallationMetadataOriginAuthorNamespace")
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstallationMetadataOriginChecksum")
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstallationMetadataOriginLineageId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstallationMetadataOriginRegistryId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstallationMetadataOriginVersion")
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstallationMetadataTargetLastPublishedChecksum")
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstallationMetadataTargetLastPublishedId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstallationMetadataTargetLastPublishedVersion")
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstallationMetadataTargetLineageId")
+                        .HasColumnType("text");
+
+                    b.Property<long?>("LastTimeSeriesDataSyncDurationMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("LineageId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("LogicMonitorId")
                         .HasColumnType("integer");
@@ -842,12 +1000,23 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("PayloadVersion")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<int>("PollingIntervalSeconds")
                         .HasColumnType("integer");
+
+                    b.Property<string>("Tags")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Technology")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<bool>("UseWildValueAsUuid")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Version")
                         .IsRequired()
@@ -884,6 +1053,46 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 
                     b.Property<Guid>("DeviceDataSourceInstanceId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("InstanceDatapointProperty1")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstanceDatapointProperty10")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstanceDatapointProperty2")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstanceDatapointProperty3")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstanceDatapointProperty4")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstanceDatapointProperty5")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstanceDatapointProperty6")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstanceDatapointProperty7")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstanceDatapointProperty8")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstanceDatapointProperty9")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("LogicMonitorId")
                         .HasColumnType("integer");
@@ -941,6 +1150,46 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
                         .HasColumnType("integer");
 
                     b.Property<string>("GroupName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstanceProperty1")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstanceProperty10")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstanceProperty2")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstanceProperty3")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstanceProperty4")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstanceProperty5")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstanceProperty6")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstanceProperty7")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstanceProperty8")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstanceProperty9")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -1283,6 +1532,9 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
                     b.Property<long?>("LastRawDataTimeSeconds")
                         .HasColumnType("bigint");
 
+                    b.Property<long?>("LastTimeSeriesDataSyncDurationMs")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("Link")
                         .HasColumnType("text");
 
@@ -1511,6 +1763,114 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
                     b.HasKey("Id");
 
                     b.ToTable("LogItems");
+                });
+
+            modelBuilder.Entity("LogicMonitor.Datamart.Models.LogicModuleUpdateStoreItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AppliesTo")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<long>("AuditVersion")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("CollectionMethod")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("CurrentUuid")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTimeOffset>("DatamartCreated")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("DatamartLastModified")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("DatamartLastObserved")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Group")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Local")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("LocalId")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("LocalVersion")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Locator")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Namespace")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<long>("PublishedAtMilliseconds")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Quality")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("RegistryVersion")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Remote")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("RestLm")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<long>("Version")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("LogicModuleUpdates");
                 });
 
             modelBuilder.Entity("LogicMonitor.Datamart.Models.MonitorObjectGroupStoreItem", b =>
@@ -1939,6 +2299,10 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 
             modelBuilder.Entity("LogicMonitor.Datamart.Models.DataSourceDataPointStoreItem", b =>
                 {
+                    b.HasOne("LogicMonitor.Datamart.Models.DataSourceGraphStoreItem", null)
+                        .WithMany("DataPoints")
+                        .HasForeignKey("DataSourceGraphStoreItemId");
+
                     b.HasOne("LogicMonitor.Datamart.Models.DataSourceStoreItem", "DataSource")
                         .WithMany()
                         .HasForeignKey("DataSourceId")
@@ -1946,6 +2310,13 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
                         .IsRequired();
 
                     b.Navigation("DataSource");
+                });
+
+            modelBuilder.Entity("LogicMonitor.Datamart.Models.DataSourceGraphStoreItem", b =>
+                {
+                    b.HasOne("LogicMonitor.Datamart.Models.DataSourceStoreItem", null)
+                        .WithMany("Graphs")
+                        .HasForeignKey("DataSourceStoreItemId");
                 });
 
             modelBuilder.Entity("LogicMonitor.Datamart.Models.DeviceDataSourceInstanceDataPointStoreItem", b =>
@@ -2052,11 +2423,18 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
                     b.Navigation("DeviceDataSourceInstanceDataPoints");
                 });
 
+            modelBuilder.Entity("LogicMonitor.Datamart.Models.DataSourceGraphStoreItem", b =>
+                {
+                    b.Navigation("DataPoints");
+                });
+
             modelBuilder.Entity("LogicMonitor.Datamart.Models.DataSourceStoreItem", b =>
                 {
                     b.Navigation("DataPoints");
 
                     b.Navigation("DeviceDataSources");
+
+                    b.Navigation("Graphs");
                 });
 
             modelBuilder.Entity("LogicMonitor.Datamart.Models.DeviceDataSourceInstanceDataPointStoreItem", b =>

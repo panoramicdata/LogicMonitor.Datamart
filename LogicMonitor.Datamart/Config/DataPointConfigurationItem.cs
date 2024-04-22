@@ -18,6 +18,11 @@ public class DataPointConfigurationItem
 	public string Description { get; set; } = string.Empty;
 
 	/// <summary>
+	/// The unique graph name.  If omitted, the graph with ID of -1 (raw data) is used.
+	/// </summary>
+	public string? GraphName { get; set; }
+
+	/// <summary>
 	/// The measurement unit to report to downstream systems
 	/// </summary>
 	public string MeasurementUnit { get; set; } = string.Empty;

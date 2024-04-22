@@ -5,6 +5,8 @@ public class DataSourceStoreItem : IdentifiedStoreItem
 	// Navigation properties
 	public ICollection<DeviceDataSourceStoreItem>? DeviceDataSources { get; set; } = null!;
 
+	public ICollection<DataSourceGraphStoreItem>? Graphs { get; set; } = null!;
+
 	public ICollection<DeviceDataSourceInstanceDataPointStoreItem>? DataPoints { get; set; } = null!;
 
 	// Database properties

@@ -8,7 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage(
 	"Performance",
 	"CA1848:Use the LoggerMessage delegates",
-	Justification = "Implmentation effort not worth the gain",
+	Justification = "Implementation effort not worth the gain",
 	Scope = "namespaceanddescendants",
 	Target = "~N:LogicMonitor.Datamart")
 ]

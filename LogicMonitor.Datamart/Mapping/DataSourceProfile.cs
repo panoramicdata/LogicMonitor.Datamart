@@ -12,6 +12,9 @@ public class DataSourceProfile : Profile
 				dest => dest.LogicMonitorId,
 				opts => opts.MapFrom(src => src.Id))
 			.ForMember(
+				dest => dest.Graphs,
+				opts => opts.Ignore())
+			.ForMember(
 				dest => dest.DatamartCreated,
 				opts => opts.Ignore())
 			.ForMember(

@@ -381,10 +381,14 @@ public class DatamartClient : LogicMonitorClient
 
 		// For DataPoints, the information from LogicMonitor is present on the DataSources.
 		// So, after fetching the DataSources, we should also update the DataPoints in the database
-		if (typeof(TStore) == typeof(DataSourceStoreItem))
+		switch (typeof(TStore).Name)
 		{
-			await UpdateDataPointsAsync(context, apiItems.Cast<DataSource>().ToList())
-				.ConfigureAwait(false);
+			case nameof(DataSourceStoreItem):
+				await UpdateGraphsAsync(context, apiItems.Cast<DataSource>().ToList(), cancellationToken)
+					.ConfigureAwait(false);
+				await UpdateDataPointsAsync(context, apiItems.Cast<DataSource>().ToList(), cancellationToken)
+					.ConfigureAwait(false);
+				break;
 		}
 	}
 
@@ -436,13 +440,92 @@ public class DatamartClient : LogicMonitorClient
 			added,
 			modified);
 	}
+	/// <summary>
+	/// Update Graphs, given a list of DataSources just retrieved from the LogicMonitor API
+	/// </summary>
+	/// <param name="context">The database context</param>
+	/// <param name="apiDataSources">The list of API DataSources</param>
+	private async Task UpdateGraphsAsync(Context context, List<DataSource> apiDataSources, CancellationToken cancellationToken)
+	{
+		foreach (var apiDataSource in apiDataSources)
+		{
+			var apiGraphs = await GetDataSourceGraphsAsync(apiDataSource.Id, cancellationToken).ConfigureAwait(false);
+			var apiOverviewGraphs = (await GetDataSourceOverviewGraphsPageAsync(apiDataSource.Id, null, cancellationToken).ConfigureAwait(false)).Items;
+
+			var databaseDataSource = await context
+				.DataSources
+				.SingleOrDefaultAsync(ds => ds.Name == apiDataSource.Name, cancellationToken)
+				.ConfigureAwait(false);
+
+			if (databaseDataSource is null)
+			{
+				_logger.LogError(
+					"For LogicMonitor instance {LogicMonitorAccount}, expected to find Database DataSource called '{DataSourceName}', but it was missing.",
+					_configuration.LogicMonitorClientOptions.Account,
+					apiDataSource.Name);
+				continue;
+			}
+
+			var databaseGraphs = await context
+				.DataSourceGraphs
+				.Where(g => g.DataSource!.LogicMonitorId == apiDataSource.Id)
+				.ToListAsync(cancellationToken)
+				.ConfigureAwait(false);
+
+			UpdateGraphs(context, apiGraphs, databaseDataSource.Id, databaseGraphs, false);
+			UpdateGraphs(context, apiOverviewGraphs, databaseDataSource.Id, databaseGraphs, true);
+
+			await context
+				.SaveChangesAsync(cancellationToken)
+				.ConfigureAwait(false);
+		}
+	}
+
+	private static void UpdateGraphs(
+		Context context,
+		List<DataSourceGraph> apiGraphs,
+		Guid databaseDataSourceId,
+		List<DataSourceGraphStoreItem> databaseGraphs,
+		bool areOverview)
+	{
+		// Graphs to add = API - Database
+		var graphsToAdd = apiGraphs
+			.Where(g => !databaseGraphs.Any(dg => dg.Name == g.Name && dg.IsOverview == areOverview))
+			.Select(g =>
+			{
+				DataSourceGraphStoreItem databaseDataSourceGraph = MapperInstance.Map<DataSourceGraphStoreItem>(g);
+				databaseDataSourceGraph.DataSourceId = databaseDataSourceId;
+				databaseDataSourceGraph.IsOverview = areOverview;
+				return databaseDataSourceGraph;
+			}
+			)
+			.ToList();
+
+		var graphsToRemove = databaseGraphs
+			.Where(dg => !apiGraphs.Any(g => g.Name == dg.Name && dg.IsOverview == areOverview))
+			.ToList();
+
+		var graphsToUpdate = databaseGraphs
+			.Where(dg => apiGraphs.Any(g => g.Name == dg.Name && dg.IsOverview == areOverview))
+			.ToList();
+
+		// Add, remove and update
+		context.DataSourceGraphs.AddRange(graphsToAdd);
+		context.DataSourceGraphs.RemoveRange(graphsToRemove);
+		foreach (var graphToUpdate in graphsToUpdate)
+		{
+			var databaseGraph = databaseGraphs.Single(dg => dg.Name == graphToUpdate.Name && dg.IsOverview == areOverview);
+			MapperInstance.Map(graphToUpdate, databaseGraph);
+			databaseGraph.IsOverview = areOverview;
+		}
+	}
 
 	/// <summary>
 	/// Update DataPoints, given a list of DataSources just retrieved from the LogicMonitor API
 	/// </summary>
 	/// <param name="context">The database context</param>
 	/// <param name="apiDataSources">The list of API DataSources</param>
-	private async Task UpdateDataPointsAsync(Context context, List<DataSource> apiDataSources)
+	private async Task UpdateDataPointsAsync(Context context, List<DataSource> apiDataSources, CancellationToken cancellationToken)
 	{
 		// Update the nominated DataSources' DataPoints only for those reference in the config
 		foreach (var configDataSourceSpecification in _configuration.DataSources)
@@ -466,7 +549,7 @@ public class DatamartClient : LogicMonitorClient
 			// The DataSource from the database
 			var databaseDataSource = await context
 				.DataSources
-				.SingleOrDefaultAsync(ds => ds.Name == dataSourceName)
+				.SingleOrDefaultAsync(ds => ds.Name == dataSourceName, cancellationToken)
 				.ConfigureAwait(false);
 			if (databaseDataSource is null)
 			{
@@ -509,7 +592,7 @@ public class DatamartClient : LogicMonitorClient
 				// Is it in the database?
 				var databaseDataSourceDataPointModel = await context
 					.DataSourceDataPoints
-					.SingleOrDefaultAsync(dsdp => dsdp.DataSource.Name == apiDataSource.Name && dsdp.Name == configDataPoint.Name)
+					.SingleOrDefaultAsync(dsdp => dsdp.DataSource.Name == apiDataSource.Name && dsdp.Name == configDataPoint.Name, cancellationToken)
 					.ConfigureAwait(false);
 
 				if (databaseDataSourceDataPointModel is null)
@@ -576,7 +659,7 @@ public class DatamartClient : LogicMonitorClient
 				}
 
 				await context
-					.SaveChangesAsync()
+					.SaveChangesAsync(cancellationToken)
 					.ConfigureAwait(false);
 			}
 

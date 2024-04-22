@@ -718,6 +718,12 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
 						.IsRequired()
 						.HasColumnType("nvarchar(max)");
 
+					b.Property<Guid?>("DataSourceGraphId")
+						.HasColumnType("uniqueidentifier");
+
+					b.Property<Guid?>("DataSourceGraphStoreItemId")
+						.HasColumnType("uniqueidentifier");
+
 					b.Property<Guid>("DataSourceId")
 						.HasColumnType("uniqueidentifier");
 
@@ -802,9 +808,79 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
 
 					b.HasKey("Id");
 
+					b.HasIndex("DataSourceGraphStoreItemId");
+
 					b.HasIndex("DataSourceId");
 
 					b.ToTable("DataSourceDataPoints");
+				});
+
+			modelBuilder.Entity("LogicMonitor.Datamart.Models.DataSourceGraphStoreItem", b =>
+				{
+					b.Property<Guid>("Id")
+						.ValueGeneratedOnAdd()
+						.HasColumnType("uniqueidentifier");
+
+					b.Property<Guid>("DataSourceId")
+						.HasColumnType("uniqueidentifier");
+
+					b.Property<DateTimeOffset>("DatamartCreated")
+						.HasColumnType("datetimeoffset");
+
+					b.Property<DateTimeOffset>("DatamartLastModified")
+						.HasColumnType("datetimeoffset");
+
+					b.Property<DateTimeOffset>("DatamartLastObserved")
+						.HasColumnType("datetimeoffset");
+
+					b.Property<int>("DisplayPriority")
+						.HasColumnType("int");
+
+					b.Property<int>("Height")
+						.HasColumnType("int");
+
+					b.Property<bool>("IsBase1024")
+						.HasColumnType("bit");
+
+					b.Property<bool>("IsOverview")
+						.HasColumnType("bit");
+
+					b.Property<bool>("IsRigid")
+						.HasColumnType("bit");
+
+					b.Property<int>("LogicMonitorId")
+						.HasColumnType("int");
+
+					b.Property<double?>("MaxValue")
+						.HasColumnType("float");
+
+					b.Property<double?>("MinValue")
+						.HasColumnType("float");
+
+					b.Property<string>("Name")
+						.IsRequired()
+						.HasColumnType("nvarchar(max)");
+
+					b.Property<string>("Timescale")
+						.IsRequired()
+						.HasColumnType("nvarchar(max)");
+
+					b.Property<string>("Title")
+						.IsRequired()
+						.HasColumnType("nvarchar(max)");
+
+					b.Property<string>("VerticalLabel")
+						.IsRequired()
+						.HasColumnType("nvarchar(max)");
+
+					b.Property<int>("Width")
+						.HasColumnType("int");
+
+					b.HasKey("Id");
+
+					b.HasIndex("DataSourceId");
+
+					b.ToTable("DataSourceGraphs");
 				});
 
 			modelBuilder.Entity("LogicMonitor.Datamart.Models.DataSourceStoreItem", b =>
@@ -2220,8 +2296,23 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
 
 			modelBuilder.Entity("LogicMonitor.Datamart.Models.DataSourceDataPointStoreItem", b =>
 				{
+					b.HasOne("LogicMonitor.Datamart.Models.DataSourceGraphStoreItem", null)
+						.WithMany("DataPoints")
+						.HasForeignKey("DataSourceGraphStoreItemId");
+
 					b.HasOne("LogicMonitor.Datamart.Models.DataSourceStoreItem", "DataSource")
 						.WithMany()
+						.HasForeignKey("DataSourceId")
+						.OnDelete(DeleteBehavior.Cascade)
+						.IsRequired();
+
+					b.Navigation("DataSource");
+				});
+
+			modelBuilder.Entity("LogicMonitor.Datamart.Models.DataSourceGraphStoreItem", b =>
+				{
+					b.HasOne("LogicMonitor.Datamart.Models.DataSourceStoreItem", "DataSource")
+						.WithMany("Graphs")
 						.HasForeignKey("DataSourceId")
 						.OnDelete(DeleteBehavior.Cascade)
 						.IsRequired();
@@ -2333,11 +2424,18 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
 					b.Navigation("DeviceDataSourceInstanceDataPoints");
 				});
 
+			modelBuilder.Entity("LogicMonitor.Datamart.Models.DataSourceGraphStoreItem", b =>
+				{
+					b.Navigation("DataPoints");
+				});
+
 			modelBuilder.Entity("LogicMonitor.Datamart.Models.DataSourceStoreItem", b =>
 				{
 					b.Navigation("DataPoints");
 
 					b.Navigation("DeviceDataSources");
+
+					b.Navigation("Graphs");
 				});
 
 			modelBuilder.Entity("LogicMonitor.Datamart.Models.DeviceDataSourceInstanceDataPointStoreItem", b =>

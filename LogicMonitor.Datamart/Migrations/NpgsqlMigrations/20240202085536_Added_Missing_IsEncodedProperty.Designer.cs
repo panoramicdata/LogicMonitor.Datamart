@@ -9,7 +9,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace LogicMonitor.Datamart.Migrations
+namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 {
     [DbContext(typeof(Context))]
     [Migration("20240202085536_Added_Missing_IsEncodedProperty")]

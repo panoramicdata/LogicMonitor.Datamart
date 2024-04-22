@@ -1,6 +1,6 @@
 ﻿#nullable disable
 
-namespace LogicMonitor.Datamart.Migrations
+namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 {
 	/// <inheritdoc />
 	public partial class MoveTimeSeriesTimeCursorToDataPointLevel : Migration

@@ -32,6 +32,9 @@ public class DataPointProfile : Profile
 			.ForMember(
 				dest => dest.GlobalAlertExpression,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.DataSourceGraphId,
+				opts => opts.Ignore())
 			;
 	}
 }

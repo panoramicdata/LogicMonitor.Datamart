@@ -4,6 +4,12 @@ public class DataSourceDataPointStoreItem : IdentifiedStoreItem
 {
 	public Guid DataSourceId { get; set; }
 
+	/// <summary>
+	/// An optional reference to a DataSourceGraph
+	/// If null, the DataPoint is a raw DataSource DataPoint
+	/// </summary>
+	public Guid? DataSourceGraphId { get; set; }
+
 	public DataSourceStoreItem DataSource { get; set; } = null!;
 
 	public string Name { get; set; } = string.Empty;

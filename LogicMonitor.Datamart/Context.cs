@@ -17,6 +17,7 @@ public class Context : DbContext
 	public DbSet<CollectorStoreItem> Collectors { get; set; } = null!;
 	public DbSet<CollectorGroupStoreItem> CollectorGroups { get; set; } = null!;
 	public DbSet<ConfigSourceStoreItem> ConfigSources { get; set; } = null!;
+	public DbSet<DataSourceGraphStoreItem> DataSourceGraphs { get; set; } = null!;
 	public DbSet<DataSourceStoreItem> DataSources { get; set; } = null!;
 	public DbSet<DeviceDataSourceInstanceDataPointStoreItem> DeviceDataSourceInstanceDataPoints { get; set; } = null!;
 	public DbSet<DataSourceDataPointStoreItem> DataSourceDataPoints { get; set; } = null!;
