@@ -5,7 +5,6 @@ internal class DimensionSync : LoopInterval
 	private readonly List<string> _types;
 	private readonly DatamartClient _datamartClient;
 	private readonly Configuration _configuration;
-	private readonly bool _throwOnError;
 
 	public DimensionSync(
 		DatamartClient datamartClient,
