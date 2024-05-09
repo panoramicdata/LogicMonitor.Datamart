@@ -163,6 +163,7 @@ internal class AlertSync : LoopInterval
 							{
 								// No.  We will bulk insert
 								var newStoreItem = DatamartClient.MapperInstance.Map<Alert, AlertStoreItem>(networkAlert);
+								newStoreItem.Id = Guid.NewGuid();
 								var utcNow = DateTimeOffset.UtcNow;
 								newStoreItem.DatamartCreated = utcNow;
 								newStoreItem.DatamartLastModified = utcNow;
