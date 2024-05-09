@@ -11,7 +11,8 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor API Datamart</PackageTags>
 		<PackageReleaseNotes>
-			Added the MinutesOffset configuration property
+			Alignment with LogicMonitor.Api v3.203
+			Alert sync fixes
 		</PackageReleaseNotes>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
