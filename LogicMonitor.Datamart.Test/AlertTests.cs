@@ -3,17 +3,21 @@ namespace LogicMonitor.Datamart.Test;
 public class AlertTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTestOutputHelper)
 {
 	[Fact]
-	public async void UpdateDevices()
+	public async Task UpdateDevices()
 	{
 		var utcNow = DateTime.UtcNow;
 
 		await DatamartClient
-			.AddOrUpdate<Device, DeviceStoreItem>(context => context.Devices, LoggerFactory.CreateLogger(nameof(AlertTests)), default)
+			.AddOrUpdate<Device, DeviceStoreItem>(
+				context => context.Devices,
+				true,
+				LoggerFactory.CreateLogger(nameof(AlertTests)),
+				default)
 			.ConfigureAwait(true);
 	}
 
 	[Fact]
-	public async void Get24HoursOfAlerts()
+	public async Task Get24HoursOfAlerts()
 	{
 		var startDateTimeUtc = DateTime.UtcNow.AddHours(-24);
 		//var startDateTimeUtc = DateTime.UtcNow.AddDays(-30);
@@ -29,7 +33,7 @@ public class AlertTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iT
 	}
 
 	[Fact]
-	public async void GetCachedAlertsAsync()
+	public async Task GetCachedAlertsAsync()
 	{
 		var startDateTimeUtc = DateTimeOffset.UtcNow.AddDays(-10);
 		var endDateTimeUtc = DateTimeOffset.UtcNow.AddDays(-5);

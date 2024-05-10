@@ -11,3 +11,9 @@ using System.Diagnostics.CodeAnalysis;
 	Justification = "OK for unit tests",
 	Scope = "namespaceanddescendants",
 	Target = "~N:LogicMonitor.Datamart.Test")]
+[assembly: SuppressMessage(
+	"Performance",
+	"CA1848:Use the LoggerMessage delegates",
+	Justification = "Not worth dev overhead",
+	Scope = "namespaceanddescendants",
+	Target = "~N:LogicMonitor.Datamart.Test")]

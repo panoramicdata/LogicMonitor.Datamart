@@ -1,11 +1,9 @@
 ﻿global using AutoMapper;
-global using AutoMapper.Configuration;
 global using Divergic.Logging.Xunit;
 global using FluentAssertions;
 global using LogicMonitor.Api.Alerts;
 global using LogicMonitor.Api.Devices;
 global using LogicMonitor.Datamart.Config;
-global using LogicMonitor.Datamart.Logging;
 global using LogicMonitor.Datamart.Models;
 global using LogicMonitor.Datamart.Test.Config;
 global using Microsoft.Extensions.Configuration;

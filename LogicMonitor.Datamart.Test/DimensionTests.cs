@@ -20,7 +20,8 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 		await new DimensionSync(
 				DatamartClient,
 				Configuration,
-				LoggerFactory)
+				LoggerFactory,
+				default)
 			.ExecuteAsync(default)
 			.ConfigureAwait(true);
 	}
@@ -35,7 +36,8 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 					nameof(Device),
 					nameof(DeviceDataSourceInstance),
 				],
-				LoggerFactory)
+				LoggerFactory,
+				TestNotificationReceiver)
 			.ExecuteAsync(default)
 			.ConfigureAwait(true);
 	}
@@ -50,7 +52,8 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 				[
 					nameof(LogicModuleUpdate),
 				],
-				LoggerFactory)
+				LoggerFactory,
+				TestNotificationReceiver)
 			.ExecuteAsync(default)
 			.ConfigureAwait(true);
 	}
@@ -64,7 +67,8 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 				[
 					nameof(DataSource)
 				],
-				LoggerFactory)
+				LoggerFactory,
+				TestNotificationReceiver)
 			.ExecuteAsync(default)
 			.ConfigureAwait(true);
 	}

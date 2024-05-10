@@ -1,19 +1,12 @@
 namespace LogicMonitor.Datamart;
 
-internal class AlertSync : LoopInterval
+internal class AlertSync(
+	DatamartClient datamartClient,
+	DateTimeOffset startDateTimeUtc,
+	ILoggerFactory loggerFactory) : LoopInterval(nameof(AlertSync), loggerFactory)
 {
-	private readonly DatamartClient _datamartClient;
-	private readonly DateTimeOffset _startDateTimeUtc;
-
-	public AlertSync(
-		DatamartClient datamartClient,
-		DateTimeOffset startDateTimeUtc,
-		ILoggerFactory loggerFactory)
-		: base(nameof(AlertSync), loggerFactory)
-	{
-		_datamartClient = datamartClient;
-		_startDateTimeUtc = startDateTimeUtc;
-	}
+	private readonly DatamartClient _datamartClient = datamartClient;
+	private readonly DateTimeOffset _startDateTimeUtc = startDateTimeUtc;
 
 	public async Task TruncateAlerts(CancellationToken cancellationToken)
 	{
@@ -246,7 +239,7 @@ internal class AlertSync : LoopInterval
 
 					if (alertsToBulkInsert.Values.Count > 0)
 					{
-						await BulkInsertAlertsAsync(_datamartClient.DbContextOptions, alertsToBulkInsert.Values.ToList()).ConfigureAwait(false);
+						await BulkInsertAlertsAsync(_datamartClient.DbContextOptions, [.. alertsToBulkInsert.Values]).ConfigureAwait(false);
 						alertsToBulkInsert.Clear();
 					}
 					// Update the device

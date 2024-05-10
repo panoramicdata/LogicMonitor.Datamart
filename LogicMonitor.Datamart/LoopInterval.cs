@@ -3,16 +3,9 @@ using Humanizer.Localisation;
 
 namespace LogicMonitor.Datamart;
 
-internal abstract class LoopInterval
+internal abstract class LoopInterval(string name, ILoggerFactory loggerFactory)
 {
-	private readonly string _name;
-	public ILogger Logger { get; }
-
-	protected LoopInterval(string name, ILoggerFactory loggerFactory)
-	{
-		_name = name;
-		Logger = new PrefixLogger(name, loggerFactory);
-	}
+	public ILogger Logger { get; } = loggerFactory.CreateLogger<LoopInterval>();
 
 	public abstract Task ExecuteAsync(CancellationToken cancellationToken);
 
@@ -33,7 +26,7 @@ internal abstract class LoopInterval
 		{
 			stopwatch.Restart();
 
-			Logger.LogInformation("Starting {Name}...", _name);
+			Logger.LogInformation("Starting {Name}...", name);
 
 			try
 			{
@@ -41,7 +34,7 @@ internal abstract class LoopInterval
 			}
 			catch (Exception ex) when (ex is OperationCanceledException || ex is TaskCanceledException)
 			{
-				Logger.LogInformation(ex, "LoopAsync {Name} cancelled.", _name);
+				Logger.LogInformation(ex, "LoopAsync {Name} cancelled.", name);
 			}
 			catch (Exception ex)
 			{
@@ -56,7 +49,7 @@ internal abstract class LoopInterval
 			stopwatch.Stop();
 			Logger.LogInformation(
 				"Finished {Name} in {StopwatchHumanized}.",
-				_name,
+				name,
 				stopwatch.Elapsed.Humanize(7, minUnit: TimeUnit.Second));
 
 			// Are we repeating?
@@ -65,7 +58,7 @@ internal abstract class LoopInterval
 				// NO
 				Logger.LogInformation(
 					"{Name} configured to run once, finished.",
-					_name);
+					name);
 				break;
 			}
 
@@ -75,7 +68,7 @@ internal abstract class LoopInterval
 			{
 				Logger.LogInformation(
 					"Next {Name} will start in {RemainingTimeInInterval} at {RemainingTimeInInterval}.",
-					_name,
+					name,
 					remainingTimeInInterval.Humanize(7, minUnit: TimeUnit.Second),
 					DateTime.UtcNow.Add(remainingTimeInInterval)
 					);
@@ -85,7 +78,7 @@ internal abstract class LoopInterval
 			{
 				Logger.LogWarning(
 					"Next {Name} will start immediately as it took longer than the configured {IntervalMinutes} minutes.",
-					_name,
+					name,
 					intervalMinutes);
 			}
 		}

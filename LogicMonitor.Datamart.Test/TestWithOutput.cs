@@ -1,10 +1,13 @@
 ﻿using LogicMonitor.Api;
+using LogicMonitor.Datamart.Interfaces;
 
 namespace LogicMonitor.Datamart.Test;
 
 public abstract class TestWithOutput
 {
 	protected static DateTimeOffset TwelveHoursAgo = DateTimeOffset.UtcNow.AddHours(-12);
+
+	protected INotificationReceiver TestNotificationReceiver { get; }
 
 	protected static Configuration Configuration = new()
 	{
@@ -142,7 +145,7 @@ public abstract class TestWithOutput
 		EndEpoch = nowUtc.ToUnixTimeSeconds();
 		var configuration = LoadConfiguration("appsettings.json");
 		var logicMonitorCredentials = configuration.LogicMonitorCredentials;
-		var loggerFactory = new PrefixLoggerFactory(logicMonitorCredentials.Account, LogFactory.Create(iTestOutputHelper));
+		var loggerFactory = iTestOutputHelper.BuildLoggerFactory();
 
 		Configuration.LogicMonitorClientOptions = new LogicMonitorClientOptions
 		{
@@ -172,6 +175,8 @@ public abstract class TestWithOutput
 		Stopwatch = Stopwatch.StartNew();
 
 		LoggerFactory = LogFactory.Create(iTestOutputHelper);
+
+		TestNotificationReceiver = new TestNotificationReceiver(LoggerFactory.CreateLogger<TestWithOutput>());
 	}
 
 	protected static TestConfiguration LoadConfiguration(string jsonFilePath)

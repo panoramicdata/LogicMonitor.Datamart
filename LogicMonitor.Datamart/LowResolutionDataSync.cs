@@ -1,5 +1,7 @@
 ﻿using LogicMonitor.Api.Data;
 using LogicMonitor.Api.Time;
+using LogicMonitor.Datamart.Interfaces;
+using LogicMonitor.Datamart.Notifications;
 using PanoramicData.NCalcExtensions;
 
 namespace LogicMonitor.Datamart;
@@ -7,13 +9,16 @@ namespace LogicMonitor.Datamart;
 internal class LowResolutionDataSync(
 	DatamartClient datamartClient,
 	Configuration configuration,
-	ILoggerFactory loggerFactory) : LoopInterval(nameof(LowResolutionDataSync), loggerFactory)
+	ILoggerFactory loggerFactory,
+	INotificationReceiver? notificationReceiver) : LoopInterval(nameof(LowResolutionDataSync), loggerFactory)
 {
 	private static readonly TimeSpan EightHours = TimeSpan.FromHours(8);
 	private const int DeviceDownTimeWindowSeconds = 3000;
 
 	private readonly DatamartClient _datamartClient = datamartClient;
 	private readonly Configuration _configuration = configuration;
+
+	private readonly INotificationReceiver _notificationReceiver = notificationReceiver ?? new NullNotificationReceiver();
 
 	public override async Task ExecuteAsync(CancellationToken cancellationToken)
 	{
@@ -74,19 +79,35 @@ internal class LowResolutionDataSync(
 			var deviceIndex = 0;
 			var failedDeviceDisplayNames = new List<string>();
 			var deviceStopwatch = new Stopwatch();
+
+			await _notificationReceiver
+				.SetStageNameAsync("Syncing TimeSeriesDataAggregations", cancellationToken)
+				.ConfigureAwait(false);
+
+			await _notificationReceiver
+				.SetItemCountAsync(deviceCount, cancellationToken)
+				.ConfigureAwait(false);
+
 			foreach (var device in databaseDevices)
 			{
 				deviceIndex++;
 
 				deviceStopwatch.Restart();
 
-				Logger.LogInformation(
-					"Getting DeviceDataSourceInstanceDataPoints for {DatabaseName}: {DeviceName} ({DeviceIndex}/{DeviceCount})...",
-					_configuration.DatabaseName,
-					device.DisplayName,
-					deviceIndex,
-					deviceCount
-				);
+				if (deviceIndex % 100 == 0)
+				{
+					Logger.LogInformation(
+						"Getting DeviceDataSourceInstanceDataPoints for {DatabaseName}: {DeviceName} ({DeviceIndex}/{DeviceCount})...",
+						_configuration.DatabaseName,
+						device.DisplayName,
+						deviceIndex,
+						deviceCount
+					);
+
+					await _notificationReceiver
+						.SetItemIndexAsync(deviceIndex + 1, cancellationToken)
+						.ConfigureAwait(false);
+				}
 
 				// Get the list of DeviceDataSourceInstanceDataPoints
 				var databaseDeviceDataSourceInstanceDataPoints = await context
@@ -252,7 +273,7 @@ internal class LowResolutionDataSync(
 	}
 
 
-	private async Task GetAndWriteAggregationsAsync(
+	private static async Task GetAndWriteAggregationsAsync(
 		DatamartClient datamartClient,
 		Context context,
 		Configuration configuration,
@@ -594,11 +615,11 @@ internal class LowResolutionDataSync(
 			{
 				databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo = null;
 
-				// Remove any related aggregations using the Bulk extensions
+				// Remove any related aggregations
 				var aggregationStoreItemsToRemove = await context
 					.TimeSeriesDataAggregations
 					.Where(tsda => tsda.DeviceDataSourceInstanceDataPointId == databaseDeviceDataSourceInstanceDataPoint.Id)
-					.BatchDeleteAsync(cancellationToken)
+					.ExecuteDeleteAsync(cancellationToken)
 					.ConfigureAwait(false);
 			}
 

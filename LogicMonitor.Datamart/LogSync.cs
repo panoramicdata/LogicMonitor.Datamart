@@ -1,19 +1,10 @@
 ﻿namespace LogicMonitor.Datamart;
 
-internal class LogSync : LoopInterval
+internal class LogSync(
+	DatamartClient datamartClient,
+	DateTimeOffset startDateTimeUtc,
+	ILoggerFactory loggerFactory) : LoopInterval(nameof(LogSync), loggerFactory)
 {
-	private readonly DatamartClient _datamartClient;
-	private readonly DateTimeOffset _startDateTimeUtc;
-
-	public LogSync(
-		DatamartClient datamartClient,
-		DateTimeOffset startDateTimeUtc,
-		ILoggerFactory loggerFactory) : base(nameof(LogSync), loggerFactory)
-	{
-		_datamartClient = datamartClient;
-		_startDateTimeUtc = startDateTimeUtc;
-	}
-
 	public override async Task ExecuteAsync(CancellationToken cancellationToken)
 	{
 		Logger.LogInformation("Loading LogItems...");
@@ -28,7 +19,7 @@ internal class LogSync : LoopInterval
 		long mostRecentTimestamp;
 
 		// Get the latest timestamp from the database
-		using (var context = new Context(_datamartClient.DbContextOptions))
+		using (var context = new Context(datamartClient.DbContextOptions))
 		{
 			mostRecentTimestamp = (await context
 				.LogItems
@@ -40,13 +31,13 @@ internal class LogSync : LoopInterval
 		}
 
 		// Only go as far back as the configured StartDateTimeUtc
-		timeCursor = Math.Max(mostRecentTimestamp, _startDateTimeUtc.ToUnixTimeSeconds());
+		timeCursor = Math.Max(mostRecentTimestamp, startDateTimeUtc.ToUnixTimeSeconds());
 		var initialTimeCursor = timeCursor;
 		var timeCursorLastTime = timeCursor;
 		var totalLogEntriesStored = 0;
 		while (timeCursor <= nowSecondsSinceEpoch)
 		{
-			using var context = new Context(_datamartClient.DbContextOptions);
+			using var context = new Context(datamartClient.DbContextOptions);
 			var filter = new Filter<LogItem>
 			{
 				FilterItems =
@@ -60,7 +51,7 @@ internal class LogSync : LoopInterval
 				},
 				Take = pageSize
 			};
-			var apiEntriesThisTime = await _datamartClient
+			var apiEntriesThisTime = await datamartClient
 				.GetAllAsync(filter, cancellationToken)
 				.ConfigureAwait(false);
 
@@ -93,7 +84,7 @@ internal class LogSync : LoopInterval
 
 			Logger.LogDebug(
 				"Processing log items for {DatamartClientAccountName}",
-				_datamartClient.AccountName);
+				datamartClient.AccountName);
 			var dataProcessingStopwatch = Stopwatch.StartNew();
 			var sqlSave = new Stopwatch();
 
@@ -108,12 +99,12 @@ internal class LogSync : LoopInterval
 			Logger.LogDebug("Processed {ApiEntriesThisTime} log items ending {TimeCursor} for {DatamartClientAccountName}",
 				apiEntriesThisTime,
 				timeCursor,
-				_datamartClient.AccountName);
+				datamartClient.AccountName);
 		}
 
 		Logger.LogInformation(
 			"Finished storing {TotalLogEntriesStored} Log entries for {LogicMonitorAccountName}",
 			totalLogEntriesStored,
-			_datamartClient.AccountName);
+			datamartClient.AccountName);
 	}
 }

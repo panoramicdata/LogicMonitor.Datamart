@@ -5,7 +5,7 @@ public class AgingTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iT
 
 	// Age - retaining 5 days
 	[Fact]
-	public async void AgeData()
+	public async Task AgeData()
 		=> await new DataAging(
 				DatamartClient,
 				5,

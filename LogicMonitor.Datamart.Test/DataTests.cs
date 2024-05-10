@@ -3,7 +3,7 @@
 public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTestOutputHelper)
 {
 	[Fact]
-	public async void GetData_Succeeds()
+	public async Task GetData_Succeeds()
 	{
 		var device = new DeviceStoreItem
 		{
@@ -57,12 +57,13 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 	}
 
 	[Fact]
-	public async void LowResolutionDataSync_RunsSuccessfully()
+	public async Task LowResolutionDataSync_RunsSuccessfully()
 	{
 		await new LowResolutionDataSync(
 				DatamartClient,
 				Configuration,
-				LoggerFactory)
+				LoggerFactory,
+				TestNotificationReceiver)
 			.ExecuteAsync(default)
 			.ConfigureAwait(true);
 	}
