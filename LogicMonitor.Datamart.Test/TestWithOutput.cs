@@ -25,7 +25,14 @@ public abstract class TestWithOutput
 			TimeSpan.Zero)
 		.UtcDateTime,
 
-		DeviceProperties = ["fix.url", "ReportMagic", "location", "customer.code"],
+		DeviceProperties = [
+			"fix.url",
+			"ReportMagic",
+			"location",
+			"customer.code",
+			"auto.bios.version",
+			"system.sysinfo",
+		],
 
 		DataSources =
 			[

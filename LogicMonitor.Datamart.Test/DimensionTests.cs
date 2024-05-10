@@ -27,6 +27,21 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 	}
 
 	[Fact]
+	public async Task GetDimensions_Device_RunsSuccessfully()
+	{
+		await new DimensionSync(
+				DatamartClient,
+				Configuration,
+				[
+					nameof(Device),
+				],
+				LoggerFactory,
+				TestNotificationReceiver)
+			.ExecuteAsync(default)
+			.ConfigureAwait(true);
+	}
+
+	[Fact]
 	public async Task GetDimensions_DeviceAndDeviceDataSourceInstance_RunsSuccessfully()
 	{
 		await new DimensionSync(
