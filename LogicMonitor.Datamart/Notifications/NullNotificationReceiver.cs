@@ -2,12 +2,11 @@
 
 namespace LogicMonitor.Datamart.Notifications;
 
-internal class NullNotificationReceiver : INotificationReceiver
+public class NullNotificationReceiver : INotificationReceiver
 {
 	public Task SetStageNameAsync(string stageName, CancellationToken cancellationToken) => Task.CompletedTask;
 
 	public Task SetItemCountAsync(int itemCount, CancellationToken cancellationToken) => Task.CompletedTask;
 
 	public Task SetItemIndexAsync(int itemIndex, CancellationToken cancellationToken) => Task.CompletedTask;
-
 }

@@ -32,6 +32,8 @@ public static class CustomPropertyHandler
 
 		var result =
 			device.CustomProperties.SingleOrDefault(p => p.Name == _propertyNames[propertyNumber - 1])
+			?? device.AutoProperties.SingleOrDefault(p => p.Name == _propertyNames[propertyNumber - 1])
+			?? device.SystemProperties.SingleOrDefault(p => p.Name == _propertyNames[propertyNumber - 1])
 			?? device.InheritedProperties.SingleOrDefault(p => p.Name == _propertyNames[propertyNumber - 1]);
 		return result?.Value;
 	}
