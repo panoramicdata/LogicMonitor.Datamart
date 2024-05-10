@@ -1,5 +1,4 @@
 using LogicMonitor.Datamart.Interfaces;
-using LogicMonitor.Datamart.Notifications;
 using PanoramicData.NCalcExtensions;
 
 namespace LogicMonitor.Datamart;
@@ -19,7 +18,6 @@ public class DatamartClient : LogicMonitorClient
 
 	private readonly Configuration _configuration;
 	private static readonly MapperConfiguration _mapperConfig = new(cfg => cfg.AddMaps(typeof(DatamartClient).Assembly));
-	private readonly INotificationReceiver _notificationReceiver;
 	internal static IMapper MapperInstance = new Mapper(_mapperConfig);
 
 	public DatamartClient(
@@ -30,8 +28,6 @@ public class DatamartClient : LogicMonitorClient
 		// Store and validate configuration
 		_configuration = configuration;
 		_configuration.Validate();
-
-		_notificationReceiver = _configuration.NotificationReceiver ?? new NullNotificationReceiver();
 
 		// Set up the AutoMapper CustomPropertyFetcher
 		CustomPropertyHandler.Configure(_configuration.DeviceProperties);
@@ -263,19 +259,21 @@ public class DatamartClient : LogicMonitorClient
 
 	public Task SyncDimensionsAsync(
 		int desiredMaxIntervalMinutes,
+		INotificationReceiver notificationReceiver,
 		CancellationToken cancellationToken)
 	{
 		var sync = new DimensionSync(
 			this,
 			_configuration,
 			_loggerFactory,
-			_notificationReceiver);
+			notificationReceiver);
 		return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
 	}
 
 	public Task SyncDimensionsAsync(
 		int desiredMaxIntervalMinutes,
 		List<string> types,
+		INotificationReceiver notificationReceiver,
 		CancellationToken cancellationToken)
 	{
 		var sync = new DimensionSync(
@@ -283,19 +281,20 @@ public class DatamartClient : LogicMonitorClient
 			_configuration,
 			types,
 			_loggerFactory,
-			_notificationReceiver);
+			notificationReceiver);
 		return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
 	}
 
 	public Task SyncLowResolutionDataAsync(
 		int desiredMaxIntervalMinutes,
+		INotificationReceiver notificationReceiver,
 		CancellationToken cancellationToken)
 	{
 		var sync = new LowResolutionDataSync(
 			this,
 			_configuration,
 			_loggerFactory,
-			_notificationReceiver);
+			notificationReceiver);
 		return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
 	}
 
@@ -343,13 +342,14 @@ public class DatamartClient : LogicMonitorClient
 		Func<Context, DbSet<TStore>> action,
 		bool haltOnError,
 		ILogger logger,
+		INotificationReceiver notificationReceiver,
 		CancellationToken cancellationToken)
 		where TApi : IdentifiedItem, IHasEndpoint, new()
 		where TStore : IdentifiedStoreItem
 	{
 		try
 		{
-			await _notificationReceiver
+			await notificationReceiver
 				.SetStageNameAsync($"Dimension {typeof(TApi).Name}", cancellationToken)
 				.ConfigureAwait(false);
 			logger.LogInformation("Syncing {Type}s...", typeof(TApi).Name);
@@ -364,7 +364,7 @@ public class DatamartClient : LogicMonitorClient
 			var apiItems = await GetAllAsync<TApi>(cancellationToken: cancellationToken)
 				.ConfigureAwait(false);
 
-			await _notificationReceiver
+			await notificationReceiver
 				.SetItemCountAsync(apiItems.Count, cancellationToken)
 				.ConfigureAwait(false);
 
@@ -374,7 +374,7 @@ public class DatamartClient : LogicMonitorClient
 			{
 				if (itemIndex % 100 == 0)
 				{
-					await _notificationReceiver
+					await notificationReceiver
 						.SetItemIndexAsync(itemIndex, cancellationToken)
 						.ConfigureAwait(false);
 				}
@@ -389,7 +389,7 @@ public class DatamartClient : LogicMonitorClient
 					cancellationToken);
 			}
 
-			await _notificationReceiver
+			await notificationReceiver
 				.SetItemIndexAsync(itemIndex, cancellationToken)
 				.ConfigureAwait(false);
 
@@ -434,7 +434,6 @@ public class DatamartClient : LogicMonitorClient
 				throw;
 			}
 		}
-
 	}
 
 	/// <summary>
@@ -448,16 +447,19 @@ public class DatamartClient : LogicMonitorClient
 		Func<Context, DbSet<LogicModuleUpdateStoreItem>> action,
 		bool haltOnError,
 		ILogger logger,
+		INotificationReceiver notificationReceiver,
 		CancellationToken cancellationToken)
 	{
 		try
 		{
-			logger.LogInformation($"Syncing {nameof(LogicModuleUpdate)}s...");
-
-			logger.LogDebug("{TypeName}: Loading entries...", nameof(LogicModuleUpdateStoreItem));
+			logger.LogInformation("Syncing {Type}s...", nameof(LogicModuleUpdate));
+			await notificationReceiver
+				.SetStageNameAsync($"Syncing {nameof(LogicModuleUpdate)}s...", cancellationToken)
+				.ConfigureAwait(false);
 
 			using var context = GetContext();
 			// Get the right DbSet from the context
+			logger.LogDebug("{TypeName}: Loading entries...", nameof(LogicModuleUpdateStoreItem));
 			var dbSet = action(context);
 
 			// Fetch the items from the LogicMonitor API
@@ -503,7 +505,6 @@ public class DatamartClient : LogicMonitorClient
 				throw;
 			}
 		}
-
 	}
 	/// <summary>
 	/// Update Graphs, given a list of DataSources just retrieved from the LogicMonitor API

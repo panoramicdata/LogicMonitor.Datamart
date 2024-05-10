@@ -12,6 +12,7 @@ public class AlertTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iT
 				context => context.Devices,
 				true,
 				LoggerFactory.CreateLogger(nameof(AlertTests)),
+				TestNotificationReceiver,
 				default)
 			.ConfigureAwait(true);
 	}

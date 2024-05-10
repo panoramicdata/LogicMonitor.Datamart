@@ -49,11 +49,15 @@ internal class DimensionSync : LoopInterval
 				.ConfigureAwait(false);
 
 			// Top level
-			await SyncTopLevelDimensionsAsync(_configuration.DimensionSyncHaltOnError, cancellationToken)
+			await SyncTopLevelDimensionsAsync(
+				_configuration.DimensionSyncHaltOnError,
+				cancellationToken)
 				.ConfigureAwait(false);
 
 			// Second level
-			await SyncSecondLevelDimensionsAsync(_configuration.DimensionSyncHaltOnError, cancellationToken)
+			await SyncSecondLevelDimensionsAsync(
+				_configuration.DimensionSyncHaltOnError,
+				cancellationToken)
 				.ConfigureAwait(false);
 
 			// DeviceDataSources and DeviceDataSourceInstances
@@ -90,7 +94,9 @@ internal class DimensionSync : LoopInterval
 		}
 	}
 
-	private async Task SyncSecondLevelDimensionsAsync(bool haltOnError, CancellationToken cancellationToken)
+	private async Task SyncSecondLevelDimensionsAsync(
+		bool haltOnError,
+		CancellationToken cancellationToken)
 	{
 		if (_types?.Contains(nameof(Device)) ?? true)
 		{
@@ -99,6 +105,7 @@ internal class DimensionSync : LoopInterval
 				context => context.Devices,
 				haltOnError,
 				Logger,
+				_notificationReceiver,
 				cancellationToken)
 			.ConfigureAwait(false);
 		}
@@ -110,6 +117,7 @@ internal class DimensionSync : LoopInterval
 				context => context.Websites,
 				haltOnError,
 				Logger,
+				_notificationReceiver,
 				cancellationToken)
 			.ConfigureAwait(false);
 		}
@@ -121,12 +129,15 @@ internal class DimensionSync : LoopInterval
 				context => context.Collectors,
 				haltOnError,
 				Logger,
+				_notificationReceiver,
 				cancellationToken)
 			.ConfigureAwait(false);
 		}
 	}
 
-	private async Task SyncTopLevelDimensionsAsync(bool haltOnError, CancellationToken cancellationToken)
+	private async Task SyncTopLevelDimensionsAsync(
+		bool haltOnError,
+		CancellationToken cancellationToken)
 	{
 		if (_types?.Contains(nameof(CollectorGroup)) ?? true)
 		{
@@ -135,6 +146,7 @@ internal class DimensionSync : LoopInterval
 				context => context.CollectorGroups,
 				haltOnError,
 				Logger,
+				_notificationReceiver,
 				cancellationToken)
 			.ConfigureAwait(false);
 		}
@@ -146,6 +158,7 @@ internal class DimensionSync : LoopInterval
 					context => context.EscalationChains,
 					haltOnError,
 					Logger,
+					_notificationReceiver,
 					cancellationToken
 				)
 				.ConfigureAwait(false);
@@ -158,6 +171,7 @@ internal class DimensionSync : LoopInterval
 					context => context.AlertRules,
 					haltOnError,
 					Logger,
+					_notificationReceiver,
 					cancellationToken)
 				.ConfigureAwait(false);
 		}
@@ -169,6 +183,7 @@ internal class DimensionSync : LoopInterval
 					context => context.DataSources,
 					haltOnError,
 					Logger,
+					_notificationReceiver,
 					cancellationToken)
 				.ConfigureAwait(false);
 		}
@@ -176,45 +191,50 @@ internal class DimensionSync : LoopInterval
 		if (_types?.Contains(nameof(ConfigSource)) ?? true)
 		{
 			await _datamartClient
-			.AddOrUpdate<ConfigSource, ConfigSourceStoreItem>(
-				context => context.ConfigSources,
-				haltOnError,
-				Logger,
-				cancellationToken).ConfigureAwait(false);
+				.AddOrUpdate<ConfigSource, ConfigSourceStoreItem>(
+					context => context.ConfigSources,
+					haltOnError,
+					Logger,
+					_notificationReceiver,
+					cancellationToken)
+				.ConfigureAwait(false);
 			Logger.LogInformation($"Syncing {nameof(ConfigSource)}s complete.");
 		}
 
 		if (_types?.Contains(nameof(EventSource)) ?? true)
 		{
 			await _datamartClient
-			.AddOrUpdate<EventSource, EventSourceStoreItem>(
-				context => context.EventSources,
-				haltOnError,
-				Logger,
-				cancellationToken)
-			.ConfigureAwait(false);
+				.AddOrUpdate<EventSource, EventSourceStoreItem>(
+					context => context.EventSources,
+					haltOnError,
+					Logger,
+					_notificationReceiver,
+					cancellationToken)
+				.ConfigureAwait(false);
 		}
 
 		if (_types?.Contains(nameof(DeviceGroup)) ?? true)
 		{
 			await _datamartClient
-			.AddOrUpdate<DeviceGroup, DeviceGroupStoreItem>(
-				context => context.DeviceGroups,
-				haltOnError,
-				Logger,
-				cancellationToken)
-			.ConfigureAwait(false);
+				.AddOrUpdate<DeviceGroup, DeviceGroupStoreItem>(
+					context => context.DeviceGroups,
+					haltOnError,
+					Logger,
+					_notificationReceiver,
+					cancellationToken)
+				.ConfigureAwait(false);
 		}
 
 		if (_types?.Contains(nameof(WebsiteGroup)) ?? true)
 		{
 			await _datamartClient
-			.AddOrUpdate<WebsiteGroup, WebsiteGroupStoreItem>(
-				context => context.WebsiteGroups,
-				haltOnError,
-				Logger,
-				cancellationToken)
-			.ConfigureAwait(false);
+				.AddOrUpdate<WebsiteGroup, WebsiteGroupStoreItem>(
+					context => context.WebsiteGroups,
+					haltOnError,
+					Logger,
+					_notificationReceiver,
+					cancellationToken)
+				.ConfigureAwait(false);
 			Logger.LogInformation($"Syncing {nameof(ConfigSource)}s complete.");
 		}
 
@@ -222,12 +242,13 @@ internal class DimensionSync : LoopInterval
 		if (_types?.Contains(nameof(LogicModuleUpdate)) ?? true)
 		{
 			await _datamartClient
-			.AddOrUpdateLogicModuleUpdates(
-				context => context.LogicModuleUpdates,
-				haltOnError,
-				Logger,
-				cancellationToken)
-			.ConfigureAwait(false);
+				.AddOrUpdateLogicModuleUpdates(
+					context => context.LogicModuleUpdates,
+					haltOnError,
+					Logger,
+					_notificationReceiver,
+					cancellationToken)
+				.ConfigureAwait(false);
 		}
 	}
 }

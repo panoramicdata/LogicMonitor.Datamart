@@ -1,6 +1,4 @@
-﻿using LogicMonitor.Datamart.Interfaces;
-
-namespace LogicMonitor.Datamart.Config;
+﻿namespace LogicMonitor.Datamart.Config;
 
 public class Configuration
 {
@@ -34,8 +32,6 @@ public class Configuration
 	/// The LogicMonitor client options
 	/// </summary>
 	public LogicMonitorClientOptions LogicMonitorClientOptions { get; set; } = null!;
-
-	public INotificationReceiver? NotificationReceiver { get; set; }
 
 	/// <summary>
 	/// The Database type
