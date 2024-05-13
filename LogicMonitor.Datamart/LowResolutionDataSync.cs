@@ -696,7 +696,8 @@ internal class LowResolutionDataSync(
 			}
 		}
 
-		var totalCount = upTimeCount + downTimeCount;
+		// This should be a double, var would incorrectly infer int
+		double totalCount = upTimeCount + downTimeCount;
 
 		if (totalCount == 0)
 		{
