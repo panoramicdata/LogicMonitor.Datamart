@@ -90,6 +90,7 @@ public class AlertProfile : Profile
 			.ForMember(dest => dest.Sdt, opts => opts.Ignore())
 			.ForMember(dest => dest.CustomColumns, opts => opts.Ignore())
 			.ForMember(dest => dest.MonitorObjectGroups, opts => opts.Ignore())
+			.ForMember(dest => dest.AlertGroupEntityValue, opts => opts.Ignore())
 			;
 	}
 }
