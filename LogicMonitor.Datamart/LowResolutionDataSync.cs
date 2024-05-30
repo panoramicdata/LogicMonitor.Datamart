@@ -341,10 +341,10 @@ internal class LowResolutionDataSync(
 					1, 0, 0, 0,
 					TimeSpan.Zero);
 
-				var startDateTime = lastAggregationHourWrittenUtc.AddMinutes(configuration.MinutesOffset);      // RM-16049
-				var endDateTime = lastAggregationHourWrittenUtc.AddMonths(1);
+				var startDateTimeUtc = lastAggregationHourWrittenUtc;
+				var endDateTimeUtc = lastAggregationHourWrittenUtc.AddMonths(1);
 
-				if (endDateTime >= utcNow)
+				if (endDateTimeUtc.AddMinutes(configuration.MinutesOffset) >= utcNow)
 				{
 					continue;
 				}
@@ -385,14 +385,14 @@ internal class LowResolutionDataSync(
 							&& dp.DataSource!.Name == dataSourceConfigurationItem.Name
 						);
 
-					while (endDateTime < utcNow)
+					while (endDateTimeUtc.AddMinutes(configuration.MinutesOffset) < utcNow)
 					{
 						var bulkWriteModel = await GetTimeSeriesDataAggregationStoreItemAsync(
 							datamartClient,
 							device,
 							databaseDeviceDataSourceInstanceDataPoint,
-							startDateTime,
-							endDateTime,
+							startDateTimeUtc.AddMinutes(configuration.MinutesOffset), // RM-16049 Add an offset from the start time
+							endDateTimeUtc.AddMinutes(configuration.MinutesOffset), // RM-16049 Add an offset from the end time
 							dataPointName,
 							dataSourceDataPointStoreItem,
 							logger,
@@ -406,9 +406,9 @@ internal class LowResolutionDataSync(
 
 						aggregationsToWrite.Add(bulkWriteModel);
 
-						databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo = endDateTime;
-						startDateTime = startDateTime.AddMonths(1);
-						endDateTime = endDateTime.AddMonths(1);
+						databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo = endDateTimeUtc;
+						startDateTimeUtc = startDateTimeUtc.AddMonths(1);
+						endDateTimeUtc = endDateTimeUtc.AddMonths(1);
 					}
 
 					await context
@@ -443,8 +443,8 @@ internal class LowResolutionDataSync(
 		DatamartClient datamartClient,
 		DeviceStoreItem device,
 		DeviceDataSourceInstanceDataPointStoreItem databaseDeviceDataSourceInstanceDataPoint,
-		DateTimeOffset startDateTime,
-		DateTimeOffset endDateTime,
+		DateTimeOffset startDateTimeOffset,
+		DateTimeOffset endDateTimeOffset,
 		string dataPointName,
 		DataSourceDataPointStoreItem? dataPointStoreItem,
 		ILogger logger,
@@ -467,8 +467,8 @@ internal class LowResolutionDataSync(
 					DeviceDataSourceInstanceId = databaseDeviceDataSourceInstanceDataPoint
 						.DeviceDataSourceInstance
 						.LogicMonitorId,
-					StartDateTime = startDateTime.UtcDateTime,
-					EndDateTime = endDateTime.UtcDateTime,
+					StartDateTime = startDateTimeOffset.UtcDateTime,
+					EndDateTime = endDateTimeOffset.UtcDateTime,
 					TimePeriod = TimePeriod.Zoom,
 					DataSourceGraphId = -1,
 				},
@@ -537,8 +537,8 @@ internal class LowResolutionDataSync(
 		{
 			Id = Guid.NewGuid(),
 			DeviceDataSourceInstanceDataPointId = databaseDeviceDataSourceInstanceDataPoint.Id,
-			PeriodStart = startDateTime.UtcDateTime,
-			PeriodEnd = endDateTime.UtcDateTime,
+			PeriodStart = startDateTimeOffset.UtcDateTime,
+			PeriodEnd = endDateTimeOffset.UtcDateTime,
 			DataCount = line.Data.Count(d => d.HasValue),
 			NoDataCount = line.Data.Count(d => !d.HasValue),
 			Sum = line.Data.Sum(d => d ?? 0),
