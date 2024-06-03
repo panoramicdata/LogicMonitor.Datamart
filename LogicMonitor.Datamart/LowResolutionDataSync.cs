@@ -35,13 +35,15 @@ internal class LowResolutionDataSync(
 			"Getting reference data for {DatabaseName}: DataSources...",
 			_configuration.DatabaseName
 		);
-		var dataSourceNames = _configuration.DataSources
+		var configurationDataSources = _configuration.DataSources;
+
+		var configurationDataSourceNames = configurationDataSources
 			.ConvertAll(dsci => dsci.Name);
 
 		// Get the database DataSources for those names
 		var matchingDatabaseDataSources = await context
 			.DataSources
-			.Where(ds => dataSourceNames.Contains(ds.Name))
+			.Where(ds => configurationDataSourceNames.Contains(ds.Name))
 			.ToListAsync(cancellationToken: cancellationToken)
 			.ConfigureAwait(false);
 
@@ -89,8 +91,17 @@ internal class LowResolutionDataSync(
 						.SetStageNameAsync($"Syncing TimeSeriesDataAggregations for {dataSourceName} ({dataSourceIndex}/{dataSourceCount})", cancellationToken)
 						.ConfigureAwait(false);
 
+					var configDataSource = configurationDataSources
+						.First(dsci => dsci.Name == dataSourceName);
+
+					// Only sync the requested devices
+					// If no devices are specified, sync all devices as apply to the DataSource
+					var appliesTo = string.IsNullOrWhiteSpace(configDataSource.AppliesTo)
+						? matchingDatabaseDataSource.AppliesTo
+						: configDataSource.AppliesTo;
+
 					var appliesToMatches = await _datamartClient
-						.GetAppliesToAsync(matchingDatabaseDataSource.AppliesTo, cancellationToken)
+						.GetAppliesToAsync(appliesTo, cancellationToken)
 						.ConfigureAwait(false);
 					var appliesToDeviceIds = appliesToMatches.Select(a => a.Id).ToList();
 
