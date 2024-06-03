@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 {
-    [DbContext(typeof(Context))]
+    [DbContext(typeof(NpgsqlContext))]
     [Migration("20230717121119_ChangedInstanceNameToString")]
     partial class ChangedInstanceNameToString
     {

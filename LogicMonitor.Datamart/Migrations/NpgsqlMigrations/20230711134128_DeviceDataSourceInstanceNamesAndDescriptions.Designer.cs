@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 {
-    [DbContext(typeof(Context))]
+    [DbContext(typeof(NpgsqlContext))]
     [Migration("20230711134128_DeviceDataSourceInstanceNamesAndDescriptions")]
     partial class DeviceDataSourceInstanceNamesAndDescriptions
     {

@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 {
-    [DbContext(typeof(Context))]
+    [DbContext(typeof(NpgsqlContext))]
     [Migration("20231207140855_UpdatedDataSources")]
     partial class UpdatedDataSources
     {
