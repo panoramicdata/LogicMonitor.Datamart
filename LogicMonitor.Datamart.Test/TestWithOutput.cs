@@ -152,14 +152,17 @@ public abstract class TestWithOutput
 		EndEpoch = nowUtc.ToUnixTimeSeconds();
 		var configuration = LoadConfiguration("appsettings.json");
 		var logicMonitorCredentials = configuration.LogicMonitorCredentials;
-		var loggerFactory = iTestOutputHelper.BuildLoggerFactory();
+
+		// Create a logger at the Information level
+		var loggerFactory = iTestOutputHelper.BuildLoggerFactory(LogLevel.Information);
+		var logger = loggerFactory.CreateLogger<LogicMonitorClient>();
 
 		Configuration.LogicMonitorClientOptions = new LogicMonitorClientOptions
 		{
 			Account = logicMonitorCredentials.Account,
 			AccessId = logicMonitorCredentials.AccessId,
 			AccessKey = logicMonitorCredentials.AccessKey,
-			Logger = loggerFactory.CreateLogger<LogicMonitorClient>(),
+			Logger = logger,
 			HttpClientTimeoutSeconds = 3600
 		};
 

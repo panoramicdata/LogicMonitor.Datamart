@@ -370,16 +370,23 @@ public class DatamartClient : LogicMonitorClient
 
 			// Add/update all the items
 			var itemIndex = 0;
+			var stopwatch = Stopwatch.StartNew();
 			foreach (var item in apiItems)
 			{
-				if (itemIndex % 100 == 0)
+				itemIndex++;
+
+				if (stopwatch.ElapsedMilliseconds > 10_000)
 				{
+					logger.LogInformation(
+						"Syncing {Type}s: {ItemIndex}/{ItemCount}",
+						typeof(TApi).Name,
+						itemIndex,
+						apiItems.Count);
 					await notificationReceiver
 						.SetItemIndexAsync(itemIndex, cancellationToken)
 						.ConfigureAwait(false);
+					stopwatch.Restart();
 				}
-
-				itemIndex++;
 
 				await dbSet.AddOrUpdateIdentifiedItemAsync(
 					context,
@@ -412,6 +419,7 @@ public class DatamartClient : LogicMonitorClient
 				case nameof(DataSourceStoreItem):
 					await UpdateGraphsAsync(context, apiItems.Cast<DataSource>().ToList(), cancellationToken)
 						.ConfigureAwait(false);
+
 					await UpdateDataPointsAsync(context, apiItems.Cast<DataSource>().ToList(), cancellationToken)
 						.ConfigureAwait(false);
 					break;
@@ -513,8 +521,22 @@ public class DatamartClient : LogicMonitorClient
 	/// <param name="apiDataSources">The list of API DataSources</param>
 	private async Task UpdateGraphsAsync(Context context, List<DataSource> apiDataSources, CancellationToken cancellationToken)
 	{
+		_logger.LogInformation("Updating DataSource Graphs...");
+		var graphsStopwatch = Stopwatch.StartNew();
+		var dataSourceCount = apiDataSources.Count;
+		var dataSourceIndex = 0;
 		foreach (var apiDataSource in apiDataSources)
 		{
+			++dataSourceIndex;
+			if (graphsStopwatch.Elapsed > TimeSpan.FromSeconds(10))
+			{
+				_logger.LogInformation(
+					"UpdateGraphsAsync: DataSource {DataSourceIndex}/{DataSourceCount}",
+					dataSourceIndex,
+					dataSourceCount);
+				graphsStopwatch.Restart();
+			}
+
 			var apiGraphs = await GetDataSourceGraphsAsync(apiDataSource.Id, cancellationToken).ConfigureAwait(false);
 			var apiOverviewGraphs = (await GetDataSourceOverviewGraphsPageAsync(apiDataSource.Id, null, cancellationToken).ConfigureAwait(false)).Items;
 
@@ -545,6 +567,8 @@ public class DatamartClient : LogicMonitorClient
 				.SaveChangesAsync(cancellationToken)
 				.ConfigureAwait(false);
 		}
+
+		_logger.LogInformation("Updating DataSource Graphs done.");
 	}
 
 	private static void UpdateGraphs(
@@ -593,9 +617,23 @@ public class DatamartClient : LogicMonitorClient
 	/// <param name="apiDataSources">The list of API DataSources</param>
 	private async Task UpdateDataPointsAsync(Context context, List<DataSource> apiDataSources, CancellationToken cancellationToken)
 	{
+		_logger.LogInformation("Updating DataSource DataPoints...");
+		var dataPointsStopwatch = Stopwatch.StartNew();
+		var dataSourceCount = apiDataSources.Count;
+		var dataSourceIndex = 0;
 		// Update the nominated DataSources' DataPoints only for those reference in the config
 		foreach (var configDataSourceSpecification in _configuration.DataSources)
 		{
+			++dataSourceIndex;
+			if (dataPointsStopwatch.Elapsed > TimeSpan.FromSeconds(10))
+			{
+				_logger.LogInformation(
+					"UpdateDataPointsAsync: DataSource {DataSourceIndex}/{DataSourceCount}",
+					dataSourceIndex,
+					dataSourceCount);
+				dataPointsStopwatch.Restart();
+			}
+
 			// The DataSource name from the config
 			var dataSourceName = configDataSourceSpecification.Name;
 
@@ -733,6 +771,8 @@ public class DatamartClient : LogicMonitorClient
 			// This will cascade delete, so may take a long time.
 			// Consider adjusting the command timeout.
 		}
+
+		_logger.LogInformation("Updating DataSource DataPoints done.");
 	}
 
 	public async Task<List<Alert>> GetCachedAlertsAsync(
