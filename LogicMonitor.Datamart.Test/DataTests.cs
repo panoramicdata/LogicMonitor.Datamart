@@ -39,17 +39,24 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 			MeasurementUnit = "Seconds",
 		};
 
-		var result = await LowResolutionDataSync.GetTimeSeriesDataAggregationStoreItemAsync(
+		var graphData = await LowResolutionDataSync.GetGraphDataAsync(
 			DatamartClient,
-			device,
-			deviceDataSourceInstanceDataPoint,
+			deviceDataSourceInstanceDataPoint.DeviceDataSourceInstance.LogicMonitorId,
 			startDateTime,
 			endDateTime,
+			LoggerFactory.CreateLogger<DataTests>(),
+			default
+			);
+
+		var result = LowResolutionDataSync.GetTimeSeriesDataAggregationStoreItem(
+			device,
+			deviceDataSourceInstanceDataPoint,
 			dataPointName,
 			dataPointStoreItem,
-			LoggerFactory.CreateLogger<DataTests>(),
-			default)
-			.ConfigureAwait(true);
+			startDateTime,
+			endDateTime,
+			graphData
+		);
 
 		result.Should().NotBeNull();
 		result!.PeriodStart.Should().Be(startDateTime);

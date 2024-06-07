@@ -230,28 +230,28 @@ public class DatamartClient : LogicMonitorClient
 					.ToListAsync(cancellationToken)
 					.ConfigureAwait(false);
 				return alertStoreItems
-					.ConvertAll(a => MapperInstance.Map<AlertStoreItem, Alert>(a) as TApi);
+					.ConvertAll(a => MapperInstance.Map<AlertStoreItem, Alert>(a) as TApi ?? throw new InvalidOperationException($"Could not convert {nameof(AlertStoreItem)} to {nameof(Alert)}"));
 			case nameof(CollectorGroup):
 				var collectorGroupStoreItems = await context
 					.CollectorGroups
 					.ToListAsync(cancellationToken)
 					.ConfigureAwait(false);
 				return collectorGroupStoreItems
-					.ConvertAll(cg => MapperInstance.Map<CollectorGroupStoreItem, CollectorGroup>(cg) as TApi);
+					.ConvertAll(cg => MapperInstance.Map<CollectorGroupStoreItem, CollectorGroup>(cg) as TApi ?? throw new InvalidOperationException($"Could not convert {nameof(CollectorGroupStoreItem)} to {nameof(CollectorGroup)}"));
 			case nameof(DeviceGroup):
 				var deviceGroupStoreItems = await context
 					.DeviceGroups
 					.ToListAsync(cancellationToken)
 					.ConfigureAwait(false);
 				return deviceGroupStoreItems
-					.ConvertAll(dg => MapperInstance.Map<DeviceGroupStoreItem, DeviceGroup>(dg) as TApi);
+					.ConvertAll(dg => MapperInstance.Map<DeviceGroupStoreItem, DeviceGroup>(dg) as TApi ?? throw new InvalidOperationException($"Could not convert {nameof(DeviceGroupStoreItem)} to {nameof(DeviceGroup)}"));
 			case nameof(WebsiteGroup):
 				var websiteGroupStoreItems = await context
 					.WebsiteGroups
 					.ToListAsync(cancellationToken)
 					.ConfigureAwait(false);
 				return websiteGroupStoreItems
-					.ConvertAll(wg => MapperInstance.Map<WebsiteGroupStoreItem, WebsiteGroup>(wg) as TApi);
+					.ConvertAll(wg => MapperInstance.Map<WebsiteGroupStoreItem, WebsiteGroup>(wg) as TApi ?? throw new InvalidOperationException($"Could not convert {nameof(WebsiteGroupStoreItem)} to {nameof(WebsiteGroup)}"));
 			default:
 				throw new NotSupportedException($"{className} not supported.  Add it to GetAllCachedAsync<T>().");
 		}
@@ -1457,7 +1457,7 @@ public class DatamartClient : LogicMonitorClient
 		}
 	}
 
-	internal async Task<List<DataSourceDataPointStoreItem>> SyncDataSourceDataPointsAsync(
+	internal static async Task<List<DataSourceDataPointStoreItem>> SyncDataSourceDataPointsAsync(
 		DataSourceStoreItem dataSource,
 		Context context,
 		DataSourceConfigurationItem dataSourceSpecification,

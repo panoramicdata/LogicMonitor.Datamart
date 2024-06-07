@@ -15,7 +15,6 @@ public class DatabaseTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput
 			.ConfigureAwait(true);
 
 		// Ensure the database is created
-		var databaseName = Configuration.DatabaseName;
 		var pendingMigrations = await database
 			.GetPendingMigrationsAsync()
 			.ConfigureAwait(true);

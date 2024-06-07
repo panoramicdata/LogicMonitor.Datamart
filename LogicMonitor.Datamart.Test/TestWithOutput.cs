@@ -5,11 +5,11 @@ namespace LogicMonitor.Datamart.Test;
 
 public abstract class TestWithOutput
 {
-	protected static DateTimeOffset TwelveHoursAgo = DateTimeOffset.UtcNow.AddHours(-12);
+	protected static readonly DateTimeOffset TwelveHoursAgo = DateTimeOffset.UtcNow.AddHours(-12);
 
 	protected INotificationReceiver TestNotificationReceiver { get; }
 
-	protected static Configuration Configuration = new()
+	protected static readonly Configuration Configuration = new()
 	{
 		Name = "Test",
 		AggregationDurationMinutes = 15,
@@ -192,7 +192,7 @@ public abstract class TestWithOutput
 	protected static TestConfiguration LoadConfiguration(string jsonFilePath)
 	{
 		var location = typeof(TestWithOutput).GetTypeInfo().Assembly.Location;
-		var dirPath = Path.Combine(Path.GetDirectoryName(location), "../../..");
+		var dirPath = Path.Combine(Path.GetDirectoryName(location) ?? throw new InvalidOperationException(), "../../..");
 
 		TestConfiguration configuration;
 		var configurationRoot = new ConfigurationBuilder()
