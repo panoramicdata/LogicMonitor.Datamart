@@ -479,14 +479,40 @@ public class DatamartClient : LogicMonitorClient
 				nameof(LogicModuleUpdateStoreItem),
 				apiItems.Items.Count);
 
+			await notificationReceiver
+				.SetItemCountAsync(apiItems.Items.Count, cancellationToken)
+				.ConfigureAwait(false);
+
+			var itemIndex = 0;
+			var stopwatch = Stopwatch.StartNew();
 			// Add/update all the items
 			foreach (var item in apiItems.Items)
 			{
+				itemIndex++;
+
+				if (stopwatch.ElapsedMilliseconds > 10_000)
+				{
+					logger.LogInformation(
+						"Syncing {Type}s: {ItemIndex}/{ItemCount}",
+						typeof(LogicModuleUpdate).Name,
+						itemIndex,
+						apiItems.Items.Count);
+					await notificationReceiver
+						.SetItemIndexAsync(itemIndex, cancellationToken)
+						.ConfigureAwait(false);
+					stopwatch.Restart();
+				}
+
 				dbSet.AddOrUpdateLogicModuleUpdate(
 					item,
 					lastObservedUtc,
 					logger);
 			}
+
+			// Send a final notification
+			await notificationReceiver
+				.SetItemIndexAsync(itemIndex, cancellationToken)
+				.ConfigureAwait(false);
 
 			// Calculate and log the stats
 			var added = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Added);
