@@ -27,39 +27,42 @@ internal class LowResolutionDataSync(
 			_configuration.DatabaseName
 			);
 
-		using var context = _datamartClient.GetContext();
-		// Use the database as a reference for what should be loaded in to ensure referential integrity between the data and the DeviceDataSourceInstance
+		List<DataSourceStoreItem> matchingDatabaseDataSourcesNotTracked;
+		Dictionary<int, DeviceStoreItem> allDatabaseDevicesByLogicMonitorIdNotTracked;
+		using (var contextForReferenceDataNotTracked = _datamartClient.GetContext())
+		{
+			// Use the database as a reference for what should be loaded in to ensure referential integrity between the data and the DeviceDataSourceInstance
+			// Get the configured DataSource names
+			Logger.LogInformation(
+				"Getting reference data for {DatabaseName}: DataSources...",
+				_configuration.DatabaseName
+			);
 
-		// Get the configured DataSource names
-		Logger.LogInformation(
-			"Getting reference data for {DatabaseName}: DataSources...",
-			_configuration.DatabaseName
-		);
-		var configurationDataSources = _configuration.DataSources;
+			var configurationDataSourceNames = _configuration.DataSources.ConvertAll(ds => ds.Name);
 
-		var configurationDataSourceNames = configurationDataSources
-			.ConvertAll(dsci => dsci.Name);
+			// Get the database DataSources for those that are configured
+			matchingDatabaseDataSourcesNotTracked = await contextForReferenceDataNotTracked
+				.DataSources
+				.AsNoTracking()
+				.Where(ds => configurationDataSourceNames.Contains(ds.Name))
+				.ToListAsync(cancellationToken: cancellationToken)
+				.ConfigureAwait(false);
 
-		// Get the database DataSources for those names
-		var matchingDatabaseDataSources = await context
-			.DataSources
-			.Where(ds => configurationDataSourceNames.Contains(ds.Name))
-			.ToListAsync(cancellationToken: cancellationToken)
-			.ConfigureAwait(false);
+			Logger.LogInformation(
+				"Getting reference data for {DatabaseName}: DataSources found {DatabaseDataSourceCount} in db",
+				_configuration.DatabaseName,
+				matchingDatabaseDataSourcesNotTracked.Count
+			);
 
-		Logger.LogInformation(
-			"Getting reference data for {DatabaseName}: DataSources - found {DatabaseDataSourceCount}",
-			_configuration.DatabaseName,
-			matchingDatabaseDataSources.Count
-		);
-
-		// Get a list of devices
-		var allDatabaseDevicesByLogicMonitorId = await context
-			.Devices
-			.ToDictionaryAsync(
-				d => d.LogicMonitorId,
-				cancellationToken: cancellationToken)
-			.ConfigureAwait(false);
+			// Get a list of devices
+			allDatabaseDevicesByLogicMonitorIdNotTracked = await contextForReferenceDataNotTracked
+				.Devices
+				.AsNoTracking()
+				.ToDictionaryAsync(
+					d => d.LogicMonitorId,
+					cancellationToken: cancellationToken)
+				.ConfigureAwait(false);
+		}
 
 		// Clear out the PortalClient Cache, otherwise we remember all the data values for no reason
 		_datamartClient.ClearCache();
@@ -68,20 +71,20 @@ internal class LowResolutionDataSync(
 		try
 		{
 			// Get the LogicMonitor Ids for those DataSources
-			var dataSourceCount = matchingDatabaseDataSources.Count;
+			var dataSourceCount = matchingDatabaseDataSourcesNotTracked.Count;
 			var dataSourceIndex = 0;
 			var dataSourceStopwatch = new Stopwatch();
 			var deviceStopwatch = new Stopwatch();
 			var notificationStopwatch = Stopwatch.StartNew();
 			var totalDurationMsByDeviceLogicMonitorId = new Dictionary<int, long>();
 
-			foreach (var matchingDatabaseDataSource in matchingDatabaseDataSources)
+			foreach (var matchingDatabaseDataSourceNotTracked in matchingDatabaseDataSourcesNotTracked)
 			{
 				dataSourceStopwatch.Restart();
 				dataSourceIndex++;
 
-				var dataSourceId = matchingDatabaseDataSource.LogicMonitorId;
-				var dataSourceName = matchingDatabaseDataSource.Name;
+				var dataSourceLogicMonitorId = matchingDatabaseDataSourceNotTracked.LogicMonitorId;
+				var dataSourceName = matchingDatabaseDataSourceNotTracked.Name;
 
 				try
 				{
@@ -91,32 +94,33 @@ internal class LowResolutionDataSync(
 						.SetStageNameAsync($"Syncing TimeSeriesDataAggregations for {dataSourceName} ({dataSourceIndex}/{dataSourceCount})", cancellationToken)
 						.ConfigureAwait(false);
 
-					var configDataSource = configurationDataSources
+					var configDataSource = _configuration.DataSources
 						.First(dsci => dsci.Name == dataSourceName);
 
 					// Only sync the requested devices
-					// If no devices are specified, sync all devices as apply to the DataSource
+					// If no devices are specified in the configuration, sync all devices using the AppliesTo on the DataSource
 					var appliesTo = string.IsNullOrWhiteSpace(configDataSource.AppliesTo)
-						? matchingDatabaseDataSource.AppliesTo
+						? matchingDatabaseDataSourceNotTracked.AppliesTo
 						: configDataSource.AppliesTo;
 
 					var appliesToMatches = await _datamartClient
 						.GetAppliesToAsync(appliesTo, cancellationToken)
 						.ConfigureAwait(false);
-					var appliesToDeviceIds = appliesToMatches.Select(a => a.Id).ToList();
+					var appliesToDeviceIds = appliesToMatches.Select(a => a.Id).ToHashSet();
 
-					var databaseDevicesThatMatchTheAppliesTo = allDatabaseDevicesByLogicMonitorId
+					// Filter the devices to only those that match the AppliesTo
+					var databaseDevicesThatMatchTheAppliesToNotTracked = allDatabaseDevicesByLogicMonitorIdNotTracked
 						.Where(kvp => appliesToDeviceIds.Contains(kvp.Key))
 						.Select(kvp => kvp.Value)
 						.ToList();
 
-					var deviceCount = databaseDevicesThatMatchTheAppliesTo.Count;
+					var deviceCount = databaseDevicesThatMatchTheAppliesToNotTracked.Count;
 					await _notificationReceiver
 						.SetItemCountAsync(deviceCount, cancellationToken)
 						.ConfigureAwait(false);
 
 					var deviceIndex = 0;
-					foreach (var databaseDevice in databaseDevicesThatMatchTheAppliesTo)
+					foreach (var databaseDeviceNotTracked in databaseDevicesThatMatchTheAppliesToNotTracked)
 					{
 						deviceIndex++;
 						deviceStopwatch.Restart();
@@ -140,73 +144,79 @@ internal class LowResolutionDataSync(
 							notificationStopwatch.Restart();
 						}
 
-						// Get the list of DeviceDataSourceInstanceDataPoints
-						var databaseDeviceDataSourceInstanceDataPoints = await context
-							.DeviceDataSourceInstanceDataPoints
-							.Include(ddsidp => ddsidp.DeviceDataSourceInstance!.DeviceDataSource!.DataSource)
-							.Include(ddsidp => ddsidp.DeviceDataSourceInstance!.DeviceDataSource!.Device)
-							.Include(ddsidp => ddsidp.DataSourceDataPoint)
-							.Where(ddsi =>
-								ddsi.DeviceDataSourceInstance!.DeviceDataSource!.DeviceId == databaseDevice.Id
-								&& ddsi.DeviceDataSourceInstance!.LastWentMissing == null
-								&& ddsi.DeviceDataSourceInstance!.DeviceDataSource!.DataSource!.LogicMonitorId == dataSourceId
-							)
-							// To make debugging a little more deterministic, order by the Device and then its instances
-							.OrderBy(ddsi => ddsi.DeviceDataSourceInstance!.DeviceDataSourceId)
-							.ThenBy(ddsi => ddsi.LogicMonitorId)
-							.ToListAsync(cancellationToken: cancellationToken)
-							.ConfigureAwait(false);
-
-						var databaseDeviceDataSourceInstanceDataPointsCount = databaseDeviceDataSourceInstanceDataPoints.Count;
-
-						// Continue if there aren't any
-						if (databaseDeviceDataSourceInstanceDataPointsCount == 0)
+						// Use a fresh context for each device to avoid tracking too many objects unnecessarily
+						using (var context = _datamartClient.GetContext())
 						{
-							continue;
-						}
-						// We have the database deviceDataSourceInstances for the configured DataSources
-
-						try
-						{
-							await GetAndWriteAggregationsAsync(
-								_datamartClient,
-								context,
-								_configuration,
-								Logger,
-								databaseDevice,
-								databaseDeviceDataSourceInstanceDataPoints,
-								cancellationToken)
+							// Get the list of DeviceDataSourceInstanceDataPoints
+							var databaseDeviceDataSourceInstanceDataPoints = await context
+								.DeviceDataSourceInstanceDataPoints
+								.Include(ddsidp => ddsidp.DeviceDataSourceInstance!.DeviceDataSource!.DataSource)
+								.Include(ddsidp => ddsidp.DeviceDataSourceInstance!.DeviceDataSource!.Device)
+								.Include(ddsidp => ddsidp.DataSourceDataPoint)
+								.Where(ddsi =>
+									ddsi.DeviceDataSourceInstance!.DeviceDataSource!.DeviceId == databaseDeviceNotTracked.Id
+									&& ddsi.DeviceDataSourceInstance!.LastWentMissing == null
+									&& ddsi.DeviceDataSourceInstance!.DeviceDataSource!.DataSource!.LogicMonitorId == dataSourceLogicMonitorId
+								)
+								// To make debugging a little more deterministic, order by the Device and then its instances
+								.OrderBy(ddsi => ddsi.DeviceDataSourceInstance!.DeviceDataSourceId)
+								.ThenBy(ddsi => ddsi.LogicMonitorId)
+								.ToListAsync(cancellationToken: cancellationToken)
 								.ConfigureAwait(false);
-							Logger.LogDebug(
-								"Writing aggregations for {DatabaseName}: {DeviceName} ({DeviceIndex}/{DeviceCount}) complete.",
-								_configuration.DatabaseName,
-								databaseDevice.DisplayName,
-								deviceIndex,
-								deviceCount
+
+							var databaseDeviceDataSourceInstanceDataPointsCount = databaseDeviceDataSourceInstanceDataPoints.Count;
+
+							// Continue if there aren't any
+							if (databaseDeviceDataSourceInstanceDataPointsCount == 0)
+							{
+								continue;
+							}
+							// We have the database deviceDataSourceInstances for the configured DataSources
+
+							try
+							{
+								await GetAndWriteAggregationsAsync(
+									_datamartClient,
+									context,
+									_configuration,
+									Logger,
+									databaseDeviceNotTracked,
+									databaseDeviceDataSourceInstanceDataPoints,
+									cancellationToken)
+									.ConfigureAwait(false);
+
+								Logger.LogDebug(
+									"Writing aggregations for {DatabaseName}: {DeviceName} ({DeviceIndex}/{DeviceCount}) complete.",
+									_configuration.DatabaseName,
+									databaseDeviceNotTracked.DisplayName,
+									deviceIndex,
+									deviceCount
+									);
+							}
+							catch (Exception ex)
+							{
+								Logger.LogError(
+									ex,
+									"Writing aggregations for {DatabaseName}: {DeviceName} ({DeviceIndex}/{DeviceCount}) failed: '{Message}' ||| {StackTrace}",
+									_configuration.DatabaseName,
+									databaseDeviceNotTracked.DisplayName,
+									deviceIndex,
+									deviceCount,
+									ex.Message,
+									ex.StackTrace
 								);
-						}
-						catch (Exception ex)
-						{
-							Logger.LogError(
-								ex,
-								"Writing aggregations for {DatabaseName}: {DeviceName} ({DeviceIndex}/{DeviceCount}) failed: '{Message}' ||| {StackTrace}",
-								_configuration.DatabaseName,
-								databaseDevice.DisplayName,
-								deviceIndex,
-								deviceCount,
-								ex.Message,
-								ex.StackTrace
-							);
-							failedDeviceDisplayNames.Add(databaseDevice.DisplayName);
+								failedDeviceDisplayNames.Add(databaseDeviceNotTracked.DisplayName);
+							}
 						}
 
-						if (totalDurationMsByDeviceLogicMonitorId.ContainsKey(databaseDevice.LogicMonitorId))
+						// Update the total duration for this device across all datasources
+						if (totalDurationMsByDeviceLogicMonitorId.ContainsKey(databaseDeviceNotTracked.LogicMonitorId))
 						{
-							totalDurationMsByDeviceLogicMonitorId[databaseDevice.LogicMonitorId] += deviceStopwatch.ElapsedMilliseconds;
+							totalDurationMsByDeviceLogicMonitorId[databaseDeviceNotTracked.LogicMonitorId] += deviceStopwatch.ElapsedMilliseconds;
 						}
 						else
 						{
-							totalDurationMsByDeviceLogicMonitorId[databaseDevice.LogicMonitorId] = deviceStopwatch.ElapsedMilliseconds;
+							totalDurationMsByDeviceLogicMonitorId[databaseDeviceNotTracked.LogicMonitorId] = deviceStopwatch.ElapsedMilliseconds;
 						}
 					}
 
@@ -243,29 +253,56 @@ internal class LowResolutionDataSync(
 							dataSourceStopwatch.ElapsedMilliseconds
 					);
 
-					matchingDatabaseDataSource.LastTimeSeriesDataSyncDurationMs = dataSourceStopwatch.ElapsedMilliseconds;
+					// Update the DataSource's LastTimeSeriesDataSyncDurationMs
+					using var context = _datamartClient.GetContext();
+					// Use ExecuteUpdate to efficiently update this DataSource's LastTimeSeriesDataSyncDurationMs
+					await context.DataSources
+						.Where(ds => ds.Id == matchingDatabaseDataSourceNotTracked.Id)
+						.ExecuteUpdateAsync(
+							setters => setters.SetProperty(ds => ds.LastTimeSeriesDataSyncDurationMs, dataSourceStopwatch.ElapsedMilliseconds),
+							cancellationToken);
 				}
-
-				await context
-					.SaveChangesAsync(cancellationToken)
-					.ConfigureAwait(false);
 			}
 
-			// Update the Device LastTimeSeriesDataSyncDurationMs to the overall time spent on this device for all datasources.
-			foreach (var kvp in totalDurationMsByDeviceLogicMonitorId)
-			{
-				var databaseDevice = allDatabaseDevicesByLogicMonitorId[kvp.Key];
-				databaseDevice.LastTimeSeriesDataSyncDurationMs = kvp.Value;
-			}
-
-			await context
-				.SaveChangesAsync(cancellationToken)
-				.ConfigureAwait(false);
+			// Log the next call
+			Logger.LogInformation(
+				"Updating total Device sync durations in the database {DatabaseName}",
+				_configuration.DatabaseName
+			);
+			await UpdateDeviceSyncDuration(totalDurationMsByDeviceLogicMonitorId, cancellationToken).ConfigureAwait(false);
+			Logger.LogInformation(
+				"Updating total Device sync durations in the database {DatabaseName} - Complete",
+				_configuration.DatabaseName
+			);
 		}
 		finally
 		{
 			_datamartClient.UseCache = oldCacheState;
 		}
+	}
+
+	/// <summary>
+	/// Update all the Device LastTimeSeriesDataSyncDurationMs values from the Dictionary
+	/// </summary>
+	private async Task UpdateDeviceSyncDuration(Dictionary<int, long> totalDurationMsByDeviceLogicMonitorId, CancellationToken cancellationToken)
+	{
+		// Get all the devices tracked on the context
+		using var context = _datamartClient.GetContext();
+		var allDevicesByLogicMonitorId = await context
+			.Devices
+			.ToDictionaryAsync(d => d.LogicMonitorId, cancellationToken)
+			.ConfigureAwait(false);
+
+		// Update the Device in the context to set its LastTimeSeriesDataSyncDurationMs to the overall time spent on this device for all datasources.
+		foreach (var kvp in totalDurationMsByDeviceLogicMonitorId)
+		{
+			allDevicesByLogicMonitorId[kvp.Key].LastTimeSeriesDataSyncDurationMs = kvp.Value;
+		}
+
+		// All Devices have been updated, save changes
+		await context
+			.SaveChangesAsync(cancellationToken)
+			.ConfigureAwait(false);
 	}
 
 	public static double? CalculatePercentile(double[] values, int n)
@@ -298,13 +335,12 @@ internal class LowResolutionDataSync(
 		}
 	}
 
-
 	private static async Task GetAndWriteAggregationsAsync(
 		DatamartClient datamartClient,
 		Context context,
 		Configuration configuration,
 		ILogger logger,
-		DeviceStoreItem device,
+		DeviceStoreItem deviceNotTracked,
 		List<DeviceDataSourceInstanceDataPointStoreItem> databaseDeviceDataSourceInstanceDataPoints,
 		CancellationToken cancellationToken)
 	{
@@ -318,7 +354,7 @@ internal class LowResolutionDataSync(
 
 		var stopwatch = new Stopwatch();
 
-		var dataSourceDataPointStoreItems = await context
+		var dataSourceDataPointStoreItemsNotTracked = await context
 			.DataSourceDataPoints
 			.Include(dsdp => dsdp.DataSource)
 			.AsNoTracking()
@@ -329,7 +365,7 @@ internal class LowResolutionDataSync(
 			context,
 			logger,
 			databaseDeviceDataSourceInstanceDataPoints,
-			dataSourceDataPointStoreItems,
+			dataSourceDataPointStoreItemsNotTracked,
 			cancellationToken)
 			.ConfigureAwait(false);
 
@@ -370,28 +406,26 @@ internal class LowResolutionDataSync(
 				// Get the configuration for this DataSourceName
 				var dataSourceConfigurationItem = configuration
 					.DataSources
-					.SingleOrDefault(dsci =>
-					{
-						return dsci.Name == dataSourceName;
-					})
+					.SingleOrDefault(dsci => dsci.Name == dataSourceName)
 					?? throw new InvalidOperationException($"Could not find configuration for DataSource {dataSourceName}.");
 
-				var dataSourceDataPointStoreItem = dataSourceDataPointStoreItems
+				var dataSourceDataPointStoreItemNotTracked = dataSourceDataPointStoreItemsNotTracked
 					.SingleOrDefault(dp =>
 						dp.Name == dataPointName
 						&& dp.DataSource!.Name == dataSourceConfigurationItem.Name
 					);
 
+				// Build up the aggregations to write
 				while (endDateTimeUtc.AddMinutes(configuration.MinutesOffset) < utcNow)
 				{
 					var bulkWriteModel = await GetTimeSeriesDataAggregationStoreItemAsync(
 						datamartClient,
-						device,
+						deviceNotTracked,
 						databaseDeviceDataSourceInstanceDataPoint,
 						startDateTimeUtc.AddMinutes(configuration.MinutesOffset), // RM-16049 Add an offset from the start time
 						endDateTimeUtc.AddMinutes(configuration.MinutesOffset), // RM-16049 Add an offset from the end time
 						dataPointName,
-						dataSourceDataPointStoreItem,
+						dataSourceDataPointStoreItemNotTracked,
 						logger,
 						cancellationToken
 					);
@@ -408,6 +442,7 @@ internal class LowResolutionDataSync(
 					endDateTimeUtc = endDateTimeUtc.AddMonths(1);
 				}
 
+				// Write out the aggregations
 				await context
 					.BulkInsertAsync(aggregationsToWrite, cancellationToken: cancellationToken)
 					.ConfigureAwait(false);
@@ -430,12 +465,12 @@ internal class LowResolutionDataSync(
 
 	internal static async Task<TimeSeriesDataAggregationStoreItem?> GetTimeSeriesDataAggregationStoreItemAsync(
 		DatamartClient datamartClient,
-		DeviceStoreItem device,
+		DeviceStoreItem deviceNotTracked,
 		DeviceDataSourceInstanceDataPointStoreItem databaseDeviceDataSourceInstanceDataPoint,
 		DateTimeOffset startDateTimeOffset,
 		DateTimeOffset endDateTimeOffset,
 		string dataPointName,
-		DataSourceDataPointStoreItem? dataPointStoreItem,
+		DataSourceDataPointStoreItem? dataPointStoreItemNotTracked,
 		ILogger logger,
 		CancellationToken cancellationToken)
 	{
@@ -453,9 +488,7 @@ internal class LowResolutionDataSync(
 			.GetGraphDataAsync(
 				new DeviceDataSourceInstanceGraphDataRequest
 				{
-					DeviceDataSourceInstanceId = databaseDeviceDataSourceInstanceDataPoint
-						.DeviceDataSourceInstance
-						.LogicMonitorId,
+					DeviceDataSourceInstanceId = deviceDataSourceInstanceId,
 					StartDateTime = startDateTimeOffset.UtcDateTime,
 					EndDateTime = endDateTimeOffset.UtcDateTime,
 					TimePeriod = TimePeriod.Zoom,
@@ -474,13 +507,13 @@ internal class LowResolutionDataSync(
 			graphDataLine.Data = graphDataLine.Data
 			.Where((dp, index) =>
 			{
-				return graphData.TimeStamps[index] >= device.CreatedOnSeconds * 1000;
+				return graphData.TimeStamps[index] >= deviceNotTracked.CreatedOnSeconds * 1000;
 			})
 				.ToList();
 		}
 
 		graphData.TimeStamps = graphData.TimeStamps
-			.Where(ts => ts >= device.CreatedOnSeconds * 1000)
+			.Where(ts => ts >= deviceNotTracked.CreatedOnSeconds * 1000)
 			.ToList();
 
 		Line? line;
@@ -493,7 +526,7 @@ internal class LowResolutionDataSync(
 					return dp.Legend == dataPointName;
 				});
 
-			if (line is null || dataPointStoreItem is null)
+			if (line is null || dataPointStoreItemNotTracked is null)
 			{
 				throw new FormatException($"Could not find DataPoint '{dataPointName}' for DataSource '{databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint.DataSource.Name}'");
 			}
@@ -547,28 +580,28 @@ internal class LowResolutionDataSync(
 			Centile95 = CalculatePercentile(sortedNonNullValues, 95),
 			NormalCount = CountAtAlertLevel(
 				line.Data,
-				dataPointStoreItem.GlobalAlertExpression,
+				dataPointStoreItemNotTracked.GlobalAlertExpression,
 				CountAlertLevel.Normal
 			),
 			WarningCount = CountAtAlertLevel(
 				line.Data,
-				dataPointStoreItem.GlobalAlertExpression,
+				dataPointStoreItemNotTracked.GlobalAlertExpression,
 				CountAlertLevel.Warning
 			),
 			ErrorCount = CountAtAlertLevel(
 				line.Data,
-				dataPointStoreItem.GlobalAlertExpression,
+				dataPointStoreItemNotTracked.GlobalAlertExpression,
 				CountAlertLevel.Error
 			),
 			CriticalCount = CountAtAlertLevel(
 				line.Data,
-				dataPointStoreItem.GlobalAlertExpression,
+				dataPointStoreItemNotTracked.GlobalAlertExpression,
 				CountAlertLevel.Critical
 			),
 			// IMPORTANT! This must be calculated last as this process can reverse the array.
 			AvailabilityPercent = CalculatePercentageAvailability(
 				line.Data,
-				dataPointStoreItem.PercentageAvailabilityCalculation
+				dataPointStoreItemNotTracked.PercentageAvailabilityCalculation
 			),
 		};
 
@@ -579,27 +612,27 @@ internal class LowResolutionDataSync(
 		Context context,
 		ILogger logger,
 		List<DeviceDataSourceInstanceDataPointStoreItem> databaseDeviceDataSourceInstanceDataPoints,
-		List<DataSourceDataPointStoreItem> dataPointStoreItems,
+		List<DataSourceDataPointStoreItem> dataPointStoreItemsNotTracked,
 		CancellationToken cancellationToken
 	)
 	{
 		// Get the list of DataSourceDataPoints that we're re-syncing
-		var resyncDataPointStoreItems = dataPointStoreItems
+		var resyncDataPointStoreItemsNotTracked = dataPointStoreItemsNotTracked
 			.Where(dsdp => dsdp.ResyncTimeSeriesData)
 			.ToList();
 
-		if (resyncDataPointStoreItems.Count == 0)
+		if (resyncDataPointStoreItemsNotTracked.Count == 0)
 		{
 			return;
 		}
 
 		logger.LogInformation(
 			"Re-syncing {ResyncDataPointStoreItemCount} DataPoints...",
-			resyncDataPointStoreItems.Count
+			resyncDataPointStoreItemsNotTracked.Count
 		);
 
 		var databaseDeviceDataSourceInstanceDataPointsToResync = databaseDeviceDataSourceInstanceDataPoints
-			.Where(ddsidp => resyncDataPointStoreItems.Any(dsdp => dsdp.Id == ddsidp.DataSourceDataPointId))
+			.Where(ddsidp => resyncDataPointStoreItemsNotTracked.Any(dsdp => dsdp.Id == ddsidp.DataSourceDataPointId))
 			.ToList();
 
 		// Reset their Time cursor
