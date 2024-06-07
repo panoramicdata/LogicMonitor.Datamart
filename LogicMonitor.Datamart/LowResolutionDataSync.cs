@@ -314,7 +314,7 @@ internal class LowResolutionDataSync(
 		}
 
 		// calculate the index of the value at the nth percentile
-		var index = ((n / 100.0) * (values.Length - 1));
+		var index = n / 100.0 * (values.Length - 1);
 
 		// check if the index is an integer
 		if (index % 1 == 0)
