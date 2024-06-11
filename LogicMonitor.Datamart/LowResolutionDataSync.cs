@@ -28,6 +28,12 @@ internal class LowResolutionDataSync(
 			_configuration.DatabaseName
 			);
 
+		if (_configuration.AggregationReset == true)
+		{
+			await ResetAggregationsAsync(cancellationToken)
+				.ConfigureAwait(false);
+		}
+
 		List<DataSourceStoreItem> matchingDatabaseDataSourcesNotTracked;
 		Dictionary<int, DeviceStoreItem> allDatabaseDevicesByLogicMonitorIdNotTracked;
 		using (var contextForReferenceDataNotTracked = _datamartClient.GetContext())
@@ -113,6 +119,23 @@ internal class LowResolutionDataSync(
 		{
 			_datamartClient.UseCache = oldCacheState;
 		}
+	}
+
+	private async Task ResetAggregationsAsync(CancellationToken cancellationToken)
+	{
+		using var context = _datamartClient.GetContext();
+
+		// Do the equivalent of a TRUNCATE TABLE for TimeSeriesDataAggregations.  This is a postgres database
+		await context
+			.Database
+			.ExecuteSqlRawAsync("TRUNCATE TABLE \"TimeSeriesDataAggregations\";", cancellationToken)
+			.ConfigureAwait(false);
+
+		// Set DeviceDataSourceInstanceDataPointStoreItem.DataCompleteTo to null for all DeviceDataSourceInstanceDataPointStoreItems
+		await context
+			.Database
+			.ExecuteSqlRawAsync("UPDATE \"DeviceDataSourceInstanceDataPoints\" SET \"DataCompleteTo\" = NULL;", cancellationToken)
+			.ConfigureAwait(false);
 	}
 
 	private async Task ProcessDataSourceAsync(

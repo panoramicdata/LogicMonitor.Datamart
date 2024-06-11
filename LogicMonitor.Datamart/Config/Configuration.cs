@@ -19,6 +19,15 @@ public class Configuration
 	public int AggregationDurationMinutes { get; set; } = 60;
 
 	/// <summary>
+	/// Whether to reset the aggregations
+	/// Default false
+	/// If set to true, as part of the LowResolutionDataSync, the aggregation data will be reset by:
+	/// - truncating the TimeSeriesDataAggregations table
+	/// - setting DeviceDataSourceInstanceDataPointStoreItem.DataCompleteTo to null for all DeviceDataSourceInstanceDataPointStoreItems
+	/// </summary>
+	public bool? AggregationReset { get; set; }
+
+	/// <summary>
 	/// Don't fetch any data before this date
 	/// </summary>
 	public DateTimeOffset StartDateTimeUtc { get; set; }

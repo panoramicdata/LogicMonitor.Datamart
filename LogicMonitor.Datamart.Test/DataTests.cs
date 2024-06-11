@@ -74,4 +74,18 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 			.ExecuteAsync(default)
 			.ConfigureAwait(true);
 	}
+
+
+	[Fact]
+	public async Task LowResolutionDataSync_ResettingAggregations_RunsSuccessfully()
+	{
+		Configuration.AggregationReset = true;
+		await new LowResolutionDataSync(
+				DatamartClient,
+				Configuration,
+				LoggerFactory,
+				TestNotificationReceiver)
+			.ExecuteAsync(default)
+			.ConfigureAwait(true);
+	}
 }
