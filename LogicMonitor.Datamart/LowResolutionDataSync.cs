@@ -30,7 +30,7 @@ internal class LowResolutionDataSync(
 
 		if (_configuration.AggregationReset == true)
 		{
-			await ResetAggregationsAsync(cancellationToken)
+			await AggregationResetAsync(cancellationToken)
 				.ConfigureAwait(false);
 		}
 
@@ -121,21 +121,25 @@ internal class LowResolutionDataSync(
 		}
 	}
 
-	private async Task ResetAggregationsAsync(CancellationToken cancellationToken)
+	private async Task AggregationResetAsync(CancellationToken cancellationToken)
 	{
 		using var context = _datamartClient.GetContext();
 
 		// Do the equivalent of a TRUNCATE TABLE for TimeSeriesDataAggregations.  This is a postgres database
+		Logger.LogInformation("Aggregation reset: Truncating TimeSeriesDataAggregations table...");
 		await context
 			.Database
 			.ExecuteSqlRawAsync("TRUNCATE TABLE \"TimeSeriesDataAggregations\";", cancellationToken)
 			.ConfigureAwait(false);
 
 		// Set DeviceDataSourceInstanceDataPointStoreItem.DataCompleteTo to null for all DeviceDataSourceInstanceDataPointStoreItems
+		Logger.LogInformation("Aggregation reset: Setting DeviceDataSourceInstanceDataPoints.DataCompleteTo to null...");
 		await context
 			.Database
 			.ExecuteSqlRawAsync("UPDATE \"DeviceDataSourceInstanceDataPoints\" SET \"DataCompleteTo\" = NULL;", cancellationToken)
 			.ConfigureAwait(false);
+
+		Logger.LogInformation("Aggregation reset: Complete.");
 	}
 
 	private async Task ProcessDataSourceAsync(
