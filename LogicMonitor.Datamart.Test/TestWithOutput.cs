@@ -14,10 +14,13 @@ public abstract class TestWithOutput
 		Name = "Test",
 		AggregationDurationMinutes = 15,
 		LateArrivingDataWindowHours = 2,
+		//AggregationReset = true,
+		FakeExecutionTime = new DateTime(2024, 5, 31, 14, 0, 5, DateTimeKind.Utc),
+		MinutesOffset = -420,
 		StartDateTimeUtc =
 		new DateTimeOffset(
 			TwelveHoursAgo.Year,
-			1,
+			5,
 			1,
 			0,
 			0,
@@ -26,33 +29,28 @@ public abstract class TestWithOutput
 		.UtcDateTime,
 
 		DeviceProperties = [
-			"fix.url",
-			"ReportMagic",
-			"location",
-			"customer.code",
-			"auto.bios.version",
-			"system.sysinfo",
+			"customer.code"
 		],
 
 		DataSources =
 			[
-				new DataSourceConfigurationItem{
-					Name = "WinCPU",
-					DataPoints =
-					[
-						new DataPointConfigurationItem
-						{
-							Name = "CPUBusyPercent",
-							MeasurementUnit = "%",
-							ResyncTimeSeriesData = true
-						},
-						new DataPointConfigurationItem
-						{
-							Name= "ProcessorQueueLength",
-							MeasurementUnit = "count"
-						}
-					]
-				},
+				//new DataSourceConfigurationItem{
+				//	Name = "WinCPU",
+				//	DataPoints =
+				//	[
+				//		new DataPointConfigurationItem
+				//		{
+				//			Name = "CPUBusyPercent",
+				//			MeasurementUnit = "%",
+				//			ResyncTimeSeriesData = true
+				//		},
+				//		new DataPointConfigurationItem
+				//		{
+				//			Name= "ProcessorQueueLength",
+				//			MeasurementUnit = "count"
+				//		}
+				//	]
+				//},
 				//new DataSourceConfigurationItem{
 				//	Name = "SNMP_Network_Interfaces",
 				//	InstanceInclusionExpression = "Description != ''",
@@ -89,23 +87,24 @@ public abstract class TestWithOutput
 				//			}
 				//	},
 				//},
+				//new DataSourceConfigurationItem{
+				//	Name = "Non_Existent",
+				//	DataPoints =
+				//	[
+				//		new DataPointConfigurationItem
+				//		{
+				//			Name = "Blah",
+				//			MeasurementUnit = "Grains",
+				//		},
+				//		new DataPointConfigurationItem
+				//		{
+				//			Name = "Foo",
+				//			MeasurementUnit = "Chains",
+				//		}
+				//	]
+				//},
 				new DataSourceConfigurationItem{
-					Name = "Non_Existent",
-					DataPoints =
-					[
-						new DataPointConfigurationItem
-						{
-							Name = "Blah",
-							MeasurementUnit = "Grains",
-						},
-						new DataPointConfigurationItem
-						{
-							Name = "Foo",
-							MeasurementUnit = "Chains",
-						}
-					]
-				},
-				new DataSourceConfigurationItem{
+					AppliesTo = "displayName == \"BON-APP-CHESS-03\"",
 					Name = "HostStatus",
 					DataPoints =
 					[
@@ -117,30 +116,30 @@ public abstract class TestWithOutput
 						}
 					]
 				},
-				new DataSourceConfigurationItem{
-					Name = "SNMP_Host_Uptime",
-					DataPoints =
-					[
-						new DataPointConfigurationItem
-						{
-							Name = "Uptime",
-							MeasurementUnit = "Seconds",
-							PercentageAvailabilityCalculation = "PercentUpTime"
-						}
-					]
-				},
-				new DataSourceConfigurationItem{
-					Name = "WinSystemUptime",
-					DataPoints =
-					[
-						new DataPointConfigurationItem
-						{
-							Name = "UptimeSeconds",
-							MeasurementUnit = "Seconds",
-							PercentageAvailabilityCalculation = "PercentUpTime"
-						}
-					]
-				}
+				//new DataSourceConfigurationItem{
+				//	Name = "SNMP_Host_Uptime",
+				//	DataPoints =
+				//	[
+				//		new DataPointConfigurationItem
+				//		{
+				//			Name = "Uptime",
+				//			MeasurementUnit = "Seconds",
+				//			PercentageAvailabilityCalculation = "PercentUpTime"
+				//		}
+				//	]
+				//},
+				//new DataSourceConfigurationItem{
+				//	Name = "WinSystemUptime",
+				//	DataPoints =
+				//	[
+				//		new DataPointConfigurationItem
+				//		{
+				//			Name = "UptimeSeconds",
+				//			MeasurementUnit = "Seconds",
+				//			PercentageAvailabilityCalculation = "PercentUpTime"
+				//		}
+				//	]
+				//}
 			]
 	};
 

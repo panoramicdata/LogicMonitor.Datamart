@@ -2,6 +2,7 @@
 using LogicMonitor.Api.Time;
 using LogicMonitor.Datamart.Interfaces;
 using LogicMonitor.Datamart.Notifications;
+using LogicMonitor.Datamart.Services;
 using PanoramicData.NCalcExtensions;
 using System.Globalization;
 
@@ -11,14 +12,15 @@ internal class LowResolutionDataSync(
 	DatamartClient datamartClient,
 	Configuration configuration,
 	ILoggerFactory loggerFactory,
-	INotificationReceiver? notificationReceiver) : LoopInterval(nameof(LowResolutionDataSync), loggerFactory)
+	INotificationReceiver? notificationReceiver,
+	ITimeProviderService timeProviderService) : LoopInterval(nameof(LowResolutionDataSync), loggerFactory)
 {
 	private static readonly TimeSpan EightHours = TimeSpan.FromHours(8);
 	private const int DeviceDownTimeWindowSeconds = 3000;
 
 	private readonly DatamartClient _datamartClient = datamartClient;
 	private readonly Configuration _configuration = configuration;
-
+	private readonly ITimeProviderService _timeProviderService = timeProviderService;
 	private readonly INotificationReceiver _notificationReceiver = notificationReceiver ?? new NullNotificationReceiver();
 
 	public override async Task ExecuteAsync(CancellationToken cancellationToken)
@@ -436,7 +438,7 @@ internal class LowResolutionDataSync(
 		}
 	}
 
-	private static async Task GetAndWriteAggregationsAsync(
+	private async Task GetAndWriteAggregationsAsync(
 		DatamartClient datamartClient,
 		Context context,
 		Configuration configuration,
@@ -450,7 +452,7 @@ internal class LowResolutionDataSync(
 		// able to publish its measurement data to the LogicMonitor API,
 		// we consider "now" to be X hours ago.
 		// This is "B" in the diagram below.
-		var utcNow = DateTimeOffset.UtcNow;
+		var utcNow = _timeProviderService.UtcOffsetNow;
 
 		var aggregationsToWrite = new List<TimeSeriesDataAggregationStoreItem>();
 
@@ -570,7 +572,7 @@ internal class LowResolutionDataSync(
 
 						aggregationsToWrite.Add(bulkWriteModel);
 
-						databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo = endDateTimeUtc;
+						databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo = endDateTimeUtcWithOffset;
 						startDateTimeUtc = startDateTimeUtc.AddMonths(1);
 						endDateTimeUtc = endDateTimeUtc.AddMonths(1);
 					}

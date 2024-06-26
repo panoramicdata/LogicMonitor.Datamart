@@ -1,4 +1,6 @@
-﻿namespace LogicMonitor.Datamart.Test;
+﻿using LogicMonitor.Datamart.Services;
+
+namespace LogicMonitor.Datamart.Test;
 
 public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTestOutputHelper)
 {
@@ -70,7 +72,8 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 				DatamartClient,
 				Configuration,
 				LoggerFactory,
-				TestNotificationReceiver)
+				TestNotificationReceiver,
+				new TimeProviderService())
 			.ExecuteAsync(default)
 			.ConfigureAwait(true);
 	}
@@ -79,12 +82,16 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 	[Fact]
 	public async Task LowResolutionDataSync_ResettingAggregations_RunsSuccessfully()
 	{
+		var tps = new TimeProviderService();
+		tps.SetDateTimeNow(Configuration.FakeExecutionTime);
+
 		Configuration.AggregationReset = true;
 		await new LowResolutionDataSync(
 				DatamartClient,
 				Configuration,
 				LoggerFactory,
-				TestNotificationReceiver)
+				TestNotificationReceiver,
+				tps)
 			.ExecuteAsync(default)
 			.ConfigureAwait(true);
 	}

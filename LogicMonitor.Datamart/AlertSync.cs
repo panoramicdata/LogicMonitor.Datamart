@@ -1,3 +1,5 @@
+using LogicMonitor.Datamart.Interfaces;
+
 namespace LogicMonitor.Datamart;
 
 internal class AlertSync(
@@ -7,6 +9,7 @@ internal class AlertSync(
 {
 	private readonly DatamartClient _datamartClient = datamartClient;
 	private readonly DateTimeOffset _startDateTimeUtc = startDateTimeUtc;
+	//private readonly ITimeProviderService _timeProviderService = timeProviderService;
 
 	public async Task TruncateAlerts(CancellationToken cancellationToken)
 	{
