@@ -103,6 +103,8 @@ public class Configuration
 	// RM-16049 Ability to set a static UTC offset to apply to the reporting time period. Between -13 and 13 hours
 	public int MinutesOffset { get; set; }
 
+	public DateTime? FakeExecutionTime { get; set; }
+
 	public void Validate()
 	{
 		if (string.IsNullOrWhiteSpace(Name))

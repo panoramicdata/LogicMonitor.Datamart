@@ -2,6 +2,7 @@
 using LogicMonitor.Api.Time;
 using LogicMonitor.Datamart.Interfaces;
 using LogicMonitor.Datamart.Notifications;
+using LogicMonitor.Datamart.Services;
 using PanoramicData.NCalcExtensions;
 using System.Globalization;
 
@@ -11,14 +12,15 @@ internal class LowResolutionDataSync(
 	DatamartClient datamartClient,
 	Configuration configuration,
 	ILoggerFactory loggerFactory,
-	INotificationReceiver? notificationReceiver) : LoopInterval(nameof(LowResolutionDataSync), loggerFactory)
+	INotificationReceiver? notificationReceiver,
+	ITimeProviderService timeProviderService) : LoopInterval(nameof(LowResolutionDataSync), loggerFactory)
 {
 	private static readonly TimeSpan EightHours = TimeSpan.FromHours(8);
 	private const int DeviceDownTimeWindowSeconds = 3000;
 
 	private readonly DatamartClient _datamartClient = datamartClient;
 	private readonly Configuration _configuration = configuration;
-
+	private readonly ITimeProviderService _timeProviderService = timeProviderService;
 	private readonly INotificationReceiver _notificationReceiver = notificationReceiver ?? new NullNotificationReceiver();
 
 	public override async Task ExecuteAsync(CancellationToken cancellationToken)
@@ -436,7 +438,7 @@ internal class LowResolutionDataSync(
 		}
 	}
 
-	private static async Task GetAndWriteAggregationsAsync(
+	private async Task GetAndWriteAggregationsAsync(
 		DatamartClient datamartClient,
 		Context context,
 		Configuration configuration,
@@ -450,7 +452,7 @@ internal class LowResolutionDataSync(
 		// able to publish its measurement data to the LogicMonitor API,
 		// we consider "now" to be X hours ago.
 		// This is "B" in the diagram below.
-		var utcNow = DateTimeOffset.UtcNow;
+		var utcNow = _timeProviderService.UtcOffsetNow;
 
 		var aggregationsToWrite = new List<TimeSeriesDataAggregationStoreItem>();
 
@@ -482,9 +484,11 @@ internal class LowResolutionDataSync(
 			{
 				try
 				{
-					var lastAggregationHourWrittenUtc = databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo is null
-						? configuration.StartDateTimeUtc
-						: databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo.Value;
+					var lastAggregationHourWrittenUtc =
+						(databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo is null
+							? configuration.StartDateTimeUtc
+							: databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo.Value)
+						.ToUniversalTime();
 
 					// Ensure that this is on a month boundary
 					lastAggregationHourWrittenUtc = new DateTimeOffset(
@@ -498,6 +502,25 @@ internal class LowResolutionDataSync(
 
 					if (endDateTimeUtc.AddMinutes(configuration.MinutesOffset) >= utcNow)
 					{
+						Logger.LogInformation(
+							"Skipped writing aggregations because the end date time + minutes offset (from configuration) was greater than UTC now. " +
+							"Start date UTC: {StartDateUtc}. " +
+							"End date UTC: {EndDateUtc}. " +
+							"Minutes Offset: {MinutesOffset}. " +
+							"End date UTC with offset: {EndDateUtcWithOffset}. " +
+							"Database: {DatabaseName}. " +
+							"DeviceDataSourceInstanceDataPointId: {DeviceDataSourceInstanceDataPointId}. " +
+							"DataSourceDataPointId: {DataSourceDataPointId}. " +
+							"DeviceDataSourceInstanceId: {DeviceDataSourceInstanceId}.", 
+							startDateTimeUtc,
+							endDateTimeUtc,
+							configuration.MinutesOffset,
+							endDateTimeUtc.AddMinutes(configuration.MinutesOffset),
+							configuration.DatabaseName,
+							databaseDeviceDataSourceInstanceDataPoint?.Id,
+							databaseDeviceDataSourceInstanceDataPoint?.DataSourceDataPointId,
+							databaseDeviceDataSourceInstanceDataPoint?.DeviceDataSourceInstanceId);
+
 						continue;
 					}
 
@@ -538,8 +561,8 @@ internal class LowResolutionDataSync(
 							startDateTimeUtcWithOffset,
 							endDateTimeUtcWithOffset,
 							logger,
-							cancellationToken
-						);
+							cancellationToken);
+
 							cacheStats.AddMiss();
 						}
 						else
@@ -558,8 +581,8 @@ internal class LowResolutionDataSync(
 							databaseDeviceDataSourceInstanceDataPoint,
 							dataPointName,
 							dataSourceDataPointStoreItemNotTracked,
-							startDateTimeUtcWithOffset,
-							endDateTimeUtcWithOffset,
+							startDateTimeUtc,
+							endDateTimeUtc,
 							graphData
 						);
 
@@ -631,8 +654,8 @@ internal class LowResolutionDataSync(
 		DeviceDataSourceInstanceDataPointStoreItem databaseDeviceDataSourceInstanceDataPoint,
 		string dataPointName,
 		DataSourceDataPointStoreItem? dataPointStoreItemNotTracked,
-		DateTimeOffset startDateTimeOffset,
-		DateTimeOffset endDateTimeOffset,
+		DateTimeOffset startDateTimeUtc,
+		DateTimeOffset endDateTimeUtc,
 		GraphData graphData)
 	{
 		TimeSeriesDataAggregationStoreItem bulkWriteModel;
@@ -695,8 +718,8 @@ internal class LowResolutionDataSync(
 		{
 			Id = Guid.NewGuid(),
 			DeviceDataSourceInstanceDataPointId = databaseDeviceDataSourceInstanceDataPoint.Id,
-			PeriodStart = startDateTimeOffset.UtcDateTime,
-			PeriodEnd = endDateTimeOffset.UtcDateTime,
+			PeriodStart = startDateTimeUtc.UtcDateTime,
+			PeriodEnd = endDateTimeUtc.UtcDateTime,
 			DataCount = line.Data.Count(d => d.HasValue),
 			NoDataCount = line.Data.Count(d => !d.HasValue),
 			Sum = line.Data.Sum(d => d ?? 0),

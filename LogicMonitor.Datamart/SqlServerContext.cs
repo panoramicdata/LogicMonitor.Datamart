@@ -14,7 +14,7 @@ public class SqlServerContext : Context
 	{
 		if (!optionsBuilder.IsConfigured)
 		{
-			optionsBuilder.UseSqlServer("Server=127.0.0.1;Port=1455;Database=LogicMonitorDatamart;User Id=sa;Password=XXX;");
+			optionsBuilder.UseSqlServer("Server=127.0.0.1;Port=1455;Database=LogicMonitorDatamart;User Id=sa;Password=XXX");
 		}
 	}
 }

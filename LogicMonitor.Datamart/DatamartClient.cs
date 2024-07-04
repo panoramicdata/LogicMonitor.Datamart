@@ -1,4 +1,5 @@
 using LogicMonitor.Datamart.Interfaces;
+using LogicMonitor.Datamart.Services;
 using PanoramicData.NCalcExtensions;
 
 namespace LogicMonitor.Datamart;
@@ -19,6 +20,7 @@ public class DatamartClient : LogicMonitorClient
 	private readonly Configuration _configuration;
 	private static readonly MapperConfiguration _mapperConfig = new(cfg => cfg.AddMaps(typeof(DatamartClient).Assembly));
 	internal static IMapper MapperInstance = new Mapper(_mapperConfig);
+	private readonly TimeProviderService _timeProviderService = new();
 
 	public DatamartClient(
 		Configuration configuration,
@@ -28,6 +30,8 @@ public class DatamartClient : LogicMonitorClient
 		// Store and validate configuration
 		_configuration = configuration;
 		_configuration.Validate();
+		
+		_timeProviderService.SetDateTimeNow(configuration.FakeExecutionTime);
 
 		// Set up the AutoMapper CustomPropertyFetcher
 		CustomPropertyHandler.Configure(_configuration.DeviceProperties);
@@ -66,7 +70,8 @@ public class DatamartClient : LogicMonitorClient
 						$"Port={(configuration.DatabaseServerPort ?? 5432)};" +
 						$"Database={configuration.DatabaseName};" +
 						$"Uid={configuration.DatabaseUsername};" +
-						$"Pwd={configuration.DatabasePassword};",
+						$"Pwd={configuration.DatabasePassword};" +
+						$"Timezone=UTC",
 						options => options
 							.EnableRetryOnFailure(configuration.DatabaseRetryOnFailureCount ?? 5)
 					);
@@ -294,7 +299,8 @@ public class DatamartClient : LogicMonitorClient
 			this,
 			_configuration,
 			_loggerFactory,
-			notificationReceiver);
+			notificationReceiver,
+			_timeProviderService);
 		return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
 	}
 
@@ -359,7 +365,7 @@ public class DatamartClient : LogicMonitorClient
 			var dbSet = action(context);
 
 			// Fetch the items from the LogicMonitor API
-			var lastObservedUtc = DateTimeOffset.UtcNow;
+			var lastObservedUtc = _timeProviderService.UtcOffsetNow;
 
 			var apiItems = await GetAllAsync<TApi>(cancellationToken: cancellationToken)
 				.ConfigureAwait(false);
@@ -471,7 +477,7 @@ public class DatamartClient : LogicMonitorClient
 			var dbSet = action(context);
 
 			// Fetch the items from the LogicMonitor API
-			var lastObservedUtc = DateTimeOffset.UtcNow;
+			var lastObservedUtc = _timeProviderService.UtcOffsetNow;
 			var apiItems = await GetLogicModuleUpdatesAsync(LogicModuleType.All, cancellationToken: cancellationToken)
 				.ConfigureAwait(false);
 			logger.LogDebug(
@@ -1163,7 +1169,7 @@ public class DatamartClient : LogicMonitorClient
 						cancellationToken)
 					.ConfigureAwait(false);
 
-				var instanceObservedDateTimeUtc = DateTimeOffset.UtcNow;
+				var instanceObservedDateTimeUtc = _timeProviderService.UtcOffsetNow;
 
 				// Update the DatamartLastObserved BEFORE we remove instances that do not match
 				foreach (var instance in apiDeviceDataSourceInstances)
@@ -1353,7 +1359,7 @@ public class DatamartClient : LogicMonitorClient
 							continue;
 						}
 
-						databaseDeviceDataSourceInstance.LastWentMissing = DateTimeOffset.UtcNow;
+						databaseDeviceDataSourceInstance.LastWentMissing = _timeProviderService.UtcOffsetNow;
 					}
 
 					markedMissing += deviceDatasourceInstanceIdsToMarkMissing.Count;
