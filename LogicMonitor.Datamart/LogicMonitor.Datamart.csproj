@@ -11,7 +11,7 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor API Datamart</PackageTags>
 		<PackageReleaseNotes>
-			Fixed broken unmapped property (AlertGroupEntityValue) on AlertStoreItem =&gt; Alert
+			Added ability to fake wall clock time during sync and fixed issues relating to syncing during the same month. Additional logging.
 		</PackageReleaseNotes>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
