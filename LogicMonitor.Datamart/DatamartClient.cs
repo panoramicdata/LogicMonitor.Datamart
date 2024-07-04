@@ -20,7 +20,7 @@ public class DatamartClient : LogicMonitorClient
 	private readonly Configuration _configuration;
 	private static readonly MapperConfiguration _mapperConfig = new(cfg => cfg.AddMaps(typeof(DatamartClient).Assembly));
 	internal static IMapper MapperInstance = new Mapper(_mapperConfig);
-	private readonly ITimeProviderService _timeProviderService = new TimeProviderService();
+	private readonly TimeProviderService _timeProviderService = new();
 
 	public DatamartClient(
 		Configuration configuration,
@@ -70,7 +70,8 @@ public class DatamartClient : LogicMonitorClient
 						$"Port={(configuration.DatabaseServerPort ?? 5432)};" +
 						$"Database={configuration.DatabaseName};" +
 						$"Uid={configuration.DatabaseUsername};" +
-						$"Pwd={configuration.DatabasePassword};",
+						$"Pwd={configuration.DatabasePassword};" +
+						$"Timezone=UTC",
 						options => options
 							.EnableRetryOnFailure(configuration.DatabaseRetryOnFailureCount ?? 5)
 					);

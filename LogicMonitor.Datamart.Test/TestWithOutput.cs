@@ -14,13 +14,10 @@ public abstract class TestWithOutput
 		Name = "Test",
 		AggregationDurationMinutes = 15,
 		LateArrivingDataWindowHours = 2,
-		//AggregationReset = true,
-		FakeExecutionTime = new DateTime(2024, 5, 31, 14, 0, 5, DateTimeKind.Utc),
-		MinutesOffset = -420,
 		StartDateTimeUtc =
 		new DateTimeOffset(
 			TwelveHoursAgo.Year,
-			5,
+			1,
 			1,
 			0,
 			0,

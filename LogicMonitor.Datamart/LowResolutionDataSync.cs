@@ -484,9 +484,11 @@ internal class LowResolutionDataSync(
 			{
 				try
 				{
-					var lastAggregationHourWrittenUtc = databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo is null
-						? configuration.StartDateTimeUtc
-						: databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo.Value;
+					var lastAggregationHourWrittenUtc =
+						(databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo is null
+							? configuration.StartDateTimeUtc
+							: databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo.Value)
+						.ToUniversalTime();
 
 					// Ensure that this is on a month boundary
 					lastAggregationHourWrittenUtc = new DateTimeOffset(
@@ -500,6 +502,25 @@ internal class LowResolutionDataSync(
 
 					if (endDateTimeUtc.AddMinutes(configuration.MinutesOffset) >= utcNow)
 					{
+						Logger.LogInformation(
+							"Skipped writing aggregations because the end date time + minutes offset (from configuration) was greater than UTC now. " +
+							"Start date UTC: {StartDateUtc}. " +
+							"End date UTC: {EndDateUtc}. " +
+							"Minutes Offset: {MinutesOffset}. " +
+							"End date UTC with offset: {EndDateUtcWithOffset}. " +
+							"Database: {DatabaseName}. " +
+							"DeviceDataSourceInstanceDataPointId: {DeviceDataSourceInstanceDataPointId}. " +
+							"DataSourceDataPointId: {DataSourceDataPointId}. " +
+							"DeviceDataSourceInstanceId: {DeviceDataSourceInstanceId}.", 
+							startDateTimeUtc,
+							endDateTimeUtc,
+							configuration.MinutesOffset,
+							endDateTimeUtc.AddMinutes(configuration.MinutesOffset),
+							configuration.DatabaseName,
+							databaseDeviceDataSourceInstanceDataPoint?.Id,
+							databaseDeviceDataSourceInstanceDataPoint?.DataSourceDataPointId,
+							databaseDeviceDataSourceInstanceDataPoint?.DeviceDataSourceInstanceId);
+
 						continue;
 					}
 
@@ -540,8 +561,8 @@ internal class LowResolutionDataSync(
 							startDateTimeUtcWithOffset,
 							endDateTimeUtcWithOffset,
 							logger,
-							cancellationToken
-						);
+							cancellationToken);
+
 							cacheStats.AddMiss();
 						}
 						else
@@ -560,8 +581,8 @@ internal class LowResolutionDataSync(
 							databaseDeviceDataSourceInstanceDataPoint,
 							dataPointName,
 							dataSourceDataPointStoreItemNotTracked,
-							startDateTimeUtcWithOffset,
-							endDateTimeUtcWithOffset,
+							startDateTimeUtc,
+							endDateTimeUtc,
 							graphData
 						);
 
@@ -572,7 +593,7 @@ internal class LowResolutionDataSync(
 
 						aggregationsToWrite.Add(bulkWriteModel);
 
-						databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo = endDateTimeUtcWithOffset;
+						databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo = endDateTimeUtc;
 						startDateTimeUtc = startDateTimeUtc.AddMonths(1);
 						endDateTimeUtc = endDateTimeUtc.AddMonths(1);
 					}
@@ -633,8 +654,8 @@ internal class LowResolutionDataSync(
 		DeviceDataSourceInstanceDataPointStoreItem databaseDeviceDataSourceInstanceDataPoint,
 		string dataPointName,
 		DataSourceDataPointStoreItem? dataPointStoreItemNotTracked,
-		DateTimeOffset startDateTimeOffset,
-		DateTimeOffset endDateTimeOffset,
+		DateTimeOffset startDateTimeUtc,
+		DateTimeOffset endDateTimeUtc,
 		GraphData graphData)
 	{
 		TimeSeriesDataAggregationStoreItem bulkWriteModel;
@@ -697,8 +718,8 @@ internal class LowResolutionDataSync(
 		{
 			Id = Guid.NewGuid(),
 			DeviceDataSourceInstanceDataPointId = databaseDeviceDataSourceInstanceDataPoint.Id,
-			PeriodStart = startDateTimeOffset.UtcDateTime,
-			PeriodEnd = endDateTimeOffset.UtcDateTime,
+			PeriodStart = startDateTimeUtc.UtcDateTime,
+			PeriodEnd = endDateTimeUtc.UtcDateTime,
 			DataCount = line.Data.Count(d => d.HasValue),
 			NoDataCount = line.Data.Count(d => !d.HasValue),
 			Sum = line.Data.Sum(d => d ?? 0),

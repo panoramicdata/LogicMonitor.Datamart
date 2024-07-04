@@ -23,14 +23,15 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 			}
 		};
 		var utcNow = DateTimeOffset.UtcNow;
-		var endDateTime = new DateTimeOffset(utcNow.Year,
+		var endDateTimeUtc = new DateTimeOffset(
+			utcNow.Year,
 			utcNow.Month,
 			1,
 			0,
 			0,
 			0,
 			TimeSpan.Zero);
-		var startDateTime = endDateTime.AddMonths(-1);
+		var startDateTimeUtc = endDateTimeUtc.AddMonths(-1);
 
 		var dataPointName = "Uptime";
 
@@ -44,8 +45,8 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 		var graphData = await LowResolutionDataSync.GetGraphDataAsync(
 			DatamartClient,
 			deviceDataSourceInstanceDataPoint.DeviceDataSourceInstance.LogicMonitorId,
-			startDateTime,
-			endDateTime,
+			startDateTimeUtc,
+			endDateTimeUtc,
 			LoggerFactory.CreateLogger<DataTests>(),
 			default
 			);
@@ -55,13 +56,13 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 			deviceDataSourceInstanceDataPoint,
 			dataPointName,
 			dataPointStoreItem,
-			startDateTime,
-			endDateTime,
+			startDateTimeUtc,
+			endDateTimeUtc,
 			graphData
 		);
 
 		result.Should().NotBeNull();
-		result!.PeriodStart.Should().Be(startDateTime);
+		result!.PeriodStart.Should().Be(startDateTimeUtc);
 		result.AvailabilityPercent.Should().BeApproximately(70, 5);
 	}
 
