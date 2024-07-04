@@ -14,11 +14,12 @@ internal class TimeProviderService : ITimeProviderService
 
 	public void SetDateTimeNow(DateTime? dateTime)
 	{
-		if (dateTime?.Kind != DateTimeKind.Utc)
+		if (dateTime is not null && dateTime.Value.Kind != DateTimeKind.Utc)
 		{
 			throw new ArgumentException("Date Time Kind is not UTC");
 		}
+
 		_configuredDateTime = dateTime;
-		_configuredDateTimeOffset = new DateTimeOffset(dateTime.Value);
+		_configuredDateTimeOffset = dateTime != null ? new DateTimeOffset(dateTime.Value) : null;
 	}
 }
