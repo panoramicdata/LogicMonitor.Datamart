@@ -347,7 +347,8 @@ internal class LowResolutionDataSync(
 			}
 			catch (Exception ex)
 			{
-				Logger.LogError(
+				// This can happen if the device has been deleted from LogicMonitor
+				Logger.LogInformation(
 					ex,
 					"Writing aggregations for {DatabaseName}: {DeviceName} ({DeviceIndex}/{DeviceCount}) failed: '{Message}' ||| {StackTrace}",
 					_configuration.DatabaseName,
