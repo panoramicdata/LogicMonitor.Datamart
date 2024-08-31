@@ -67,7 +67,7 @@ internal abstract class LoopInterval(string name, ILoggerFactory loggerFactory)
 			if (remainingTimeInInterval.TotalSeconds > 0)
 			{
 				Logger.LogInformation(
-					"Next {Name} will start in {RemainingTimeInInterval} at {RemainingTimeInInterval}.",
+					"Next {Name} will start in {RemainingTimeInInterval} at {StartTime}.",
 					name,
 					remainingTimeInInterval.Humanize(7, minUnit: TimeUnit.Second),
 					DateTime.UtcNow.Add(remainingTimeInInterval)

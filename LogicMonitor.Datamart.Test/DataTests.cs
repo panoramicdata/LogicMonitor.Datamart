@@ -1,4 +1,6 @@
-﻿namespace LogicMonitor.Datamart.Test;
+﻿using LogicMonitor.Datamart.Services;
+
+namespace LogicMonitor.Datamart.Test;
 
 public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTestOutputHelper)
 {
@@ -21,14 +23,15 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 			}
 		};
 		var utcNow = DateTimeOffset.UtcNow;
-		var endDateTime = new DateTimeOffset(utcNow.Year,
+		var endDateTimeUtc = new DateTimeOffset(
+			utcNow.Year,
 			utcNow.Month,
 			1,
 			0,
 			0,
 			0,
 			TimeSpan.Zero);
-		var startDateTime = endDateTime.AddMonths(-1);
+		var startDateTimeUtc = endDateTimeUtc.AddMonths(-1);
 
 		var dataPointName = "Uptime";
 
@@ -42,8 +45,8 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 		var graphData = await LowResolutionDataSync.GetGraphDataAsync(
 			DatamartClient,
 			deviceDataSourceInstanceDataPoint.DeviceDataSourceInstance.LogicMonitorId,
-			startDateTime,
-			endDateTime,
+			startDateTimeUtc,
+			endDateTimeUtc,
 			LoggerFactory.CreateLogger<DataTests>(),
 			default
 			);
@@ -53,13 +56,13 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 			deviceDataSourceInstanceDataPoint,
 			dataPointName,
 			dataPointStoreItem,
-			startDateTime,
-			endDateTime,
+			startDateTimeUtc,
+			endDateTimeUtc,
 			graphData
 		);
 
 		result.Should().NotBeNull();
-		result!.PeriodStart.Should().Be(startDateTime);
+		result!.PeriodStart.Should().Be(startDateTimeUtc);
 		result.AvailabilityPercent.Should().BeApproximately(70, 5);
 	}
 
@@ -70,7 +73,8 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 				DatamartClient,
 				Configuration,
 				LoggerFactory,
-				TestNotificationReceiver)
+				TestNotificationReceiver,
+				new TimeProviderService())
 			.ExecuteAsync(default)
 			.ConfigureAwait(true);
 	}
@@ -79,12 +83,16 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 	[Fact]
 	public async Task LowResolutionDataSync_ResettingAggregations_RunsSuccessfully()
 	{
+		var tps = new TimeProviderService();
+		tps.SetDateTimeNow(Configuration.FakeExecutionTime);
+
 		Configuration.AggregationReset = true;
 		await new LowResolutionDataSync(
 				DatamartClient,
 				Configuration,
 				LoggerFactory,
-				TestNotificationReceiver)
+				TestNotificationReceiver,
+				tps)
 			.ExecuteAsync(default)
 			.ConfigureAwait(true);
 	}

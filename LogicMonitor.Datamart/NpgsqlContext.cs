@@ -14,7 +14,7 @@ public class NpgsqlContext : Context
 	{
 		if (!optionsBuilder.IsConfigured)
 		{
-			optionsBuilder.UseNpgsql("Server=127.0.0.1;Port=5432;Database=XXX;User Id=XXX;Password=XXX;");
+			optionsBuilder.UseNpgsql("Server=127.0.0.1;Port=5432;Database=XXX;User Id=XXX;Password=XXX;Timezone=UTC");
 		}
 	}
 }
