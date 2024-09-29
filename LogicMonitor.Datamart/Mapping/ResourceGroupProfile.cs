@@ -1,10 +1,10 @@
 ﻿namespace LogicMonitor.Datamart.Mapping;
 
-public class DeviceGroupProfile : Profile
+public class ResourceGroupProfile : Profile
 {
-	public DeviceGroupProfile()
+	public ResourceGroupProfile()
 	{
-		CreateMap<DeviceGroup, DeviceGroupStoreItem>()
+		CreateMap<ResourceGroup, DeviceGroupStoreItem>()
 			.ForMember(
 				dest => dest.Id,
 				opts => opts.Ignore())
@@ -20,8 +20,11 @@ public class DeviceGroupProfile : Profile
 			.ForMember(
 				dest => dest.DatamartLastObserved,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.AlertEnable,
+				opts => opts.Ignore())
 			;
-		CreateMap<DeviceGroupStoreItem, DeviceGroup>()
+		CreateMap<DeviceGroupStoreItem, ResourceGroup>()
 			.ForMember(
 				dest => dest.Id,
 				opts => opts.MapFrom(src => src.LogicMonitorId))
@@ -41,7 +44,7 @@ public class DeviceGroupProfile : Profile
 				dest => dest.DefaultLoadBalanceCollectorGroupId,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.Devices,
+				dest => dest.Resources,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.Extra,
@@ -70,6 +73,19 @@ public class DeviceGroupProfile : Profile
 			.ForMember(
 				dest => dest.ServicesTemplatesId,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.IsAlertingEnabled,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.ResourceGroupType,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.DirectResourceCount,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.PropertyChangeWarningMessage,
+				opts => opts.Ignore())
+			.IgnoreAllPropertiesWithAnInaccessibleSetter()
 			;
 	}
 }

@@ -91,6 +91,9 @@ public class AlertProfile : Profile
 			.ForMember(dest => dest.CustomColumns, opts => opts.Ignore())
 			.ForMember(dest => dest.MonitorObjectGroups, opts => opts.Ignore())
 			.ForMember(dest => dest.AlertGroupEntityValue, opts => opts.Ignore())
+			.ForMember(dest => dest.LogPartition, opts => opts.Ignore())
+			.ForMember(dest => dest.ExternalTicketUrl, opts => opts.Ignore())
+			.ForMember(dest => dest.LogMetadata, opts => opts.Ignore())
 			;
 	}
 }

@@ -18,8 +18,8 @@ public class AutoMapperTruncateTests(ITestOutputHelper iTestOutputHelper) : Test
 			cfg.AddProfile<DataSourceProfile>();
 			cfg.AddProfile<DeviceDataSourceInstanceProfile>();
 			cfg.AddProfile<DeviceDataSourceProfile>();
-			cfg.AddProfile<DeviceGroupProfile>();
-			cfg.AddProfile<DeviceProfile>();
+			cfg.AddProfile<ResourceGroupProfile>();
+			cfg.AddProfile<ResourceProfile>();
 			cfg.AddProfile<EscalationChainProfile>();
 			cfg.AddProfile<EventSourceProfile>();
 			cfg.AddProfile<LogProfile>();

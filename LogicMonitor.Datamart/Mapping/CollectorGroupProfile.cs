@@ -41,13 +41,13 @@ public class CollectorGroupProfile : Profile
 				dest => dest.AutoBalanceStrategy,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.AutoBalanceDeviceCountThrehsold,
+				dest => dest.AutoBalanceDeviceCountThreshold,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.AutoBalanceInstanceCountThrehsold,
+				dest => dest.AutoBalanceInstanceCountThreshold,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.MismatchVerison,
+				dest => dest.VersionsMismatch,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.Platform,

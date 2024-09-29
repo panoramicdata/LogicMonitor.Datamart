@@ -78,7 +78,7 @@ internal class DimensionSync : LoopInterval
 
 	private async Task SyncThirdLevelDimensionsAsync(CancellationToken cancellationToken)
 	{
-		if (_types?.Contains(nameof(DeviceDataSourceInstance)) ?? true)
+		if (_types?.Contains(nameof(ResourceDataSourceInstance)) ?? true)
 		{
 			foreach (var dataSourceSpecification in _configuration.DataSources)
 			{
@@ -89,7 +89,7 @@ internal class DimensionSync : LoopInterval
 						cancellationToken
 					)
 					.ConfigureAwait(false);
-				Logger.LogInformation($"Syncing {nameof(DeviceDataSourceInstance)}s for DataSource '{{DataSource}}' complete.", dataSourceSpecification.Name);
+				Logger.LogInformation($"Syncing {nameof(ResourceDataSourceInstance)}s for DataSource '{{DataSource}}' complete.", dataSourceSpecification.Name);
 			}
 		}
 	}
@@ -98,10 +98,10 @@ internal class DimensionSync : LoopInterval
 		bool haltOnError,
 		CancellationToken cancellationToken)
 	{
-		if (_types?.Contains(nameof(Device)) ?? true)
+		if (_types?.Contains(nameof(Resource)) ?? true)
 		{
 			await _datamartClient
-			.AddOrUpdate<Device, DeviceStoreItem>(
+			.AddOrUpdate<Resource, DeviceStoreItem>(
 				context => context.Devices,
 				haltOnError,
 				Logger,
@@ -213,10 +213,10 @@ internal class DimensionSync : LoopInterval
 				.ConfigureAwait(false);
 		}
 
-		if (_types?.Contains(nameof(DeviceGroup)) ?? true)
+		if (_types?.Contains(nameof(ResourceGroup)) ?? true)
 		{
 			await _datamartClient
-				.AddOrUpdate<DeviceGroup, DeviceGroupStoreItem>(
+				.AddOrUpdate<ResourceGroup, DeviceGroupStoreItem>(
 					context => context.DeviceGroups,
 					haltOnError,
 					Logger,

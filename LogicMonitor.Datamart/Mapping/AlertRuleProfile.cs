@@ -41,10 +41,10 @@ public class AlertRuleProfile : Profile
 				dest => dest.EscalationChainId,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.Devices,
+				dest => dest.Resources,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.DeviceGroups,
+				dest => dest.ResourceGroups,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.EscalationChain,
@@ -55,6 +55,7 @@ public class AlertRuleProfile : Profile
 			.ForMember(
 				dest => dest.SendAnomalySuppressedAlert,
 				opts => opts.Ignore())
+			.IgnoreAllPropertiesWithAnInaccessibleSetter()
 			;
 	}
 }

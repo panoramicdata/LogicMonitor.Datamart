@@ -30,7 +30,7 @@ public class DatamartClient : LogicMonitorClient
 		// Store and validate configuration
 		_configuration = configuration;
 		_configuration.Validate();
-		
+
 		_timeProviderService.SetDateTimeNow(configuration.FakeExecutionTime);
 
 		// Set up the AutoMapper CustomPropertyFetcher
@@ -207,16 +207,16 @@ public class DatamartClient : LogicMonitorClient
 		var typeName = typeof(TApi).Name;
 		switch (typeName)
 		{
-			case nameof(Device):
+			case nameof(Resource):
 				var deviceStoreItem = await context
 					.Devices
 					.SingleOrDefaultAsync(i => i.LogicMonitorId == id, cancellationToken)
 					.ConfigureAwait(false);
 				var result = deviceStoreItem == null
 					? throw new KeyNotFoundException($"Device with id {id} not found")
-					: MapperInstance.Map<DeviceStoreItem, Device>(deviceStoreItem) as TApi;
+					: MapperInstance.Map<DeviceStoreItem, Resource>(deviceStoreItem) as TApi;
 
-				return result ?? throw new InvalidOperationException($"Could not convert {nameof(DeviceStoreItem)} to {nameof(Device)}");
+				return result ?? throw new InvalidOperationException($"Could not convert {nameof(DeviceStoreItem)} to {nameof(Resource)}");
 			default:
 				throw new NotSupportedException($"Getting cached {typeName} is not supported");
 		}
@@ -243,13 +243,13 @@ public class DatamartClient : LogicMonitorClient
 					.ConfigureAwait(false);
 				return collectorGroupStoreItems
 					.ConvertAll(cg => MapperInstance.Map<CollectorGroupStoreItem, CollectorGroup>(cg) as TApi ?? throw new InvalidOperationException($"Could not convert {nameof(CollectorGroupStoreItem)} to {nameof(CollectorGroup)}"));
-			case nameof(DeviceGroup):
+			case nameof(ResourceGroup):
 				var deviceGroupStoreItems = await context
 					.DeviceGroups
 					.ToListAsync(cancellationToken)
 					.ConfigureAwait(false);
 				return deviceGroupStoreItems
-					.ConvertAll(dg => MapperInstance.Map<DeviceGroupStoreItem, DeviceGroup>(dg) as TApi ?? throw new InvalidOperationException($"Could not convert {nameof(DeviceGroupStoreItem)} to {nameof(DeviceGroup)}"));
+					.ConvertAll(dg => MapperInstance.Map<DeviceGroupStoreItem, ResourceGroup>(dg) as TApi ?? throw new InvalidOperationException($"Could not convert {nameof(DeviceGroupStoreItem)} to {nameof(ResourceGroup)}"));
 			case nameof(WebsiteGroup):
 				var websiteGroupStoreItems = await context
 					.WebsiteGroups
@@ -1059,7 +1059,7 @@ public class DatamartClient : LogicMonitorClient
 	{
 		try
 		{
-			logger.LogInformation($"Syncing {nameof(DeviceDataSourceInstance)}s for DataSource '{{DataSource}}'...", dataSourceSpecification.Name);
+			logger.LogInformation($"Syncing {nameof(ResourceDataSourceInstance)}s for DataSource '{{DataSource}}'...", dataSourceSpecification.Name);
 
 			var dataSourceName = dataSourceSpecification.Name;
 
@@ -1098,7 +1098,7 @@ public class DatamartClient : LogicMonitorClient
 				dataSourceName,
 				appliesToMatches.Count);
 
-			var instanceProperties = typeof(DeviceDataSourceInstance)
+			var instanceProperties = typeof(ResourceDataSourceInstance)
 				.GetProperties();
 
 			var markedMissing = 0;
@@ -1107,11 +1107,11 @@ public class DatamartClient : LogicMonitorClient
 			foreach (var appliesToMatch in appliesToMatches)
 			{
 				// Get the device
-				var device = await GetAsync<Device>(appliesToMatch.Id, cancellationToken)
+				var device = await GetAsync<Resource>(appliesToMatch.Id, cancellationToken)
 					.ConfigureAwait(false);
 
 				// Get the DeviceDataSource
-				var deviceDataSource = await GetDeviceDataSourceByDeviceIdAndDataSourceIdAsync(
+				var deviceDataSource = await GetResourceDataSourceByResourceIdAndDataSourceIdAsync(
 						device.Id,
 						databaseDataSource.LogicMonitorId,
 						cancellationToken
@@ -1396,14 +1396,14 @@ public class DatamartClient : LogicMonitorClient
 		{
 			logger.LogWarning(
 				e,
-				$"Error while syncing {nameof(DeviceDataSourceInstance)}s for DataSource '{{DataSource}}' : {{Message}}\n {{StackTrace}}",
+				$"Error while syncing {nameof(ResourceDataSourceInstance)}s for DataSource '{{DataSource}}' : {{Message}}\n {{StackTrace}}",
 				dataSourceSpecification.Name,
 				e.Message,
 				e.StackTrace);
 		}
 	}
 
-	private static string EvaluateProperty(string condition, Device device, DeviceDataSourceInstance ddsi, ILogger logger)
+	private static string EvaluateProperty(string condition, Resource device, ResourceDataSourceInstance ddsi, ILogger logger)
 	{
 		if (string.Equals(condition, "true", StringComparison.OrdinalIgnoreCase) ||
 			string.IsNullOrWhiteSpace(condition))
@@ -1454,7 +1454,7 @@ public class DatamartClient : LogicMonitorClient
 		{
 			logger.LogError(e, "Error evaluating DeviceDataSourceInstance Condition '{Condition}' for {DeviceName} instance {InstanceName} due to {Message}",
 				condition,
-				ddsi.DeviceDisplayName,
+				ddsi.ResourceDisplayName,
 				ddsi.DisplayName,
 				e.Message);
 

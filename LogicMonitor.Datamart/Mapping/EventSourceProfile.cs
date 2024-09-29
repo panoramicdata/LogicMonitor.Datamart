@@ -106,6 +106,8 @@ public class EventSourceProfile : Profile
 			.ForMember(
 				dest => dest.InstallationMetadata,
 				opts => opts.Ignore())
+			.ForMember(dest => dest.AccessGroupIds, opts => opts.Ignore())
+			.ForMember(dest => dest.AccessGroups, opts => opts.Ignore())
 			;
 	}
 }

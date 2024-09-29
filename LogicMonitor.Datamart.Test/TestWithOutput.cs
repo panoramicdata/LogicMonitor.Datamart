@@ -223,5 +223,6 @@ public abstract class TestWithOutput
 
 	protected DatamartClient DatamartClient { get; }
 
-	protected void AssertIsFast(int durationSeconds) => Assert.InRange(Stopwatch.ElapsedMilliseconds, 0, durationSeconds * 1000);
+	protected void AssertIsFast(int durationSeconds)
+		=> Stopwatch.ElapsedMilliseconds.Should().BeInRange(0, durationSeconds * 1000);
 }

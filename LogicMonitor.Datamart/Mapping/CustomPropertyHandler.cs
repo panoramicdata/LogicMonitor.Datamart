@@ -16,7 +16,7 @@ public static class CustomPropertyHandler
 		}
 	}
 
-	internal static string? Get(Device device, int propertyNumber)
+	internal static string? Get(Resource device, int propertyNumber)
 	{
 		if (_propertyNames is null)
 		{

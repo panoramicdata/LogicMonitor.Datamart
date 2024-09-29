@@ -1,10 +1,10 @@
 ﻿namespace LogicMonitor.Datamart.Mapping;
 
-public class DeviceProfile : Profile
+public class ResourceProfile : Profile
 {
-	public DeviceProfile()
+	public ResourceProfile()
 	{
-		CreateMap<Device, DeviceStoreItem>()
+		CreateMap<Resource, DeviceStoreItem>()
 			.ForMember(
 				dest => dest.Id,
 				opts => opts.Ignore())
@@ -97,7 +97,7 @@ public class DeviceProfile : Profile
 				opts => opts.Ignore())
 			;
 
-		CreateMap<DeviceStoreItem, Device>()
+		CreateMap<DeviceStoreItem, Resource>()
 			.ForMember(
 				dest => dest.Id,
 				opts => opts.MapFrom(src => src.LogicMonitorId))
@@ -193,6 +193,12 @@ public class DeviceProfile : Profile
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.Op,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.ContainsMultiValue,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.ResourceGroupIdsString,
 				opts => opts.Ignore())
 			;
 	}

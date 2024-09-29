@@ -43,7 +43,7 @@ public class DeviceDataSourceInstanceProfile : Profile
 {
 	public DeviceDataSourceInstanceProfile()
 	{
-		CreateMap<DeviceDataSourceInstance, DeviceDataSourceInstanceStoreItem>()
+		CreateMap<ResourceDataSourceInstance, DeviceDataSourceInstanceStoreItem>()
 			.ForMember(
 				dest => dest.Id,
 				opts => opts.Ignore())
@@ -109,7 +109,7 @@ public class DeviceDataSourceInstanceProfile : Profile
 				opts => opts.Ignore())
 			;
 
-		CreateMap<DeviceDataSourceInstanceStoreItem, DeviceDataSourceInstance>()
+		CreateMap<DeviceDataSourceInstanceStoreItem, ResourceDataSourceInstance>()
 			.ForMember(
 				dest => dest.Id,
 				opts => opts.MapFrom(src => src.LogicMonitorId))
@@ -123,13 +123,13 @@ public class DeviceDataSourceInstanceProfile : Profile
 				dest => dest.DataSourceId,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.DeviceDataSourceId,
+				dest => dest.ResourceDataSourceId,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.DeviceDisplayName,
+				dest => dest.ResourceDisplayName,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.DeviceId,
+				dest => dest.ResourceId,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.SystemProperties,

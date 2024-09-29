@@ -33,7 +33,7 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 				DatamartClient,
 				Configuration,
 				[
-					nameof(Device),
+					nameof(Resource),
 				],
 				LoggerFactory,
 				TestNotificationReceiver)
@@ -48,8 +48,8 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 				DatamartClient,
 				Configuration,
 				[
-					nameof(Device),
-					nameof(DeviceDataSourceInstance),
+					nameof(Resource),
+					nameof(ResourceDataSourceInstance),
 				],
 				LoggerFactory,
 				TestNotificationReceiver)

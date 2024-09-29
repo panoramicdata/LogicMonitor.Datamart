@@ -58,7 +58,7 @@ public class DeviceGroupStoreItem : IdentifiedStoreItem
 
 	public int DeviceCount { get; set; }
 
-	public DeviceGroupType DeviceGroupType { get; set; }
+	public ResourceGroupType DeviceGroupType { get; set; }
 
 	public int DirectDeviceCount { get; set; }
 

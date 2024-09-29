@@ -107,6 +107,9 @@ public class CollectorProfile : Profile
 			.ForMember(
 				dest => dest.IsSyntheticsEnables,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.SpecifiedCollectorResourceGroupId,
+				opts => opts.Ignore())
 			;
 	}
 }

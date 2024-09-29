@@ -82,6 +82,8 @@ public class ConfigSourceProfile : Profile
 			.ForMember(
 				dest => dest.InstallationMetadata,
 				opts => opts.Ignore())
+			.ForMember(destinationMember => destinationMember.AccessGroupIds, opts => opts.Ignore())
+			.ForMember(destinationMember => destinationMember.AccessGroups, opts => opts.Ignore())
 			;
 	}
 }

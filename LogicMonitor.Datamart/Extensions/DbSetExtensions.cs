@@ -158,7 +158,7 @@ public static class DbSetExtension
 					collectorStoreItem.CollectorGroupId = collectorGroupStoreItem.Id;
 					return;
 				}
-			case (Device device, DeviceStoreItem deviceStoreItem):
+			case (Resource device, DeviceStoreItem deviceStoreItem):
 				{
 					var collectorStoreItem = await dbContext
 					.Collectors
@@ -181,7 +181,7 @@ public static class DbSetExtension
 			case (CollectorGroup collectorGroup, CollectorGroupStoreItem collectorGroupStoreItem2):
 			case (ConfigSource configSource, ConfigSourceStoreItem configSourceStoreItem):
 			case (DataSource dataSource, DataSourceStoreItem dataSourceStoreItem):
-			case (DeviceGroup deviceGroup, DeviceGroupStoreItem deviceGroupStoreItem):
+			case (ResourceGroup deviceGroup, DeviceGroupStoreItem deviceGroupStoreItem):
 			case (EscalationChain escalationChain, EscalationChainStoreItem escalationChainStoreItem):
 			case (EventSource eventSource, EventSourceStoreItem eventSourceStoreItem):
 			case (WebsiteGroup websiteGroup, WebsiteGroupStoreItem websiteGroupStoreItem2):
