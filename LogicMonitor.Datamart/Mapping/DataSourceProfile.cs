@@ -161,8 +161,11 @@ public class DataSourceProfile : Profile
 			.ForMember(
 				dest => dest.InstallationMetadata,
 				opts => opts.Ignore())
-			.ForMember(destinationMember => destinationMember.AccessGroupIds, opts => opts.Ignore())
-			.ForMember(destinationMember => destinationMember.AccessGroups, opts => opts.Ignore())
-			;
+			.ForMember(
+				dest => dest.AccessGroupIds,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.AccessGroups,
+				opts => opts.Ignore());
 	}
 }
