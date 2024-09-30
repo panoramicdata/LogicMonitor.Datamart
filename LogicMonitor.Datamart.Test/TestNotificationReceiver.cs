@@ -2,7 +2,7 @@
 using System.Threading;
 
 namespace LogicMonitor.Datamart.Test;
-internal class TestNotificationReceiver(ILogger logger) : INotificationReceiver
+internal sealed class TestNotificationReceiver(ILogger logger) : INotificationReceiver
 {
 	private int _itemCount;
 	private int _itemIndex;

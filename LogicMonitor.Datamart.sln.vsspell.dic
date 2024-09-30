@@ -6,6 +6,7 @@ api
 App
 Asc
 astextplain
+Automapper
 Aws
 bigint
 cancelled
@@ -50,6 +51,7 @@ Sdt
 Silverlight
 smalldatetime
 Sql
+ss
 sublicense
 Syslog
 sysobjects

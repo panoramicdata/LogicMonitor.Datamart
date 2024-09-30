@@ -2,7 +2,6 @@
 using LogicMonitor.Api.Time;
 using LogicMonitor.Datamart.Interfaces;
 using LogicMonitor.Datamart.Notifications;
-using LogicMonitor.Datamart.Services;
 using PanoramicData.NCalcExtensions;
 using System.Globalization;
 
@@ -291,7 +290,7 @@ internal class LowResolutionDataSync(
 		List<string> failedDeviceDisplayNames,
 		int deviceIndex,
 		int deviceCount,
-		DeviceStoreItem? databaseDeviceNotTracked,
+		DeviceStoreItem databaseDeviceNotTracked,
 		CacheStats deviceCacheStats,
 		CancellationToken cancellationToken)
 	{
@@ -364,7 +363,7 @@ internal class LowResolutionDataSync(
 			}
 		}
 
-		// Update the total duration for this device across all datasources
+		// Update the total duration for this device across all DataSources
 		if (totalDurationMsByDeviceLogicMonitorId.ContainsKey(databaseDeviceNotTracked.LogicMonitorId))
 		{
 			totalDurationMsByDeviceLogicMonitorId[databaseDeviceNotTracked.LogicMonitorId] += deviceStopwatch.ElapsedMilliseconds;
@@ -392,7 +391,7 @@ internal class LowResolutionDataSync(
 			.ToDictionaryAsync(d => d.LogicMonitorId, cancellationToken)
 			.ConfigureAwait(false);
 
-		// Update the Device in the context to set its LastTimeSeriesDataSyncDurationMs to the overall time spent on this device for all datasources.
+		// Update the Device in the context to set its LastTimeSeriesDataSyncDurationMs to the overall time spent on this device for all DataSources.
 		foreach (var kvp in totalDurationMsByDeviceLogicMonitorId)
 		{
 			allDevicesByLogicMonitorId[kvp.Key].LastTimeSeriesDataSyncDurationMs = kvp.Value;
@@ -512,7 +511,7 @@ internal class LowResolutionDataSync(
 							"Database: {DatabaseName}. " +
 							"DeviceDataSourceInstanceDataPointId: {DeviceDataSourceInstanceDataPointId}. " +
 							"DataSourceDataPointId: {DataSourceDataPointId}. " +
-							"DeviceDataSourceInstanceId: {DeviceDataSourceInstanceId}.", 
+							"DeviceDataSourceInstanceId: {DeviceDataSourceInstanceId}.",
 							startDateTimeUtc,
 							endDateTimeUtc,
 							configuration.MinutesOffset,
@@ -543,7 +542,8 @@ internal class LowResolutionDataSync(
 						.SingleOrDefault(dp =>
 							dp.Name == dataPointName
 							&& dp.DataSource!.Name == dataSourceConfigurationItem.Name
-						);
+						)
+						?? throw new InvalidOperationException($"Could not find DataPoint {dataPointName} for DataSource {dataSourceName}.");
 
 					// Build up the aggregations to write
 					while (endDateTimeUtc.AddMinutes(configuration.MinutesOffset) < utcNow)
@@ -654,7 +654,7 @@ internal class LowResolutionDataSync(
 		DeviceStoreItem deviceNotTracked,
 		DeviceDataSourceInstanceDataPointStoreItem databaseDeviceDataSourceInstanceDataPoint,
 		string dataPointName,
-		DataSourceDataPointStoreItem? dataPointStoreItemNotTracked,
+		DataSourceDataPointStoreItem dataPointStoreItemNotTracked,
 		DateTimeOffset startDateTimeUtc,
 		DateTimeOffset endDateTimeUtc,
 		GraphData graphData)
@@ -711,7 +711,7 @@ internal class LowResolutionDataSync(
 		// Calculate and sort non-null values
 		var sortedNonNullValues = line.Data
 			.Where(v => v.HasValue)
-			.Select(v => v.Value)
+			.Select(v => v!.Value)
 			.OrderBy(v => v)
 			.ToArray();
 

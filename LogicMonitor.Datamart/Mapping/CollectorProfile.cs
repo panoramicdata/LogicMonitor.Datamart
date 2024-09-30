@@ -102,7 +102,7 @@ public class CollectorProfile : Profile
 				dest => dest.OtelId,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.OtelVerison,
+				dest => dest.OtelVersion,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.IsSyntheticsEnables,

@@ -82,10 +82,11 @@ internal class AlertSync(
 				{
 					using var context = new Context(_datamartClient.DbContextOptions);
 					// Get the device
-					var device = await context
+					var device = (await context
 						.Devices
 						.SingleOrDefaultAsync(d => d.LogicMonitorId == deviceId, cancellationToken: cancellationToken)
-						.ConfigureAwait(false);
+						.ConfigureAwait(false))
+						?? throw new InvalidOperationException($"Device {deviceId} not found in the database");
 
 					// Build up the list of alerts in memory, then delete the table contents and re-add.
 					alertsToBulkInsert.Clear();

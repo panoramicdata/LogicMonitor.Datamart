@@ -5,6 +5,8 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 	/// <inheritdoc />
 	public partial class InitialMigration : Migration
 	{
+		private static readonly string[] alertIndexInclude = ["Id", "Severity", "ClearValue", "MonitorObjectId", "ResourceTemplateName", "InstanceId", "InstanceName"];
+
 		/// <inheritdoc />
 		protected override void Up(MigrationBuilder migrationBuilder)
 		{
@@ -823,7 +825,7 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 				name: "IX_Alerts_FasterPercentageAvailability",
 				table: "Alerts",
 				columns: ["StartOnSeconds", "EndOnSeconds", "IsCleared", "InScheduledDownTime", "MonitorObjectGroup0Id", "MonitorObjectGroup1Id", "MonitorObjectGroup2Id", "MonitorObjectGroup3Id", "MonitorObjectGroup4Id", "MonitorObjectGroup5Id", "MonitorObjectGroup6Id", "MonitorObjectGroup7Id", "MonitorObjectGroup8Id", "MonitorObjectGroup9Id"])
-				.Annotation("Npgsql:IndexInclude", new[] { "Id", "Severity", "ClearValue", "MonitorObjectId", "ResourceTemplateName", "InstanceId", "InstanceName" });
+				.Annotation("Npgsql:IndexInclude", alertIndexInclude);
 
 			migrationBuilder.CreateIndex(
 				name: "IX_Alerts_Id",

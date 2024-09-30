@@ -37,7 +37,7 @@ public class DataSourceGraphProfile : Profile
 			.ForMember(
 				dest => dest.DatamartLastObserved,
 				opts => opts.Ignore())
-			.ForMember<ICollection<DataSourceDataPointStoreItem>>(
+			.ForMember(
 				dest => dest.DataPoints,
 				opts => opts.Ignore())
 			.ForMember(

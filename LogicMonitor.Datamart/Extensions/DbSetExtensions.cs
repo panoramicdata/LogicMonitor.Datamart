@@ -133,7 +133,8 @@ public static class DbSetExtension
 					var escalationChainStoreItem = await dbContext
 					.EscalationChains
 						.FirstOrDefaultAsync(ar => ar.LogicMonitorId == alertRule.EscalationChainId, cancellationToken)
-						.ConfigureAwait(false);
+						.ConfigureAwait(false)
+						?? throw new InvalidOperationException("EscalationChain not found");
 
 					alertRuleStoreItem.EscalationChainId = escalationChainStoreItem.Id;
 					return;
@@ -143,7 +144,8 @@ public static class DbSetExtension
 					var alertRuleStoreItem = await dbContext
 						.AlertRules
 						.FirstOrDefaultAsync(ar => ar.LogicMonitorId == alert.AlertRuleId, cancellationToken)
-						.ConfigureAwait(false);
+						.ConfigureAwait(false)
+						?? throw new InvalidOperationException("AlertRule not found");
 
 					alertStoreItem.AlertRuleId = alertRuleStoreItem.Id;
 					return;
@@ -153,7 +155,9 @@ public static class DbSetExtension
 					var collectorGroupStoreItem = await dbContext
 						.CollectorGroups
 						.FirstOrDefaultAsync(ar => ar.LogicMonitorId == collector.GroupId, cancellationToken)
-						.ConfigureAwait(false);
+						.ConfigureAwait(false)
+					?? throw new InvalidOperationException("CollectorGroup not found");
+
 
 					collectorStoreItem.CollectorGroupId = collectorGroupStoreItem.Id;
 					return;
@@ -173,7 +177,9 @@ public static class DbSetExtension
 					var websiteGroupStoreItem = await dbContext
 					.WebsiteGroups
 						.FirstOrDefaultAsync(ar => ar.LogicMonitorId == website.GroupId, cancellationToken)
-					.ConfigureAwait(false);
+					.ConfigureAwait(false)
+					?? throw new InvalidOperationException("WebsiteGroup not found");
+
 
 					websiteStoreItem.WebsiteGroupId = websiteGroupStoreItem.Id;
 					return;
@@ -190,94 +196,4 @@ public static class DbSetExtension
 				throw new NotSupportedException($"Unsupported TApi/TStore combination: {typeof(TApi).Name}/{typeof(TStore).Name}");
 		}
 	}
-
-	public static async Task AddOrUpdateAlertRangeSavingChanges(this DbSet<AlertStoreItem> dbSet, ICollection<Alert> items)
-	{
-		foreach (var item in items ?? throw new ArgumentNullException(nameof(items)))
-		{
-			dbSet.AddOrUpdateAlert(item);
-
-			await dbSet.GetContext()
-				.SaveChangesAsync()
-				.ConfigureAwait(false);
-		}
-	}
-
-	public static void AddOrUpdateAlert(this DbSet<AlertStoreItem> dbSet, Alert data)
-	{
-		var context = (dbSet ?? throw new ArgumentNullException(nameof(dbSet))).GetContext();
-		var storeItem = dbSet.AsQueryable().Where(si => si.LogicMonitorId == data.Id).FirstOrDefault();
-		var mappedStoreItem = DatamartClient.MapperInstance.Map<Alert, AlertStoreItem>(data);
-
-		var utcNow = DateTimeOffset.UtcNow;
-
-		if (storeItem != null)
-		{
-			// Keep the existing Guid
-			mappedStoreItem.Id = storeItem.Id;
-			context.Entry(storeItem).CurrentValues.SetValues(mappedStoreItem);
-			context.Entry(storeItem).State = EntityState.Modified;
-			mappedStoreItem.DatamartLastModified = utcNow;
-			return;
-		}
-		else
-		{
-			mappedStoreItem.DatamartCreated = utcNow;
-			mappedStoreItem.DatamartLastModified = utcNow;
-		}
-
-		dbSet.Add(mappedStoreItem);
-	}
-
-	public static void AddOrUpdate<TApi, TStore>(this DbSet<TStore> dbSet, Expression<Func<TStore, object>> key, TApi data)
-		where TApi : class
-		where TStore : class
-	{
-		var context = dbSet.GetContext();
-		var ids = context.Model.FindEntityType(typeof(TStore)).FindPrimaryKey().Properties.Select(x => x.Name);
-		var t = typeof(TStore);
-		var keyObject = key.Compile()(DatamartClient.MapperInstance.Map<TApi, TStore>(data));
-		var keyFields = keyObject.GetType().GetProperties().Select(p => t.GetProperty(p.Name)).ToArray()
-			?? throw new NotSupportedException($"{t.FullName} does not have a KeyAttribute field. Unable to exec AddOrUpdate call.");
-		var keyVals = keyFields.Select(p => p.GetValue(data));
-		var entities = dbSet.AsQueryable();
-		var i = 0;
-		foreach (var keyVal in keyVals)
-		{
-			entities = entities.Where(p => p.GetType().GetProperty(keyFields[i].Name).GetValue(p).Equals(keyVal));
-			i++;
-		}
-
-		var dbVal = entities.FirstOrDefault();
-		if (dbVal != null)
-		{
-			var keyAttrs =
-				data.GetType().GetProperties().Where(p => ids.Contains(p.Name)).ToList();
-			if (keyAttrs.Count > 0)
-			{
-				foreach (var keyAttr in keyAttrs)
-				{
-					keyAttr.SetValue(data,
-						Array.Find(dbVal.GetType()
-							.GetProperties(), p => p.Name == keyAttr.Name)
-							.GetValue(dbVal));
-				}
-
-				context.Entry(dbVal).CurrentValues.SetValues(data);
-				context.Entry(dbVal).State = EntityState.Modified;
-				return;
-			}
-		}
-
-		dbSet.Add(DatamartClient.MapperInstance.Map<TApi, TStore>(data));
-	}
-}
-
-public static class HackyDbSetGetContextTrick
-{
-	public static DbContext GetContext<TEntity>(this DbSet<TEntity> dbSet)
-		where TEntity : class => (DbContext)dbSet
-			.GetType().GetTypeInfo()
-			.GetField("_context", BindingFlags.NonPublic | BindingFlags.Instance)
-			.GetValue(dbSet);
 }

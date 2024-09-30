@@ -204,7 +204,8 @@ public abstract class TestWithOutput
 		services.Configure<TestConfiguration>(configurationRoot);
 		using (var sp = services.BuildServiceProvider())
 		{
-			var options = sp.GetService<IOptions<TestConfiguration>>();
+			var options = sp.GetService<IOptions<TestConfiguration>>()
+				?? throw new InvalidOperationException("TestConfiguration not loaded.");
 			configuration = options.Value;
 		}
 

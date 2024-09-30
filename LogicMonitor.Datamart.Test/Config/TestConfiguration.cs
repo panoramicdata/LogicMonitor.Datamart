@@ -9,12 +9,12 @@ public class TestConfiguration
 	/// <summary>
 	/// LogicMonitor credentials
 	/// </summary>
-	public LogicMonitorCredentials LogicMonitorCredentials { get; set; }
+	public required LogicMonitorCredentials LogicMonitorCredentials { get; set; }
 
 	/// <summary>
 	/// Server name
 	/// </summary>
-	public string DatabaseServer { get; set; }
+	public required string DatabaseServer { get; set; }
 
 	/// <summary>
 	/// Server port
@@ -29,11 +29,11 @@ public class TestConfiguration
 	/// <summary>
 	/// DatabaseName
 	/// </summary>
-	public string DatabaseName { get; set; }
+	public required string DatabaseName { get; set; }
 
 	public DatabaseType DatabaseType { get; set; }
 
-	public string DatabaseUsername { get; set; }
+	public required string DatabaseUsername { get; set; }
 
-	public string DatabasePassword { get; set; }
+	public required string DatabasePassword { get; set; }
 }

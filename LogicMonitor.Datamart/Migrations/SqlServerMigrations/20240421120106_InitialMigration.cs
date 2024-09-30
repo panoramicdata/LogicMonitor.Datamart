@@ -5,6 +5,10 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
 	/// <inheritdoc />
 	public partial class InitialMigration : Migration
 	{
+		private static readonly string[] IncludesAlertsFasterPercentageAvailabilityIndexedColumns = ["Id", "Severity", "ClearValue", "MonitorObjectId", "ResourceTemplateName", "InstanceId", "InstanceName"];
+		private static readonly string[] AlertsFasterPercentageAvailabilityIndexedColumns = ["StartOnSeconds", "EndOnSeconds", "IsCleared", "InScheduledDownTime", "MonitorObjectGroup0Id", "MonitorObjectGroup1Id", "MonitorObjectGroup2Id", "MonitorObjectGroup3Id", "MonitorObjectGroup4Id", "MonitorObjectGroup5Id", "MonitorObjectGroup6Id", "MonitorObjectGroup7Id", "MonitorObjectGroup8Id", "MonitorObjectGroup9Id"];
+		private static readonly string[] MonitorObjectGroupsIndexColumns = ["FullPath", "MonitoredObjectType"];
+
 		/// <inheritdoc />
 		protected override void Up(MigrationBuilder migrationBuilder)
 		{
@@ -919,8 +923,8 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
 			migrationBuilder.CreateIndex(
 				name: "IX_Alerts_FasterPercentageAvailability",
 				table: "Alerts",
-				columns: new[] { "StartOnSeconds", "EndOnSeconds", "IsCleared", "InScheduledDownTime", "MonitorObjectGroup0Id", "MonitorObjectGroup1Id", "MonitorObjectGroup2Id", "MonitorObjectGroup3Id", "MonitorObjectGroup4Id", "MonitorObjectGroup5Id", "MonitorObjectGroup6Id", "MonitorObjectGroup7Id", "MonitorObjectGroup8Id", "MonitorObjectGroup9Id" })
-				.Annotation("SqlServer:Include", new[] { "Id", "Severity", "ClearValue", "MonitorObjectId", "ResourceTemplateName", "InstanceId", "InstanceName" });
+				columns: AlertsFasterPercentageAvailabilityIndexedColumns)
+				.Annotation("SqlServer:Include", IncludesAlertsFasterPercentageAvailabilityIndexedColumns);
 
 			migrationBuilder.CreateIndex(
 				name: "IX_Alerts_Id",
@@ -1095,7 +1099,7 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
 			migrationBuilder.CreateIndex(
 				name: "IX_MonitorObjectGroups_FullPath_MonitoredObjectType",
 				table: "MonitorObjectGroups",
-				columns: new[] { "FullPath", "MonitoredObjectType" });
+				columns: MonitorObjectGroupsIndexColumns);
 
 			migrationBuilder.CreateIndex(
 				name: "IX_TimeSeriesDataAggregations_DeviceDataSourceInstanceDataPointId",
