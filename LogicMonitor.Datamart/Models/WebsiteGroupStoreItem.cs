@@ -22,7 +22,7 @@ public class WebsiteGroupStoreItem : IdentifiedStoreItem
 
 	public bool DisableAlerting { get; set; }
 
-	public string FullPath { get; set; }
+	public string FullPath { get; set; } = string.Empty;
 
 	public AlertStatus GroupStatus { get; set; }
 

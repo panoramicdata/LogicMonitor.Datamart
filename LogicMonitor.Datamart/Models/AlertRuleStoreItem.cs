@@ -3,7 +3,7 @@ namespace LogicMonitor.Datamart.Models;
 public class AlertRuleStoreItem : IdentifiedStoreItem
 {
 	// Navigation properties
-	public ICollection<AlertStoreItem>? AlertStoreItems { get; set; }
+	public virtual ICollection<AlertStoreItem>? AlertStoreItems { get; set; }
 
 	public EscalationChainStoreItem? EscalationChain { get; set; }
 

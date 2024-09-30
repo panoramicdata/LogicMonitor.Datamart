@@ -29,5 +29,5 @@ public class DataSourceGraphStoreItem : IdentifiedStoreItem
 
 	public required bool IsBase1024 { get; set; }
 
-	public ICollection<DataSourceDataPointStoreItem>? DataPoints { get; set; } = null!;
+	public virtual ICollection<DataSourceDataPointStoreItem>? DataPoints { get; set; } = null!;
 }

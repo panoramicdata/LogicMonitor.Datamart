@@ -3,7 +3,7 @@ namespace LogicMonitor.Datamart.Models;
 public class DeviceStoreItem : IdentifiedStoreItem
 {
 	// Navigation properties
-	public ICollection<DeviceDataSourceStoreItem> DeviceDataSources { get; set; }
+	public virtual ICollection<DeviceDataSourceStoreItem>? DeviceDataSources { get; set; }
 
 	/// <summary>
 	/// Nullable to allow for cloud collectors
@@ -43,7 +43,7 @@ public class DeviceStoreItem : IdentifiedStoreItem
 
 	public int CurrentCollectorId { get; set; }
 
-	public long DeletedTimeinMs { get; set; }
+	public long DeletedTimeInMs { get; set; }
 
 	public DeviceType DeviceType { get; set; }
 
@@ -85,7 +85,7 @@ public class DeviceStoreItem : IdentifiedStoreItem
 
 	public SdtStatus SdtStatus { get; set; }
 
-	public long ToDeleteTimeinMs { get; set; }
+	public long ToDeleteTimeInMs { get; set; }
 
 	public int UptimeInSeconds { get; set; }
 

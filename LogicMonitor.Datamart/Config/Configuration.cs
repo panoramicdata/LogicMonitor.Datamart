@@ -164,7 +164,7 @@ public class Configuration
 			throw new ConfigurationException($"{nameof(MinutesOffset)} should be in the range -780..780 (i.e. -13..13 hours).");
 		}
 
-		ValidateAggegationDuration(AggregationDurationMinutes, "configuration", Name);
+		ValidateAggregationDuration(AggregationDurationMinutes, "configuration", Name);
 
 		foreach (var dataSource in DataSources)
 		{
@@ -172,7 +172,7 @@ public class Configuration
 		}
 	}
 
-	public static void ValidateAggegationDuration(int aggregationDurationMinutes, string level, string name)
+	public static void ValidateAggregationDuration(int aggregationDurationMinutes, string level, string name)
 	{
 		switch (aggregationDurationMinutes)
 		{

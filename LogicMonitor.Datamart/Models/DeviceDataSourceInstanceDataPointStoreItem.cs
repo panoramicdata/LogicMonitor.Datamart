@@ -69,5 +69,5 @@ public class DeviceDataSourceInstanceDataPointStoreItem : IdentifiedStoreItem
 	/// </summary>
 	public string InstanceDatapointProperty10 { get; set; } = string.Empty;
 
-	public ICollection<TimeSeriesDataAggregationStoreItem> TimeSeriesDataAggregations { get; set; } = null!;
+	public virtual ICollection<TimeSeriesDataAggregationStoreItem> TimeSeriesDataAggregations { get; set; } = null!;
 }

@@ -6,9 +6,9 @@ public class DevicePropertyStoreItem : StoreItem
 
 	public Guid DeviceId { get; set; }
 
-	public string Name { get; set; }
+	public string Name { get; set; } = string.Empty;
 
-	public string Value { get; set; }
+	public string Value { get; set; } = string.Empty;
 
 	public PropertyType Type { get; set; }
 }

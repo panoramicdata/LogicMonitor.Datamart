@@ -97,5 +97,5 @@ public class DeviceDataSourceInstanceStoreItem : IdentifiedStoreItem
 	/// </summary>
 	public string InstanceProperty10 { get; set; } = string.Empty;
 
-	public ICollection<DeviceDataSourceInstanceDataPointStoreItem> DeviceDataSourceInstanceDataPoints { get; set; } = null!;
+	public virtual ICollection<DeviceDataSourceInstanceDataPointStoreItem> DeviceDataSourceInstanceDataPoints { get; set; } = null!;
 }

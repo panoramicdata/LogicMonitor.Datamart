@@ -3,7 +3,7 @@ namespace LogicMonitor.Datamart.Models;
 public class CollectorGroupStoreItem : IdentifiedStoreItem
 {
 	// Navigation properties
-	public ICollection<CollectorStoreItem>? Collectors { get; set; }
+	public virtual ICollection<CollectorStoreItem>? Collectors { get; set; }
 
 	// Database properties
 	public string Name { get; set; } = string.Empty;

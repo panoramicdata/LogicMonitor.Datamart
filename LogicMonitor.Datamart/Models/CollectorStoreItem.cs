@@ -3,7 +3,7 @@ namespace LogicMonitor.Datamart.Models;
 public class CollectorStoreItem : IdentifiedStoreItem
 {
 	// Navigation properties
-	public ICollection<DeviceStoreItem>? Devices { get; set; }
+	public virtual ICollection<DeviceStoreItem>? Devices { get; set; }
 
 	public CollectorGroupStoreItem? CollectorGroup { get; set; }
 
@@ -88,7 +88,7 @@ public class CollectorStoreItem : IdentifiedStoreItem
 
 	public string? OnetimeDowngradeInfo { get; set; }
 
-	public string OtelVerison { get; set; } = string.Empty;
+	public string OtelVersion { get; set; } = string.Empty;
 
 	public string Platform { get; set; } = string.Empty;
 

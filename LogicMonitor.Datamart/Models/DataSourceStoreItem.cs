@@ -3,11 +3,11 @@ namespace LogicMonitor.Datamart.Models;
 public class DataSourceStoreItem : IdentifiedStoreItem
 {
 	// Navigation properties
-	public ICollection<DeviceDataSourceStoreItem>? DeviceDataSources { get; set; } = null!;
+	public virtual ICollection<DeviceDataSourceStoreItem>? DeviceDataSources { get; set; } = null!;
 
-	public ICollection<DataSourceGraphStoreItem>? Graphs { get; set; } = null!;
+	public virtual ICollection<DataSourceGraphStoreItem>? Graphs { get; set; } = null!;
 
-	public ICollection<DeviceDataSourceInstanceDataPointStoreItem>? DataPoints { get; set; } = null!;
+	public virtual ICollection<DeviceDataSourceInstanceDataPointStoreItem>? DataPoints { get; set; } = null!;
 
 	// Database properties
 	public required string Description { get; set; }
