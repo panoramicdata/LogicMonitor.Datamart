@@ -638,7 +638,7 @@ internal class LowResolutionDataSync(
 
 		return await datamartClient
 			.GetGraphDataAsync(
-				new DeviceDataSourceInstanceGraphDataRequest
+				new ResourceDataSourceInstanceGraphDataRequest
 				{
 					DeviceDataSourceInstanceId = deviceDataSourceInstanceId,
 					StartDateTime = startDateTimeOffset.UtcDateTime,

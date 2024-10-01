@@ -45,7 +45,7 @@ public class DeviceStoreItem : IdentifiedStoreItem
 
 	public long DeletedTimeInMs { get; set; }
 
-	public DeviceType DeviceType { get; set; }
+	public ResourceType DeviceType { get; set; }
 
 	public bool IsAlertingDisabled { get; set; }
 
