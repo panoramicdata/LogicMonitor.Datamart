@@ -1,4 +1,6 @@
-﻿namespace LogicMonitor.Datamart.Test.Config;
+﻿using Microsoft.Data.SqlClient;
+
+namespace LogicMonitor.Datamart.Test.Config;
 
 /// <summary>
 /// Application configuration, loaded from an appsettings.json file upon execution
@@ -36,4 +38,9 @@ public class TestConfiguration
 	public required string DatabaseUsername { get; set; }
 
 	public required string DatabasePassword { get; set; }
+
+	/// <summary>
+	/// The non-standard SQL Server authentication method
+	/// </summary>
+	public SqlAuthenticationMethod? SqlServerAuthenticationMethod { get; set; }
 }

@@ -1,4 +1,5 @@
 using LogicMonitor.Api.LogicModules;
+using LogicMonitor.Api.Websites;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 
@@ -34,6 +35,21 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 				Configuration,
 				[
 					nameof(Resource),
+				],
+				LoggerFactory,
+				TestNotificationReceiver)
+			.ExecuteAsync(default)
+			.ConfigureAwait(true);
+	}
+
+	[Fact]
+	public async Task GetDimensions_Website_RunsSuccessfully()
+	{
+		await new DimensionSync(
+				DatamartClient,
+				Configuration,
+				[
+					nameof(Website),
 				],
 				LoggerFactory,
 				TestNotificationReceiver)

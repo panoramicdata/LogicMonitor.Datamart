@@ -63,6 +63,11 @@ public class Configuration
 	public int? DatabaseRetryOnFailureCount { get; set; }
 
 	/// <summary>
+	/// The non-standard SQL Server authentication method
+	/// </summary>
+	public SqlAuthenticationMethod? SqlServerAuthenticationMethod { get; set; }
+
+	/// <summary>
 	/// The Database name
 	/// </summary>
 	public string DatabaseName { get; set; } = null!;

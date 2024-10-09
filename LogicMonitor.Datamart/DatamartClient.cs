@@ -55,7 +55,8 @@ public class DatamartClient : LogicMonitorClient
 							InitialCatalog = configuration.DatabaseName,
 							UserID = configuration.DatabaseUsername,
 							Password = configuration.DatabasePassword,
-							ApplicationName = ConnectionStringApplicationName
+							ApplicationName = ConnectionStringApplicationName,
+							Authentication = configuration.SqlServerAuthenticationMethod ?? SqlAuthenticationMethod.NotSpecified
 						}.ToString()
 					}.ConnectionString,
 					options => options
