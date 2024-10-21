@@ -11,8 +11,8 @@ RUN apt-get update && apt-get install -y git
 
 # Copy necessary files for proper restore and build caching
 COPY Directory.Build.props ./
+COPY global.json ./  # This is the correct path assuming global.json is next to Directory.Build.props
 COPY */*.csproj ./
-COPY global.json ./  # If you have a global.json file specifying SDK versions
 
 # Restore dependencies for all projects
 RUN for project in $(ls *.csproj); do dotnet restore $project; done
