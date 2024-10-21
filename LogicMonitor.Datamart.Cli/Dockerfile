@@ -1,5 +1,6 @@
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
+RUN apt-get update && apt-get install -y git
 EXPOSE 8080
 EXPOSE 8081
 
