@@ -10,8 +10,6 @@ WORKDIR /src
 RUN apt-get update && apt-get install -y git
 
 # Copy necessary files for proper restore and build caching
-COPY Directory.Build.props ./
-COPY global.json ./  # This is the correct path assuming global.json is next to Directory.Build.props
 COPY */*.csproj ./
 
 # Restore dependencies for all projects
