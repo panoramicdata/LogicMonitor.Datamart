@@ -14,11 +14,14 @@ COPY */*.csproj ./
 RUN for project in $(ls *.csproj); do dotnet restore $project; done
 COPY . .
 
+# Set the build configuration argument
+ARG BUILD_CONFIGURATION=Release
+
 # Build projects to cache them for other docker images
-RUN dotnet build -c Release ./LogicMonitor.Datamart.Cli.csproj
+RUN dotnet build -c $BUILD_CONFIGURATION ./LogicMonitor.Datamart.Cli.csproj --verbosity detailed
 
 WORKDIR "/src/LogicMonitor.Datamart.Cli"
-RUN dotnet publish "./LogicMonitor.Datamart.Cli.csproj" -c Release -o /app/publish
+RUN dotnet publish "./LogicMonitor.Datamart.Cli.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
