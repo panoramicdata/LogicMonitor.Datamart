@@ -1,7 +1,6 @@
 using LogicMonitor.Api.LogicModules;
 using LogicMonitor.Api.Websites;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
 
 namespace LogicMonitor.Datamart.Test;
 
@@ -16,36 +15,29 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 	}
 
 	[Fact]
-	public async Task GetDimensions_All_RunsSuccessfully()
-	{
-		await new DimensionSync(
+	public Task GetDimensions_All_RunsSuccessfully()
+		=> new DimensionSync(
 				DatamartClient,
 				Configuration,
 				LoggerFactory,
 				default)
-			.ExecuteAsync(default)
-			.ConfigureAwait(true);
-	}
+			.ExecuteAsync(default);
 
 	[Fact]
-	public async Task GetDimensions_Device_RunsSuccessfully()
-	{
-		await new DimensionSync(
-				DatamartClient,
-				Configuration,
-				[
-					nameof(Resource),
-				],
-				LoggerFactory,
-				TestNotificationReceiver)
-			.ExecuteAsync(default)
-			.ConfigureAwait(true);
-	}
+	public Task GetDimensions_Device_RunsSuccessfully()
+		=> new DimensionSync(
+			DatamartClient,
+			Configuration,
+			[
+				nameof(Resource),
+			],
+			LoggerFactory,
+			TestNotificationReceiver)
+		.ExecuteAsync(default);
 
 	[Fact]
-	public async Task GetDimensions_Website_RunsSuccessfully()
-	{
-		await new DimensionSync(
+	public Task GetDimensions_Website_RunsSuccessfully()
+		=> new DimensionSync(
 				DatamartClient,
 				Configuration,
 				[
@@ -53,14 +45,11 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 				],
 				LoggerFactory,
 				TestNotificationReceiver)
-			.ExecuteAsync(default)
-			.ConfigureAwait(true);
-	}
+			.ExecuteAsync(default);
 
 	[Fact]
-	public async Task GetDimensions_DeviceAndDeviceDataSourceInstance_RunsSuccessfully()
-	{
-		await new DimensionSync(
+	public Task GetDimensions_DeviceAndDeviceDataSourceInstance_RunsSuccessfully()
+		=> new DimensionSync(
 				DatamartClient,
 				Configuration,
 				[
@@ -69,15 +58,12 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 				],
 				LoggerFactory,
 				TestNotificationReceiver)
-			.ExecuteAsync(default)
-			.ConfigureAwait(true);
-	}
+			.ExecuteAsync(default);
 
 	[Fact]
 	[Trait("Long Running Test", "")]
-	public async Task GetDimensions_LogicModuleUpdates_RunsSuccessfully()
-	{
-		await new DimensionSync(
+	public Task GetDimensions_LogicModuleUpdates_RunsSuccessfully()
+		=> new DimensionSync(
 				DatamartClient,
 				Configuration,
 				[
@@ -85,14 +71,11 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 				],
 				LoggerFactory,
 				TestNotificationReceiver)
-			.ExecuteAsync(default)
-			.ConfigureAwait(true);
-	}
+			.ExecuteAsync(default);
 
 	[Fact]
-	public async Task GetDimensions_DataSources_RunsSuccessfully()
-	{
-		await new DimensionSync(
+	public Task GetDimensions_DataSources_RunsSuccessfully()
+		=> new DimensionSync(
 				DatamartClient,
 				Configuration,
 				[
@@ -100,7 +83,5 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 				],
 				LoggerFactory,
 				TestNotificationReceiver)
-			.ExecuteAsync(default)
-			.ConfigureAwait(true);
-	}
+			.ExecuteAsync(default);
 }

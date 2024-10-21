@@ -1,46 +1,18 @@
-[*]
-# VSSPELL: Spell checker settings from LogicMonitor.Datamart.sln.vsspell
-vsspell_section_id = 6c0cbb2ad10949d1b6cf974d7e199711
-vsspell_ignored_words_6c0cbb2ad10949d1b6cf974d7e199711 = File:LogicMonitor.Datamart.sln.vsspell.dic
-
+# Rules in this file were initially inferred by Visual Studio IntelliCode from the F:\Projects\PanoramicData.ReportMagic\2.x codebase based on best match to current usage at 05/12/2018
 # You can modify the rules from these initially generated values to suit your own policies
 # You can learn more about editorconfig here: https://docs.microsoft.com/en-us/visualstudio/ide/editorconfig-code-style-settings-reference
-[*.cs]
+
+[*]
 
 #Core editorconfig formatting - indentation
 
 #use hard tabs for indentation
 indent_style = tab
-csharp_style_namespace_declarations= file_scoped:silent
-csharp_indent_labels = one_less_than_current
-csharp_using_directive_placement = outside_namespace:silent
-csharp_prefer_simple_using_statement = true:suggestion
-csharp_prefer_braces = true:silent
-csharp_style_prefer_method_group_conversion = true:silent
-csharp_style_prefer_top_level_statements = true:silent
-csharp_style_expression_bodied_methods = false:silent
-csharp_style_expression_bodied_constructors = false:silent
-csharp_style_expression_bodied_operators = false:silent
-csharp_style_expression_bodied_properties = true:silent
-csharp_style_expression_bodied_indexers = true:silent
-csharp_style_expression_bodied_accessors = true:silent
-csharp_style_expression_bodied_lambdas = true:silent
-csharp_style_expression_bodied_local_functions = false:silent
-
-[*.json]
-indent_style = tab
 
 #Formatting - new line options
 
-#place catch statements on a new line
-#require braces to be on a new line for object_collection, properties, anonymous_methods, methods, types, lambdas, and control_blocks (also known as "Allman" style)
+#require braces to be on a new line for object_collection, control_blocks, types, methods, and anonymous_types (also known as "Allman" style)
 csharp_new_line_before_open_brace = all
-csharp_new_line_before_else = true
-csharp_new_line_before_catch = true
-csharp_new_line_before_finally = true
-csharp_new_line_before_members_in_object_initializers = true
-csharp_new_line_before_members_in_anonymous_types = true
-csharp_new_line_between_query_expression_clauses = true
 
 #Formatting - organize using options
 
@@ -53,6 +25,8 @@ dotnet_sort_system_directives_first = false
 csharp_space_after_cast = false
 #require a space before the colon for bases or interfaces in a type declaration
 csharp_space_after_colon_in_inheritance_clause = true
+#require a space after a keyword in a control flow statement such as a for loop
+csharp_space_after_keywords_in_control_flow_statements = true
 #require a space before the colon for bases or interfaces in a type declaration
 csharp_space_before_colon_in_inheritance_clause = true
 #remove space within empty argument list parentheses
@@ -73,10 +47,8 @@ csharp_preserve_single_line_blocks = true
 
 #Style - expression bodied member options
 
-#prefer expression-bodied members for accessors
-csharp_style_expression_bodied_accessors = true:suggestion
-#prefer expression-bodied members for constructors
-csharp_style_expression_bodied_constructors = true:suggestion
+#prefer block bodies for constructors
+csharp_style_expression_bodied_constructors = false:suggestion
 #prefer expression-bodied members for methods
 csharp_style_expression_bodied_methods = true:suggestion
 #prefer expression-bodied members for properties
@@ -110,11 +82,30 @@ dotnet_style_qualification_for_method = false:suggestion
 #prefer properties not to be prefaced with this. or Me. in Visual Basic
 dotnet_style_qualification_for_property = false:suggestion
 
-[*.{cs,vb}]
-dotnet_style_operator_placement_when_wrapping = beginning_of_line
-tab_width = 4
-indent_size = 4
-end_of_line = crlf
+# RCS1224: Make method an extension method.
+dotnet_diagnostic.RCS1224.severity = none
+
+# Instance fields are camelCase and start with _
+dotnet_naming_rule.instance_fields_should_be_camel_case.severity = suggestion
+dotnet_naming_rule.instance_fields_should_be_camel_case.symbols = instance_fields
+dotnet_naming_rule.instance_fields_should_be_camel_case.style = instance_field_style
+
+dotnet_naming_symbols.instance_fields.applicable_kinds = field
+dotnet_naming_symbols.instance_fields.applicable_accessibilities = private
+
+dotnet_naming_style.instance_field_style.capitalization = camel_case
+dotnet_naming_style.instance_field_style.required_prefix = _
+
+# Instance fields are camelCase and start with _
+dotnet_naming_rule.constant_fields_should_be_camel_case.severity = suggestion
+dotnet_naming_rule.constant_fields_should_be_camel_case.symbols = constant_fields
+dotnet_naming_rule.constant_fields_should_be_camel_case.style = constant_field_style
+
+dotnet_naming_symbols.constant_fields.applicable_kinds = field
+dotnet_naming_symbols.constant_fields.required_modifiers = const
+dotnet_naming_symbols.constant_fields.applicable_accessibilities = private
+
+dotnet_naming_style.constant_field_style.capitalization = pascal_case
 dotnet_style_coalesce_expression = true:suggestion
 dotnet_style_null_propagation = true:suggestion
 dotnet_style_prefer_is_null_check_over_reference_equality_method = true:suggestion
@@ -130,50 +121,98 @@ dotnet_style_prefer_inferred_anonymous_type_member_names = true:suggestion
 dotnet_style_prefer_compound_assignment = true:suggestion
 dotnet_style_prefer_simplified_interpolation = true:suggestion
 dotnet_style_namespace_match_folder = true:suggestion
-[*.{cs,vb}]
-#### Naming styles ####
+csharp_using_directive_placement = outside_namespace:silent
+csharp_prefer_simple_using_statement = true:suggestion
+csharp_prefer_braces = true:silent
+csharp_style_namespace_declarations = file_scoped:silent
+csharp_style_prefer_method_group_conversion = true:silent
+csharp_style_expression_bodied_operators = false:silent
+csharp_style_expression_bodied_indexers = true:silent
+csharp_style_expression_bodied_accessors = true:silent
+csharp_style_expression_bodied_lambdas = true:silent
+csharp_style_expression_bodied_local_functions = false:silent
+csharp_style_throw_expression = true:suggestion
+csharp_style_prefer_null_check_over_type_check = true:suggestion
+csharp_prefer_simple_default_expression = true:suggestion
+dotnet_style_operator_placement_when_wrapping = beginning_of_line
+tab_width = 4
+indent_size = 4
+end_of_line = crlf
+csharp_indent_labels = one_less_than_current
+csharp_style_prefer_local_over_anonymous_function = true:suggestion
+csharp_style_prefer_switch_expression = true:suggestion
+csharp_style_prefer_pattern_matching = true:suggestion
+csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion
+csharp_style_pattern_matching_over_as_with_null_check = true:suggestion
+csharp_style_prefer_not_pattern = true:suggestion
+csharp_style_prefer_extended_property_pattern = true:suggestion
+csharp_style_prefer_top_level_statements = true:silent
+dotnet_diagnostic.CA1050.severity = error
+#dotnet_naming_style.constant_field_style.required_prefix = _ NOPE.
 
-# Naming rules
+					 
+vsspell_section_id = 74e06e8520534f749a64185748a8c617
+vsspell_spell_check_as_you_type = true
+vsspell_ignore_words_with_digits = true
+vsspell_ignore_words_in_all_uppercase = true
+vsspell_ignore_format_specifiers = true
+vsspell_ignore_filenames_and_email_addresses = true
+vsspell_ignore_xml_elements_in_text = true
+vsspell_treat_underscore_as_separator = true
+vsspell_ignored_character_class = NonLatin
+vsspell_determine_resource_file_language_from_name = false
+vsspell_code_analyzer_ignore_xml_doc_comments = false
+vsspell_code_analyzer_ignore_delimited_comments = false
+vsspell_code_analyzer_ignore_standard_single_line_comments = false
+vsspell_code_analyzer_ignore_quadruple_slash_comments = false
+vsspell_code_analyzer_ignore_normal_strings = false
+vsspell_code_analyzer_ignore_verbatim_strings = false
+vsspell_cad_import_code_analysis_dictionaries = true
+vsspell_cad_recognized_word_handling = None
+vsspell_cad_treat_unrecognized_words_as_misspelled = true
+vsspell_cad_treat_deprecated_terms_as_misspelled = false
+vsspell_cad_treat_compound_terms_as_misspelled = false
+vsspell_cad_treat_casing_exceptions_as_ignored_words = false
+vsspell_additional_dictionary_folders_74e06e8520534f749a64185748a8c617 = .\
+vsspell_ignored_words_74e06e8520534f749a64185748a8c617 = File:LogicMonitor.Datamart.dic
+vsspell_dictionary_languages_74e06e8520534f749a64185748a8c617 = en-GB
 
-dotnet_naming_rule.interface_should_be_begins_with_i.severity = suggestion
-dotnet_naming_rule.interface_should_be_begins_with_i.symbols = interface
-dotnet_naming_rule.interface_should_be_begins_with_i.style = begins_with_i
+[*.js]
+vsspell_spell_check_as_you_type = false
+vsspell_include_in_project_spell_check = false
 
-dotnet_naming_rule.types_should_be_pascal_case.severity = suggestion
-dotnet_naming_rule.types_should_be_pascal_case.symbols = types
-dotnet_naming_rule.types_should_be_pascal_case.style = pascal_case
+[*.NoSpellCheck.*]
+vsspell_spell_check_as_you_type = false
+vsspell_include_in_project_spell_check = false
 
-dotnet_naming_rule.non_field_members_should_be_pascal_case.severity = suggestion
-dotnet_naming_rule.non_field_members_should_be_pascal_case.symbols = non_field_members
-dotnet_naming_rule.non_field_members_should_be_pascal_case.style = pascal_case
+[_*.scss]
+vsspell_spell_check_as_you_type = false
+vsspell_include_in_project_spell_check = false
 
-# Symbol specifications
+[**/fontawesome/**]
+vsspell_spell_check_as_you_type = false
+vsspell_include_in_project_spell_check = false
 
-dotnet_naming_symbols.interface.applicable_kinds = interface
-dotnet_naming_symbols.interface.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
-dotnet_naming_symbols.interface.required_modifiers =
+[*.log]
+vsspell_spell_check_as_you_type = false
+vsspell_include_in_project_spell_check = false
 
-dotnet_naming_symbols.types.applicable_kinds = class, struct, interface, enum
-dotnet_naming_symbols.types.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
-dotnet_naming_symbols.types.required_modifiers =
+[*.psd1]
+vsspell_spell_check_as_you_type = false
+vsspell_include_in_project_spell_check = false
 
-dotnet_naming_symbols.non_field_members.applicable_kinds = property, event, method
-dotnet_naming_symbols.non_field_members.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
-dotnet_naming_symbols.non_field_members.required_modifiers =
+[*.ps1xml]
+vsspell_spell_check_as_you_type = false
+vsspell_include_in_project_spell_check = false
 
-# Naming styles
+[*.psm1]
+vsspell_spell_check_as_you_type = false
+vsspell_include_in_project_spell_check = false
 
-dotnet_naming_style.begins_with_i.required_prefix = I
-dotnet_naming_style.begins_with_i.required_suffix =
-dotnet_naming_style.begins_with_i.word_separator =
-dotnet_naming_style.begins_with_i.capitalization = pascal_case
+[Newtonsoft.Json.xml]
+vsspell_spell_check_as_you_type = false
+vsspell_include_in_project_spell_check = false
 
-dotnet_naming_style.pascal_case.required_prefix =
-dotnet_naming_style.pascal_case.required_suffix =
-dotnet_naming_style.pascal_case.word_separator =
-dotnet_naming_style.pascal_case.capitalization = pascal_case
-
-dotnet_naming_style.pascal_case.required_prefix =
-dotnet_naming_style.pascal_case.required_suffix =
-dotnet_naming_style.pascal_case.word_separator =
-dotnet_naming_style.pascal_case.capitalization = pascal_case
+[Themes.razor]
+vsspell_spell_check_as_you_type = false
+vsspell_include_in_project_spell_check = false

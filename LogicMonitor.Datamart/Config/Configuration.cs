@@ -157,13 +157,13 @@ public class Configuration
 			throw new ConfigurationException($"{nameof(DatabaseName)} not set.");
 		}
 
-		if (DeviceDataSourceInstanceBatchSize < 1 || DeviceDataSourceInstanceBatchSize > 100)
+		if (DeviceDataSourceInstanceBatchSize is < 1 or > 100)
 		{
 			// Do not exceed 100 for BatchSize as limited by the LogicMonitor DataFetch endpoint
 			throw new ConfigurationException("BatchSize should be in the range 1..100.");
 		}
 
-		if (MinutesOffset < -780 || MinutesOffset > 780)
+		if (MinutesOffset is < (-780) or > 780)
 		{
 			// RM-16049 states the permitted range of the UTC offset
 			throw new ConfigurationException($"{nameof(MinutesOffset)} should be in the range -780..780 (i.e. -13..13 hours).");

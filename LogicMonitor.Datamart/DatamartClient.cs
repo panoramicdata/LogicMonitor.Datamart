@@ -265,7 +265,7 @@ public class DatamartClient : LogicMonitorClient
 
 	public Task SyncDimensionsAsync(
 		int desiredMaxIntervalMinutes,
-		INotificationReceiver notificationReceiver,
+		INotificationReceiver? notificationReceiver,
 		CancellationToken cancellationToken)
 	{
 		var sync = new DimensionSync(
@@ -279,7 +279,7 @@ public class DatamartClient : LogicMonitorClient
 	public Task SyncDimensionsAsync(
 		int desiredMaxIntervalMinutes,
 		List<string> types,
-		INotificationReceiver notificationReceiver,
+		INotificationReceiver? notificationReceiver,
 		CancellationToken cancellationToken)
 	{
 		var sync = new DimensionSync(
@@ -293,7 +293,7 @@ public class DatamartClient : LogicMonitorClient
 
 	public Task SyncLowResolutionDataAsync(
 		int desiredMaxIntervalMinutes,
-		INotificationReceiver notificationReceiver,
+		INotificationReceiver? notificationReceiver,
 		CancellationToken cancellationToken)
 	{
 		var sync = new LowResolutionDataSync(
@@ -326,12 +326,19 @@ public class DatamartClient : LogicMonitorClient
 		return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
 	}
 
+	[Obsolete("Use PerformDataAgeingAsync instead")]
 	public Task PerformDataAgingAsync(
+		int desiredMaxIntervalMinutes,
+		int CountAggregationDaysToRetain,
+		CancellationToken cancellationToken)
+		=> PerformDataAgeingAsync(desiredMaxIntervalMinutes, CountAggregationDaysToRetain, cancellationToken);
+
+	public Task PerformDataAgeingAsync(
 	int desiredMaxIntervalMinutes,
 	int CountAggregationDaysToRetain,
 	CancellationToken cancellationToken)
 	{
-		var sync = new DataAging(
+		var sync = new DataAgeing(
 			this,
 			CountAggregationDaysToRetain,
 			_loggerFactory);
@@ -1383,7 +1390,7 @@ public class DatamartClient : LogicMonitorClient
 				markedMissing);
 
 		}
-		catch (Exception e) when (e is OperationCanceledException || e is TaskCanceledException)
+		catch (Exception e) when (e is OperationCanceledException or TaskCanceledException)
 		{
 			if (cancellationToken.IsCancellationRequested)
 			{
@@ -1393,14 +1400,14 @@ public class DatamartClient : LogicMonitorClient
 			// If it was anything else then re-throw
 			throw;
 		}
-		catch (Exception e)
+		catch (Exception ex)
 		{
 			logger.LogWarning(
-				e,
+				ex,
 				$"Error while syncing {nameof(ResourceDataSourceInstance)}s for DataSource '{{DataSource}}' : {{Message}}\n {{StackTrace}}",
 				dataSourceSpecification.Name,
-				e.Message,
-				e.StackTrace);
+				ex.Message,
+				ex.StackTrace);
 		}
 	}
 

@@ -67,17 +67,14 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 	}
 
 	[Fact]
-	public async Task LowResolutionDataSync_RunsSuccessfully()
-	{
-		await new LowResolutionDataSync(
+	public Task LowResolutionDataSync_RunsSuccessfully()
+		=> new LowResolutionDataSync(
 				DatamartClient,
 				Configuration,
 				LoggerFactory,
 				TestNotificationReceiver,
 				new TimeProviderService())
-			.ExecuteAsync(default)
-			.ConfigureAwait(true);
-	}
+			.ExecuteAsync(default);
 
 
 	[Fact]

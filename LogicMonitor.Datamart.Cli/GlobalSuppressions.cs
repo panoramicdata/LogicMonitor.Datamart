@@ -6,9 +6,9 @@
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage(
-	"Globalization",
-	"CA1303:Do not pass literals as localized parameters",
-	Justification = "This doesn't even get used.",
-	Scope = "member",
-	Target = "~M:LogicMonitor.Datamart.Cli.Program.Main")
-]
+	"Performance",
+	"CA1848:Use the LoggerMessage delegates",
+	Justification = "Benefit not worth the dev effort",
+	Scope = "namespaceanddescendants",
+	Target = "~N:LogicMonitor.Datamart.Cli"
+)]

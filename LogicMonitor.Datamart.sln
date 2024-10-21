@@ -12,13 +12,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 		.gitattributes = .gitattributes
 		.gitignore = .gitignore
+		BuildDockerImages.ps1 = BuildDockerImages.ps1
 		Directory.Build.props = Directory.Build.props
+		GitRunnerBuildDockerImages.ps1 = GitRunnerBuildDockerImages.ps1
 		global.json = global.json
 		LICENSE = LICENSE
-		LogicMonitor.Datamart.sln.vsspell.dic = LogicMonitor.Datamart.sln.vsspell.dic
+		LogicMonitor.Datamart.dic = LogicMonitor.Datamart.dic
 		Migrations.md = Migrations.md
 		README.md = README.md
-		Rosylnator.ruleset = Rosylnator.ruleset
 		version.json = version.json
 	EndProjectSection
 	ProjectSection(FolderGlobals) = preProject

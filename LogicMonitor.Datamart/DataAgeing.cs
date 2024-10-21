@@ -1,9 +1,9 @@
 ﻿namespace LogicMonitor.Datamart;
 
-internal class DataAging(
+internal class DataAgeing(
 	DatamartClient datamartClient,
 	int countAggregationDaysToRetain,
-	ILoggerFactory loggerFactory) : LoopInterval(nameof(DataAging), loggerFactory)
+	ILoggerFactory loggerFactory) : LoopInterval(nameof(DataAgeing), loggerFactory)
 {
 
 	public override async Task ExecuteAsync(CancellationToken cancellationToken)

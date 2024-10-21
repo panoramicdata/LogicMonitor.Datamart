@@ -2,6 +2,7 @@ Ack
 ackages
 Acked
 Allman
+analyzers
 api
 App
 Asc
@@ -9,6 +10,7 @@ astextplain
 Automapper
 Aws
 bigint
+buildtransitive
 cancelled
 Centile
 checkin
@@ -24,6 +26,7 @@ diffing
 dotnet
 editorconfig
 ef
+Exe
 Gcp
 Guid
 hacky
@@ -34,6 +37,7 @@ json
 lastexitcode
 Lm
 msysgit
+namespaceanddescendants
 ne
 Netflow
 Netscan
@@ -57,6 +61,7 @@ Syslog
 sysobjects
 Telerik
 timestamp
+Timezone
 tinyint
 Uid
 username

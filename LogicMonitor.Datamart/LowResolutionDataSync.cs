@@ -14,7 +14,7 @@ internal class LowResolutionDataSync(
 	INotificationReceiver? notificationReceiver,
 	ITimeProviderService timeProviderService) : LoopInterval(nameof(LowResolutionDataSync), loggerFactory)
 {
-	private static readonly TimeSpan EightHours = TimeSpan.FromHours(8);
+	private static readonly TimeSpan _eightHours = TimeSpan.FromHours(8);
 	private const int DeviceDownTimeWindowSeconds = 3000;
 
 	private readonly DatamartClient _datamartClient = datamartClient;

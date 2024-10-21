@@ -1,5 +1,16 @@
-<Project>
-  <PropertyGroup>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<PropertyGroup>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<TargetFramework>net8.0</TargetFramework>
+		<Copyright>Panoramic Data Limited 2024</Copyright>
+		<Company>Panoramic Data Limited</Company>
+		<Authors>Panoramic Data Limited</Authors>
+		<LangVersion>latest</LangVersion>
+		<MSBuildWarningsAsErrors>MSB3277</MSBuildWarningsAsErrors>
+		<AnalysisLevel>latest-recommended</AnalysisLevel>
+		<Nullable>enable</Nullable>
+		<EnableNETAnalyzers>true</EnableNETAnalyzers>
+		<AnalysisMode>All</AnalysisMode>
+	</PropertyGroup>
 </Project>

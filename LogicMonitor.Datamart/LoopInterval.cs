@@ -32,7 +32,7 @@ internal abstract class LoopInterval(string name, ILoggerFactory loggerFactory)
 			{
 				await ExecuteAsync(cancellationToken).ConfigureAwait(false);
 			}
-			catch (Exception ex) when (ex is OperationCanceledException || ex is TaskCanceledException)
+			catch (Exception ex) when (ex is OperationCanceledException or TaskCanceledException)
 			{
 				Logger.LogInformation(ex, "LoopAsync {Name} cancelled.", name);
 			}
