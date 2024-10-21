@@ -13,7 +13,7 @@ COPY Directory.Build.props .
 COPY */*.csproj ./
 # Restore all the project nuget packages
 RUN for project in $(ls *.csproj); do dotnet restore $project; done
-COPY . .
+COPY . ./
 
 # Set the build configuration argument
 ARG BUILD_CONFIGURATION=Release
