@@ -15,6 +15,8 @@ COPY */*.csproj ./
 # Restore dependencies for all projects
 RUN for project in $(ls *.csproj); do dotnet restore $project; done
 
+# Ensure the .git folder is included
+COPY .git ./
 # Copy the rest of the source code
 COPY . ./
 
