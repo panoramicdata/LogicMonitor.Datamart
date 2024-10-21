@@ -1,29 +1,26 @@
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-USER app
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
 # This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+# Copy the directory build props file
 COPY Directory.Build.props .
+# Copy all the csproj files
 COPY */*.csproj ./
+# Restore all the project nuget packages
 RUN for project in $(ls *.csproj); do dotnet restore $project; done
 COPY . .
 
-RUN dotnet build -c $BUILD_CONFIGURATION ./LogicMonitor.Datamart.Cli.csproj
+# Build projects to cache them for other docker images
+RUN dotnet build -c Release ./LogicMonitor.Datamart.Cli.csproj
 
 WORKDIR "/src/LogicMonitor.Datamart.Cli"
+RUN dotnet publish "./LogicMonitor.Datamart.Cli.csproj" -c Release -o /app/publish
 
-# This stage is used to publish the service project to be copied to the final stage
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./LogicMonitor.Datamart.Cli.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
-
-# This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
+COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "LogicMonitor.Datamart.Cli.dll"]
