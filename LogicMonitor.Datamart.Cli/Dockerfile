@@ -22,7 +22,7 @@ COPY . ./
 ARG BUILD_CONFIGURATION=Release
 
 # Build the project(s)
-RUN dotnet build -c $BUILD_CONFIGURATION ./LogicMonitor.Datamart.Cli.csproj --verbosity detailed
+RUN dotnet build -c $BUILD_CONFIGURATION ./LogicMonitor.Datamart.Cli.csproj
 
 # Publish the project (use /app/publish to ensure clean directory)
 WORKDIR "/src/LogicMonitor.Datamart.Cli"
