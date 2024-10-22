@@ -1,12 +1,14 @@
 # Introduction
 
-Creates a copy of major aspects of your LogicMonitor system, including:
+## Purpose
+
+The LogicMonitor Datamart creates a copy of major aspects of your LogicMonitor system in a SQL Server or PostgreSQL database, including:
 - Dimension data
 - Alert history
 - Audit log history
 - Time Series data aggregations
 
-# Support
+## Support
 
 * Customers with an active project and available hours can request support via your project manager.
 * Otherwise, support is provided on a best-effort basis via the [Panoramic Data Community](https://community.panoramicdata.com/).
@@ -16,16 +18,16 @@ Creates a copy of major aspects of your LogicMonitor system, including:
 
 ## Prerequisites
 
-1. A LogicMonitor account with API access.
-	- You will need an API key and ID to access the LogicMonitor API.
+1. LogicMonitor API credentials
+	- You will need an API Token ID and Key.
 	- You can create these in the LogicMonitor UI under Settings > Users > API Tokens.
 	- We recommend creating a separate user for this purpose.
 	- The tool does not write to LogicMonitor, however full read permissions, including LogicModule access is required.
-2. A database server to store the data mart.
+2. Database server
 	- PostgreSQL and SQL Server databases are supported.
 	- Note that the solution uses table partitioning, which is not available in lower SQL Server tiers, such as SQL Server Express.
 	- The database server must be accessible from the container.
-3. A docker environment
+3. Docker environment
 	- Step-by-step instructions are provided for those running Docker Desktop on Windows
 	- We assume that you have a basic understanding of Docker and how to run containers.
 4. A configuration file
