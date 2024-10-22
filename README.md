@@ -18,21 +18,25 @@ The LogicMonitor Datamart creates a copy of major aspects of your LogicMonitor s
 
 ## Prerequisites
 
-1. LogicMonitor API credentials
-	- You will need an API Token ID and Key.
-	- You can create these in the LogicMonitor UI under Settings > Users > API Tokens.
+1. **LogicMonitor Account**
+	- You will need an API key and ID to access the LogicMonitor API.
+	- Create these in the LogicMonitor UI under Settings > Users > API Tokens.
 	- We recommend creating a separate user for this purpose.
-	- The tool does not write to LogicMonitor, however full read permissions, including LogicModule access is required.
-2. Database server
-	- PostgreSQL and SQL Server databases are supported.
-	- Note that the solution uses table partitioning, which is not available in lower SQL Server tiers, such as SQL Server Express.
+	- Full read permissions, including LogicModule access, are required.
+
+2. **Database Server**
+	- Supported databases: PostgreSQL and SQL Server.
+	- Note: Table partitioning is not available in lower SQL Server tiers, such as SQL Server Express.
 	- The database server must be accessible from the container.
-3. A docker environment
-	- You should have a basic understanding of Docker and how to run containers.
-4. A configuration file
+
+3. **Docker Environment**
+	- Step-by-step instructions are provided for Docker Desktop on Windows.
+	- Basic understanding of Docker and container management is assumed.
+
+4. **Configuration File**
 	- An example configuration file is provided here: [appsettings.example.json](LogicMonitor.Datamart.Cli/appsettings.example.json).
-	- Make a copy of this file and modify it to include your own API credentials, database connection information, and data mart configuration.
-	- The configuration file must be accessible from the container.
+	- Modify this file to include your API credentials, database connection information, and data mart configuration.
+	- Ensure the configuration file is accessible from the container.
 
 ## Configuration file
 
@@ -100,24 +104,6 @@ The LogicMonitor Datamart creates a copy of major aspects of your LogicMonitor s
 		- The access key of your LogicMonitor API user.
 
 ### Database configuration
-```
-		"DatabaseType": "SqlServer",
-		"DatabaseServerName": "localhost",
-		"DatabaseServerPort": 1433,
-		"DatabaseRetryOnFailureCount": 0,
-		"SqlServerAuthenticationMethod": "SqlPassword",
-		"DatabaseName": "LogicMonitor_acme",
-		"DatabaseUsername": "username",
-		"DatabasePassword": "password",
-		"SqlCommandTimeoutSeconds": 600,
-		"SqlBulkCopyTimeoutSeconds": 600,
-		"EnableSensitiveDatabaseLogging": false,
-		"DeviceDataSourceInstanceBatchSize": 100,
-		"DeviceProperties": [],
-		"DimensionSyncHaltOnError": true,
-		"MinutesOffset": 0,
-		"FakeExecutionTime": null
-```
 
 * **DatabaseType**
 	- The type of database you are using.
@@ -174,7 +160,7 @@ The LogicMonitor Datamart creates a copy of major aspects of your LogicMonitor s
 
 ## Using a Local `appsettings.json` File with Docker
 
-To use the Docker image `panoramicdata/logicmonitor-datamart:3.211.26` with a local `appsettings.json` file, follow these steps:
+To use the Docker image `panoramicdata/logicmonitor-datamart:latest` with a local `appsettings.json` file, follow these steps:
 
 ## Steps:
 
