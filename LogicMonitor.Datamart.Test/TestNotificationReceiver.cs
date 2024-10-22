@@ -1,5 +1,4 @@
 ﻿using LogicMonitor.Datamart.Interfaces;
-using System.Threading;
 
 namespace LogicMonitor.Datamart.Test;
 internal sealed class TestNotificationReceiver(ILogger logger) : INotificationReceiver

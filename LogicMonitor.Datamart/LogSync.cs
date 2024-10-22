@@ -1,4 +1,6 @@
-﻿namespace LogicMonitor.Datamart;
+﻿using LogicMonitor.Api.Extensions;
+
+namespace LogicMonitor.Datamart;
 
 internal class LogSync(
 	DatamartClient datamartClient,
@@ -88,7 +90,12 @@ internal class LogSync(
 			var dataProcessingStopwatch = Stopwatch.StartNew();
 			var sqlSave = new Stopwatch();
 
+			// The raw record
 			context.LogItems.AddRange(apiEntriesThisTime.Select(DatamartClient.MapperInstance.Map<LogItem, LogStoreItem>));
+
+			context.AuditEvents.AddRange(apiEntriesThisTime
+				.Select(x => x.ToAuditEvent())
+				.Select(DatamartClient.MapperInstance.Map<AuditEvent, AuditEventStoreItem>));
 
 			await context
 				.SaveChangesAsync(cancellationToken)

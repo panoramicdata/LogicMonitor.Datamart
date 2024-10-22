@@ -111,6 +111,13 @@ public class EventSourceProfile : Profile
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.AccessGroups,
-				opts => opts.Ignore());
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.ColumnInstanceName,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.Query,
+				opts => opts.Ignore())
+				;
 	}
 }

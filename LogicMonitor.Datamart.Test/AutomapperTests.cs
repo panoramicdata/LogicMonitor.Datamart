@@ -5,7 +5,5 @@ public class AutomapperTests
 
 	[Fact]
 	public void ValidateAutoMapperProfiles()
-	{
-		_mapperConfig.AssertConfigurationIsValid();
-	}
+		=> _mapperConfig.AssertConfigurationIsValid();
 }

@@ -1,34 +1,36 @@
-﻿#nullable disable
+﻿using System.Collections.ObjectModel;
+
+#nullable disable
 
 namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 {
 	/// <inheritdoc />
-	public partial class AlertDependencyRole : Migration
+	public partial class AuditEventFixedColumn : Migration
 	{
 		/// <inheritdoc />
 		protected override void Up(MigrationBuilder migrationBuilder)
 		{
 			migrationBuilder.AlterColumn<string>(
-				name: "DependencyRole",
-				table: "Alerts",
+				name: "ResourceIds",
+				table: "AuditEvents",
 				type: "character varying(50)",
 				maxLength: 50,
 				nullable: true,
-				oldClrType: typeof(string),
-				oldType: "character varying(50)",
-				oldMaxLength: 50);
+				oldClrType: typeof(Collection<int>),
+				oldType: "integer[]",
+				oldMaxLength: 50,
+				oldNullable: true);
 		}
 
 		/// <inheritdoc />
 		protected override void Down(MigrationBuilder migrationBuilder)
 		{
-			migrationBuilder.AlterColumn<string>(
-				name: "DependencyRole",
-				table: "Alerts",
-				type: "character varying(50)",
+			migrationBuilder.AlterColumn<Collection<int>>(
+				name: "ResourceIds",
+				table: "AuditEvents",
+				type: "integer[]",
 				maxLength: 50,
-				nullable: false,
-				defaultValue: "",
+				nullable: true,
 				oldClrType: typeof(string),
 				oldType: "character varying(50)",
 				oldMaxLength: 50,

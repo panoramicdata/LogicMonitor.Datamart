@@ -14,6 +14,7 @@ public class Context : DbContext
 
 	public DbSet<AlertStoreItem> Alerts { get; set; } = null!;
 	public DbSet<AlertRuleStoreItem> AlertRules { get; set; } = null!;
+	public DbSet<AuditEventStoreItem> AuditEvents { get; set; } = null!;
 	public DbSet<CollectorStoreItem> Collectors { get; set; } = null!;
 	public DbSet<CollectorGroupStoreItem> CollectorGroups { get; set; } = null!;
 	public DbSet<ConfigSourceStoreItem> ConfigSources { get; set; } = null!;
