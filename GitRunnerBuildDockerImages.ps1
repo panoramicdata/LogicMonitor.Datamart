@@ -12,7 +12,7 @@ $env:DOCKER_BUILDKIT = 1
 # Get the git tag which is the same as the built version based on nerdbank gitversioning
 $versionString = $env:TAG
 
-$repositories = @("pdl-harbor-test.panoramicdata.com/library", "pdl-harbor-prod.panoramicdata.com/library")
+$repositories = @("pdl-harbor-test.panoramicdata.com/library", "pdl-harbor-prod.panoramicdata.com/library", "hub.docker.com/panoramicdata")
 
 Write-Output "Building LogicMonitor.Datamart.Cli ${versionString}..."
 & docker build -f LogicMonitor.Datamart.Cli/Dockerfile -t logicmonitor-datamart:${versionString} .

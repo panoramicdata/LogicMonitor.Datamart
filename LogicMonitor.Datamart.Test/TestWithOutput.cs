@@ -12,8 +12,6 @@ public abstract class TestWithOutput
 	protected static readonly Configuration Configuration = new()
 	{
 		Name = "Test",
-		AggregationDurationMinutes = 15,
-		LateArrivingDataWindowHours = 2,
 		StartDateTimeUtc =
 		new DateTimeOffset(
 			TwelveHoursAgo.Year,

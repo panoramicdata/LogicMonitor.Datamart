@@ -13,12 +13,6 @@ public class Configuration
 	public List<DataSourceConfigurationItem> DataSources { get; set; } = [];
 
 	/// <summary>
-	/// The aggregation duration override in minutes
-	/// If not present, the duration from the parent DataSourceConfigurationItem is used.
-	/// </summary>
-	public int AggregationDurationMinutes { get; set; } = 60;
-
-	/// <summary>
 	/// Whether to reset the aggregations
 	/// Default false
 	/// If set to true, as part of the LowResolutionDataSync, the aggregation data will be reset by:
@@ -31,11 +25,6 @@ public class Configuration
 	/// Don't fetch any data before this date
 	/// </summary>
 	public DateTimeOffset StartDateTimeUtc { get; set; }
-
-	/// <summary>
-	/// The time to permit late arriving data to arrive
-	/// </summary>
-	public int LateArrivingDataWindowHours { get; set; } = 2;
 
 	/// <summary>
 	/// The LogicMonitor client options
@@ -127,11 +116,6 @@ public class Configuration
 			throw new ConfigurationException($"{nameof(StartDateTimeUtc)} should not be in the future.");
 		}
 
-		if (LateArrivingDataWindowHours <= 0)
-		{
-			throw new ConfigurationException($"{nameof(LateArrivingDataWindowHours)} should be a positive integer.");
-		}
-
 		if (LogicMonitorClientOptions == null)
 		{
 			throw new ConfigurationException($"{nameof(LogicMonitorClientOptions)} not set.");
@@ -169,27 +153,9 @@ public class Configuration
 			throw new ConfigurationException($"{nameof(MinutesOffset)} should be in the range -780..780 (i.e. -13..13 hours).");
 		}
 
-		ValidateAggregationDuration(AggregationDurationMinutes, "configuration", Name);
-
 		foreach (var dataSource in DataSources)
 		{
 			dataSource.Validate();
-		}
-	}
-
-	public static void ValidateAggregationDuration(int aggregationDurationMinutes, string level, string name)
-	{
-		switch (aggregationDurationMinutes)
-		{
-			case 5:
-			case 10:
-			case 15:
-			case 20:
-			case 30:
-			case 60:
-				return;
-			default:
-				throw new ConfigurationException($"Invalid AggregationDurationMinutes {aggregationDurationMinutes} for {level} '{name}'.");
 		}
 	}
 
