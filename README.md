@@ -27,9 +27,8 @@ The LogicMonitor Datamart creates a copy of major aspects of your LogicMonitor s
 	- PostgreSQL and SQL Server databases are supported.
 	- Note that the solution uses table partitioning, which is not available in lower SQL Server tiers, such as SQL Server Express.
 	- The database server must be accessible from the container.
-3. Docker environment
-	- Step-by-step instructions are provided for those running Docker Desktop on Windows
-	- We assume that you have a basic understanding of Docker and how to run containers.
+3. A docker environment
+	- You should have a basic understanding of Docker and how to run containers.
 4. A configuration file
 	- An example configuration file is provided here: [appsettings.example.json](LogicMonitor.Datamart.Cli/appsettings.example.json).
 	- Make a copy of this file and modify it to include your own API credentials, database connection information, and data mart configuration.
