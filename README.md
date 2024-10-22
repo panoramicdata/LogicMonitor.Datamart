@@ -63,10 +63,6 @@ To start with, we recommend using the example configuration file and modifying j
 
 # Docker container
 
-## Using a Local `appsettings.json` File with Docker
-
-To use the Docker image `panoramicdata/logicmonitor-datamart:latest` with a local `appsettings.json` file, follow these steps:
-
 ## Steps:
 
 1. **Prepare your local `appsettings.json` file**:
