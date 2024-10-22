@@ -73,17 +73,18 @@ To start with, we recommend using the example configuration file and modifying j
 2. **Run the Docker container with a volume mount**:
    Use Docker's `-v` flag to mount your local file into the container. Set the environment variable `CONFIG_FILE` to point to the mounted file inside the container.
 
-   Example command:
+   Example command (on Windows):
 
- ```
-   docker run -d \
-   -v /path/to/your/appsettings.json:/app/appsettings.json \
-   -e CONFIG_FILE=/app/appsettings.json \
-   panoramicdata/logicmonitor-datamart:latest
+```
+docker run -d --name lm_datamart_panoramicdata -p 5000:8080 -v C:\Users\david\Projects\lmdm_docker\appsettings.json:/app/appsettings.json -e CONFIG_FILE=/app/appsettings.json panoramicdata/logicmonitor-datamart:latest
 ```
 
-   - `-v /path/to/your/appsettings.json:/app/appsettings.json`: This mounts your local `appsettings.json` file into the container at `/app/appsettings.json`.
-   - `-e CONFIG_FILE=/app/appsettings.json`: This sets the `CONFIG_FILE` environment variable to tell the container where the configuration file is located.
+- `-d`: This runs the container in detached mode.
+- `--name lm_datamart_panoramicdata`: This gives the container a name.
+- `-p 5000:8080`: This maps port 8080 inside the container to port 5000 on the host.
+- `-v /path/to/your/appsettings.json:/app/appsettings.json`: This mounts your local `appsettings.json` file into the container at `/app/appsettings.json`.
+- `-e CONFIG_FILE=/app/appsettings.json`: This sets the `CONFIG_FILE` environment variable to tell the container where the configuration file is located.
+- `panoramicdata/logicmonitor-datamart:latest`: This is the name of the Docker image to run.
 
 3. **Explanation**:
    - Your local `appsettings.json` file is mounted inside the container at `/app/appsettings.json`.
@@ -97,6 +98,9 @@ To start with, we recommend using the example configuration file and modifying j
 ```
 
    Replace `<container-id>` with the ID of your running container (which you can get by running `docker ps`).
+
+5. **Monitor the container**:
+   You can monitor the container by visiting `http://localhost:5000/health` in your browser.
 
 # For developers
 
