@@ -11,7 +11,7 @@ The LogicMonitor Datamart creates a copy of major aspects of your LogicMonitor s
 ## Support
 
 * Customers with an active project and available hours can request support via your project manager.
-* Otherwise, support is provided on a best-effort basis via the [Panoramic Data Community](https://community.panoramicdata.com/).
+* Otherwise, support is provided on a best-effort basis via the [Panoramic Data Community](https://community.panoramicdata.com/c/open-source-nuget).
 * The LogicMonitor Datamart is provided as-is, with no warranty or guarantee of support.
 
 # Installation
