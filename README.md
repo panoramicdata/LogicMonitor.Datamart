@@ -191,7 +191,7 @@ To use the Docker image `panoramicdata/logicmonitor-datamart:3.211.26` with a lo
    docker run -d \
    -v /path/to/your/appsettings.json:/app/appsettings.json \
    -e CONFIG_FILE=/app/appsettings.json \
-   panoramicdata/logicmonitor-datamart:3.211.26
+   panoramicdata/logicmonitor-datamart:latest
 ```
 
    - `-v /path/to/your/appsettings.json:/app/appsettings.json`: This mounts your local `appsettings.json` file into the container at `/app/appsettings.json`.
