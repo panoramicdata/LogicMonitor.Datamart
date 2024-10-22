@@ -38,12 +38,87 @@ The LogicMonitor Datamart creates a copy of major aspects of your LogicMonitor s
 	- Modify this file to include your API credentials, database connection information, and data mart configuration.
 	- Ensure the configuration file is accessible from the container.
 
-## Configuration file
+# Configuration file - quick start
+
+The configuration file can get quite complex.  Full documentation can be found at  the bottom of this page.
+
+To start with, we recommend using the example configuration file and modifying just the following:
+* LogicMonitorClientOptions
+	- Account
+		- The first part of your LogicMonitor portal URL, e.g. "acme" for "acme.logicmonitor.com".
+	- AccessId
+		- The access ID of your LogicMonitor API user.
+	- AccessKey
+		- The access key of your LogicMonitor API user.
+* DatabaseType
+	- Set to "SqlServer" or "Postgres"
+* DatabaseName
+	- The name of the database to use.
+* DatabaseUsername
+	- The username to use when connecting to the database.
+	- This user should have full rights to the database, for example db_owner for SQL Server.
+	- We recommend creating a new user for this purpose.
+* DatabasePassword
+	- The password to use when connecting to the database.
+
+# Docker container
+
+## Using a Local `appsettings.json` File with Docker
+
+To use the Docker image `panoramicdata/logicmonitor-datamart:latest` with a local `appsettings.json` file, follow these steps:
+
+## Steps:
+
+1. **Prepare your local `appsettings.json` file**:
+   Ensure you have a local `appsettings.json` file, which the container will use.  See above for an example configuration file.
+
+   For example, let's assume the file is located at `/path/to/your/appsettings.json`.
+
+2. **Run the Docker container with a volume mount**:
+   Use Docker's `-v` flag to mount your local file into the container. Set the environment variable `CONFIG_FILE` to point to the mounted file inside the container.
+
+   Example command:
+
+ ```
+   docker run -d \
+   -v /path/to/your/appsettings.json:/app/appsettings.json \
+   -e CONFIG_FILE=/app/appsettings.json \
+   panoramicdata/logicmonitor-datamart:latest
+```
+
+   - `-v /path/to/your/appsettings.json:/app/appsettings.json`: This mounts your local `appsettings.json` file into the container at `/app/appsettings.json`.
+   - `-e CONFIG_FILE=/app/appsettings.json`: This sets the `CONFIG_FILE` environment variable to tell the container where the configuration file is located.
+
+3. **Explanation**:
+   - Your local `appsettings.json` file is mounted inside the container at `/app/appsettings.json`.
+   - The application inside the container reads the configuration from the file specified by the `CONFIG_FILE` environment variable.
+
+4. **Verify the container**:
+   You can verify that the container is running and using the correct configuration file by checking the logs:
+
+```
+   docker logs <container-id>
+```
+
+   Replace `<container-id>` with the ID of your running container (which you can get by running `docker ps`).
+
+# For developers
+
+Developers can use the LogicMonitor.Datamart nuget package to create their own data mart.
+The package is available on nuget.org and is licensed under the MIT license.
+
+# Contributors
+
+Contributions are welcome.
+
+# Configuration file - full documentation
+
+## Basic configuration
 
 * **Name**
 	- This is just a name for the configuration. Optional.
 
-### LogicMonitor configuration
+## LogicMonitor configuration
 
 * * **DataSources**
 	- A list of data sources for which time series data will be collected.
@@ -103,7 +178,7 @@ The LogicMonitor Datamart creates a copy of major aspects of your LogicMonitor s
 	- **AccessKey**
 		- The access key of your LogicMonitor API user.
 
-### Database configuration
+## Database configuration
 
 * **DatabaseType**
 	- The type of database you are using.
@@ -122,7 +197,7 @@ The LogicMonitor Datamart creates a copy of major aspects of your LogicMonitor s
 	- Options are documented in the [Microsoft Docs](https://learn.microsoft.com/en-us/dotnet/api/microsoft.data.sqlclient.sqlauthenticationmethod).
 * **DatabaseName**
 	- The name of the database to use.
-	- We recommned creating a new database for the data mart and ensuring that your LogicMonitor portal name is included in the database name.
+	- We recommend creating a new database for the data mart and ensuring that your LogicMonitor portal name is included in the database name.
 	- For example, if your LogicMonitor portal is `acme`, you could name the database `LogicMonitor_acme`.
 	- This is important if you are running multiple data marts for different portals.
 * **DatabaseUsername**
@@ -156,55 +231,12 @@ The LogicMonitor Datamart creates a copy of major aspects of your LogicMonitor s
 	- This is useful for testing.
 	- Default is null.
 
-# Docker container
+## Logging configuration (Serilog)
 
-## Using a Local `appsettings.json` File with Docker
+We use Serilog for logging.  Sink DLLs are included for:
+* Application Insights
+* Azure Analytics
+* Console
+* ElasticSearch
 
-To use the Docker image `panoramicdata/logicmonitor-datamart:latest` with a local `appsettings.json` file, follow these steps:
-
-## Steps:
-
-1. **Prepare your local `appsettings.json` file**:
-   Ensure you have a local `appsettings.json` file, which the container will use.  See above for an example configuration file.
-
-   For example, let's assume the file is located at `/path/to/your/appsettings.json`.
-
-2. **Run the Docker container with a volume mount**:
-   Use Docker's `-v` flag to mount your local file into the container. Set the environment variable `CONFIG_FILE` to point to the mounted file inside the container.
-
-   Example command:
-
- ```
-   docker run -d \
-   -v /path/to/your/appsettings.json:/app/appsettings.json \
-   -e CONFIG_FILE=/app/appsettings.json \
-   panoramicdata/logicmonitor-datamart:latest
-```
-
-   - `-v /path/to/your/appsettings.json:/app/appsettings.json`: This mounts your local `appsettings.json` file into the container at `/app/appsettings.json`.
-   - `-e CONFIG_FILE=/app/appsettings.json`: This sets the `CONFIG_FILE` environment variable to tell the container where the configuration file is located.
-
-3. **Explanation**:
-   - Your local `appsettings.json` file is mounted inside the container at `/app/appsettings.json`.
-   - The application inside the container reads the configuration from the file specified by the `CONFIG_FILE` environment variable.
-
-4. **Verify the container**:
-   You can verify that the container is running and using the correct configuration file by checking the logs:
-
-```
-   docker logs <container-id>
-```
-
-   Replace `<container-id>` with the ID of your running container (which you can get by running `docker ps`).
-
-
-powershell
-
-# For developers
-
-Developers can use the LogicMonitor.Datamart nuget package to create their own data mart.
-The package is available on nuget.org and is licensed under the MIT license.
-
-# Contributors
-
-Contributions are welcome.
+See the [Serilog documentation](https://github.com/serilog/serilog-settings-configuration) for more information.

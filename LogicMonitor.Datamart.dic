@@ -19,6 +19,7 @@ csharp
 Datamart
 datapoint
 datetimeoffset
+db
 dd
 Desc
 diff
@@ -31,11 +32,14 @@ Gcp
 Guid
 hacky
 healthcheck
+hostname
 inline
 Installshield
 json
 lastexitcode
 Lm
+localhost
+logicmonitor
 msysgit
 namespaceanddescendants
 ne
@@ -48,10 +52,13 @@ Nullable
 nvarchar
 Otel
 Paket
+panoramicdata
 plugin
 Postgres
+ps
 Pwd
 Sdt
+Serilog
 Silverlight
 smalldatetime
 Sql
