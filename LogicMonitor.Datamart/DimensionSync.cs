@@ -213,6 +213,18 @@ internal class DimensionSync : LoopInterval
 				.ConfigureAwait(false);
 		}
 
+		if (_types?.Contains(nameof(Integration)) ?? true)
+		{
+			await _datamartClient
+				.AddOrUpdate<Integration, IntegrationStoreItem>(
+					context => context.Integrations,
+					haltOnError,
+					Logger,
+					_notificationReceiver,
+					cancellationToken)
+				.ConfigureAwait(false);
+		}
+
 		if (_types?.Contains(nameof(ResourceGroup)) ?? true)
 		{
 			await _datamartClient
