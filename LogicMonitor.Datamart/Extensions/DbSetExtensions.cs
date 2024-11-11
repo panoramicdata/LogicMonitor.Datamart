@@ -191,6 +191,7 @@ public static class DbSetExtension
 			case (EscalationChain escalationChain, EscalationChainStoreItem escalationChainStoreItem):
 			case (EventSource eventSource, EventSourceStoreItem eventSourceStoreItem):
 			case (WebsiteGroup websiteGroup, WebsiteGroupStoreItem websiteGroupStoreItem2):
+			case (Integration integration, IntegrationStoreItem integrationStoreItem):
 				return;
 			default:
 				throw new NotSupportedException($"Unsupported TApi/TStore combination: {typeof(TApi).Name}/{typeof(TStore).Name}");

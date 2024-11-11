@@ -3,6 +3,7 @@ using System;
 using LogicMonitor.Datamart;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 {
     [DbContext(typeof(NpgsqlContext))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20241111225553_AddedEmailIntegrationSupport")]
+    partial class AddedEmailIntegrationSupport
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1323,9 +1326,6 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<int?>("AccountId")
-                        .HasColumnType("integer");
-
                     b.Property<string>("AckAlertDataType")
                         .HasColumnType("text");
 
@@ -1416,9 +1416,6 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
                     b.Property<string>("ClearUsername")
                         .HasColumnType("text");
 
-                    b.Property<int?>("CriticalPriority")
-                        .HasColumnType("integer");
-
                     b.Property<DateTimeOffset>("DatamartCreated")
                         .HasColumnType("timestamp with time zone");
 
@@ -1431,14 +1428,8 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
-                    b.Property<string>("DueDateTime")
-                        .HasColumnType("text");
-
                     b.Property<string>("EnabledStatus")
                         .HasColumnType("text");
-
-                    b.Property<int?>("ErrorPriority")
-                        .HasColumnType("integer");
 
                     b.Property<string>("Extra")
                         .IsRequired()
@@ -1489,26 +1480,11 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
                     b.Property<string>("PayloadFormat")
                         .HasColumnType("text");
 
-                    b.Property<int?>("QueueId")
-                        .HasColumnType("integer");
-
                     b.Property<string>("Receivers")
                         .HasColumnType("text");
 
                     b.Property<string>("Sender")
                         .HasColumnType("text");
-
-                    b.Property<int?>("StatusAckTicket")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("StatusCloseTicket")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("StatusNewTicket")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("StatusUpdateTicket")
-                        .HasColumnType("integer");
 
                     b.Property<string>("Subject")
                         .HasColumnType("text");
@@ -1606,12 +1582,6 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 
                     b.Property<string>("Username")
                         .HasColumnType("text");
-
-                    b.Property<int?>("WarnPriority")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("Zone")
-                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 

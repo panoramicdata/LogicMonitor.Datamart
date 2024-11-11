@@ -151,4 +151,28 @@ public class IntegrationStoreItem : IdentifiedStoreItem
 	public string? UpdateOAuthClientSecret { get; set; }
 
 	public string? UpdateOAuthScope { get; set; }
+
+	public string? Subject { get; set; }
+
+	public string? Name { get; set; }
+
+	public string? Body { get; set; }
+
+	public string? Description { get; set; }
+
+	public string? Receivers { get; set; }
+
+	public string? Sender { get; set; }
+
+	public int? Zone { get; set; }
+	public int? AccountId { get; set; }
+	public string? DueDateTime { get; set; }
+	public int? QueueId { get; set; }
+	public int? WarnPriority { get; set; }
+	public int? ErrorPriority { get; set; }
+	public int? CriticalPriority { get; set; }
+	public int? StatusNewTicket { get; set; }
+	public int? StatusUpdateTicket { get; set; }
+	public int? StatusCloseTicket { get; set; }
+	public int? StatusAckTicket { get; set; }
 }

@@ -215,14 +215,23 @@ internal class DimensionSync : LoopInterval
 
 		if (_types?.Contains(nameof(Integration)) ?? true)
 		{
-			await _datamartClient
-				.AddOrUpdate<Integration, IntegrationStoreItem>(
-					context => context.Integrations,
-					haltOnError,
-					Logger,
-					_notificationReceiver,
-					cancellationToken)
-				.ConfigureAwait(false);
+			// It's possible that new Integrations are not supported.
+			// For now, we'll just log an error and continue.
+			try
+			{
+				await _datamartClient
+					.AddOrUpdate<Integration, IntegrationStoreItem>(
+						context => context.Integrations,
+						haltOnError,
+						Logger,
+						_notificationReceiver,
+						cancellationToken)
+					.ConfigureAwait(false);
+			}
+			catch (Exception ex)
+			{
+				Logger.LogError(ex, "Unable to sync Integrations {Message}.", ex.Message);
+			}
 		}
 
 		if (_types?.Contains(nameof(ResourceGroup)) ?? true)
