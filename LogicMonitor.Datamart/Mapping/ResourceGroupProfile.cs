@@ -4,7 +4,7 @@ public class ResourceGroupProfile : Profile
 {
 	public ResourceGroupProfile()
 	{
-		CreateMap<ResourceGroup, DeviceGroupStoreItem>()
+		CreateMap<ResourceGroup, ResourceGroupStoreItem>()
 			.ForMember(
 				dest => dest.Id,
 				opts => opts.Ignore())
@@ -42,7 +42,7 @@ public class ResourceGroupProfile : Profile
 				dest => dest.AlertEnable,
 				opts => opts.Ignore())
 			;
-		CreateMap<DeviceGroupStoreItem, ResourceGroup>()
+		CreateMap<ResourceGroupStoreItem, ResourceGroup>()
 			.ForMember(
 				dest => dest.Id,
 				opts => opts.MapFrom(src => src.LogicMonitorId))

@@ -4,7 +4,7 @@ public class ResourceProfile : Profile
 {
 	public ResourceProfile()
 	{
-		CreateMap<Resource, DeviceStoreItem>()
+		CreateMap<Resource, ResourceStoreItem>()
 			.ForMember(
 				dest => dest.Id,
 				opts => opts.Ignore())
@@ -109,7 +109,7 @@ public class ResourceProfile : Profile
 				opts => opts.Ignore())
 			;
 
-		CreateMap<DeviceStoreItem, Resource>()
+		CreateMap<ResourceStoreItem, Resource>()
 			.ForMember(
 				dest => dest.Id,
 				opts => opts.MapFrom(src => src.LogicMonitorId))

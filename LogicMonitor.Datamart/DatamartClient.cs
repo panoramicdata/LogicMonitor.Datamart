@@ -176,9 +176,9 @@ public class DatamartClient : LogicMonitorClient
 			nameof(AlertRuleStoreItem) => context.AlertRules as DbSet<TStore>,
 			nameof(CollectorStoreItem) => context.Collectors as DbSet<TStore>,
 			nameof(CollectorGroupStoreItem) => context.CollectorGroups as DbSet<TStore>,
-			nameof(DeviceDataSourceStoreItem) => context.DeviceDataSources as DbSet<TStore>,
-			nameof(DeviceStoreItem) => context.Devices as DbSet<TStore>,
-			nameof(DeviceGroupStoreItem) => context.DeviceGroups as DbSet<TStore>,
+			nameof(ResourceDataSourceStoreItem) => context.DeviceDataSources as DbSet<TStore>,
+			nameof(ResourceStoreItem) => context.Devices as DbSet<TStore>,
+			nameof(ResourceGroupStoreItem) => context.DeviceGroups as DbSet<TStore>,
 			nameof(ConfigSourceStoreItem) => context.ConfigSources as DbSet<TStore>,
 			nameof(DataSourceStoreItem) => context.DataSources as DbSet<TStore>,
 			nameof(EscalationChainStoreItem) => context.EscalationChains as DbSet<TStore>,
@@ -215,9 +215,9 @@ public class DatamartClient : LogicMonitorClient
 					.ConfigureAwait(false);
 				var result = deviceStoreItem == null
 					? throw new KeyNotFoundException($"Device with id {id} not found")
-					: MapperInstance.Map<DeviceStoreItem, Resource>(deviceStoreItem) as TApi;
+					: MapperInstance.Map<ResourceStoreItem, Resource>(deviceStoreItem) as TApi;
 
-				return result ?? throw new InvalidOperationException($"Could not convert {nameof(DeviceStoreItem)} to {nameof(Resource)}");
+				return result ?? throw new InvalidOperationException($"Could not convert {nameof(ResourceStoreItem)} to {nameof(Resource)}");
 			default:
 				throw new NotSupportedException($"Getting cached {typeName} is not supported");
 		}
@@ -250,7 +250,7 @@ public class DatamartClient : LogicMonitorClient
 					.ToListAsync(cancellationToken)
 					.ConfigureAwait(false);
 				return deviceGroupStoreItems
-					.ConvertAll(dg => MapperInstance.Map<DeviceGroupStoreItem, ResourceGroup>(dg) as TApi ?? throw new InvalidOperationException($"Could not convert {nameof(DeviceGroupStoreItem)} to {nameof(ResourceGroup)}"));
+					.ConvertAll(dg => MapperInstance.Map<ResourceGroupStoreItem, ResourceGroup>(dg) as TApi ?? throw new InvalidOperationException($"Could not convert {nameof(ResourceGroupStoreItem)} to {nameof(ResourceGroup)}"));
 			case nameof(WebsiteGroup):
 				var websiteGroupStoreItems = await context
 					.WebsiteGroups
@@ -1000,7 +1000,7 @@ public class DatamartClient : LogicMonitorClient
 			.ToListAsync()
 			.ConfigureAwait(false);
 
-	public static async Task<List<int>> GetAllCachedDeviceGroupIdsAsync(DbSet<DeviceGroupStoreItem> deviceGroups, string groupName)
+	public static async Task<List<int>> GetAllCachedDeviceGroupIdsAsync(DbSet<ResourceGroupStoreItem> deviceGroups, string groupName)
 		=> (groupName ?? throw new ArgumentNullException(nameof(groupName))).EndsWith('*')
 			? await deviceGroups
 				.Where(dg => dg.FullPath.StartsWith(groupName.TrimEnd('*'), StringComparison.Ordinal))
@@ -1148,7 +1148,7 @@ public class DatamartClient : LogicMonitorClient
 				if (deviceDataSourceStoreItem == null)
 				{
 					// Add it to the database
-					deviceDataSourceStoreItem = MapperInstance.Map<DeviceDataSourceStoreItem>(deviceDataSource);
+					deviceDataSourceStoreItem = MapperInstance.Map<ResourceDataSourceStoreItem>(deviceDataSource);
 					context.DeviceDataSources.Add(deviceDataSourceStoreItem);
 				}
 				else
@@ -1178,7 +1178,7 @@ public class DatamartClient : LogicMonitorClient
 					if (await context
 						.DeviceDataSourceInstances
 						.SingleOrDefaultAsync(dddsi => dddsi.LogicMonitorId == instance.Id, cancellationToken: cancellationToken)
-						.ConfigureAwait(false) is DeviceDataSourceInstanceStoreItem instanceStoreItem)
+						.ConfigureAwait(false) is ResourceDataSourceInstanceStoreItem instanceStoreItem)
 					{
 						// RM-16087 Update "DatamartLastObserved" to the date the sync noticed them, even if nothing was changed
 						instanceStoreItem.DatamartLastObserved = instanceObservedDateTimeUtc;
@@ -1248,7 +1248,7 @@ public class DatamartClient : LogicMonitorClient
 					if (databaseDeviceDataSourceInstance == null)
 					{
 						// Add it to the database
-						databaseDeviceDataSourceInstance = MapperInstance.Map<DeviceDataSourceInstanceStoreItem>(apiDeviceDataSourceInstance);
+						databaseDeviceDataSourceInstance = MapperInstance.Map<ResourceDataSourceInstanceStoreItem>(apiDeviceDataSourceInstance);
 						databaseDeviceDataSourceInstance.DeviceDataSourceId = deviceDataSourceStoreItem.Id;
 						context.DeviceDataSourceInstances.Add(databaseDeviceDataSourceInstance);
 					}
@@ -1291,7 +1291,7 @@ public class DatamartClient : LogicMonitorClient
 							// Add to the database
 							context
 							.DeviceDataSourceInstanceDataPoints
-							.Add(new DeviceDataSourceInstanceDataPointStoreItem
+							.Add(new ResourceDataSourceInstanceDataPointStoreItem
 							{
 								DeviceDataSourceInstanceId = databaseDeviceDataSourceInstance.Id,
 								DataSourceDataPointId = dataSourceDataPointId,

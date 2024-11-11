@@ -1,9 +1,9 @@
 ﻿namespace LogicMonitor.Datamart.Models;
 
-public class DeviceDataSourceInstanceDataPointStoreItem : IdentifiedStoreItem
+public class ResourceDataSourceInstanceDataPointStoreItem : IdentifiedStoreItem
 {
 	// Navigation properties
-	public DeviceDataSourceInstanceStoreItem? DeviceDataSourceInstance { get; set; }
+	public ResourceDataSourceInstanceStoreItem? DeviceDataSourceInstance { get; set; }
 
 	// Database properties
 	public Guid DeviceDataSourceInstanceId { get; set; }

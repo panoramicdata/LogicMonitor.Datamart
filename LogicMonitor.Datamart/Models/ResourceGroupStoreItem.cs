@@ -1,6 +1,6 @@
 namespace LogicMonitor.Datamart.Models;
 
-public class DeviceGroupStoreItem : IdentifiedStoreItem
+public class ResourceGroupStoreItem : IdentifiedStoreItem
 {
 	public string Name { get; set; } = string.Empty;
 

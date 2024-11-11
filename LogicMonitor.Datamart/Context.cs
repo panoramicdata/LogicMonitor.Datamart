@@ -20,17 +20,18 @@ public class Context : DbContext
 	public DbSet<ConfigSourceStoreItem> ConfigSources { get; set; } = null!;
 	public DbSet<DataSourceGraphStoreItem> DataSourceGraphs { get; set; } = null!;
 	public DbSet<DataSourceStoreItem> DataSources { get; set; } = null!;
-	public DbSet<DeviceDataSourceInstanceDataPointStoreItem> DeviceDataSourceInstanceDataPoints { get; set; } = null!;
 	public DbSet<DataSourceDataPointStoreItem> DataSourceDataPoints { get; set; } = null!;
-	public DbSet<DeviceDataSourceStoreItem> DeviceDataSources { get; set; } = null!;
-	public DbSet<DeviceDataSourceInstanceStoreItem> DeviceDataSourceInstances { get; set; } = null!;
+	//public DbSet<IntegrationStoreItem> Integrations { get; set; } = null!;
+	public DbSet<ResourceDataSourceStoreItem> DeviceDataSources { get; set; } = null!;
+	public DbSet<ResourceDataSourceInstanceStoreItem> DeviceDataSourceInstances { get; set; } = null!;
 	public DbSet<EscalationChainStoreItem> EscalationChains { get; set; } = null!;
 	public DbSet<EventSourceStoreItem> EventSources { get; set; } = null!;
-	public DbSet<DeviceStoreItem> Devices { get; set; } = null!;
-	public DbSet<DeviceGroupStoreItem> DeviceGroups { get; set; } = null!;
 	public DbSet<LogicModuleUpdateStoreItem> LogicModuleUpdates { get; set; } = null!;
 	public DbSet<LogStoreItem> LogItems { get; set; } = null!;
 	public DbSet<WebsiteStoreItem> Websites { get; set; } = null!;
+	public DbSet<ResourceDataSourceInstanceDataPointStoreItem> DeviceDataSourceInstanceDataPoints { get; set; } = null!;
+	public DbSet<ResourceStoreItem> Devices { get; set; } = null!;
+	public DbSet<ResourceGroupStoreItem> DeviceGroups { get; set; } = null!;
 	public DbSet<WebsiteGroupStoreItem> WebsiteGroups { get; set; } = null!;
 	public DbSet<MonitorObjectGroupStoreItem> MonitorObjectGroups { get; set; } = null!;
 	public DbSet<TimeSeriesDataAggregationStoreItem> TimeSeriesDataAggregations { get; set; } = null!;
@@ -124,26 +125,26 @@ public class Context : DbContext
 			.OnDelete(DeleteBehavior.Restrict);
 
 		// DeviceDataSourceInstance indexes
-		modelBuilder.Entity<DeviceDataSourceInstanceStoreItem>()
+		modelBuilder.Entity<ResourceDataSourceInstanceStoreItem>()
 			.HasIndex(ddsi => ddsi.LastWentMissing);
 
 		// Relational stuff
-		modelBuilder.Entity<DeviceDataSourceInstanceStoreItem>()
+		modelBuilder.Entity<ResourceDataSourceInstanceStoreItem>()
 			.HasOne(ddsi => ddsi.DeviceDataSource)
 			.WithMany(ds => ds.DeviceDataSourceInstances)
 			.OnDelete(DeleteBehavior.Restrict);
 
-		modelBuilder.Entity<DeviceDataSourceInstanceStoreItem>()
+		modelBuilder.Entity<ResourceDataSourceInstanceStoreItem>()
 			.HasOne(ddsi => ddsi.DeviceDataSource)
 			.WithMany(d => d.DeviceDataSourceInstances)
 			.OnDelete(DeleteBehavior.Restrict);
 
-		modelBuilder.Entity<DeviceDataSourceStoreItem>()
+		modelBuilder.Entity<ResourceDataSourceStoreItem>()
 			.HasOne(dds => dds.DataSource)
 			.WithMany(d => d.DeviceDataSources)
 			.OnDelete(DeleteBehavior.Restrict);
 
-		modelBuilder.Entity<DeviceDataSourceStoreItem>()
+		modelBuilder.Entity<ResourceDataSourceStoreItem>()
 			.HasOne(dds => dds.Device)
 			.WithMany(d => d.DeviceDataSources)
 			.OnDelete(DeleteBehavior.Restrict);

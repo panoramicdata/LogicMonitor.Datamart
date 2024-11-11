@@ -1,15 +1,15 @@
 namespace LogicMonitor.Datamart.Models;
 
-public class DeviceDataSourceStoreItem : IdentifiedStoreItem
+public class ResourceDataSourceStoreItem : IdentifiedStoreItem
 {
 	// Navigation properties
-	public virtual ICollection<DeviceDataSourceInstanceStoreItem>? DeviceDataSourceInstances { get; set; }
+	public virtual ICollection<ResourceDataSourceInstanceStoreItem>? DeviceDataSourceInstances { get; set; }
 
 	public DataSourceStoreItem? DataSource { get; set; }
 
 	public Guid DataSourceId { get; set; }
 
-	public DeviceStoreItem? Device { get; set; } = null!;
+	public ResourceStoreItem? Device { get; set; } = null!;
 
 	public Guid DeviceId { get; set; }
 

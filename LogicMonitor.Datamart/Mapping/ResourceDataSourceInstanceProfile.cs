@@ -4,7 +4,7 @@ public class ResourceDataSourceInstanceProfile : Profile
 {
 	public ResourceDataSourceInstanceProfile()
 	{
-		CreateMap<ResourceDataSourceInstance, DeviceDataSourceInstanceStoreItem>()
+		CreateMap<ResourceDataSourceInstance, ResourceDataSourceInstanceStoreItem>()
 			.ForMember(
 				dest => dest.Id,
 				opts => opts.Ignore())
@@ -70,7 +70,7 @@ public class ResourceDataSourceInstanceProfile : Profile
 				opts => opts.Ignore())
 			;
 
-		CreateMap<DeviceDataSourceInstanceStoreItem, ResourceDataSourceInstance>()
+		CreateMap<ResourceDataSourceInstanceStoreItem, ResourceDataSourceInstance>()
 			.ForMember(
 				dest => dest.Id,
 				opts => opts.MapFrom(src => src.LogicMonitorId))

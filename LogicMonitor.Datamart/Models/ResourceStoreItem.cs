@@ -1,9 +1,9 @@
 namespace LogicMonitor.Datamart.Models;
 
-public class DeviceStoreItem : IdentifiedStoreItem
+public class ResourceStoreItem : IdentifiedStoreItem
 {
 	// Navigation properties
-	public virtual ICollection<DeviceDataSourceStoreItem>? DeviceDataSources { get; set; }
+	public virtual ICollection<ResourceDataSourceStoreItem>? DeviceDataSources { get; set; }
 
 	/// <summary>
 	/// Nullable to allow for cloud collectors

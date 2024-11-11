@@ -7,12 +7,12 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 	[Fact]
 	public async Task GetData_Succeeds()
 	{
-		var device = new DeviceStoreItem
+		var device = new ResourceStoreItem
 		{
 			CreatedOnSeconds = 0
 		};
 
-		var deviceDataSourceInstanceDataPoint = new DeviceDataSourceInstanceDataPointStoreItem
+		var deviceDataSourceInstanceDataPoint = new ResourceDataSourceInstanceDataPointStoreItem
 		{
 			DeviceDataSourceInstance = new()
 			{

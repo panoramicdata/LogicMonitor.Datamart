@@ -82,5 +82,5 @@ public class DataSourceDataPointStoreItem : IdentifiedStoreItem
 	/// </summary>
 	public bool ResyncTimeSeriesData { get; set; }
 
-	public virtual ICollection<DeviceDataSourceInstanceDataPointStoreItem> DeviceDataSourceInstanceDataPoints { get; set; } = null!;
+	public virtual ICollection<ResourceDataSourceInstanceDataPointStoreItem> DeviceDataSourceInstanceDataPoints { get; set; } = null!;
 }

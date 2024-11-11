@@ -101,7 +101,7 @@ internal class DimensionSync : LoopInterval
 		if (_types?.Contains(nameof(Resource)) ?? true)
 		{
 			await _datamartClient
-			.AddOrUpdate<Resource, DeviceStoreItem>(
+			.AddOrUpdate<Resource, ResourceStoreItem>(
 				context => context.Devices,
 				haltOnError,
 				Logger,
@@ -216,7 +216,7 @@ internal class DimensionSync : LoopInterval
 		if (_types?.Contains(nameof(ResourceGroup)) ?? true)
 		{
 			await _datamartClient
-				.AddOrUpdate<ResourceGroup, DeviceGroupStoreItem>(
+				.AddOrUpdate<ResourceGroup, ResourceGroupStoreItem>(
 					context => context.DeviceGroups,
 					haltOnError,
 					Logger,

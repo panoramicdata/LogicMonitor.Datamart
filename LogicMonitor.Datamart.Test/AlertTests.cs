@@ -8,7 +8,7 @@ public class AlertTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iT
 		var utcNow = DateTime.UtcNow;
 
 		await DatamartClient
-			.AddOrUpdate<Resource, DeviceStoreItem>(
+			.AddOrUpdate<Resource, ResourceStoreItem>(
 				context => context.Devices,
 				true,
 				LoggerFactory.CreateLogger(nameof(AlertTests)),

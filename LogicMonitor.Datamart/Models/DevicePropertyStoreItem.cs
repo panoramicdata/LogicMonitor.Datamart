@@ -2,7 +2,7 @@ namespace LogicMonitor.Datamart.Models;
 
 public class DevicePropertyStoreItem : StoreItem
 {
-	public DeviceStoreItem? Device { get; set; }
+	public virtual ResourceStoreItem? Device { get; set; }
 
 	public Guid DeviceId { get; set; }
 

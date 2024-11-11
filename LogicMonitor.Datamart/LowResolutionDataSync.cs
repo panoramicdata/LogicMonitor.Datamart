@@ -36,7 +36,7 @@ internal class LowResolutionDataSync(
 		}
 
 		List<DataSourceStoreItem> matchingDatabaseDataSourcesNotTracked;
-		Dictionary<int, DeviceStoreItem> allDatabaseDevicesByLogicMonitorIdNotTracked;
+		Dictionary<int, ResourceStoreItem> allDatabaseDevicesByLogicMonitorIdNotTracked;
 		using (var contextForReferenceDataNotTracked = _datamartClient.GetContext())
 		{
 			// Use the database as a reference for what should be loaded in to ensure referential integrity between the data and the DeviceDataSourceInstance
@@ -144,7 +144,7 @@ internal class LowResolutionDataSync(
 	}
 
 	private async Task ProcessDataSourceAsync(
-		Dictionary<int, DeviceStoreItem> allDatabaseDevicesByLogicMonitorIdNotTracked,
+		Dictionary<int, ResourceStoreItem> allDatabaseDevicesByLogicMonitorIdNotTracked,
 		int dataSourceIndex,
 		int dataSourceCount,
 		Stopwatch dataSourceStopwatch,
@@ -290,7 +290,7 @@ internal class LowResolutionDataSync(
 		List<string> failedDeviceDisplayNames,
 		int deviceIndex,
 		int deviceCount,
-		DeviceStoreItem databaseDeviceNotTracked,
+		ResourceStoreItem databaseDeviceNotTracked,
 		CacheStats deviceCacheStats,
 		CancellationToken cancellationToken)
 	{
@@ -443,8 +443,8 @@ internal class LowResolutionDataSync(
 		Context context,
 		Configuration configuration,
 		ILogger logger,
-		DeviceStoreItem deviceNotTracked,
-		List<DeviceDataSourceInstanceDataPointStoreItem> databaseDeviceDataSourceInstanceDataPoints,
+		ResourceStoreItem deviceNotTracked,
+		List<ResourceDataSourceInstanceDataPointStoreItem> databaseDeviceDataSourceInstanceDataPoints,
 		CacheStats cacheStats,
 		CancellationToken cancellationToken)
 	{
@@ -651,8 +651,8 @@ internal class LowResolutionDataSync(
 	}
 
 	internal static TimeSeriesDataAggregationStoreItem? GetTimeSeriesDataAggregationStoreItem(
-		DeviceStoreItem deviceNotTracked,
-		DeviceDataSourceInstanceDataPointStoreItem databaseDeviceDataSourceInstanceDataPoint,
+		ResourceStoreItem deviceNotTracked,
+		ResourceDataSourceInstanceDataPointStoreItem databaseDeviceDataSourceInstanceDataPoint,
 		string dataPointName,
 		DataSourceDataPointStoreItem dataPointStoreItemNotTracked,
 		DateTimeOffset startDateTimeUtc,
@@ -771,7 +771,7 @@ internal class LowResolutionDataSync(
 	private static async Task ResetForResyncAsync(
 		Context context,
 		ILogger logger,
-		List<DeviceDataSourceInstanceDataPointStoreItem> databaseDeviceDataSourceInstanceDataPoints,
+		List<ResourceDataSourceInstanceDataPointStoreItem> databaseDeviceDataSourceInstanceDataPoints,
 		List<DataSourceDataPointStoreItem> dataPointStoreItemsNotTracked,
 		CancellationToken cancellationToken
 	)
