@@ -12,6 +12,24 @@ public class ResourceGroupProfile : Profile
 				dest => dest.LogicMonitorId,
 				opts => opts.MapFrom(src => src.Id))
 			.ForMember(
+				dest => dest.AwsDeviceCount,
+				opts => opts.MapFrom(src => src.AwsResourceCount))
+			.ForMember(
+				dest => dest.AzureDeviceCount,
+				opts => opts.MapFrom(src => src.AzureResourceCount))
+			.ForMember(
+				dest => dest.GcpDeviceCount,
+				opts => opts.MapFrom(src => src.GcpResourceCount))
+			.ForMember(
+				dest => dest.DeviceCount,
+				opts => opts.MapFrom(src => src.ResourceCount))
+			.ForMember(
+				dest => dest.DeviceGroupType,
+				opts => opts.MapFrom(src => src.ResourceGroupType))
+			.ForMember(
+				dest => dest.DirectDeviceCount,
+				opts => opts.MapFrom(src => src.DirectResourceCount))
+			.ForMember(
 				dest => dest.DatamartCreated,
 				opts => opts.Ignore())
 			.ForMember(
@@ -59,7 +77,7 @@ public class ResourceGroupProfile : Profile
 				dest => dest.DefaultAutoBalancedCollectorGroupId,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.KubernetesDeviceCount,
+				dest => dest.KubernetesResourceCount,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.RolePrivileges,
@@ -84,6 +102,18 @@ public class ResourceGroupProfile : Profile
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.PropertyChangeWarningMessage,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.AwsResourceCount,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.AzureResourceCount,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.GcpResourceCount,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.ResourceCount,
 				opts => opts.Ignore())
 			.IgnoreAllPropertiesWithAnInaccessibleSetter()
 			;

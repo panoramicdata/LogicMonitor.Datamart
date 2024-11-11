@@ -33,6 +33,18 @@ public class ResourceProfile : Profile
 				dest => dest.LastAlertClosedTimeSeconds,
 				opts => opts.Ignore())
 			.ForMember(
+				dest => dest.DeviceType,
+				opts => opts.MapFrom(src => src.ResourceType))
+			.ForMember(
+				dest => dest.DeviceGroupIdsString,
+				opts => opts.MapFrom(src => src.ResourceGroupIdsString))
+			.ForMember(
+				dest => dest.DeviceStatus,
+				opts => opts.MapFrom(src => src.ResourceStatus))
+			.ForMember(
+				dest => dest.RelatedDeviceId,
+				opts => opts.MapFrom(src => src.RelatedResourceId))
+			.ForMember(
 				dest => dest.Property1,
 				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 1)))
 			.ForMember(
@@ -199,6 +211,15 @@ public class ResourceProfile : Profile
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.ResourceGroupIdsString,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.RelatedResourceId,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.ResourceStatus,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.ResourceType,
 				opts => opts.Ignore())
 			;
 	}

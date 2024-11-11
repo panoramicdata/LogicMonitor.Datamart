@@ -623,7 +623,7 @@ internal class LowResolutionDataSync(
 
 	internal static async Task<GraphData> GetGraphDataAsync(
 		DatamartClient datamartClient,
-		int deviceDataSourceInstanceId,
+		int resourceDataSourceInstanceId,
 		DateTimeOffset startDateTimeOffset,
 		DateTimeOffset endDateTimeOffset,
 		ILogger logger,
@@ -632,7 +632,7 @@ internal class LowResolutionDataSync(
 	{
 		logger.LogDebug(
 			"Getting graph data for DeviceDataSourceInstance {DeviceDataSourceInstanceId} ({Start:yyyy-MM-dd HH:mm:ss} .. {End:yyyy-MM-dd HH:mm:ss})...",
-			deviceDataSourceInstanceId,
+			resourceDataSourceInstanceId,
 			startDateTimeOffset,
 			endDateTimeOffset);
 
@@ -640,7 +640,7 @@ internal class LowResolutionDataSync(
 			.GetGraphDataAsync(
 				new ResourceDataSourceInstanceGraphDataRequest
 				{
-					DeviceDataSourceInstanceId = deviceDataSourceInstanceId,
+					ResourceDataSourceInstanceId = resourceDataSourceInstanceId,
 					StartDateTime = startDateTimeOffset.UtcDateTime,
 					EndDateTime = endDateTimeOffset.UtcDateTime,
 					TimePeriod = TimePeriod.Zoom,

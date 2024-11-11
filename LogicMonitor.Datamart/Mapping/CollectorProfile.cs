@@ -18,8 +18,26 @@ public class CollectorProfile : Profile
 				dest => dest.Devices,
 				opts => opts.Ignore())
 			.ForMember(
+				dest => dest.DeviceCount,
+				opts => opts.MapFrom(src => src.ResourceCount))
+			.ForMember(
+				dest => dest.EnableFailOverOnCollectorDevice,
+				opts => opts.MapFrom(src => src.EnableFailOverOnCollectorResource))
+			.ForMember(
+				dest => dest.HasFailOverDevice,
+				opts => opts.MapFrom(src => src.HasFailOverResource))
+			.ForMember(
+				dest => dest.NeedAutoCreateCollectorDevice,
+				opts => opts.MapFrom(src => src.NeedAutoCreateCollectorResource))
+			.ForMember(
+				dest => dest.SpecifiedCollectorDeviceGroupId,
+				opts => opts.MapFrom(src => src.SpecifiedCollectorResourceGroupId))
+			.ForMember(
+				dest => dest.UserVisibleDeviceCount,
+				opts => opts.MapFrom(src => src.UserVisibleResourceCount))
+			.ForMember(
 				dest => dest.LogicMonitorDeviceId,
-				opts => opts.MapFrom(src => src.DeviceId))
+				opts => opts.MapFrom(src => src.ResourceId))
 			.ForMember(
 				dest => dest.DatamartCreated,
 				opts => opts.Ignore())
@@ -42,8 +60,26 @@ public class CollectorProfile : Profile
 				dest => dest.Id,
 				opts => opts.MapFrom(src => src.LogicMonitorId))
 			.ForMember(
-				dest => dest.DeviceId,
+				dest => dest.ResourceId,
 				opts => opts.MapFrom(src => src.LogicMonitorDeviceId))
+			.ForMember(
+				dest => dest.ResourceCount,
+				opts => opts.MapFrom(src => src.DeviceCount))
+			.ForMember(
+				dest => dest.EnableFailOverOnCollectorResource,
+				opts => opts.MapFrom(src => src.EnableFailOverOnCollectorDevice))
+			.ForMember(
+				dest => dest.HasFailOverResource,
+				opts => opts.MapFrom(src => src.HasFailOverDevice))
+			.ForMember(
+				dest => dest.IsAdminAccount,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.NeedAutoCreateCollectorResource,
+				opts => opts.MapFrom(src => src.NeedAutoCreateCollectorDevice))
+			.ForMember(
+				dest => dest.UserVisibleResourceCount,
+				opts => opts.MapFrom(src => src.UserVisibleDeviceCount))
 			.ForMember(
 				dest => dest.GroupId,
 				opts => opts.Ignore())

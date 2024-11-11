@@ -20,6 +20,9 @@ public class AuditEventProfile : Profile
 				dest => dest.DatamartLastModified,
 				opts => opts.Ignore())
 			.ForMember(
+				dest => dest.DeviceDataSourceId,
+				opts => opts.MapFrom(src => src.ResourceDataSourceId))
+			.ForMember(
 				dest => dest.OriginatorType,
 				opts => opts.MapFrom(src => src.OriginatorType.ToString()))
 			.ForMember(

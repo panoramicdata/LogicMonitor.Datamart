@@ -69,7 +69,7 @@ public class DeviceDataSourceProfile : Profile
 				dest => dest.DataSourceId,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.DeviceId,
+				dest => dest.ResourceId,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.GroupName,
@@ -109,6 +109,12 @@ public class DeviceDataSourceProfile : Profile
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.SdtAt,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.ResourceName,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.ResourceDisplayName,
 				opts => opts.Ignore())
 			;
 	}

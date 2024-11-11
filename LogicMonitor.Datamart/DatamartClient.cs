@@ -326,13 +326,6 @@ public class DatamartClient : LogicMonitorClient
 		return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
 	}
 
-	[Obsolete("Use PerformDataAgeingAsync instead")]
-	public Task PerformDataAgingAsync(
-		int desiredMaxIntervalMinutes,
-		int CountAggregationDaysToRetain,
-		CancellationToken cancellationToken)
-		=> PerformDataAgeingAsync(desiredMaxIntervalMinutes, CountAggregationDaysToRetain, cancellationToken);
-
 	public Task PerformDataAgeingAsync(
 	int desiredMaxIntervalMinutes,
 	int CountAggregationDaysToRetain,
@@ -1137,14 +1130,14 @@ public class DatamartClient : LogicMonitorClient
 					.Include(dds => dds.DataSource)
 					.Include(dds => dds.Device)
 					.SingleOrDefaultAsync(dds =>
-							dds.Device!.LogicMonitorId == deviceDataSource.DeviceId
+							dds.Device!.LogicMonitorId == deviceDataSource.ResourceId
 							&& dds.DataSource!.LogicMonitorId == deviceDataSource.DataSourceId,
 						cancellationToken: cancellationToken)
 					.ConfigureAwait(false);
 
 				var deviceStoreItem = await context
 					.Devices
-					.SingleOrDefaultAsync(d => d.LogicMonitorId == deviceDataSource.DeviceId, cancellationToken)
+					.SingleOrDefaultAsync(d => d.LogicMonitorId == deviceDataSource.ResourceId, cancellationToken)
 					.ConfigureAwait(false);
 
 				var dataSourceStoreItem = await context
@@ -1170,7 +1163,7 @@ public class DatamartClient : LogicMonitorClient
 
 				// Fetch the DeviceDataSourceInstances from the API
 				var apiDeviceDataSourceInstances =
-					await GetAllDeviceDataSourceInstancesAsync(
+					await GetAllResourceDataSourceInstancesAsync(
 						device.Id,
 						deviceDataSource.Id,
 						new(),

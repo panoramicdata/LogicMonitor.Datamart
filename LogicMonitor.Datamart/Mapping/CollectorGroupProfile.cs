@@ -41,7 +41,7 @@ public class CollectorGroupProfile : Profile
 				dest => dest.AutoBalanceStrategy,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.AutoBalanceDeviceCountThreshold,
+				dest => dest.AutoBalanceResourceCountThreshold,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.AutoBalanceInstanceCountThreshold,
@@ -56,7 +56,7 @@ public class CollectorGroupProfile : Profile
 				dest => dest.InstanceCount,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.DeviceCount,
+				dest => dest.ResourceCount,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.MismatchVersion,
