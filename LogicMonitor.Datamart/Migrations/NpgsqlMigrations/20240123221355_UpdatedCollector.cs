@@ -1,38 +1,37 @@
 ﻿#nullable disable
 
-namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
+namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations;
+
+/// <inheritdoc />
+public partial class UpdatedCollector : Migration
 {
 	/// <inheritdoc />
-	public partial class UpdatedCollector : Migration
+	protected override void Up(MigrationBuilder migrationBuilder)
 	{
-		/// <inheritdoc />
-		protected override void Up(MigrationBuilder migrationBuilder)
-		{
-			migrationBuilder.AddColumn<bool>(
-				name: "IsLmLogsEnabled",
-				table: "Collectors",
-				type: "boolean",
-				nullable: false,
-				defaultValue: false);
+		migrationBuilder.AddColumn<bool>(
+			name: "IsLmLogsEnabled",
+			table: "Collectors",
+			type: "boolean",
+			nullable: false,
+			defaultValue: false);
 
-			migrationBuilder.AddColumn<bool>(
-				name: "IsLmLogsSyslogEnabled",
-				table: "Collectors",
-				type: "boolean",
-				nullable: false,
-				defaultValue: false);
-		}
+		migrationBuilder.AddColumn<bool>(
+			name: "IsLmLogsSyslogEnabled",
+			table: "Collectors",
+			type: "boolean",
+			nullable: false,
+			defaultValue: false);
+	}
 
-		/// <inheritdoc />
-		protected override void Down(MigrationBuilder migrationBuilder)
-		{
-			migrationBuilder.DropColumn(
-				name: "IsLmLogsEnabled",
-				table: "Collectors");
+	/// <inheritdoc />
+	protected override void Down(MigrationBuilder migrationBuilder)
+	{
+		migrationBuilder.DropColumn(
+			name: "IsLmLogsEnabled",
+			table: "Collectors");
 
-			migrationBuilder.DropColumn(
-				name: "IsLmLogsSyslogEnabled",
-				table: "Collectors");
-		}
+		migrationBuilder.DropColumn(
+			name: "IsLmLogsSyslogEnabled",
+			table: "Collectors");
 	}
 }

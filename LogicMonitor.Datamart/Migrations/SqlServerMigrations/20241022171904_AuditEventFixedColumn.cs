@@ -1,20 +1,19 @@
 ﻿#nullable disable
 
-namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
+namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations;
+
+/// <inheritdoc />
+public partial class AuditEventFixedColumn : Migration
 {
 	/// <inheritdoc />
-	public partial class AuditEventFixedColumn : Migration
+	protected override void Up(MigrationBuilder migrationBuilder)
 	{
-		/// <inheritdoc />
-		protected override void Up(MigrationBuilder migrationBuilder)
-		{
 
-		}
+	}
 
-		/// <inheritdoc />
-		protected override void Down(MigrationBuilder migrationBuilder)
-		{
+	/// <inheritdoc />
+	protected override void Down(MigrationBuilder migrationBuilder)
+	{
 
-		}
 	}
 }

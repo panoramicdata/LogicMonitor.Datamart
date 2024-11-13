@@ -1,38 +1,37 @@
 ﻿#nullable disable
 
-namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
+namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations;
+
+/// <inheritdoc />
+public partial class DeviceDataSourceInstanceNamesAndDescriptions : Migration
 {
 	/// <inheritdoc />
-	public partial class DeviceDataSourceInstanceNamesAndDescriptions : Migration
+	protected override void Up(MigrationBuilder migrationBuilder)
 	{
-		/// <inheritdoc />
-		protected override void Up(MigrationBuilder migrationBuilder)
-		{
-			migrationBuilder.AddColumn<string>(
-				name: "Description",
-				table: "DeviceDataSourceInstances",
-				type: "text",
-				nullable: false,
-				defaultValue: "");
+		migrationBuilder.AddColumn<string>(
+			name: "Description",
+			table: "DeviceDataSourceInstances",
+			type: "text",
+			nullable: false,
+			defaultValue: "");
 
-			migrationBuilder.AddColumn<bool>(
-				name: "Name",
-				table: "DeviceDataSourceInstances",
-				type: "boolean",
-				nullable: false,
-				defaultValue: false);
-		}
+		migrationBuilder.AddColumn<bool>(
+			name: "Name",
+			table: "DeviceDataSourceInstances",
+			type: "boolean",
+			nullable: false,
+			defaultValue: false);
+	}
 
-		/// <inheritdoc />
-		protected override void Down(MigrationBuilder migrationBuilder)
-		{
-			migrationBuilder.DropColumn(
-				name: "Description",
-				table: "DeviceDataSourceInstances");
+	/// <inheritdoc />
+	protected override void Down(MigrationBuilder migrationBuilder)
+	{
+		migrationBuilder.DropColumn(
+			name: "Description",
+			table: "DeviceDataSourceInstances");
 
-			migrationBuilder.DropColumn(
-				name: "Name",
-				table: "DeviceDataSourceInstances");
-		}
+		migrationBuilder.DropColumn(
+			name: "Name",
+			table: "DeviceDataSourceInstances");
 	}
 }

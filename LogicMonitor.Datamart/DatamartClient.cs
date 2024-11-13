@@ -68,7 +68,7 @@ public class DatamartClient : LogicMonitorClient
 				dbContextOptionsBuilder
 					.UseNpgsql(
 						$"Server={configuration.DatabaseServerName};" +
-						$"Port={(configuration.DatabaseServerPort ?? 5432)};" +
+						$"Port={configuration.DatabaseServerPort ?? 5432};" +
 						$"Database={configuration.DatabaseName};" +
 						$"Uid={configuration.DatabaseUsername};" +
 						$"Pwd={configuration.DatabasePassword};" +
@@ -501,7 +501,7 @@ public class DatamartClient : LogicMonitorClient
 				{
 					logger.LogInformation(
 						"Syncing {Type}s: {ItemIndex}/{ItemCount}",
-						typeof(LogicModuleUpdate).Name,
+						nameof(LogicModuleUpdate),
 						itemIndex,
 						apiItems.Items.Count);
 					await notificationReceiver
@@ -616,7 +616,7 @@ public class DatamartClient : LogicMonitorClient
 			.Where(g => !databaseGraphs.Any(dg => dg.Name == g.Name && dg.IsOverview == areOverview))
 			.Select(g =>
 			{
-				DataSourceGraphStoreItem databaseDataSourceGraph = MapperInstance.Map<DataSourceGraphStoreItem>(g);
+				var databaseDataSourceGraph = MapperInstance.Map<DataSourceGraphStoreItem>(g);
 				databaseDataSourceGraph.DataSourceId = databaseDataSourceId;
 				databaseDataSourceGraph.IsOverview = areOverview;
 				return databaseDataSourceGraph;

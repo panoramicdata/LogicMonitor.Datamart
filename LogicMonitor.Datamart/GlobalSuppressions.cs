@@ -19,3 +19,17 @@ using System.Diagnostics.CodeAnalysis;
 	Scope = "namespaceanddescendants",
 	Target = "~N:LogicMonitor.Datamart.Migrations")
 ]
+[assembly: SuppressMessage(
+	"Style",
+	"IDE0022:Use expression body for method",
+	Justification = "Code generated",
+	Scope = "namespaceanddescendants",
+	Target = "~N:LogicMonitor.Datamart.Migrations")
+]
+[assembly: SuppressMessage(
+	"Naming",
+	"CA1707:Identifiers should not contain underscores",
+	Justification = "Code generated",
+	Scope = "namespaceanddescendants",
+	Target = "~N:LogicMonitor.Datamart.Migrations")
+]
