@@ -1252,6 +1252,14 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 						.ValueGeneratedOnAdd()
 						.HasColumnType("uuid");
 
+					b.Property<string>("CcDestination")
+						.IsRequired()
+						.HasColumnType("text");
+
+					b.Property<string>("CcDestinations")
+						.IsRequired()
+						.HasColumnType("text");
+
 					b.Property<DateTimeOffset>("DatamartCreated")
 						.HasColumnType("timestamp with time zone");
 
@@ -1262,6 +1270,14 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 						.HasColumnType("timestamp with time zone");
 
 					b.Property<string>("Description")
+						.IsRequired()
+						.HasColumnType("text");
+
+					b.Property<string>("Destination")
+						.IsRequired()
+						.HasColumnType("text");
+
+					b.Property<string>("Destinations")
 						.IsRequired()
 						.HasColumnType("text");
 

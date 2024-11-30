@@ -1,7 +1,11 @@
-﻿namespace LogicMonitor.Datamart.Mapping;
+﻿using System.Text.Json;
+
+namespace LogicMonitor.Datamart.Mapping;
 
 public class EscalationChainProfile : Profile
 {
+	private static readonly JsonSerializerOptions _jsonSerializerOptions = new();
+
 	public EscalationChainProfile()
 	{
 		CreateMap<EscalationChain, EscalationChainStoreItem>()
@@ -23,6 +27,18 @@ public class EscalationChainProfile : Profile
 			.ForMember(
 				dest => dest.DatamartLastObserved,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.Destination,
+				opts => opts.MapFrom(src => JsonSerializer.Serialize(src.Destination, _jsonSerializerOptions)))
+			.ForMember(
+				dest => dest.Destinations,
+				opts => opts.MapFrom(src => JsonSerializer.Serialize(src.Destinations, _jsonSerializerOptions)))
+			.ForMember(
+				dest => dest.CcDestination,
+				opts => opts.MapFrom(src => JsonSerializer.Serialize(src.CcDestination, _jsonSerializerOptions)))
+			.ForMember(
+				dest => dest.CcDestinations,
+				opts => opts.MapFrom(src => JsonSerializer.Serialize(src.CcDestinations, _jsonSerializerOptions)))
 			;
 		CreateMap<EscalationChainStoreItem, EscalationChain>()
 			.ForMember(

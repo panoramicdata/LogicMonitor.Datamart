@@ -49,6 +49,18 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 		.ExecuteAsync(default);
 
 	[Fact]
+	public Task GetDimensions_EscalationChain_RunsSuccessfully()
+		=> new DimensionSync(
+			DatamartClient,
+			Configuration,
+			[
+				nameof(EscalationChain),
+			],
+			LoggerFactory,
+			TestNotificationReceiver)
+		.ExecuteAsync(default);
+
+	[Fact]
 	public Task GetDimensions_Website_RunsSuccessfully()
 		=> new DimensionSync(
 				DatamartClient,
