@@ -1,27 +1,26 @@
 ﻿#nullable disable
 
-namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
+namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations;
+
+/// <inheritdoc />
+public partial class AddedAuditItemDateTime : Migration
 {
 	/// <inheritdoc />
-	public partial class AddedAuditItemDateTime : Migration
+	protected override void Up(MigrationBuilder migrationBuilder)
 	{
-		/// <inheritdoc />
-		protected override void Up(MigrationBuilder migrationBuilder)
-		{
-			migrationBuilder.AddColumn<DateTimeOffset>(
-				name: "DateTime",
-				table: "AuditEvents",
-				type: "datetimeoffset",
-				nullable: false,
-				defaultValue: new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)));
-		}
+		migrationBuilder.AddColumn<DateTimeOffset>(
+			name: "DateTime",
+			table: "AuditEvents",
+			type: "datetimeoffset",
+			nullable: false,
+			defaultValue: new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)));
+	}
 
-		/// <inheritdoc />
-		protected override void Down(MigrationBuilder migrationBuilder)
-		{
-			migrationBuilder.DropColumn(
-				name: "DateTime",
-				table: "AuditEvents");
-		}
+	/// <inheritdoc />
+	protected override void Down(MigrationBuilder migrationBuilder)
+	{
+		migrationBuilder.DropColumn(
+			name: "DateTime",
+			table: "AuditEvents");
 	}
 }
