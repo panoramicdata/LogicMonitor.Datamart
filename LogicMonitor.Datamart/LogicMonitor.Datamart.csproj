@@ -44,10 +44,6 @@
 		<PackageReference Include="Nerdbank.GitVersioning" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.1" />
 		<PackageReference Include="PanoramicData.NCalcExtensions" Version="3.1.36" />
-		<PackageReference Include="SecurityCodeScan.VS2019" Version="5.6.7">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="Icon.png" Pack="true" PackagePath="" />
