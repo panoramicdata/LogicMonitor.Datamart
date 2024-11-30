@@ -3,7 +3,7 @@ using Microsoft.Extensions.Options;
 using System.Diagnostics;
 
 namespace LogicMonitor.Datamart.Cli;
-internal class Application(
+internal sealed class Application(
 	IOptions<Configuration> configuration,
 	ILoggerFactory loggerFactory)
 	: IHostLifetime, IDisposable
@@ -87,7 +87,7 @@ internal class Application(
 		}
 	}
 
-	protected virtual void Dispose(bool disposing)
+	private void Dispose(bool disposing)
 	{
 		if (!_disposedValue)
 		{
