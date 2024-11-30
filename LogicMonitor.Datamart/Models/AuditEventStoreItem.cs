@@ -11,7 +11,7 @@ public class AuditEventStoreItem : StoreItem
 	/// <summary>
 	/// When the event occurred
 	/// </summary>
-	DateTimeOffset DateTime { get; set; }
+	public DateTimeOffset DateTime { get; set; }
 
 	/// <summary>
 	/// The host that initiated the event
