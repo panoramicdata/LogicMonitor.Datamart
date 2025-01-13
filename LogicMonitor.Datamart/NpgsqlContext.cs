@@ -1,4 +1,6 @@
-﻿namespace LogicMonitor.Datamart;
+﻿using Microsoft.EntityFrameworkCore.Diagnostics;
+
+namespace LogicMonitor.Datamart;
 
 public class NpgsqlContext : Context
 {
@@ -16,5 +18,7 @@ public class NpgsqlContext : Context
 		{
 			optionsBuilder.UseNpgsql("Server=127.0.0.1;Port=5432;Database=XXX;User Id=XXX;Password=XXX;Timezone=UTC");
 		}
+
+		optionsBuilder.ConfigureWarnings(warnings => warnings.Log(RelationalEventId.PendingModelChangesWarning));
 	}
 }
