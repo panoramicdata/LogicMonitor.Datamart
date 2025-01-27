@@ -26,12 +26,12 @@
 	<ItemGroup>
 		<PackageReference Include="AspNetCore.HealthChecks.Network" Version="8.0.1" />
 		<PackageReference Include="AspNetCore.HealthChecks.SystemMemory" Version="1.0.1" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.0">
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.1">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.1" />
 		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
 		<PackageReference Include="Nerdbank.GitVersioning" />
 		<PackageReference Include="PanoramicData.HealthChecks.Core" Version="9.0.1" />
@@ -43,7 +43,7 @@
 		<PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
 		<PackageReference Include="Serilog.Sinks.ElasticSearch" Version="10.0.0" />
 		<PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
-		<PackageReference Update="Nerdbank.GitVersioning" Version="3.6.146">
+		<PackageReference Update="Nerdbank.GitVersioning" Version="3.7.115">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
