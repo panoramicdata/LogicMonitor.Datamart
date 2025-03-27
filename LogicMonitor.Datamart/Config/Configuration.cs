@@ -22,6 +22,11 @@ public class Configuration
 	public bool? AggregationReset { get; set; }
 
 	/// <summary>
+	/// Syncs only alerts for Devices relevant to each of the appliesTo's
+	/// </summary>
+	public bool? LimitAlertSyncToDataSourceAppliesTo { get; set; }
+
+	/// <summary>
 	/// Don't fetch any data before this date
 	/// </summary>
 	public DateTimeOffset StartDateTimeUtc { get; set; }

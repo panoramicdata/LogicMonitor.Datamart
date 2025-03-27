@@ -26,19 +26,36 @@ internal class AlertSync(
 		var nowSecondsSinceEpoch = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
 		List<int> databaseDeviceIds;
-		// Run the test against one instance of the context
-		using (var context = new Context(_datamartClient.DbContextOptions))
+
+		if (_datamartClient.LimitAlertSyncToDataSourceAppliesTo)
 		{
-			// Ordered for predictability
-			databaseDeviceIds = await context
+			// MS-20213: Filter the Alerts on the AppliesTo for each DataSource
+			databaseDeviceIds =
+				await _datamartClient.GetOrderedDeviceIdsForDataSourceAppliesTos(
+					cancellationToken)
+				.ConfigureAwait(false);
+		}
+		else
+		{
+			// Run the test against one instance of the context
+			using (var context = new Context(_datamartClient.DbContextOptions))
+			{
+				// Ordered for predictability
+				databaseDeviceIds =
+					await context
 						.Devices
 						.Select(d => d.LogicMonitorId)
 						.OrderBy(id => id)
 						.ToListAsync(cancellationToken: cancellationToken)
-						.ConfigureAwait(false);
+					.ConfigureAwait(false);
+			}
 		}
 
-		var updateAlertStats = await UpdateDeviceAlerts(nowSecondsSinceEpoch, databaseDeviceIds, cancellationToken)
+		var updateAlertStats =
+			await UpdateDeviceAlerts(
+				nowSecondsSinceEpoch,
+				databaseDeviceIds,
+				cancellationToken)
 			.ConfigureAwait(false);
 
 		// TODO - Non-device alerts
@@ -110,10 +127,10 @@ internal class AlertSync(
 						var alertFilter = new Filter<Alert>
 						{
 							FilterItems =
-										[
-											new Eq<Alert>(nameof(Alert.IsCleared), "*"),
-											new Gt<Alert>(nameof(Alert.EndOnSeconds), timeCursor),
-										],
+							[
+								new Eq<Alert>(nameof(Alert.IsCleared), "*"),
+								new Gt<Alert>(nameof(Alert.EndOnSeconds), timeCursor),
+							],
 							Order = new Order<Alert>
 							{
 								Property = nameof(Alert.EndOnSeconds),
@@ -257,8 +274,7 @@ internal class AlertSync(
 						deviceIndex,
 						databaseDeviceIds.Count,
 						deviceAlertCount,
-						stopwatch.Elapsed.TotalSeconds
-						);
+						stopwatch.Elapsed.TotalSeconds);
 				}
 				catch (Exception e)
 				{
@@ -359,6 +375,7 @@ internal class AlertSync(
 					"Adding new MonitorObjectGroup {NetworkAlertMonitorObjectType}:{NetworkAlertMonitorObjectGroupsFullPath}",
 					networkAlert.MonitorObjectType,
 					networkAlert.MonitorObjectGroups[index].FullPath);
+
 				databaseEntry = new MonitorObjectGroupStoreItem
 				{
 					MonitoredObjectType = networkAlert.MonitorObjectType,
@@ -366,12 +383,12 @@ internal class AlertSync(
 				};
 				monitorObjectGroupContext.MonitorObjectGroups.Add(databaseEntry);
 				await monitorObjectGroupContext.SaveChangesAsync().ConfigureAwait(false);
+				
 				Logger.LogInformation(
 					"Added new MonitorObjectGroup {DatabaseEntryMonitoredObjectType}:{DatabaseEntryFullPath} with id {DatabaseEntryId}",
 					databaseEntry.MonitoredObjectType,
 					databaseEntry.FullPath,
-					databaseEntry.Id
-					);
+					databaseEntry.Id);
 			}
 
 			return databaseEntry.Id;
@@ -435,9 +452,8 @@ internal class AlertSync(
 
 	internal async Task BulkInsertAlertsAsync(DbContextOptions<Context> contextOptions, List<AlertStoreItem> alertStoreItems)
 	{
-		Logger.LogDebug(
-			"Bulk inserting {AlertStoreItemCount} alerts...",
-			alertStoreItems.Count);
+		Logger.LogDebug("Bulk inserting {AlertStoreItemCount} alerts...", alertStoreItems.Count);
+
 		var stopwatch = Stopwatch.StartNew();
 		switch (_datamartClient.DatabaseType)
 		{

@@ -10,16 +10,22 @@ public class DatamartClient : LogicMonitorClient
 
 	internal DatabaseType DatabaseType => _configuration.DatabaseType;
 
+	internal bool LimitAlertSyncToDataSourceAppliesTo => _configuration.LimitAlertSyncToDataSourceAppliesTo ?? false;
+
 	internal const string LogicMonitorCredentialNullMessage = "Either the configuration or some aspect of the LogicMonitorCredential is null";
 
 	private const string ConnectionStringApplicationName = "LogicMonitor.Datamart";
 
 	private readonly ILoggerFactory _loggerFactory;
+	
 	private readonly ILogger _logger;
 
 	private readonly Configuration _configuration;
+	
 	private static readonly MapperConfiguration _mapperConfig = new(cfg => cfg.AddMaps(typeof(DatamartClient).Assembly));
+	
 	internal static IMapper MapperInstance = new Mapper(_mapperConfig);
+	
 	private readonly TimeProviderService _timeProviderService = new();
 
 	public DatamartClient(
@@ -1089,9 +1095,7 @@ public class DatamartClient : LogicMonitorClient
 				var requestedAppliesToMatches = await GetAppliesToAsync(dataSourceSpecification.AppliesTo, cancellationToken)
 					.ConfigureAwait(false);
 
-				appliesToMatches = appliesToMatches
-					.Where(a => requestedAppliesToMatches.Any(r => r.Id == a.Id))
-					.ToList();
+				appliesToMatches = [.. appliesToMatches.Where(a => requestedAppliesToMatches.Any(r => r.Id == a.Id))];
 			}
 
 			logger.LogDebug(
@@ -1511,7 +1515,7 @@ public class DatamartClient : LogicMonitorClient
 			databaseDataPoint.Property10 = configDataSourceDataPoint.Property10;
 			databaseDataPoint.Tags = configDataSourceDataPoint.Tags;
 
-			// Only update the description if it is not null or whitespace
+			// Only update the description if it is not null or white-space
 			if (!string.IsNullOrWhiteSpace(configDataSourceDataPoint.Description))
 			{
 				databaseDataPoint.Description = configDataSourceDataPoint.Description;
@@ -1525,5 +1529,71 @@ public class DatamartClient : LogicMonitorClient
 			.ConfigureAwait(false);
 
 		return dataSourceDataPointStoreItems;
+	}
+
+	internal async Task<List<int>> GetOrderedDeviceIdsForDataSourceAppliesTos(CancellationToken cancellationToken)
+	{
+		var databaseDeviceIds = new List<int>();
+
+		using var context = GetContext();
+
+		// Loop over the DataSources
+		foreach (var configDataSource in _configuration.DataSources)
+		{
+			// This is the AppliesTo we have in the database (or LogicMonitor)
+			var dsAppliesTo = string.Empty;
+
+			// Find the DataSource in the database
+			if (await context
+				.DataSources
+				.SingleOrDefaultAsync(ds => ds.Name == configDataSource.Name, cancellationToken)
+				.ConfigureAwait(false)
+				is DataSourceStoreItem databaseDataSource)
+			{
+				dsAppliesTo = databaseDataSource.AppliesTo;
+			}
+			else
+			{
+				// Fetch the DataSource via LogicMonitor instead
+				if (await GetDataSourceByUniqueNameAsync(configDataSource.Name, cancellationToken).ConfigureAwait(false)
+					is DataSource lmDataSource)
+				{
+					dsAppliesTo = lmDataSource.AppliesTo;
+				}
+				else
+				{
+					// Not in the database and not in LogicMonior
+					throw new InvalidOperationException($"Could not find DataSource '{configDataSource.Name}' in database or LogicMonitor.");
+				}
+			}
+
+			// Get the Devices that match the ACTUAL AppliesTo on the DataSource
+			var appliesToMatches = await GetAppliesToAsync(dsAppliesTo, cancellationToken).ConfigureAwait(false);
+
+			if (!string.IsNullOrWhiteSpace(configDataSource.AppliesTo))
+			{
+				// Constrain the matches based on the AppliesTo in ** THE CONFIGURATION **
+
+				var constrainedAppliesToMatches =
+					await GetAppliesToAsync(
+						configDataSource.AppliesTo,
+						cancellationToken)
+					.ConfigureAwait(false);
+
+				databaseDeviceIds.AddRange(
+					[.. appliesToMatches
+						.Where(match => constrainedAppliesToMatches.Any(constrained => constrained.Id == match.Id))
+						.Select(match => match.Id)
+					]);
+
+				// Go to the next one...
+				continue;
+			}
+
+			// We use the original set of matches (because the DataSource configuration didn't specify one)
+			databaseDeviceIds.AddRange(appliesToMatches.Select(match => match.Id));
+		}
+
+		return [.. databaseDeviceIds.Distinct().OrderBy(id => id)];
 	}
 }

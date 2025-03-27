@@ -21,7 +21,6 @@ public class AlertTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iT
 	public async Task Get24HoursOfAlerts()
 	{
 		var startDateTimeUtc = DateTime.UtcNow.AddHours(-24);
-		//var startDateTimeUtc = DateTime.UtcNow.AddDays(-30);
 
 		var updatedAlertStats = await new AlertSync(
 				DatamartClient,
