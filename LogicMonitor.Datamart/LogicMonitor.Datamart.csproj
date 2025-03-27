@@ -11,7 +11,7 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor API Datamart</PackageTags>
 		<PackageReleaseNotes>
-			Updated the LogicMonitor.Api nuget to 3.216.6.
+			Added configuration item "LimitAlertSyncToDataSourceAppliesTo" to limit alerts to only those Devices which match the AppliesTo on each DataSource.
 		</PackageReleaseNotes>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
