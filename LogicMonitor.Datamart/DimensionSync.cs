@@ -80,16 +80,42 @@ internal class DimensionSync : LoopInterval
 	{
 		if (_types?.Contains(nameof(ResourceDataSourceInstance)) ?? true)
 		{
+			var stopwatch = new Stopwatch();
 			foreach (var dataSourceSpecification in _configuration.DataSources)
 			{
-				await _datamartClient
-					.SyncDeviceDataSourcesAndInstancesAsync(
-						dataSourceSpecification,
-						Logger,
-						cancellationToken
-					)
-					.ConfigureAwait(false);
-				Logger.LogInformation($"Syncing {nameof(ResourceDataSourceInstance)}s for DataSource '{{DataSource}}' complete.", dataSourceSpecification.Name);
+				try
+				{
+					Logger.LogInformation(
+						$"Syncing {nameof(ResourceDataSourceInstance)}s for DataSource '{{DataSource}}'...",
+						dataSourceSpecification.Name);
+
+					stopwatch.Restart();
+
+					await _datamartClient
+						.SyncDeviceDataSourcesAndInstancesAsync(
+							dataSourceSpecification,
+							Logger,
+							cancellationToken
+						)
+						.ConfigureAwait(false);
+
+					Logger.LogInformation(
+						$"Syncing {nameof(ResourceDataSourceInstance)}s for DataSource '{{DataSource}}' complete after {{TimeSeconds}}s.",
+						dataSourceSpecification.Name,
+						stopwatch.Elapsed.TotalSeconds);
+				}
+				catch (Exception ex)
+				{
+					Logger.LogError(
+						ex,
+						$"Unable to sync {nameof(ResourceDataSourceInstance)}s for DataSource '{{DataSource}}': {{Message}}",
+						dataSourceSpecification.Name,
+						ex.Message);
+					if (_configuration.DimensionSyncHaltOnError)
+					{
+						throw;
+					}
+				}
 			}
 		}
 	}
