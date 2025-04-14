@@ -17,15 +17,15 @@ public class DatamartClient : LogicMonitorClient
 	private const string ConnectionStringApplicationName = "LogicMonitor.Datamart";
 
 	private readonly ILoggerFactory _loggerFactory;
-	
+
 	private readonly ILogger _logger;
 
 	private readonly Configuration _configuration;
-	
+
 	private static readonly MapperConfiguration _mapperConfig = new(cfg => cfg.AddMaps(typeof(DatamartClient).Assembly));
-	
+
 	internal static IMapper MapperInstance = new Mapper(_mapperConfig);
-	
+
 	private readonly TimeProviderService _timeProviderService = new();
 
 	public DatamartClient(
@@ -643,7 +643,12 @@ public class DatamartClient : LogicMonitorClient
 		context.DataSourceGraphs.RemoveRange(graphsToRemove);
 		foreach (var graphToUpdate in graphsToUpdate)
 		{
-			var databaseGraph = databaseGraphs.Single(dg => dg.Name == graphToUpdate.Name && dg.IsOverview == areOverview);
+			var databaseGraph = databaseGraphs.SingleOrDefault(dg => dg.Name == graphToUpdate.Name && dg.IsOverview == areOverview);
+			if (databaseGraph is null)
+			{
+				continue;
+			}
+
 			MapperInstance.Map(graphToUpdate, databaseGraph);
 			databaseGraph.IsOverview = areOverview;
 		}
