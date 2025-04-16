@@ -58,7 +58,8 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 			dataPointStoreItem,
 			startDateTimeUtc,
 			endDateTimeUtc,
-			graphData
+			graphData,
+			LoggerFactory.CreateLogger<DataTests>()
 		);
 
 		result.Should().NotBeNull();

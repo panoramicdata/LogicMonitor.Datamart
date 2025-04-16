@@ -14,7 +14,6 @@ internal class LowResolutionDataSync(
 	INotificationReceiver? notificationReceiver,
 	ITimeProviderService timeProviderService) : LoopInterval(nameof(LowResolutionDataSync), loggerFactory)
 {
-	private static readonly TimeSpan _eightHours = TimeSpan.FromHours(8);
 	private const int DeviceDownTimeWindowSeconds = 3000;
 
 	private readonly DatamartClient _datamartClient = datamartClient;
@@ -24,10 +23,7 @@ internal class LowResolutionDataSync(
 
 	public override async Task ExecuteAsync(CancellationToken cancellationToken)
 	{
-		Logger.LogInformation(
-			"Data sync started for {DatabaseName}...",
-			_configuration.DatabaseName
-			);
+		Logger.LogInformation("Data sync started for {DatabaseName}...", _configuration.DatabaseName);
 
 		if (_configuration.AggregationReset == true)
 		{
@@ -37,14 +33,14 @@ internal class LowResolutionDataSync(
 
 		List<DataSourceStoreItem> matchingDatabaseDataSourcesNotTracked;
 		Dictionary<int, ResourceStoreItem> allDatabaseDevicesByLogicMonitorIdNotTracked;
+
 		using (var contextForReferenceDataNotTracked = _datamartClient.GetContext())
 		{
 			// Use the database as a reference for what should be loaded in to ensure referential integrity between the data and the DeviceDataSourceInstance
 			// Get the configured DataSource names
 			Logger.LogInformation(
 				"Getting reference data for {DatabaseName}: DataSources...",
-				_configuration.DatabaseName
-			);
+				_configuration.DatabaseName);
 
 			var configurationDataSourceNames = _configuration.DataSources.ConvertAll(ds => ds.Name);
 
@@ -59,8 +55,7 @@ internal class LowResolutionDataSync(
 			Logger.LogInformation(
 				"Getting reference data for {DatabaseName}: DataSources found {DatabaseDataSourceCount} in db",
 				_configuration.DatabaseName,
-				matchingDatabaseDataSourcesNotTracked.Count
-			);
+				matchingDatabaseDataSourcesNotTracked.Count);
 
 			// Get a list of devices
 			allDatabaseDevicesByLogicMonitorIdNotTracked = await contextForReferenceDataNotTracked
@@ -300,20 +295,21 @@ internal class LowResolutionDataSync(
 		using (var context = _datamartClient.GetContext())
 		{
 			// Get the list of DeviceDataSourceInstanceDataPoints
-			var databaseDeviceDataSourceInstanceDataPoints = await context
-				.DeviceDataSourceInstanceDataPoints
-				.Include(ddsidp => ddsidp.DeviceDataSourceInstance!.DeviceDataSource!.DataSource)
-				.Include(ddsidp => ddsidp.DeviceDataSourceInstance!.DeviceDataSource!.Device)
-				.Include(ddsidp => ddsidp.DataSourceDataPoint)
-				.Where(ddsi =>
-					ddsi.DeviceDataSourceInstance!.DeviceDataSource!.DeviceId == databaseDeviceNotTracked.Id
-					&& ddsi.DeviceDataSourceInstance!.LastWentMissing == null
-					&& ddsi.DeviceDataSourceInstance!.DeviceDataSource!.DataSource!.LogicMonitorId == dataSourceLogicMonitorId
-				)
-				// To make debugging a little more deterministic, order by the Device and then its instances
-				.OrderBy(ddsi => ddsi.DeviceDataSourceInstance!.DeviceDataSourceId)
-				.ThenBy(ddsi => ddsi.LogicMonitorId)
-				.ToListAsync(cancellationToken: cancellationToken)
+			var databaseDeviceDataSourceInstanceDataPoints =
+				await context
+					.DeviceDataSourceInstanceDataPoints
+					.Include(ddsidp => ddsidp.DeviceDataSourceInstance!.DeviceDataSource!.DataSource)
+					.Include(ddsidp => ddsidp.DeviceDataSourceInstance!.DeviceDataSource!.Device)
+					.Include(ddsidp => ddsidp.DataSourceDataPoint)
+					.Where(ddsi =>
+						ddsi.DeviceDataSourceInstance!.DeviceDataSource!.DeviceId == databaseDeviceNotTracked.Id
+						&& ddsi.DeviceDataSourceInstance!.LastWentMissing == null
+						&& ddsi.DeviceDataSourceInstance!.DeviceDataSource!.DataSource!.LogicMonitorId == dataSourceLogicMonitorId
+					)
+					// To make debugging a little more deterministic, order by the Device and then its instances
+					.OrderBy(ddsi => ddsi.DeviceDataSourceInstance!.DeviceDataSourceId)
+					.ThenBy(ddsi => ddsi.LogicMonitorId)
+					.ToListAsync(cancellationToken: cancellationToken)
 				.ConfigureAwait(false);
 
 			var databaseDeviceDataSourceInstanceDataPointsCount = databaseDeviceDataSourceInstanceDataPoints.Count;
@@ -321,6 +317,10 @@ internal class LowResolutionDataSync(
 			// Continue if there aren't any
 			if (databaseDeviceDataSourceInstanceDataPointsCount == 0)
 			{
+				Logger.LogInformation(
+					"No Device DataSource Instance DataPoints found in the database for Device {DeviceId}. Continuing.",
+					databaseDeviceNotTracked.Id.ToString());
+
 				return;
 			}
 			// We have the database deviceDataSourceInstances for the configured DataSources
@@ -336,7 +336,7 @@ internal class LowResolutionDataSync(
 					databaseDeviceDataSourceInstanceDataPoints,
 					deviceCacheStats,
 					cancellationToken)
-					.ConfigureAwait(false);
+				.ConfigureAwait(false);
 
 				Logger.LogDebug(
 					"Writing aggregations for {DatabaseName}: {DeviceName} ({DeviceIndex}/{DeviceCount}) complete.",
@@ -476,144 +476,169 @@ internal class LowResolutionDataSync(
 		// Disable caching
 		var oldCacheState = datamartClient.UseCache;
 		datamartClient.UseCache = false;
-		foreach (var databaseDeviceDataSourceInstanceDataPointGroup in databaseDeviceDataSourceInstanceDataPoints.GroupBy(ddsidp => ddsidp.DeviceDataSourceInstance!.LogicMonitorId))
+
+		foreach (var databaseDeviceDataSourceInstanceDataPointGroup in 
+			databaseDeviceDataSourceInstanceDataPoints
+			.GroupBy(ddsidp => ddsidp.DeviceDataSourceInstance!.LogicMonitorId))
 		{
-			var graphDataCache = new Dictionary<string, GraphData>();
-
-			foreach (var databaseDeviceDataSourceInstanceDataPoint in databaseDeviceDataSourceInstanceDataPointGroup)
+			try
 			{
-				try
+				var graphDataCache = new Dictionary<string, GraphData>();
+
+				foreach (var databaseDeviceDataSourceInstanceDataPoint in databaseDeviceDataSourceInstanceDataPointGroup)
 				{
-					var lastAggregationHourWrittenUtc =
-						(databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo is null
-							? configuration.StartDateTimeUtc
-							: databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo.Value)
-						.ToUniversalTime();
-
-					// Ensure that this is on a month boundary
-					lastAggregationHourWrittenUtc = new DateTimeOffset(
-						lastAggregationHourWrittenUtc.Year,
-						lastAggregationHourWrittenUtc.Month,
-						1, 0, 0, 0,
-						TimeSpan.Zero);
-
-					var startDateTimeUtc = lastAggregationHourWrittenUtc;
-					var endDateTimeUtc = lastAggregationHourWrittenUtc.AddMonths(1);
-
-					if (endDateTimeUtc.AddMinutes(configuration.MinutesOffset) >= utcNow)
+					try
 					{
-						Logger.LogInformation(
-							"Skipped writing aggregations because the end date time + minutes offset (from configuration) was greater than UTC now. " +
-							"Start date UTC: {StartDateUtc}. " +
-							"End date UTC: {EndDateUtc}. " +
-							"Minutes Offset: {MinutesOffset}. " +
-							"End date UTC with offset: {EndDateUtcWithOffset}. " +
-							"Database: {DatabaseName}. " +
-							"DeviceDataSourceInstanceDataPointId: {DeviceDataSourceInstanceDataPointId}. " +
-							"DataSourceDataPointId: {DataSourceDataPointId}. " +
-							"DeviceDataSourceInstanceId: {DeviceDataSourceInstanceId}.",
-							startDateTimeUtc,
-							endDateTimeUtc,
-							configuration.MinutesOffset,
-							endDateTimeUtc.AddMinutes(configuration.MinutesOffset),
-							configuration.DatabaseName,
-							databaseDeviceDataSourceInstanceDataPoint?.Id,
-							databaseDeviceDataSourceInstanceDataPoint?.DataSourceDataPointId,
-							databaseDeviceDataSourceInstanceDataPoint?.DeviceDataSourceInstanceId);
+						var lastAggregationHourWrittenUtc =
+							(databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo is null
+								? configuration.StartDateTimeUtc
+								: databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo.Value)
+							.ToUniversalTime();
 
-						continue;
-					}
+						// Ensure that this is on a month boundary
+						lastAggregationHourWrittenUtc = new DateTimeOffset(
+							lastAggregationHourWrittenUtc.Year,
+							lastAggregationHourWrittenUtc.Month,
+							1, 0, 0, 0,
+							TimeSpan.Zero);
 
-					var dataSourceName = databaseDeviceDataSourceInstanceDataPoint
-						.DeviceDataSourceInstance!
-						.DeviceDataSource!
-						.DataSource!
-						.Name;
+						var startDateTimeUtc = lastAggregationHourWrittenUtc;
+						var endDateTimeUtc = lastAggregationHourWrittenUtc.AddMonths(1);
 
-					var dataPointName = databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint!.Name;
-
-					// Get the configuration for this DataSourceName
-					var dataSourceConfigurationItem = configuration
-						.DataSources
-						.SingleOrDefault(dsci => dsci.Name == dataSourceName)
-						?? throw new InvalidOperationException($"Could not find configuration for DataSource {dataSourceName}.");
-
-					var dataSourceDataPointStoreItemNotTracked = dataSourceDataPointStoreItemsNotTracked
-						.SingleOrDefault(dp =>
-							dp.Name == dataPointName
-							&& dp.DataSource!.Name == dataSourceConfigurationItem.Name
-						)
-						?? throw new InvalidOperationException($"Could not find DataPoint {dataPointName} for DataSource {dataSourceName}.");
-
-					// Build up the aggregations to write
-					while (endDateTimeUtc.AddMinutes(configuration.MinutesOffset) < utcNow)
-					{
-						// RM-16049 Add an offset from the start and end times
-						var startDateTimeUtcWithOffset = startDateTimeUtc.AddMinutes(configuration.MinutesOffset);
-						var endDateTimeUtcWithOffset = endDateTimeUtc.AddMinutes(configuration.MinutesOffset);
-
-						var deviceDataSourceInstanceId = databaseDeviceDataSourceInstanceDataPoint.DeviceDataSourceInstance!.LogicMonitorId;
-						var cacheKey = deviceDataSourceInstanceId + "_" + startDateTimeUtcWithOffset.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture) + "_" + endDateTimeUtcWithOffset.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture);
-						if (!graphDataCache.TryGetValue(cacheKey, out var graphData))
+						if (endDateTimeUtc.AddMinutes(configuration.MinutesOffset) >= utcNow)
 						{
-							graphData = graphDataCache[cacheKey] = await GetGraphDataAsync(
-							datamartClient,
-							deviceDataSourceInstanceId,
-							startDateTimeUtcWithOffset,
-							endDateTimeUtcWithOffset,
-							logger,
-							cancellationToken);
+							Logger.LogWarning(
+								"Skipped writing aggregations because the end date time + minutes offset (from configuration) was greater than UTC now. " +
+								"Start date UTC: {StartDateUtc}. " +
+								"End date UTC: {EndDateUtc}. " +
+								"Minutes Offset: {MinutesOffset}. " +
+								"End date UTC with offset: {EndDateUtcWithOffset}. " +
+								"Database: {DatabaseName}. " +
+								"DeviceDataSourceInstanceDataPointId: {DeviceDataSourceInstanceDataPointId}. " +
+								"DataSourceDataPointId: {DataSourceDataPointId}. " +
+								"DeviceDataSourceInstanceId: {DeviceDataSourceInstanceId}.",
+								startDateTimeUtc,
+								endDateTimeUtc,
+								configuration.MinutesOffset,
+								endDateTimeUtc.AddMinutes(configuration.MinutesOffset),
+								configuration.DatabaseName,
+								databaseDeviceDataSourceInstanceDataPoint?.Id,
+								databaseDeviceDataSourceInstanceDataPoint?.DataSourceDataPointId,
+								databaseDeviceDataSourceInstanceDataPoint?.DeviceDataSourceInstanceId);
 
-							cacheStats.AddMiss();
-						}
-						else
-						{
-							logger.LogDebug(
-								"Using cached data for DeviceDataSourceInstance {DeviceDataSourceInstanceId} ({Start:yyyy-MM-dd HH:mm:ss} .. {End:yyyy-MM-dd HH:mm:ss})...",
-								deviceDataSourceInstanceId,
-								startDateTimeUtcWithOffset,
-								endDateTimeUtcWithOffset);
-
-							cacheStats.AddHit();
-						}
-
-						var bulkWriteModel = GetTimeSeriesDataAggregationStoreItem(
-							deviceNotTracked,
-							databaseDeviceDataSourceInstanceDataPoint,
-							dataPointName,
-							dataSourceDataPointStoreItemNotTracked,
-							startDateTimeUtc,
-							endDateTimeUtc,
-							graphData
-						);
-
-						if (bulkWriteModel is null)
-						{
 							continue;
 						}
 
-						aggregationsToWrite.Add(bulkWriteModel);
+						var dataSourceName = databaseDeviceDataSourceInstanceDataPoint
+							.DeviceDataSourceInstance!
+							.DeviceDataSource!
+							.DataSource!
+							.Name;
 
-						databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo = endDateTimeUtc;
-						startDateTimeUtc = startDateTimeUtc.AddMonths(1);
-						endDateTimeUtc = endDateTimeUtc.AddMonths(1);
+						var dataPointName = databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint!.Name;
+
+						// Get the configuration for this DataSourceName
+						var dataSourceConfigurationItem = configuration
+							.DataSources
+							.SingleOrDefault(dsci => dsci.Name == dataSourceName)
+							?? throw new InvalidOperationException($"Could not find configuration for DataSource {dataSourceName}.");
+
+						var dataSourceDataPointStoreItemNotTracked = dataSourceDataPointStoreItemsNotTracked
+							.SingleOrDefault(dp =>
+								dp.Name == dataPointName
+								&& dp.DataSource!.Name == dataSourceConfigurationItem.Name
+							)
+							?? throw new InvalidOperationException($"Could not find DataPoint {dataPointName} for DataSource {dataSourceName}.");
+
+						// Build up the aggregations to write
+						while (endDateTimeUtc.AddMinutes(configuration.MinutesOffset) < utcNow)
+						{
+							// RM-16049 Add an offset from the start and end times
+							var startDateTimeUtcWithOffset = startDateTimeUtc.AddMinutes(configuration.MinutesOffset);
+							var endDateTimeUtcWithOffset = endDateTimeUtc.AddMinutes(configuration.MinutesOffset);
+
+							var deviceDataSourceInstanceId = databaseDeviceDataSourceInstanceDataPoint.DeviceDataSourceInstance!.LogicMonitorId;
+							var cacheKey = deviceDataSourceInstanceId + "_" + startDateTimeUtcWithOffset.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture) + "_" + endDateTimeUtcWithOffset.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture);
+							if (!graphDataCache.TryGetValue(cacheKey, out var graphData))
+							{
+								graphData = graphDataCache[cacheKey] = await GetGraphDataAsync(
+								datamartClient,
+								deviceDataSourceInstanceId,
+								startDateTimeUtcWithOffset,
+								endDateTimeUtcWithOffset,
+								logger,
+								cancellationToken);
+
+								cacheStats.AddMiss();
+							}
+							else
+							{
+								logger.LogDebug(
+									"Using cached data for DeviceDataSourceInstance {DeviceDataSourceInstanceId} ({Start:yyyy-MM-dd HH:mm:ss} .. {End:yyyy-MM-dd HH:mm:ss})...",
+									deviceDataSourceInstanceId,
+									startDateTimeUtcWithOffset,
+									endDateTimeUtcWithOffset);
+
+								cacheStats.AddHit();
+							}
+
+							var bulkWriteModel = GetTimeSeriesDataAggregationStoreItem(
+								deviceNotTracked,
+								databaseDeviceDataSourceInstanceDataPoint,
+								dataPointName,
+								dataSourceDataPointStoreItemNotTracked,
+								startDateTimeUtc,
+								endDateTimeUtc,
+								graphData,
+								Logger
+							);
+
+							if (bulkWriteModel is null)
+							{
+								continue;
+							}
+
+							aggregationsToWrite.Add(bulkWriteModel);
+
+							databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo = endDateTimeUtc;
+							startDateTimeUtc = startDateTimeUtc.AddMonths(1);
+							endDateTimeUtc = endDateTimeUtc.AddMonths(1);
+						}
+
+						// Write out the aggregations
+						await context
+							.BulkInsertAsync(aggregationsToWrite, cancellationToken: cancellationToken)
+							.ConfigureAwait(false);
+
+						await context
+							.SaveChangesAsync(cancellationToken)
+							.ConfigureAwait(false);
+
+						aggregationsToWrite.Clear();
 					}
-
-					// Write out the aggregations
-					await context
-						.BulkInsertAsync(aggregationsToWrite, cancellationToken: cancellationToken)
-						.ConfigureAwait(false);
-
-					await context
-						.SaveChangesAsync(cancellationToken)
-						.ConfigureAwait(false);
-
-					aggregationsToWrite.Clear();
+					catch (Exception ex)
+					{
+						logger.LogError(ex, "Error syncing data for instance datapoint with id {DeviceDataSourceInstanceDataPointId}: {Message}.", databaseDeviceDataSourceInstanceDataPoint.Id, ex.Message);
+					}
 				}
-				catch (Exception ex)
-				{
-					logger.LogError(ex, "Error syncing data for instance datapoint with id {DeviceDataSourceInstanceDataPointId}: {Message}.", databaseDeviceDataSourceInstanceDataPoint.Id, ex.Message);
-				}
+			}
+			catch (Exception exception)
+			{
+				logger.LogError(
+					exception,
+					"An exception occurred syncing data for a database Device Data Source Instance. " +
+					"Database GUID: {DatabaseGuid}. " +
+					"Device DataSource Instance Name: {DeviceDataSourceInstanceName}. " +
+					"DataSource DataPoint Name: {DataSourceDataPointName}. " +
+					"Device DataSourceInstance LogicMonitor ID: {DataSourceInstanceLogicMonitorId}. " +
+					"The exception was: {Message}",
+					databaseDeviceDataSourceInstanceDataPointGroup.FirstOrDefault()?.Id.ToString() ?? string.Empty,
+					databaseDeviceDataSourceInstanceDataPointGroup.FirstOrDefault()?.DeviceDataSourceInstance?.Name ?? string.Empty,
+					databaseDeviceDataSourceInstanceDataPointGroup.FirstOrDefault()?.DataSourceDataPoint?.Name ?? string.Empty,
+					databaseDeviceDataSourceInstanceDataPointGroup.FirstOrDefault()?.DeviceDataSourceInstance?.LogicMonitorId.ToString() ?? string.Empty,
+					exception.Message);
+
+				// Go to the next group
 			}
 		}
 
@@ -636,18 +661,32 @@ internal class LowResolutionDataSync(
 			startDateTimeOffset,
 			endDateTimeOffset);
 
-		return await datamartClient
-			.GetGraphDataAsync(
-				new ResourceDataSourceInstanceGraphDataRequest
-				{
-					ResourceDataSourceInstanceId = resourceDataSourceInstanceId,
-					StartDateTime = startDateTimeOffset.UtcDateTime,
-					EndDateTime = endDateTimeOffset.UtcDateTime,
-					TimePeriod = TimePeriod.Zoom,
-					DataSourceGraphId = -1,
-				},
-				cancellationToken)
-			.ConfigureAwait(false);
+		try
+		{
+			return await datamartClient
+				.GetGraphDataAsync(
+					new ResourceDataSourceInstanceGraphDataRequest
+					{
+						ResourceDataSourceInstanceId = resourceDataSourceInstanceId,
+						StartDateTime = startDateTimeOffset.UtcDateTime,
+						EndDateTime = endDateTimeOffset.UtcDateTime,
+						TimePeriod = TimePeriod.Zoom,
+						DataSourceGraphId = -1,
+					},
+					cancellationToken)
+				.ConfigureAwait(false);
+		}
+		catch (Exception exception)
+		{
+			logger.LogError(
+				exception,
+				"Error getting graph data for DeviceDataSourceInstance {DeviceDataSourceInstanceId} ({Start:yyyy-MM-dd HH:mm:ss} .. {End:yyyy-MM-dd HH:mm:ss})...",
+				resourceDataSourceInstanceId,
+				startDateTimeOffset,
+				endDateTimeOffset);
+
+			throw;
+		}
 	}
 
 	internal static TimeSeriesDataAggregationStoreItem? GetTimeSeriesDataAggregationStoreItem(
@@ -657,45 +696,45 @@ internal class LowResolutionDataSync(
 		DataSourceDataPointStoreItem dataPointStoreItemNotTracked,
 		DateTimeOffset startDateTimeUtc,
 		DateTimeOffset endDateTimeUtc,
-		GraphData graphData)
+		GraphData graphData,
+		ILogger logger)
 	{
-		TimeSeriesDataAggregationStoreItem bulkWriteModel;
-
-		// Remove all DataPoint values before the device was added to LogicMonitor
-		foreach (var graphDataLine in graphData.Lines)
+		try
 		{
-			graphDataLine.Data = graphDataLine.Data
+			TimeSeriesDataAggregationStoreItem bulkWriteModel;
+
+			// Remove all DataPoint values before the device was added to LogicMonitor
+			foreach (var graphDataLine in graphData.Lines)
+			{
+				graphDataLine.Data = [.. graphDataLine.Data
 			.Where((dp, index) =>
 			{
 				return graphData.TimeStamps[index] >= deviceNotTracked.CreatedOnSeconds * 1000;
-			})
-				.ToList();
-		}
-
-		graphData.TimeStamps = graphData.TimeStamps
-			.Where(ts => ts >= deviceNotTracked.CreatedOnSeconds * 1000)
-			.ToList();
-
-		Line? line;
-		if (string.IsNullOrWhiteSpace(databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint!.Calculation))
-		{
-			line = graphData
-				.Lines
-				.SingleOrDefault(dp =>
-				{
-					return dp.Legend == dataPointName;
-				});
-
-			if (line is null || dataPointStoreItemNotTracked is null)
-			{
-				throw new FormatException($"Could not find DataPoint '{dataPointName}' for DataSource '{databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint.DataSource.Name}'");
+			})];
 			}
-		}
-		else
-		{
-			var expression = new ExtendedExpression(databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint.Calculation);
-			line = new Line();
-			line.Data = graphData.TimeStamps.Select((ts, index) =>
+
+			graphData.TimeStamps = [.. graphData.TimeStamps.Where(ts => ts >= deviceNotTracked.CreatedOnSeconds * 1000)];
+
+			Line? line;
+			if (string.IsNullOrWhiteSpace(databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint!.Calculation))
+			{
+				line = graphData
+					.Lines
+					.SingleOrDefault(dp =>
+					{
+						return dp.Legend == dataPointName;
+					});
+
+				if (line is null || dataPointStoreItemNotTracked is null)
+				{
+					throw new FormatException($"Could not find DataPoint '{dataPointName}' for DataSource '{databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint.DataSource.Name}'");
+				}
+			}
+			else
+			{
+				var expression = new ExtendedExpression(databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint.Calculation);
+				line = new Line();
+				line.Data = [.. graphData.TimeStamps.Select((ts, index) =>
 			{
 				expression.Parameters.Clear();
 				foreach (var line in graphData.Lines)
@@ -704,68 +743,82 @@ internal class LowResolutionDataSync(
 				}
 
 				return expression.Evaluate() as double?;
-			})
-			.ToList();
+			})];
+			}
+
+			// Calculate and sort non-null values
+			var sortedNonNullValues = line.Data
+				.Where(v => v.HasValue)
+				.Select(v => v!.Value)
+				.OrderBy(v => v)
+				.ToArray();
+
+			bulkWriteModel = new TimeSeriesDataAggregationStoreItem
+			{
+				Id = Guid.NewGuid(),
+				DeviceDataSourceInstanceDataPointId = databaseDeviceDataSourceInstanceDataPoint.Id,
+				PeriodStart = startDateTimeUtc.UtcDateTime,
+				PeriodEnd = endDateTimeUtc.UtcDateTime,
+				DataCount = line.Data.Count(d => d.HasValue),
+				NoDataCount = line.Data.Count(d => !d.HasValue),
+				Sum = line.Data.Sum(d => d ?? 0),
+				SumSquared = line.Data.Sum(d => d.HasValue ? d.Value * d.Value : 0),
+				Max = line.Data.Where(d => d != null).DefaultIfEmpty(null).Max(),
+				Min = line.Data.Where(d => d != null).DefaultIfEmpty(null).Min(),
+				First = line.Data.DefaultIfEmpty(null).First(),
+				Last = line.Data.DefaultIfEmpty(null).Last(),
+				FirstWithData = line.Data.Where(d => d != null).DefaultIfEmpty(null).First(),
+				LastWithData = line.Data.Where(d => d != null).DefaultIfEmpty(null).Last(),
+				Centile05 = CalculatePercentile(sortedNonNullValues, 5),
+				Centile10 = CalculatePercentile(sortedNonNullValues, 10),
+				Centile25 = CalculatePercentile(sortedNonNullValues, 25),
+				Centile50 = CalculatePercentile(sortedNonNullValues, 50),
+				Centile75 = CalculatePercentile(sortedNonNullValues, 75),
+				Centile90 = CalculatePercentile(sortedNonNullValues, 90),
+				Centile95 = CalculatePercentile(sortedNonNullValues, 95),
+				NormalCount = CountAtAlertLevel(
+					line.Data,
+					dataPointStoreItemNotTracked.GlobalAlertExpression,
+					CountAlertLevel.Normal
+				),
+				WarningCount = CountAtAlertLevel(
+					line.Data,
+					dataPointStoreItemNotTracked.GlobalAlertExpression,
+					CountAlertLevel.Warning
+				),
+				ErrorCount = CountAtAlertLevel(
+					line.Data,
+					dataPointStoreItemNotTracked.GlobalAlertExpression,
+					CountAlertLevel.Error
+				),
+				CriticalCount = CountAtAlertLevel(
+					line.Data,
+					dataPointStoreItemNotTracked.GlobalAlertExpression,
+					CountAlertLevel.Critical
+				),
+				// IMPORTANT! This must be calculated last as this process can reverse the array.
+				AvailabilityPercent = CalculatePercentageAvailability(
+					line.Data,
+					dataPointStoreItemNotTracked.PercentageAvailabilityCalculation
+				),
+			};
+
+			return bulkWriteModel;
 		}
-
-		// Calculate and sort non-null values
-		var sortedNonNullValues = line.Data
-			.Where(v => v.HasValue)
-			.Select(v => v!.Value)
-			.OrderBy(v => v)
-			.ToArray();
-
-		bulkWriteModel = new TimeSeriesDataAggregationStoreItem
+		catch (Exception exception)
 		{
-			Id = Guid.NewGuid(),
-			DeviceDataSourceInstanceDataPointId = databaseDeviceDataSourceInstanceDataPoint.Id,
-			PeriodStart = startDateTimeUtc.UtcDateTime,
-			PeriodEnd = endDateTimeUtc.UtcDateTime,
-			DataCount = line.Data.Count(d => d.HasValue),
-			NoDataCount = line.Data.Count(d => !d.HasValue),
-			Sum = line.Data.Sum(d => d ?? 0),
-			SumSquared = line.Data.Sum(d => d.HasValue ? d.Value * d.Value : 0),
-			Max = line.Data.Where(d => d != null).DefaultIfEmpty(null).Max(),
-			Min = line.Data.Where(d => d != null).DefaultIfEmpty(null).Min(),
-			First = line.Data.DefaultIfEmpty(null).First(),
-			Last = line.Data.DefaultIfEmpty(null).Last(),
-			FirstWithData = line.Data.Where(d => d != null).DefaultIfEmpty(null).First(),
-			LastWithData = line.Data.Where(d => d != null).DefaultIfEmpty(null).Last(),
-			Centile05 = CalculatePercentile(sortedNonNullValues, 5),
-			Centile10 = CalculatePercentile(sortedNonNullValues, 10),
-			Centile25 = CalculatePercentile(sortedNonNullValues, 25),
-			Centile50 = CalculatePercentile(sortedNonNullValues, 50),
-			Centile75 = CalculatePercentile(sortedNonNullValues, 75),
-			Centile90 = CalculatePercentile(sortedNonNullValues, 90),
-			Centile95 = CalculatePercentile(sortedNonNullValues, 95),
-			NormalCount = CountAtAlertLevel(
-				line.Data,
-				dataPointStoreItemNotTracked.GlobalAlertExpression,
-				CountAlertLevel.Normal
-			),
-			WarningCount = CountAtAlertLevel(
-				line.Data,
-				dataPointStoreItemNotTracked.GlobalAlertExpression,
-				CountAlertLevel.Warning
-			),
-			ErrorCount = CountAtAlertLevel(
-				line.Data,
-				dataPointStoreItemNotTracked.GlobalAlertExpression,
-				CountAlertLevel.Error
-			),
-			CriticalCount = CountAtAlertLevel(
-				line.Data,
-				dataPointStoreItemNotTracked.GlobalAlertExpression,
-				CountAlertLevel.Critical
-			),
-			// IMPORTANT! This must be calculated last as this process can reverse the array.
-			AvailabilityPercent = CalculatePercentageAvailability(
-				line.Data,
-				dataPointStoreItemNotTracked.PercentageAvailabilityCalculation
-			),
-		};
+			logger.LogError(
+				exception,
+				"An error occurred getting time series data aggregations. " +
+				"Data point name: {DataPointName}. " +
+				"DataSourceDataPointStoreItem Id: {DataSourceDataPointStoreItemId}. " +
+				"The error was due to: {Message}",
+				dataPointStoreItemNotTracked.Id.ToString(),
+				dataPointName,
+				exception.Message);
 
-		return bulkWriteModel;
+			throw;
+		}
 	}
 
 	private static async Task ResetForResyncAsync(
