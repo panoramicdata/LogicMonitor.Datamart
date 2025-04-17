@@ -84,6 +84,26 @@ internal class LowResolutionDataSync(
 
 			foreach (var matchingDatabaseDataSourceNotTracked in matchingDatabaseDataSourcesNotTracked)
 			{
+				Logger.BeginScope(
+					"Syncing DataSource {DataSourceName} ({DataSourceIndex}/{DataSourceCount})... ",
+					matchingDatabaseDataSourceNotTracked.Name,
+					dataSourceIndex + 1,
+					dataSourceCount
+				);
+
+				// Log the start of the sync
+				await _notificationReceiver
+					.SetStageNameAsync($"Syncing DataSource {matchingDatabaseDataSourceNotTracked.Name}", cancellationToken)
+					.ConfigureAwait(false);
+
+				Logger.LogInformation(
+					"Getting DeviceDataSourceInstanceDataPoints for {DatabaseName}: DataSource {DataSourceName} ({DataSourceIndex}/{DataSourceCount})... ",
+					_configuration.DatabaseName,
+					matchingDatabaseDataSourceNotTracked.Name,
+					dataSourceIndex + 1,
+					dataSourceCount
+				);
+
 				var dataSourceCacheStats = new CacheStats($"DataSource {matchingDatabaseDataSourceNotTracked.Name}");
 				dataSourceIndex++;
 				await ProcessDataSourceAsync(
@@ -477,7 +497,7 @@ internal class LowResolutionDataSync(
 		var oldCacheState = datamartClient.UseCache;
 		datamartClient.UseCache = false;
 
-		foreach (var databaseDeviceDataSourceInstanceDataPointGroup in 
+		foreach (var databaseDeviceDataSourceInstanceDataPointGroup in
 			databaseDeviceDataSourceInstanceDataPoints
 			.GroupBy(ddsidp => ddsidp.DeviceDataSourceInstance!.LogicMonitorId))
 		{
@@ -504,11 +524,12 @@ internal class LowResolutionDataSync(
 
 						var startDateTimeUtc = lastAggregationHourWrittenUtc;
 						var endDateTimeUtc = lastAggregationHourWrittenUtc.AddMonths(1);
+						var endDateTimePlusOffset = endDateTimeUtc.AddMinutes(configuration.MinutesOffset);
 
-						if (endDateTimeUtc.AddMinutes(configuration.MinutesOffset) >= utcNow)
+						if (endDateTimePlusOffset >= utcNow)
 						{
 							Logger.LogWarning(
-								"Skipped writing aggregations because the end date time + minutes offset (from configuration) was greater than UTC now. " +
+								"Skipped writing aggregations because the end date time + minutes offset ({EndDateTimePlusOffset}) (from configuration) was greater than UTC now ({UtcNow}). " +
 								"Start date UTC: {StartDateUtc}. " +
 								"End date UTC: {EndDateUtc}. " +
 								"Minutes Offset: {MinutesOffset}. " +
@@ -517,6 +538,8 @@ internal class LowResolutionDataSync(
 								"DeviceDataSourceInstanceDataPointId: {DeviceDataSourceInstanceDataPointId}. " +
 								"DataSourceDataPointId: {DataSourceDataPointId}. " +
 								"DeviceDataSourceInstanceId: {DeviceDataSourceInstanceId}.",
+								endDateTimePlusOffset,
+								utcNow,
 								startDateTimeUtc,
 								endDateTimeUtc,
 								configuration.MinutesOffset,
