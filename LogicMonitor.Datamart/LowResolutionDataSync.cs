@@ -84,43 +84,57 @@ internal class LowResolutionDataSync(
 
 			foreach (var matchingDatabaseDataSourceNotTracked in matchingDatabaseDataSourcesNotTracked)
 			{
-				Logger.BeginScope(
-					"Syncing DataSource {DataSourceName} ({DataSourceIndex}/{DataSourceCount})... ",
-					matchingDatabaseDataSourceNotTracked.Name,
-					dataSourceIndex + 1,
-					dataSourceCount
-				);
+				try
+				{
+					Logger.BeginScope(
+						"Syncing DataSource {DataSourceName} ({DataSourceIndex}/{DataSourceCount})... ",
+						matchingDatabaseDataSourceNotTracked.Name,
+						dataSourceIndex + 1,
+						dataSourceCount
+					);
 
-				// Log the start of the sync
-				await _notificationReceiver
-					.SetStageNameAsync($"Syncing DataSource {matchingDatabaseDataSourceNotTracked.Name}", cancellationToken)
-					.ConfigureAwait(false);
+					// Log the start of the sync
+					await _notificationReceiver
+						.SetStageNameAsync($"Syncing DataSource {matchingDatabaseDataSourceNotTracked.Name}", cancellationToken)
+						.ConfigureAwait(false);
 
-				Logger.LogInformation(
-					"Getting DeviceDataSourceInstanceDataPoints for {DatabaseName}: DataSource {DataSourceName} ({DataSourceIndex}/{DataSourceCount})... ",
-					_configuration.DatabaseName,
-					matchingDatabaseDataSourceNotTracked.Name,
-					dataSourceIndex + 1,
-					dataSourceCount
-				);
+					Logger.LogInformation(
+						"Getting DeviceDataSourceInstanceDataPoints for {DatabaseName}: DataSource {DataSourceName} ({DataSourceIndex}/{DataSourceCount})... ",
+						_configuration.DatabaseName,
+						matchingDatabaseDataSourceNotTracked.Name,
+						dataSourceIndex + 1,
+						dataSourceCount
+					);
 
-				var dataSourceCacheStats = new CacheStats($"DataSource {matchingDatabaseDataSourceNotTracked.Name}");
-				dataSourceIndex++;
-				await ProcessDataSourceAsync(
-					allDatabaseDevicesByLogicMonitorIdNotTracked,
-					dataSourceIndex,
-					dataSourceCount,
-					dataSourceStopwatch,
-					deviceStopwatch,
-					notificationStopwatch,
-					totalDurationMsByDeviceLogicMonitorId,
-					matchingDatabaseDataSourceNotTracked,
-					dataSourceCacheStats,
-					cancellationToken)
-					.ConfigureAwait(false);
+					var dataSourceCacheStats = new CacheStats($"DataSource {matchingDatabaseDataSourceNotTracked.Name}");
+					dataSourceIndex++;
+					await ProcessDataSourceAsync(
+						allDatabaseDevicesByLogicMonitorIdNotTracked,
+						dataSourceIndex,
+						dataSourceCount,
+						dataSourceStopwatch,
+						deviceStopwatch,
+						notificationStopwatch,
+						totalDurationMsByDeviceLogicMonitorId,
+						matchingDatabaseDataSourceNotTracked,
+						dataSourceCacheStats,
+						cancellationToken)
+						.ConfigureAwait(false);
 
-				// Update the overall cache stats
-				overallCacheStats.Add(dataSourceCacheStats);
+					// Update the overall cache stats
+					overallCacheStats.Add(dataSourceCacheStats);
+				}
+				catch (Exception e)
+				{
+					Logger.LogError(
+						e,
+						"An error occurred syncing data for DataSource {DataSourceName} ({DataSourceIndex}/{DataSourceCount}): {Message}.",
+						matchingDatabaseDataSourceNotTracked.Name,
+						dataSourceIndex + 1,
+						dataSourceCount,
+						e.Message
+					);
+				}
 			}
 
 			overallCacheStats.Log(Logger);
