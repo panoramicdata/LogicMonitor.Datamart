@@ -507,7 +507,7 @@ internal class LowResolutionDataSync(
 
 						if (endDateTimeUtc.AddMinutes(configuration.MinutesOffset) >= utcNow)
 						{
-							Logger.LogWarning(
+							Logger.LogInformation(
 								"Skipped writing aggregations because the end date time + minutes offset (from configuration) was greater than UTC now. " +
 								"Start date UTC: {StartDateUtc}. " +
 								"End date UTC: {EndDateUtc}. " +
