@@ -144,6 +144,9 @@ public class CollectorProfile : Profile
 				dest => dest.IsSyntheticsEnables,
 				opts => opts.Ignore())
 			.ForMember(
+				dest => dest.SdtCount,
+				opts => opts.Ignore())
+			.ForMember(
 				dest => dest.SpecifiedCollectorResourceGroupId,
 				opts => opts.Ignore())
 			;

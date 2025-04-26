@@ -3,6 +3,7 @@ using System;
 using LogicMonitor.Datamart;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 {
 	[DbContext(typeof(NpgsqlContext))]
-	partial class ContextModelSnapshot : ModelSnapshot
+	[Migration("20250426205655_AddedDeviceConfigSourceInstanceConfigs")]
+	partial class AddedDeviceConfigSourceInstanceConfigs
 	{
-		protected override void BuildModel(ModelBuilder modelBuilder)
+		/// <inheritdoc />
+		protected override void BuildTargetModel(ModelBuilder modelBuilder)
 		{
 #pragma warning disable 612, 618
 			modelBuilder
@@ -1849,20 +1852,9 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 						.ValueGeneratedOnAdd()
 						.HasColumnType("uuid");
 
-					b.Property<string>("ChangeStatus")
-						.IsRequired()
-						.HasColumnType("text");
-
 					b.Property<string>("Config")
 						.IsRequired()
 						.HasColumnType("text");
-
-					b.Property<string>("ConfigErrorMessage")
-						.IsRequired()
-						.HasColumnType("text");
-
-					b.Property<int>("ConfigStatus")
-						.HasColumnType("integer");
 
 					b.Property<DateTimeOffset>("DatamartCreated")
 						.HasColumnType("timestamp with time zone");
@@ -1880,13 +1872,6 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 						.HasColumnType("integer");
 
 					b.Property<string>("LogicMonitorStringId")
-						.IsRequired()
-						.HasColumnType("text");
-
-					b.Property<DateTimeOffset>("PollUtc")
-						.HasColumnType("timestamp with time zone");
-
-					b.Property<string>("Version")
 						.IsRequired()
 						.HasColumnType("text");
 

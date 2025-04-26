@@ -38,17 +38,15 @@ internal class AlertSync(
 		else
 		{
 			// Run the test against one instance of the context
-			using (var context = new Context(_datamartClient.DbContextOptions))
-			{
-				// Ordered for predictability
-				databaseDeviceIds =
-					await context
-						.Devices
-						.Select(d => d.LogicMonitorId)
-						.OrderBy(id => id)
-						.ToListAsync(cancellationToken: cancellationToken)
-					.ConfigureAwait(false);
-			}
+			using var context = new Context(_datamartClient.DbContextOptions);
+			// Ordered for predictability
+			databaseDeviceIds =
+				await context
+					.Devices
+					.Select(d => d.LogicMonitorId)
+					.OrderBy(id => id)
+					.ToListAsync(cancellationToken: cancellationToken)
+				.ConfigureAwait(false);
 		}
 
 		var updateAlertStats =
@@ -383,7 +381,7 @@ internal class AlertSync(
 				};
 				monitorObjectGroupContext.MonitorObjectGroups.Add(databaseEntry);
 				await monitorObjectGroupContext.SaveChangesAsync().ConfigureAwait(false);
-				
+
 				Logger.LogInformation(
 					"Added new MonitorObjectGroup {DatabaseEntryMonitoredObjectType}:{DatabaseEntryFullPath} with id {DatabaseEntryId}",
 					databaseEntry.MonitoredObjectType,

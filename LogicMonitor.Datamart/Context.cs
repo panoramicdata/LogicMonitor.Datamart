@@ -22,6 +22,9 @@ public class Context : DbContext
 	public DbSet<DataSourceStoreItem> DataSources { get; set; } = null!;
 	public DbSet<DataSourceDataPointStoreItem> DataSourceDataPoints { get; set; } = null!;
 	public DbSet<IntegrationStoreItem> Integrations { get; set; } = null!;
+	public DbSet<ResourceConfigSourceStoreItem> DeviceConfigSources { get; set; } = null!;
+	public DbSet<ResourceConfigSourceInstanceStoreItem> DeviceConfigSourceInstances { get; set; } = null!;
+	public DbSet<ResourceConfigSourceInstanceConfigStoreItem> DeviceConfigSourceInstanceConfigs { get; set; } = null!;
 	public DbSet<ResourceDataSourceStoreItem> DeviceDataSources { get; set; } = null!;
 	public DbSet<ResourceDataSourceInstanceStoreItem> DeviceDataSourceInstances { get; set; } = null!;
 	public DbSet<EscalationChainStoreItem> EscalationChains { get; set; } = null!;

@@ -1,8 +1,5 @@
 namespace LogicMonitor.Datamart.Models;
 
-public class ConfigSourceStoreItem : IdentifiedStoreItem
+public class ConfigSourceStoreItem : LogicModuleStoreItem
 {
-	public required string Name { get; set; }
-
-	public required string Description { get; set; }
 }

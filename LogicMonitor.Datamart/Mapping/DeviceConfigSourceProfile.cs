@@ -1,10 +1,10 @@
 ﻿namespace LogicMonitor.Datamart.Mapping;
 
-public class DeviceDataSourceProfile : Profile
+public class DeviceConfigSourceProfile : Profile
 {
-	public DeviceDataSourceProfile()
+	public DeviceConfigSourceProfile()
 	{
-		CreateMap<ResourceDataSource, ResourceDataSourceStoreItem>()
+		CreateMap<ResourceDataSource, ResourceConfigSourceStoreItem>()
 			.ForMember(
 				dest => dest.Id,
 				opts => opts.Ignore())
@@ -18,13 +18,10 @@ public class DeviceDataSourceProfile : Profile
 				dest => dest.DeviceId,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.DataSource,
+				dest => dest.ConfigSource,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.DataSource,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DataSourceId,
+				dest => dest.ConfigSourceId,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.DatamartCreated,
@@ -36,11 +33,11 @@ public class DeviceDataSourceProfile : Profile
 				dest => dest.DatamartLastObserved,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.DeviceDataSourceInstances,
+				dest => dest.DeviceConfigSourceInstances,
 				opts => opts.Ignore())
 			;
 
-		CreateMap<ResourceDataSourceStoreItem, ResourceDataSource>()
+		CreateMap<ResourceConfigSourceStoreItem, ResourceDataSource>()
 			.ForMember(
 				dest => dest.Id,
 				opts => opts.MapFrom(src => src.LogicMonitorId))
@@ -61,6 +58,12 @@ public class DeviceDataSourceProfile : Profile
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.DataSourceType,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.DataSourceName,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.DataSourceDescription,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.DataSourceDisplayName,

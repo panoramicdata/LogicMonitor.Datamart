@@ -13,6 +13,11 @@ public class Configuration
 	public List<DataSourceConfigurationItem> DataSources { get; set; } = [];
 
 	/// <summary>
+	/// The ConfigSources
+	/// </summary>
+	public List<ConfigSourceConfigurationItem> ConfigSources { get; set; } = [];
+
+	/// <summary>
 	/// Whether to reset the aggregations
 	/// Default false
 	/// If set to true, as part of the LowResolutionDataSync, the aggregation data will be reset by:

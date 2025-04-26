@@ -147,8 +147,15 @@ public abstract class TestWithOutput
 						PercentageAvailabilityCalculation = "PercentUpTime"
 					}
 				]
+			},
+		],
+		ConfigSources =
+		[
+			new ConfigSourceConfigurationItem
+			{
+				Name = "Kubernetes_ConfigMaps",
 			}
-		]
+		],
 	};
 
 	protected TestWithOutput(ITestOutputHelper iTestOutputHelper)

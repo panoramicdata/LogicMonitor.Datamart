@@ -72,9 +72,7 @@ internal class LogSync(
 				.ConfigureAwait(false);
 
 			// Remove those that came in on the boundary that we already have
-			apiEntriesThisTime = apiEntriesThisTime
-				.Where(e => !existingOnBoundary.Contains(e.Id))
-				.ToList();
+			apiEntriesThisTime = [.. apiEntriesThisTime.Where(e => !existingOnBoundary.Contains(e.Id))];
 
 			if (apiEntriesThisTime.Count == 0)
 			{

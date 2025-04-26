@@ -430,10 +430,10 @@ public class DatamartClient : LogicMonitorClient
 			switch (typeof(TStore).Name)
 			{
 				case nameof(DataSourceStoreItem):
-					await UpdateGraphsAsync(context, apiItems.Cast<DataSource>().ToList(), cancellationToken)
+					await UpdateGraphsAsync(context, [.. apiItems.Cast<DataSource>()], cancellationToken)
 						.ConfigureAwait(false);
 
-					await UpdateDataPointsAsync(context, apiItems.Cast<DataSource>().ToList(), cancellationToken)
+					await UpdateDataPointsAsync(context, [.. apiItems.Cast<DataSource>()], cancellationToken)
 						.ConfigureAwait(false);
 					break;
 			}
@@ -1063,41 +1063,84 @@ public class DatamartClient : LogicMonitorClient
 		return tableName;
 	}
 
-	public async Task SyncDeviceDataSourcesAndInstancesAsync(
-		DataSourceConfigurationItem dataSourceSpecification,
+	public async Task SyncDeviceLogicModuleSourcesAndInstancesAsync(
+		LogicModuleConfigurationItem logicModuleConfigurationItem,
 		ILogger logger,
-		CancellationToken cancellationToken
-	)
+		CancellationToken cancellationToken)
 	{
 		try
 		{
-			logger.LogInformation($"Syncing {nameof(ResourceDataSourceInstance)}s for DataSource '{{DataSource}}'...", dataSourceSpecification.Name);
-
-			var dataSourceName = dataSourceSpecification.Name;
-
 			using var context = GetContext();
+			int logicModuleId;
+			string databaseAppliesTo;
+			Guid databaseLogicModuleId;
+			List<DataSourceDataPointStoreItem> dataSourceDataPoints = [];
 
-			var databaseDataSource = await context
-				.DataSources
-				.SingleOrDefaultAsync(ds => ds.Name == dataSourceName, cancellationToken)
-				.ConfigureAwait(false) ?? throw new InvalidOperationException($"Could not find DataSource '{dataSourceName}' in database.");
+			switch (logicModuleConfigurationItem)
+			{
+				case DataSourceConfigurationItem dataSourceConfigurationItem:
+					logger.LogInformation($"Syncing {nameof(ResourceDataSourceInstance)}s for DataSource {{DataSourceName}}...", logicModuleConfigurationItem.Name);
+					var dataSourceStoreItem = await context
+						.DataSources
+						.SingleOrDefaultAsync(ds => ds.Name == dataSourceConfigurationItem.Name, cancellationToken)
+						.ConfigureAwait(false);
 
-			var dataSourceDataPoints = await SyncDataSourceDataPointsAsync(
-					databaseDataSource,
-					context,
-					dataSourceSpecification,
-					cancellationToken
-				)
-				.ConfigureAwait(false);
+					if (dataSourceStoreItem is null)
+					{
+						logger.LogError(
+							"For LogicMonitor instance {LogicMonitorAccount}, expected to find Database DataSource called '{DataSourceName}', but it was missing.",
+							_configuration.LogicMonitorClientOptions.Account,
+							dataSourceConfigurationItem.Name);
+						return;
+					}
+
+					databaseLogicModuleId = dataSourceStoreItem.Id;
+					databaseAppliesTo = dataSourceStoreItem.AppliesTo;
+					logicModuleId = dataSourceStoreItem.LogicMonitorId;
+
+					dataSourceDataPoints = await SyncDataSourceDataPointsAsync(
+						dataSourceStoreItem,
+						context,
+						dataSourceConfigurationItem.DataPoints,
+						cancellationToken
+						)
+						.ConfigureAwait(false);
+					break;
+				case ConfigSourceConfigurationItem configSourceConfigurationItem:
+					logger.LogInformation($"Syncing {nameof(ResourceDataSourceInstance)}s for ConfigSource {{ConfigSourceName}}...", logicModuleConfigurationItem.Name);
+
+					var configSourceStoreItem = await context
+							.ConfigSources
+							.Where(cs => cs.Name == configSourceConfigurationItem.Name)
+							.FirstOrDefaultAsync(cancellationToken)
+							.ConfigureAwait(false);
+
+					if (configSourceStoreItem is null)
+					{
+						logger.LogError(
+								"For LogicMonitor instance {LogicMonitorAccount}, expected to find Database ConfigSource called '{ConfigSourceName}', but it was missing.",
+								_configuration.LogicMonitorClientOptions.Account,
+								configSourceConfigurationItem.Name);
+						return;
+					}
+
+					databaseLogicModuleId = configSourceStoreItem.Id;
+					databaseAppliesTo = configSourceStoreItem.AppliesTo;
+					logicModuleId = configSourceStoreItem.LogicMonitorId;
+
+					break;
+				default:
+					throw new NotSupportedException($"LogicModuleType {logicModuleConfigurationItem.GetType().Name} is not supported.");
+			}
 
 			// Get the Devices that match the appliesTo function on the DataSource
-			var appliesToMatches = await GetAppliesToAsync(databaseDataSource.AppliesTo, cancellationToken)
+			var appliesToMatches = await GetAppliesToAsync(databaseAppliesTo, cancellationToken)
 				.ConfigureAwait(false);
 
 			// Further constrain the appliesToMatches if requested
-			if (!string.IsNullOrWhiteSpace(dataSourceSpecification.AppliesTo))
+			if (!string.IsNullOrWhiteSpace(logicModuleConfigurationItem.AppliesTo))
 			{
-				var requestedAppliesToMatches = await GetAppliesToAsync(dataSourceSpecification.AppliesTo, cancellationToken)
+				var requestedAppliesToMatches = await GetAppliesToAsync(logicModuleConfigurationItem.AppliesTo, cancellationToken)
 					.ConfigureAwait(false);
 
 				appliesToMatches = [.. appliesToMatches.Where(a => requestedAppliesToMatches.Any(r => r.Id == a.Id))];
@@ -1105,7 +1148,7 @@ public class DatamartClient : LogicMonitorClient
 
 			logger.LogDebug(
 				"Syncing {DataSourceName} instances for {AppliesToMatchesCount} devices",
-				dataSourceName,
+				logicModuleConfigurationItem.Name,
 				appliesToMatches.Count);
 
 			var instanceProperties = typeof(ResourceDataSourceInstance)
@@ -1123,7 +1166,7 @@ public class DatamartClient : LogicMonitorClient
 				// Get the DeviceDataSource
 				var deviceDataSource = await GetResourceDataSourceByResourceIdAndDataSourceIdAsync(
 						device.Id,
-						databaseDataSource.LogicMonitorId,
+						logicModuleId,
 						cancellationToken
 					)
 					.ConfigureAwait(false);
@@ -1131,81 +1174,180 @@ public class DatamartClient : LogicMonitorClient
 				{
 					continue;
 				}
+
 				// We have a DeviceDataSource
-
-				// Ensure that this DeviceDataSource exists in the database
-				var deviceDataSourceStoreItem = await context
-					.DeviceDataSources
-					.Include(dds => dds.DataSource)
-					.Include(dds => dds.Device)
-					.SingleOrDefaultAsync(dds =>
-							dds.Device!.LogicMonitorId == deviceDataSource.ResourceId
-							&& dds.DataSource!.LogicMonitorId == deviceDataSource.DataSourceId,
-						cancellationToken: cancellationToken)
-					.ConfigureAwait(false);
-
-				var deviceStoreItem = await context
-					.Devices
-					.SingleOrDefaultAsync(d => d.LogicMonitorId == deviceDataSource.ResourceId, cancellationToken)
-					.ConfigureAwait(false);
-
-				var dataSourceStoreItem = await context
-					.DataSources
-					.SingleOrDefaultAsync(d => d.LogicMonitorId == deviceDataSource.DataSourceId, cancellationToken)
-					.ConfigureAwait(false);
-
-				if (deviceDataSourceStoreItem == null)
+				markedMissing = logicModuleConfigurationItem switch
 				{
-					// Add it to the database
-					deviceDataSourceStoreItem = MapperInstance.Map<ResourceDataSourceStoreItem>(deviceDataSource);
-					context.DeviceDataSources.Add(deviceDataSourceStoreItem);
-				}
-				else
-				{
-					// Update the existing entry
-					deviceDataSourceStoreItem = MapperInstance.Map(deviceDataSource, deviceDataSourceStoreItem);
-				}
+					DataSourceConfigurationItem dataSourceConfigurationItem
+						=> await ProcessDeviceDataSourceAsync(
+							dataSourceConfigurationItem,
+							logger,
+							context,
+							databaseLogicModuleId,
+							dataSourceDataPoints,
+							instanceProperties,
+							markedMissing,
+							device,
+							deviceDataSource,
+							cancellationToken)
+								.ConfigureAwait(false),
+					ConfigSourceConfigurationItem configSourceConfigurationItem
+						=> await ProcessDeviceConfigSourceAsync(
+							configSourceConfigurationItem,
+							logger,
+							context,
+							databaseLogicModuleId,
+							instanceProperties,
+							markedMissing,
+							device,
+							deviceDataSource,
+							cancellationToken)
+								.ConfigureAwait(false),
+					_ => throw new NotSupportedException($"LogicModuleType {logicModuleConfigurationItem.GetType().Name} is not supported."),
+				};
 
-				deviceDataSourceStoreItem.DeviceId = deviceStoreItem!.Id;
-				deviceDataSourceStoreItem.DataSourceId = dataSourceStoreItem!.Id;
-				// It is now in the database context
+				// Check for any that were NOT in the entries that came back from the API
+			}
 
-				// Fetch the DeviceDataSourceInstances from the API
-				var apiDeviceDataSourceInstances =
-					await GetAllResourceDataSourceInstancesAsync(
-						device.Id,
-						deviceDataSource.Id,
-						new(),
-						cancellationToken)
-					.ConfigureAwait(false);
+			var added = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Added);
+			var modified = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Modified);
+			var total = context.ChangeTracker.Entries().Count();
+			var rowsAffected = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-				var instanceObservedDateTimeUtc = _timeProviderService.UtcOffsetNow;
+			logger.LogInformation(
+				"Sync completed for {LogicModuleName}; Total {Total}; Added {Added}; Modified {Modified} ({MarkedMissing:N0} MarkedMissing).",
+				logicModuleConfigurationItem.Name,
+				total,
+				added,
+				modified,
+				markedMissing);
 
-				// Update the DatamartLastObserved BEFORE we remove instances that do not match
-				foreach (var instance in apiDeviceDataSourceInstances)
-				{
-					if (await context
-						.DeviceDataSourceInstances
-						.SingleOrDefaultAsync(dddsi => dddsi.LogicMonitorId == instance.Id, cancellationToken: cancellationToken)
-						.ConfigureAwait(false) is ResourceDataSourceInstanceStoreItem instanceStoreItem)
-					{
-						// RM-16087 Update "DatamartLastObserved" to the date the sync noticed them, even if nothing was changed
-						instanceStoreItem.DatamartLastObserved = instanceObservedDateTimeUtc;
-					}
+		}
+		catch (Exception e) when (e is OperationCanceledException or TaskCanceledException)
+		{
+			if (cancellationToken.IsCancellationRequested)
+			{
+				// We're done, don't loop any more
+				return;
+			}
+			// If it was anything else then re-throw
+			throw;
+		}
+		catch (Exception ex)
+		{
+			logger.LogWarning(
+				ex,
+				$"Error while syncing {nameof(ResourceDataSourceInstance)}s for LogicModule '{{DataSource}}' : {{Message}}\n {{StackTrace}}",
+				logicModuleConfigurationItem.Name,
+				ex.Message,
+				ex.StackTrace);
+		}
+	}
 
-					// Those device data source instances NOT in the database will be added further on and "DatamartLastObserved" will be set there
-				}
+	private async Task<int> ProcessDeviceDataSourceAsync(
+		DataSourceConfigurationItem dataSourceConfigurationItem,
+		ILogger logger,
+		Context context,
+		Guid databaseLogicModuleId,
+		List<DataSourceDataPointStoreItem> dataSourceDataPoints,
+		PropertyInfo[] instanceProperties,
+		int markedMissing,
+		Resource device,
+		ResourceDataSource deviceDataSource,
+		CancellationToken cancellationToken)
+	{
 
-				await context
-					.SaveChangesAsync(cancellationToken)
-					.ConfigureAwait(false);
+		// Ensure that this DeviceDataSource exists in the database
+		var deviceDataSourceStoreItem = await context
+			.DeviceDataSources
+			.Include(dds => dds.DataSource)
+			.Include(dds => dds.Device)
+			.SingleOrDefaultAsync(dds =>
+					dds.Device!.LogicMonitorId == deviceDataSource.ResourceId
+					&& dds.DataSource!.LogicMonitorId == deviceDataSource.DataSourceId,
+				cancellationToken: cancellationToken)
+			.ConfigureAwait(false);
 
-				// Remove any instances that do not match the DataSourceConfigurationItem's InstanceInclusionExpression
-				if (!string.IsNullOrWhiteSpace(dataSourceSpecification.InstanceInclusionExpression) && dataSourceSpecification.InstanceInclusionExpression != "true")
-				{
-					var instanceInclusionExpression = new ExtendedExpression(dataSourceSpecification.InstanceInclusionExpression);
+		var deviceStoreItem = await context
+			.Devices
+			.SingleOrDefaultAsync(d => d.LogicMonitorId == deviceDataSource.ResourceId, cancellationToken)
+			.ConfigureAwait(false);
 
-					apiDeviceDataSourceInstances = apiDeviceDataSourceInstances
+		if (deviceStoreItem is null)
+		{
+			logger.LogError(
+				"For LogicMonitor instance {LogicMonitorAccount}, expected to find Database Device called '{DeviceName}', but it was missing.",
+				_configuration.LogicMonitorClientOptions.Account,
+				device.Name);
+			return markedMissing;
+		}
+
+		var dataSourceStoreItem = await context
+			.DataSources
+			.SingleOrDefaultAsync(d => d.LogicMonitorId == deviceDataSource.DataSourceId, cancellationToken)
+			.ConfigureAwait(false);
+
+		if (dataSourceStoreItem is null)
+		{
+			logger.LogError(
+					"For LogicMonitor instance {LogicMonitorAccount}, expected to find Database DataSource called '{DataSourceName}', but it was missing.",
+					_configuration.LogicMonitorClientOptions.Account,
+					dataSourceConfigurationItem.Name);
+			return markedMissing;
+		}
+
+		if (deviceDataSourceStoreItem == null)
+		{
+			// Add it to the database
+			deviceDataSourceStoreItem = MapperInstance.Map<ResourceDataSourceStoreItem>(deviceDataSource);
+			context.DeviceDataSources.Add(deviceDataSourceStoreItem);
+		}
+		else
+		{
+			// Update the existing entry
+			deviceDataSourceStoreItem = MapperInstance.Map(deviceDataSource, deviceDataSourceStoreItem);
+		}
+
+		deviceDataSourceStoreItem.DeviceId = deviceStoreItem!.Id;
+		deviceDataSourceStoreItem.DataSourceId = dataSourceStoreItem.Id;
+		// It is now in the database context
+
+		// Fetch the DeviceDataSourceInstances from the API
+		var apiDeviceDataSourceInstances =
+			await GetAllResourceDataSourceInstancesAsync(
+				device.Id,
+				deviceDataSource.Id,
+				new(),
+				cancellationToken)
+			.ConfigureAwait(false);
+
+		var instanceObservedDateTimeUtc = _timeProviderService.UtcOffsetNow;
+
+		// Update the DatamartLastObserved BEFORE we remove instances that do not match
+		foreach (var instance in apiDeviceDataSourceInstances)
+		{
+			if (await context
+				.DeviceDataSourceInstances
+				.SingleOrDefaultAsync(dddsi => dddsi.LogicMonitorId == instance.Id, cancellationToken: cancellationToken)
+				.ConfigureAwait(false) is ResourceDataSourceInstanceStoreItem instanceStoreItem)
+			{
+				// RM-16087 Update "DatamartLastObserved" to the date the sync noticed them, even if nothing was changed
+				instanceStoreItem.DatamartLastObserved = instanceObservedDateTimeUtc;
+			}
+
+			// Those device data source instances NOT in the database will be added further on and "DatamartLastObserved" will be set there
+		}
+
+		await context
+			.SaveChangesAsync(cancellationToken)
+			.ConfigureAwait(false);
+
+		// Remove any instances that do not match the DataSourceConfigurationItem's InstanceInclusionExpression
+		if (!string.IsNullOrWhiteSpace(dataSourceConfigurationItem.InstanceInclusionExpression) && dataSourceConfigurationItem.InstanceInclusionExpression != "true")
+		{
+			var instanceInclusionExpression = new ExtendedExpression(dataSourceConfigurationItem.InstanceInclusionExpression);
+
+			apiDeviceDataSourceInstances = [.. apiDeviceDataSourceInstances
 						.Where(i =>
 						{
 							try
@@ -1238,178 +1380,485 @@ public class DatamartClient : LogicMonitorClient
 							}
 							catch (Exception e)
 							{
-								logger.LogError(e, "Error evaluating InstanceInclusionExpression '{InstanceInclusionExpression}' for {DeviceName} instance {InstanceName}", dataSourceSpecification.InstanceInclusionExpression, device.Name, i.Name);
+								logger.LogError(
+									e,
+									"Error evaluating InstanceInclusionExpression '{InstanceInclusionExpression}' for {DeviceName} instance {InstanceName}",
+									dataSourceConfigurationItem.InstanceInclusionExpression,
+									device.Name,
+									i.Name);
 
 								// Default to true
 								return true;
 							}
-						})
-						.ToList();
-				}
-
-				foreach (var apiDeviceDataSourceInstance in apiDeviceDataSourceInstances)
-				{
-					// Ensure that this DeviceDataSourceInstance exists in the database
-					var databaseDeviceDataSourceInstance = await context
-						.DeviceDataSourceInstances
-						.SingleOrDefaultAsync(dddsi => dddsi.LogicMonitorId == apiDeviceDataSourceInstance.Id, cancellationToken: cancellationToken)
-						.ConfigureAwait(false);
-					if (databaseDeviceDataSourceInstance == null)
-					{
-						// Add it to the database
-						databaseDeviceDataSourceInstance = MapperInstance.Map<ResourceDataSourceInstanceStoreItem>(apiDeviceDataSourceInstance);
-						databaseDeviceDataSourceInstance.DeviceDataSourceId = deviceDataSourceStoreItem.Id;
-						context.DeviceDataSourceInstances.Add(databaseDeviceDataSourceInstance);
-					}
-					else
-					{
-						// Update - including clearing the LastWentMissingUtc field
-						// Update the existing entry using AutoMapper
-						MapperInstance.Map(apiDeviceDataSourceInstance, databaseDeviceDataSourceInstance);
-						databaseDeviceDataSourceInstance.DeviceDataSourceId = deviceDataSourceStoreItem.Id;
-						databaseDeviceDataSourceInstance.LastWentMissing = null;
-					}
-					// It is now in the database context
-
-					// RM-16087 Update "DatamartLastObserved" to the date the sync noticed them
-					databaseDeviceDataSourceInstance.DatamartLastObserved = instanceObservedDateTimeUtc;
-
-					// Set the properties by using NCalc
-					databaseDeviceDataSourceInstance.InstanceProperty1 = EvaluateProperty(dataSourceSpecification.InstanceProperty1, device, apiDeviceDataSourceInstance, logger);
-					databaseDeviceDataSourceInstance.InstanceProperty2 = EvaluateProperty(dataSourceSpecification.InstanceProperty2, device, apiDeviceDataSourceInstance, logger);
-					databaseDeviceDataSourceInstance.InstanceProperty3 = EvaluateProperty(dataSourceSpecification.InstanceProperty3, device, apiDeviceDataSourceInstance, logger);
-					databaseDeviceDataSourceInstance.InstanceProperty4 = EvaluateProperty(dataSourceSpecification.InstanceProperty4, device, apiDeviceDataSourceInstance, logger);
-					databaseDeviceDataSourceInstance.InstanceProperty5 = EvaluateProperty(dataSourceSpecification.InstanceProperty5, device, apiDeviceDataSourceInstance, logger);
-					databaseDeviceDataSourceInstance.InstanceProperty6 = EvaluateProperty(dataSourceSpecification.InstanceProperty6, device, apiDeviceDataSourceInstance, logger);
-					databaseDeviceDataSourceInstance.InstanceProperty7 = EvaluateProperty(dataSourceSpecification.InstanceProperty7, device, apiDeviceDataSourceInstance, logger);
-					databaseDeviceDataSourceInstance.InstanceProperty8 = EvaluateProperty(dataSourceSpecification.InstanceProperty8, device, apiDeviceDataSourceInstance, logger);
-					databaseDeviceDataSourceInstance.InstanceProperty9 = EvaluateProperty(dataSourceSpecification.InstanceProperty9, device, apiDeviceDataSourceInstance, logger);
-					databaseDeviceDataSourceInstance.InstanceProperty10 = EvaluateProperty(dataSourceSpecification.InstanceProperty10, device, apiDeviceDataSourceInstance, logger);
-
-					// Get the DeviceDataSourceInstanceDataPoints
-					var deviceDataSourceInstanceDataPoints = await context
-						.DeviceDataSourceInstanceDataPoints
-						.Where(ddsidp => ddsidp.DeviceDataSourceInstanceId == databaseDeviceDataSourceInstance.Id)
-						.ToListAsync(cancellationToken);
-
-					var index = 0;
-					foreach (var dataSourceDataPointId in dataSourceDataPoints.Select(dsdp => dsdp.Id))
-					{
-						if (!deviceDataSourceInstanceDataPoints.Any(ddsidp => ddsidp.DeviceDataSourceInstanceId == databaseDeviceDataSourceInstance.Id && ddsidp.DataSourceDataPointId == dataSourceDataPointId))
-						{
-							// Add to the database
-							context
-							.DeviceDataSourceInstanceDataPoints
-							.Add(new ResourceDataSourceInstanceDataPointStoreItem
-							{
-								DeviceDataSourceInstanceId = databaseDeviceDataSourceInstance.Id,
-								DataSourceDataPointId = dataSourceDataPointId,
-								InstanceDatapointProperty1 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty1, device, apiDeviceDataSourceInstance, logger),
-								InstanceDatapointProperty2 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty2, device, apiDeviceDataSourceInstance, logger),
-								InstanceDatapointProperty3 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty3, device, apiDeviceDataSourceInstance, logger),
-								InstanceDatapointProperty4 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty4, device, apiDeviceDataSourceInstance, logger),
-								InstanceDatapointProperty5 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty5, device, apiDeviceDataSourceInstance, logger),
-								InstanceDatapointProperty6 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty6, device, apiDeviceDataSourceInstance, logger),
-								InstanceDatapointProperty7 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty7, device, apiDeviceDataSourceInstance, logger),
-								InstanceDatapointProperty8 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty8, device, apiDeviceDataSourceInstance, logger),
-								InstanceDatapointProperty9 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty9, device, apiDeviceDataSourceInstance, logger),
-								InstanceDatapointProperty10 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty10, device, apiDeviceDataSourceInstance, logger)
-							});
-						}
-						else
-						{
-							// If (through error), there is more than one, each one should be updated.
-							foreach (var ddsipsi in deviceDataSourceInstanceDataPoints.Where(ddsidp => ddsidp.DeviceDataSourceInstanceId == databaseDeviceDataSourceInstance.Id && ddsidp.DataSourceDataPointId == dataSourceDataPointId))
-							{
-								ddsipsi.InstanceDatapointProperty1 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty1, device, apiDeviceDataSourceInstance, logger);
-								ddsipsi.InstanceDatapointProperty2 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty2, device, apiDeviceDataSourceInstance, logger);
-								ddsipsi.InstanceDatapointProperty3 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty3, device, apiDeviceDataSourceInstance, logger);
-								ddsipsi.InstanceDatapointProperty4 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty4, device, apiDeviceDataSourceInstance, logger);
-								ddsipsi.InstanceDatapointProperty5 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty5, device, apiDeviceDataSourceInstance, logger);
-								ddsipsi.InstanceDatapointProperty6 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty6, device, apiDeviceDataSourceInstance, logger);
-								ddsipsi.InstanceDatapointProperty7 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty7, device, apiDeviceDataSourceInstance, logger);
-								ddsipsi.InstanceDatapointProperty8 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty8, device, apiDeviceDataSourceInstance, logger);
-								ddsipsi.InstanceDatapointProperty9 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty9, device, apiDeviceDataSourceInstance, logger);
-								ddsipsi.InstanceDatapointProperty10 = EvaluateProperty(dataSourceSpecification.DataPoints[index].InstanceDatapointProperty10, device, apiDeviceDataSourceInstance, logger);
-							}
-						}
-
-						index++;
-					}
-				}
-
-				// It's possible that there are entries in the database that are no longer brought back from the API, due to instances being deleted by Active Discovery/manual deletion
-				// Get all database instances where the
-				var databaseDeviceDataSourceInstanceIdsThatShouldHaveComeBackFromApi = new HashSet<int>(await context
-						.DeviceDataSourceInstances
-						.Include(ddsi => ddsi.DeviceDataSource!.DataSource)
-						.Include(ddsi => ddsi.DeviceDataSource!.Device)
-						.Where(ddsi => ddsi.DeviceDataSource!.Device!.LogicMonitorId == device.Id && ddsi.DeviceDataSource!.DataSourceId == databaseDataSource.Id && ddsi.LastWentMissing == null)
-						.Select(ddsi => ddsi.LogicMonitorId)
-						.ToListAsync(cancellationToken: cancellationToken)
-						.ConfigureAwait(false));
-
-				var apiDeviceDataSourceInstanceIds = new HashSet<int>(apiDeviceDataSourceInstances.Select(ddsi => ddsi.Id));
-
-				var deviceDatasourceInstanceIdsToMarkMissing = databaseDeviceDataSourceInstanceIdsThatShouldHaveComeBackFromApi
-					.Except(apiDeviceDataSourceInstanceIds)
-					.ToList();
-				if (deviceDatasourceInstanceIdsToMarkMissing.Count > 0)
-				{
-					foreach (var deviceDatasourceInstanceIdToMarkMissing in deviceDatasourceInstanceIdsToMarkMissing)
-					{
-						// Get the entry to modify from the context and update it
-						var databaseDeviceDataSourceInstance = await context
-							.DeviceDataSourceInstances
-							.SingleOrDefaultAsync(dddsi => dddsi.LogicMonitorId == deviceDatasourceInstanceIdToMarkMissing, cancellationToken: cancellationToken)
-							.ConfigureAwait(false);
-
-						if (databaseDeviceDataSourceInstance is null)
-						{
-							continue;
-						}
-
-						databaseDeviceDataSourceInstance.LastWentMissing = _timeProviderService.UtcOffsetNow;
-					}
-
-					markedMissing += deviceDatasourceInstanceIdsToMarkMissing.Count;
-				}
-
-				// Check for any that were NOT in the entries that came back from the API
-			}
-
-			var added = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Added);
-			var modified = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Modified);
-			var total = context.ChangeTracker.Entries().Count();
-			var rowsAffected = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-			logger.LogInformation(
-				"Sync completed for {DataSourceName}; Total {Total}; Added {Added}; Modified {Modified} ({MarkedMissing:N0} MarkedMissing).",
-				dataSourceName,
-				total,
-				added,
-				modified,
-				markedMissing);
-
+						})];
 		}
-		catch (Exception e) when (e is OperationCanceledException or TaskCanceledException)
+
+		foreach (var apiDeviceDataSourceInstance in apiDeviceDataSourceInstances)
 		{
-			if (cancellationToken.IsCancellationRequested)
+			// Ensure that this DeviceDataSourceInstance exists in the database
+			var databaseDeviceDataSourceInstance = await context
+				.DeviceDataSourceInstances
+				.SingleOrDefaultAsync(dddsi => dddsi.LogicMonitorId == apiDeviceDataSourceInstance.Id, cancellationToken: cancellationToken)
+				.ConfigureAwait(false);
+			if (databaseDeviceDataSourceInstance == null)
 			{
-				// We're done, don't loop any more
-				return;
+				// Add it to the database
+				databaseDeviceDataSourceInstance = MapperInstance.Map<ResourceDataSourceInstanceStoreItem>(apiDeviceDataSourceInstance);
+				databaseDeviceDataSourceInstance.DeviceDataSourceId = deviceDataSourceStoreItem.Id;
+				context.DeviceDataSourceInstances.Add(databaseDeviceDataSourceInstance);
 			}
-			// If it was anything else then re-throw
-			throw;
+			else
+			{
+				// Update - including clearing the LastWentMissingUtc field
+				// Update the existing entry using AutoMapper
+				MapperInstance.Map(apiDeviceDataSourceInstance, databaseDeviceDataSourceInstance);
+				databaseDeviceDataSourceInstance.DeviceDataSourceId = deviceDataSourceStoreItem.Id;
+				databaseDeviceDataSourceInstance.LastWentMissing = null;
+			}
+			// It is now in the database context
+
+			// RM-16087 Update "DatamartLastObserved" to the date the sync noticed them
+			databaseDeviceDataSourceInstance.DatamartLastObserved = instanceObservedDateTimeUtc;
+
+			// Set the properties by using NCalc
+			databaseDeviceDataSourceInstance.InstanceProperty1 = EvaluateProperty(dataSourceConfigurationItem.InstanceProperty1, device, apiDeviceDataSourceInstance, logger);
+			databaseDeviceDataSourceInstance.InstanceProperty2 = EvaluateProperty(dataSourceConfigurationItem.InstanceProperty2, device, apiDeviceDataSourceInstance, logger);
+			databaseDeviceDataSourceInstance.InstanceProperty3 = EvaluateProperty(dataSourceConfigurationItem.InstanceProperty3, device, apiDeviceDataSourceInstance, logger);
+			databaseDeviceDataSourceInstance.InstanceProperty4 = EvaluateProperty(dataSourceConfigurationItem.InstanceProperty4, device, apiDeviceDataSourceInstance, logger);
+			databaseDeviceDataSourceInstance.InstanceProperty5 = EvaluateProperty(dataSourceConfigurationItem.InstanceProperty5, device, apiDeviceDataSourceInstance, logger);
+			databaseDeviceDataSourceInstance.InstanceProperty6 = EvaluateProperty(dataSourceConfigurationItem.InstanceProperty6, device, apiDeviceDataSourceInstance, logger);
+			databaseDeviceDataSourceInstance.InstanceProperty7 = EvaluateProperty(dataSourceConfigurationItem.InstanceProperty7, device, apiDeviceDataSourceInstance, logger);
+			databaseDeviceDataSourceInstance.InstanceProperty8 = EvaluateProperty(dataSourceConfigurationItem.InstanceProperty8, device, apiDeviceDataSourceInstance, logger);
+			databaseDeviceDataSourceInstance.InstanceProperty9 = EvaluateProperty(dataSourceConfigurationItem.InstanceProperty9, device, apiDeviceDataSourceInstance, logger);
+			databaseDeviceDataSourceInstance.InstanceProperty10 = EvaluateProperty(dataSourceConfigurationItem.InstanceProperty10, device, apiDeviceDataSourceInstance, logger);
+
+			var deviceDataSourceInstanceDataPoints = await context
+				.DeviceDataSourceInstanceDataPoints
+				.Where(ddsidp => ddsidp.DeviceDataSourceInstanceId == databaseDeviceDataSourceInstance.Id)
+				.ToListAsync(cancellationToken);
+
+			var index = 0;
+			foreach (var dataSourceDataPointId in dataSourceDataPoints.Select(dsdp => dsdp.Id))
+			{
+				if (!deviceDataSourceInstanceDataPoints.Any(ddsidp => ddsidp.DeviceDataSourceInstanceId == databaseDeviceDataSourceInstance.Id && ddsidp.DataSourceDataPointId == dataSourceDataPointId))
+				{
+					// Add to the database
+					context
+					.DeviceDataSourceInstanceDataPoints
+					.Add(new ResourceDataSourceInstanceDataPointStoreItem
+					{
+						DeviceDataSourceInstanceId = databaseDeviceDataSourceInstance.Id,
+						DataSourceDataPointId = dataSourceDataPointId,
+						InstanceDatapointProperty1 = EvaluateProperty(dataSourceConfigurationItem.DataPoints[index].InstanceDatapointProperty1, device, apiDeviceDataSourceInstance, logger),
+						InstanceDatapointProperty2 = EvaluateProperty(dataSourceConfigurationItem.DataPoints[index].InstanceDatapointProperty2, device, apiDeviceDataSourceInstance, logger),
+						InstanceDatapointProperty3 = EvaluateProperty(dataSourceConfigurationItem.DataPoints[index].InstanceDatapointProperty3, device, apiDeviceDataSourceInstance, logger),
+						InstanceDatapointProperty4 = EvaluateProperty(dataSourceConfigurationItem.DataPoints[index].InstanceDatapointProperty4, device, apiDeviceDataSourceInstance, logger),
+						InstanceDatapointProperty5 = EvaluateProperty(dataSourceConfigurationItem.DataPoints[index].InstanceDatapointProperty5, device, apiDeviceDataSourceInstance, logger),
+						InstanceDatapointProperty6 = EvaluateProperty(dataSourceConfigurationItem.DataPoints[index].InstanceDatapointProperty6, device, apiDeviceDataSourceInstance, logger),
+						InstanceDatapointProperty7 = EvaluateProperty(dataSourceConfigurationItem.DataPoints[index].InstanceDatapointProperty7, device, apiDeviceDataSourceInstance, logger),
+						InstanceDatapointProperty8 = EvaluateProperty(dataSourceConfigurationItem.DataPoints[index].InstanceDatapointProperty8, device, apiDeviceDataSourceInstance, logger),
+						InstanceDatapointProperty9 = EvaluateProperty(dataSourceConfigurationItem.DataPoints[index].InstanceDatapointProperty9, device, apiDeviceDataSourceInstance, logger),
+						InstanceDatapointProperty10 = EvaluateProperty(dataSourceConfigurationItem.DataPoints[index].InstanceDatapointProperty10, device, apiDeviceDataSourceInstance, logger)
+					});
+				}
+				else
+				{
+					// If (through error), there is more than one, each one should be updated.
+					foreach (var ddsipsi in deviceDataSourceInstanceDataPoints.Where(ddsidp => ddsidp.DeviceDataSourceInstanceId == databaseDeviceDataSourceInstance.Id && ddsidp.DataSourceDataPointId == dataSourceDataPointId))
+					{
+						ddsipsi.InstanceDatapointProperty1 = EvaluateProperty(dataSourceConfigurationItem.DataPoints[index].InstanceDatapointProperty1, device, apiDeviceDataSourceInstance, logger);
+						ddsipsi.InstanceDatapointProperty2 = EvaluateProperty(dataSourceConfigurationItem.DataPoints[index].InstanceDatapointProperty2, device, apiDeviceDataSourceInstance, logger);
+						ddsipsi.InstanceDatapointProperty3 = EvaluateProperty(dataSourceConfigurationItem.DataPoints[index].InstanceDatapointProperty3, device, apiDeviceDataSourceInstance, logger);
+						ddsipsi.InstanceDatapointProperty4 = EvaluateProperty(dataSourceConfigurationItem.DataPoints[index].InstanceDatapointProperty4, device, apiDeviceDataSourceInstance, logger);
+						ddsipsi.InstanceDatapointProperty5 = EvaluateProperty(dataSourceConfigurationItem.DataPoints[index].InstanceDatapointProperty5, device, apiDeviceDataSourceInstance, logger);
+						ddsipsi.InstanceDatapointProperty6 = EvaluateProperty(dataSourceConfigurationItem.DataPoints[index].InstanceDatapointProperty6, device, apiDeviceDataSourceInstance, logger);
+						ddsipsi.InstanceDatapointProperty7 = EvaluateProperty(dataSourceConfigurationItem.DataPoints[index].InstanceDatapointProperty7, device, apiDeviceDataSourceInstance, logger);
+						ddsipsi.InstanceDatapointProperty8 = EvaluateProperty(dataSourceConfigurationItem.DataPoints[index].InstanceDatapointProperty8, device, apiDeviceDataSourceInstance, logger);
+						ddsipsi.InstanceDatapointProperty9 = EvaluateProperty(dataSourceConfigurationItem.DataPoints[index].InstanceDatapointProperty9, device, apiDeviceDataSourceInstance, logger);
+						ddsipsi.InstanceDatapointProperty10 = EvaluateProperty(dataSourceConfigurationItem.DataPoints[index].InstanceDatapointProperty10, device, apiDeviceDataSourceInstance, logger);
+					}
+				}
+
+				index++;
+			}
+
 		}
-		catch (Exception ex)
+
+		// It's possible that there are entries in the database that are no longer brought back from the API, due to instances being deleted by Active Discovery/manual deletion
+		// Get all database instances where the
+		var databaseDeviceDataSourceInstanceIdsThatShouldHaveComeBackFromApi = new HashSet<int>(await context
+				.DeviceDataSourceInstances
+				.Include(ddsi => ddsi.DeviceDataSource!.DataSource)
+				.Include(ddsi => ddsi.DeviceDataSource!.Device)
+				.Where(ddsi => ddsi.DeviceDataSource!.Device!.LogicMonitorId == device.Id && ddsi.DeviceDataSource!.DataSourceId == databaseLogicModuleId && ddsi.LastWentMissing == null)
+				.Select(ddsi => ddsi.LogicMonitorId)
+				.ToListAsync(cancellationToken: cancellationToken)
+				.ConfigureAwait(false));
+
+		var apiDeviceDataSourceInstanceIds = new HashSet<int>(apiDeviceDataSourceInstances.Select(ddsi => ddsi.Id));
+
+		var deviceDatasourceInstanceIdsToMarkMissing = databaseDeviceDataSourceInstanceIdsThatShouldHaveComeBackFromApi
+			.Except(apiDeviceDataSourceInstanceIds)
+			.ToList();
+		if (deviceDatasourceInstanceIdsToMarkMissing.Count > 0)
 		{
-			logger.LogWarning(
-				ex,
-				$"Error while syncing {nameof(ResourceDataSourceInstance)}s for DataSource '{{DataSource}}' : {{Message}}\n {{StackTrace}}",
-				dataSourceSpecification.Name,
-				ex.Message,
-				ex.StackTrace);
+			foreach (var deviceDatasourceInstanceIdToMarkMissing in deviceDatasourceInstanceIdsToMarkMissing)
+			{
+				// Get the entry to modify from the context and update it
+				var databaseDeviceDataSourceInstance = await context
+					.DeviceDataSourceInstances
+					.SingleOrDefaultAsync(dddsi => dddsi.LogicMonitorId == deviceDatasourceInstanceIdToMarkMissing, cancellationToken: cancellationToken)
+					.ConfigureAwait(false);
+
+				if (databaseDeviceDataSourceInstance is null)
+				{
+					continue;
+				}
+
+				databaseDeviceDataSourceInstance.LastWentMissing = _timeProviderService.UtcOffsetNow;
+			}
+
+			markedMissing += deviceDatasourceInstanceIdsToMarkMissing.Count;
+		}
+
+		return markedMissing;
+	}
+
+	private async Task<int> ProcessDeviceConfigSourceAsync(
+		ConfigSourceConfigurationItem configSourceConfigurationItem,
+		ILogger logger,
+		Context context,
+		Guid databaseLogicModuleId,
+		PropertyInfo[] instanceProperties,
+		int markedMissing,
+		Resource device,
+		ResourceDataSource deviceConfigSource,
+		CancellationToken cancellationToken)
+	{
+		var oldestUtc = DateTime.UtcNow.AddDays(-configSourceConfigurationItem.MaxAgeDays);
+
+		// Ensure that this ConfigSource exists in the database
+		var deviceConfigSourceStoreItem = await context
+			.DeviceConfigSources
+			.Include(dds => dds.ConfigSource)
+			.Include(dds => dds.Device)
+			.SingleOrDefaultAsync(dds =>
+					dds.Device!.LogicMonitorId == deviceConfigSource.ResourceId
+					&& dds.ConfigSource!.LogicMonitorId == deviceConfigSource.DataSourceId,
+				cancellationToken: cancellationToken)
+			.ConfigureAwait(false);
+
+		var deviceStoreItem = await context
+			.Devices
+			.SingleOrDefaultAsync(d => d.LogicMonitorId == deviceConfigSource.ResourceId, cancellationToken)
+			.ConfigureAwait(false);
+
+		if (deviceStoreItem is null)
+		{
+			logger.LogError(
+				"For LogicMonitor instance {LogicMonitorAccount}, expected to find Database Device called '{DeviceName}', but it was missing.",
+				_configuration.LogicMonitorClientOptions.Account,
+				device.Name);
+			return markedMissing;
+		}
+
+		var configSourceStoreItem = await context
+			.ConfigSources
+			.SingleOrDefaultAsync(d => d.LogicMonitorId == deviceConfigSource.DataSourceId, cancellationToken)
+			.ConfigureAwait(false);
+
+		if (configSourceStoreItem is null)
+		{
+			logger.LogError(
+					"For LogicMonitor instance {LogicMonitorAccount}, expected to find Database ConfigSource called '{ConfigSourceName}', but it was missing.",
+					_configuration.LogicMonitorClientOptions.Account,
+					configSourceConfigurationItem.Name);
+			return markedMissing;
+		}
+
+		if (deviceConfigSourceStoreItem == null)
+		{
+			// Add it to the database
+			deviceConfigSourceStoreItem = MapperInstance.Map<ResourceConfigSourceStoreItem>(deviceConfigSource);
+			context.DeviceConfigSources.Add(deviceConfigSourceStoreItem);
+		}
+		else
+		{
+			// Update the existing entry
+			deviceConfigSourceStoreItem = MapperInstance.Map(deviceConfigSource, deviceConfigSourceStoreItem);
+		}
+
+		deviceConfigSourceStoreItem.DeviceId = deviceStoreItem!.Id;
+		deviceConfigSourceStoreItem.ConfigSourceId = configSourceStoreItem.Id;
+		// It is now in the database context
+
+		// Fetch the DeviceDataSourceInstances from the API
+		var apiDeviceConfigSourceInstances =
+			await GetAllResourceDataSourceInstancesAsync(
+				device.Id,
+				deviceConfigSource.Id,
+				new(),
+				cancellationToken)
+			.ConfigureAwait(false);
+
+		var instanceObservedDateTimeUtc = _timeProviderService.UtcOffsetNow;
+
+		// Update the DatamartLastObserved BEFORE we remove instances that do not match
+		foreach (var instance in apiDeviceConfigSourceInstances)
+		{
+			if (await context
+				.DeviceConfigSourceInstances
+				.SingleOrDefaultAsync(dddsi => dddsi.LogicMonitorId == instance.Id, cancellationToken: cancellationToken)
+				.ConfigureAwait(false) is ResourceConfigSourceInstanceStoreItem instanceStoreItem)
+			{
+				// RM-16087 Update "DatamartLastObserved" to the date the sync noticed them, even if nothing was changed
+				instanceStoreItem.DatamartLastObserved = instanceObservedDateTimeUtc;
+			}
+
+			// Those device config source instances NOT in the database will be added further on and "DatamartLastObserved" will be set there
+		}
+
+		await context
+			.SaveChangesAsync(cancellationToken)
+			.ConfigureAwait(false);
+
+		// Remove any instances that do not match the ConfigSourceConfigurationItem's InstanceInclusionExpression
+		if (!string.IsNullOrWhiteSpace(configSourceConfigurationItem.InstanceInclusionExpression) && configSourceConfigurationItem.InstanceInclusionExpression != "true")
+		{
+			var instanceInclusionExpression = new ExtendedExpression(configSourceConfigurationItem.InstanceInclusionExpression);
+
+			apiDeviceConfigSourceInstances = [.. apiDeviceConfigSourceInstances
+						.Where(i =>
+						{
+							try
+							{
+								foreach (var instanceProperty in instanceProperties)
+								{
+									instanceInclusionExpression.Parameters[instanceProperty.Name] = instanceProperty.GetValue(i) ?? string.Empty;
+								}
+							}
+							catch (Exception e)
+							{
+								logger.LogError(e, "Error setting InstanceInclusionExpression parameters for {DeviceName} instance {InstanceName}", device.Name, i.Name);
+							}
+
+							try
+							{
+								foreach (var instanceCustomProperty in i.CustomProperties)
+								{
+									instanceInclusionExpression.Parameters[instanceCustomProperty.Name] = instanceCustomProperty.Value ?? string.Empty;
+								}
+							}
+							catch (Exception e)
+							{
+								logger.LogError(e, "Error setting InstanceInclusionExpression parameters for {DeviceName} instance {InstanceName} custom properties", device.Name, i.Name);
+							}
+
+							try
+							{
+								return instanceInclusionExpression.Evaluate() as bool? ?? true;
+							}
+							catch (Exception e)
+							{
+								logger.LogError(
+									e,
+									"Error evaluating InstanceInclusionExpression '{InstanceInclusionExpression}' for {DeviceName} instance {InstanceName}",
+									configSourceConfigurationItem.InstanceInclusionExpression,
+									device.Name,
+									i.Name);
+
+								// Default to true
+								return true;
+							}
+						})];
+		}
+
+		foreach (var apiDeviceConfigSourceInstance in apiDeviceConfigSourceInstances)
+		{
+			// Ensure that this DeviceConfigSourceInstance exists in the database
+			var databaseDeviceConfigSourceInstance = await context
+				.DeviceConfigSourceInstances
+				.SingleOrDefaultAsync(dddsi => dddsi.LogicMonitorId == apiDeviceConfigSourceInstance.Id, cancellationToken: cancellationToken)
+				.ConfigureAwait(false);
+			if (databaseDeviceConfigSourceInstance == null)
+			{
+				// Add it to the database
+				databaseDeviceConfigSourceInstance = MapperInstance.Map<ResourceConfigSourceInstanceStoreItem>(apiDeviceConfigSourceInstance);
+				databaseDeviceConfigSourceInstance.DeviceConfigSourceId = deviceConfigSourceStoreItem.Id;
+				context.DeviceConfigSourceInstances.Add(databaseDeviceConfigSourceInstance);
+			}
+			else
+			{
+				// Update - including clearing the LastWentMissingUtc field
+				// Update the existing entry using AutoMapper
+				MapperInstance.Map(apiDeviceConfigSourceInstance, databaseDeviceConfigSourceInstance);
+				databaseDeviceConfigSourceInstance.DeviceConfigSourceId = deviceConfigSourceStoreItem.Id;
+				databaseDeviceConfigSourceInstance.LastWentMissing = null;
+			}
+			// It is now in the database context
+
+			// RM-16087 Update "DatamartLastObserved" to the date the sync noticed them
+			databaseDeviceConfigSourceInstance.DatamartLastObserved = instanceObservedDateTimeUtc;
+
+			// Set the properties by using NCalc
+			databaseDeviceConfigSourceInstance.InstanceProperty1 = EvaluateProperty(configSourceConfigurationItem.InstanceProperty1, device, apiDeviceConfigSourceInstance, logger);
+			databaseDeviceConfigSourceInstance.InstanceProperty2 = EvaluateProperty(configSourceConfigurationItem.InstanceProperty2, device, apiDeviceConfigSourceInstance, logger);
+			databaseDeviceConfigSourceInstance.InstanceProperty3 = EvaluateProperty(configSourceConfigurationItem.InstanceProperty3, device, apiDeviceConfigSourceInstance, logger);
+			databaseDeviceConfigSourceInstance.InstanceProperty4 = EvaluateProperty(configSourceConfigurationItem.InstanceProperty4, device, apiDeviceConfigSourceInstance, logger);
+			databaseDeviceConfigSourceInstance.InstanceProperty5 = EvaluateProperty(configSourceConfigurationItem.InstanceProperty5, device, apiDeviceConfigSourceInstance, logger);
+			databaseDeviceConfigSourceInstance.InstanceProperty6 = EvaluateProperty(configSourceConfigurationItem.InstanceProperty6, device, apiDeviceConfigSourceInstance, logger);
+			databaseDeviceConfigSourceInstance.InstanceProperty7 = EvaluateProperty(configSourceConfigurationItem.InstanceProperty7, device, apiDeviceConfigSourceInstance, logger);
+			databaseDeviceConfigSourceInstance.InstanceProperty8 = EvaluateProperty(configSourceConfigurationItem.InstanceProperty8, device, apiDeviceConfigSourceInstance, logger);
+			databaseDeviceConfigSourceInstance.InstanceProperty9 = EvaluateProperty(configSourceConfigurationItem.InstanceProperty9, device, apiDeviceConfigSourceInstance, logger);
+			databaseDeviceConfigSourceInstance.InstanceProperty10 = EvaluateProperty(configSourceConfigurationItem.InstanceProperty10, device, apiDeviceConfigSourceInstance, logger);
+
+			await ProcessConfigsAsync(
+				context,
+				databaseDeviceConfigSourceInstance,
+				apiDeviceConfigSourceInstance,
+				configSourceConfigurationItem,
+				oldestUtc,
+				logger,
+				cancellationToken)
+				.ConfigureAwait(false);
+		}
+
+		// It's possible that there are entries in the database that are no longer brought back from the API, due to instances being deleted by Active Discovery/manual deletion
+		// Get all database instances where the
+		var databaseDeviceConfigSourceInstanceIdsThatShouldHaveComeBackFromApi = new HashSet<int>(await context
+				.DeviceConfigSourceInstances
+				.Include(ddsi => ddsi.DeviceConfigSource!.ConfigSource)
+				.Include(ddsi => ddsi.DeviceConfigSource!.Device)
+				.Where(ddsi => ddsi.DeviceConfigSource!.Device!.LogicMonitorId == device.Id && ddsi.DeviceConfigSource!.ConfigSourceId == databaseLogicModuleId && ddsi.LastWentMissing == null)
+				.Select(ddsi => ddsi.LogicMonitorId)
+				.ToListAsync(cancellationToken: cancellationToken)
+				.ConfigureAwait(false));
+
+		var apiDeviceConfigSourceInstanceIds = new HashSet<int>(apiDeviceConfigSourceInstances.Select(ddsi => ddsi.Id));
+
+		var deviceConfigSourceInstanceIdsToMarkMissing = databaseDeviceConfigSourceInstanceIdsThatShouldHaveComeBackFromApi
+			.Except(apiDeviceConfigSourceInstanceIds)
+			.ToList();
+		if (deviceConfigSourceInstanceIdsToMarkMissing.Count > 0)
+		{
+			foreach (var deviceConfigSourceInstanceIdToMarkMissing in deviceConfigSourceInstanceIdsToMarkMissing)
+			{
+				// Get the entry to modify from the context and update it
+				var databaseConfigSourceInstance = await context
+					.DeviceConfigSourceInstances
+					.SingleOrDefaultAsync(dddsi => dddsi.LogicMonitorId == deviceConfigSourceInstanceIdToMarkMissing, cancellationToken: cancellationToken)
+					.ConfigureAwait(false);
+
+				if (databaseConfigSourceInstance is null)
+				{
+					continue;
+				}
+
+				databaseConfigSourceInstance.LastWentMissing = _timeProviderService.UtcOffsetNow;
+			}
+
+			markedMissing += deviceConfigSourceInstanceIdsToMarkMissing.Count;
+		}
+
+		return markedMissing;
+	}
+
+	private async Task ProcessConfigsAsync(
+		Context context,
+		ResourceConfigSourceInstanceStoreItem databaseDeviceConfigSourceInstance,
+		ResourceDataSourceInstance apiDeviceConfigSourceInstance,
+		ConfigSourceConfigurationItem configSourceConfigurationItem,
+		DateTimeOffset oldestUtc,
+		ILogger logger,
+		CancellationToken cancellationToken)
+	{
+		// Always get the most recent
+
+		var configs = await GetAllResourceDataSourceInstanceConfigsAsync(
+				apiDeviceConfigSourceInstance.ResourceId,
+				apiDeviceConfigSourceInstance.ResourceDataSourceId,
+				apiDeviceConfigSourceInstance.Id,
+				new()
+				{
+					FilterItems =
+					[
+						new Gt<ResourceDataSourceInstanceConfig>(nameof(ResourceDataSourceInstanceConfig.PollTimestampUtc), oldestUtc.ToUnixTimeSeconds())
+					],
+					Take = 1,
+					Order = new Order<ResourceDataSourceInstanceConfig>()
+					{
+						Property = nameof(ResourceDataSourceInstanceConfig.PollTimestampUtc),
+						Direction = OrderDirection.Desc
+					}
+				},
+				cancellationToken)
+			.ConfigureAwait(false);
+
+		// If there are none - return
+		ResourceDataSourceInstanceConfig mostRecentResourceDataSourceInstanceConfig;
+		switch (configs.Count)
+		{
+			case 0:
+				// No configs - nothing to do
+				return;
+			case 1:
+				// One config - use it
+				mostRecentResourceDataSourceInstanceConfig = configs[0];
+				break;
+			default:
+				// Our filter didn't work.  Error
+				logger.LogError(
+					"More than one config was returned for {DeviceName} instance {InstanceName} for ConfigSource {ConfigSourceName} ({DataSourceId})",
+					apiDeviceConfigSourceInstance.ResourceDisplayName,
+					apiDeviceConfigSourceInstance.DisplayName,
+					apiDeviceConfigSourceInstance.DataSourceName,
+					apiDeviceConfigSourceInstance.DataSourceId);
+				return;
+		}
+
+		var otherConfigs = await GetAllResourceDataSourceInstanceConfigsAsync(
+				apiDeviceConfigSourceInstance.ResourceId,
+				apiDeviceConfigSourceInstance.ResourceDataSourceId,
+				apiDeviceConfigSourceInstance.Id,
+				new()
+				{
+					FilterItems =
+					[
+						// We want to get the configs that are older than the one we just got
+						new Lt<ResourceDataSourceInstanceConfig>(nameof(ResourceDataSourceInstanceConfig.PollTimestampUtc), mostRecentResourceDataSourceInstanceConfig.PollTimestampUtc!),
+						// More recent than the oldest permitted
+						new Gt<ResourceDataSourceInstanceConfig>(nameof(ResourceDataSourceInstanceConfig.PollTimestampUtc), oldestUtc.ToUnixTimeSeconds())
+					]
+				},
+				cancellationToken)
+			.ConfigureAwait(false);
+
+		// Make sure that they are all present in the database
+		// Create a union of the single and the others
+		var allConfigs = new List<ResourceDataSourceInstanceConfig> { mostRecentResourceDataSourceInstanceConfig };
+		allConfigs.AddRange(otherConfigs);
+
+		foreach (var config in allConfigs)
+		{
+			// Ensure that this ConfigSourceInstanceConfig exists in the database
+			var databaseConfigSourceInstanceConfig = await context
+				.DeviceConfigSourceInstanceConfigs
+				.SingleOrDefaultAsync(ddsic => ddsic.LogicMonitorStringId == config.Id, cancellationToken: cancellationToken)
+				.ConfigureAwait(false);
+			if (databaseConfigSourceInstanceConfig is null)
+			{
+				// Add it to the database
+				databaseConfigSourceInstanceConfig = MapperInstance.Map<ResourceConfigSourceInstanceConfigStoreItem>(config);
+				databaseConfigSourceInstanceConfig.DeviceConfigSourceInstanceId = databaseDeviceConfigSourceInstance.Id;
+				context.DeviceConfigSourceInstanceConfigs.Add(databaseConfigSourceInstanceConfig);
+			}
+			else
+			{
+				// Update the existing entry using AutoMapper
+				databaseConfigSourceInstanceConfig = MapperInstance.Map(config, databaseConfigSourceInstanceConfig);
+			}
+
+			databaseConfigSourceInstanceConfig.DeviceConfigSourceInstanceId = databaseDeviceConfigSourceInstance.Id;
 		}
 	}
 
@@ -1476,12 +1925,10 @@ public class DatamartClient : LogicMonitorClient
 	internal static async Task<List<DataSourceDataPointStoreItem>> SyncDataSourceDataPointsAsync(
 		DataSourceStoreItem dataSource,
 		Context context,
-		DataSourceConfigurationItem dataSourceSpecification,
+		List<DataPointConfigurationItem> configDataSourceDataPoints,
 		CancellationToken cancellationToken
 	)
 	{
-		var configDataSourceDataPoints = dataSourceSpecification.DataPoints;
-
 		var dataSourceDataPointStoreItems = new List<DataSourceDataPointStoreItem>();
 
 		// Make sure that they are present in the database

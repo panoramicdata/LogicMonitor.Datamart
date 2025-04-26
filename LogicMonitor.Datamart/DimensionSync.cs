@@ -78,6 +78,7 @@ internal class DimensionSync : LoopInterval
 
 	private async Task SyncThirdLevelDimensionsAsync(CancellationToken cancellationToken)
 	{
+		// ResourceDataSourceInstances
 		if (_types?.Contains(nameof(ResourceDataSourceInstance)) ?? true)
 		{
 			var stopwatch = new Stopwatch();
@@ -92,7 +93,7 @@ internal class DimensionSync : LoopInterval
 					stopwatch.Restart();
 
 					await _datamartClient
-						.SyncDeviceDataSourcesAndInstancesAsync(
+						.SyncDeviceLogicModuleSourcesAndInstancesAsync(
 							dataSourceSpecification,
 							Logger,
 							cancellationToken
@@ -110,6 +111,41 @@ internal class DimensionSync : LoopInterval
 						ex,
 						$"Unable to sync {nameof(ResourceDataSourceInstance)}s for DataSource '{{DataSource}}': {{Message}}",
 						dataSourceSpecification.Name,
+						ex.Message);
+					if (_configuration.DimensionSyncHaltOnError)
+					{
+						throw;
+					}
+				}
+			}
+
+			// ResourceConfigSources
+			foreach (var configSourceSpecification in _configuration.ConfigSources)
+			{
+				try
+				{
+					Logger.LogInformation(
+						$"Syncing {nameof(ResourceDataSourceInstance)}s for ConfigSource '{{ConfigSource}}'...",
+						configSourceSpecification.Name);
+					stopwatch.Restart();
+					await _datamartClient
+						.SyncDeviceLogicModuleSourcesAndInstancesAsync(
+							configSourceSpecification,
+							Logger,
+							cancellationToken
+						)
+						.ConfigureAwait(false);
+					Logger.LogInformation(
+						$"Syncing {nameof(ResourceDataSourceInstance)}s for ConfigSource '{{ConfigSource}}' complete after {{TimeSeconds}}s.",
+						configSourceSpecification.Name,
+						stopwatch.Elapsed.TotalSeconds);
+				}
+				catch (Exception ex)
+				{
+					Logger.LogError(
+						ex,
+						$"Unable to sync {nameof(ResourceDataSourceInstance)}s for ConfigSource '{{ConfigSource}}': {{Message}}",
+						configSourceSpecification.Name,
 						ex.Message);
 					if (_configuration.DimensionSyncHaltOnError)
 					{

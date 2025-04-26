@@ -3,80 +3,83 @@ using System;
 using LogicMonitor.Datamart;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
+namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
 {
-	[DbContext(typeof(NpgsqlContext))]
-	partial class ContextModelSnapshot : ModelSnapshot
+	[DbContext(typeof(SqlServerContext))]
+	[Migration("20250426210604_AddResourceConfigSourceInstanceConfigProperties")]
+	partial class AddResourceConfigSourceInstanceConfigProperties
 	{
-		protected override void BuildModel(ModelBuilder modelBuilder)
+		/// <inheritdoc />
+		protected override void BuildTargetModel(ModelBuilder modelBuilder)
 		{
 #pragma warning disable 612, 618
 			modelBuilder
 				.HasAnnotation("ProductVersion", "9.0.4")
-				.HasAnnotation("Relational:MaxIdentifierLength", 63);
+				.HasAnnotation("Relational:MaxIdentifierLength", 128);
 
-			NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+			SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
 			modelBuilder.Entity("LogicMonitor.Datamart.Models.AlertRuleStoreItem", b =>
 				{
 					b.Property<Guid>("Id")
 						.ValueGeneratedOnAdd()
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<string>("DataPoint")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("DataSourceInstanceName")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("DataSourceName")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<DateTimeOffset>("DatamartCreated")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastModified")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastObserved")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<string>("Description")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<Guid>("EscalationChainId")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<int>("EscalationChainIntervalMinutes")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("LevelString")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("LogicMonitorId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("Name")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("Priority")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<bool>("SuppressAlertAckSdt")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<bool>("SuppressAlertClear")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.HasKey("Id");
 
@@ -89,252 +92,252 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 				{
 					b.Property<Guid>("Id")
 						.ValueGeneratedOnAdd()
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<string>("AckComment")
 						.IsRequired()
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<bool>("Acked")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<string>("AckedBy")
 						.IsRequired()
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<int>("AckedOnSeconds")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("ActiveDiscoveryAlertDescription")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<int?>("AlertEscalationChainId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("AlertEscalationChainName")
 						.IsRequired()
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<int?>("AlertEscalationSubChainId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("AlertRecipients")
 						.IsRequired()
 						.HasMaxLength(200)
-						.HasColumnType("character varying(200)");
+						.HasColumnType("nvarchar(200)");
 
 					b.Property<Guid?>("AlertRuleId")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<string>("AlertRuleName")
 						.IsRequired()
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<int>("AlertType")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("ClearValue")
 						.IsRequired()
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("CustomColumn1")
 						.IsRequired()
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("CustomColumn2")
 						.IsRequired()
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("CustomColumn3")
 						.IsRequired()
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("CustomColumn4")
 						.IsRequired()
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("CustomColumn5")
 						.IsRequired()
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<int>("DataPointId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("DataPointName")
 						.IsRequired()
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<DateTimeOffset>("DatamartCreated")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastModified")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<string>("DependencyRole")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("DependencyRoutingState")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("DetailMessageBody")
 						.IsRequired()
 						.HasMaxLength(1000)
-						.HasColumnType("character varying(1000)");
+						.HasColumnType("nvarchar(1000)");
 
 					b.Property<string>("DetailMessageSubject")
 						.IsRequired()
 						.HasMaxLength(200)
-						.HasColumnType("character varying(200)");
+						.HasColumnType("nvarchar(200)");
 
 					b.Property<string>("EnableAnomalyAlertGeneration")
 						.IsRequired()
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("EnableAnomalyAlertSuppression")
 						.IsRequired()
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<int>("EndOnSeconds")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<bool>("InScheduledDownTime")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<string>("InstanceDescription")
 						.IsRequired()
 						.HasMaxLength(1000)
-						.HasColumnType("character varying(1000)");
+						.HasColumnType("nvarchar(1000)");
 
 					b.Property<int>("InstanceId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("InstanceName")
 						.IsRequired()
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("InternalId")
 						.IsRequired()
 						.HasMaxLength(20)
-						.HasColumnType("character varying(20)");
+						.HasColumnType("nvarchar(20)");
 
 					b.Property<bool>("IsActiveDiscoveryAlert")
 						.HasMaxLength(50)
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<bool>("IsAnomaly")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<bool>("IsCleared")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<string>("LogicMonitorId")
 						.IsRequired()
 						.HasMaxLength(20)
-						.HasColumnType("character varying(20)");
+						.HasColumnType("nvarchar(20)");
 
 					b.Property<Guid?>("MonitorObjectGroup0Id")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<Guid?>("MonitorObjectGroup1Id")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<Guid?>("MonitorObjectGroup2Id")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<Guid?>("MonitorObjectGroup3Id")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<Guid?>("MonitorObjectGroup4Id")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<Guid?>("MonitorObjectGroup5Id")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<Guid?>("MonitorObjectGroup6Id")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<Guid?>("MonitorObjectGroup7Id")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<Guid?>("MonitorObjectGroup8Id")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<Guid?>("MonitorObjectGroup9Id")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<int?>("MonitorObjectId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("MonitorObjectName")
 						.IsRequired()
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<int>("MonitorObjectType")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("NextRecipient")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int?>("ResourceId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int?>("ResourceTemplateId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("ResourceTemplateName")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("ResourceTemplateType")
 						.HasMaxLength(10)
-						.HasColumnType("character varying(10)");
+						.HasColumnType("nvarchar(10)");
 
 					b.Property<int>("Severity")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("StartOnSeconds")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("SuppressedDescending")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("Suppressor")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("Tenant")
 						.IsRequired()
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("Thresholds")
 						.IsRequired()
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("Value")
 						.IsRequired()
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.HasKey("Id");
 
@@ -397,7 +400,7 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 					b.HasIndex("StartOnSeconds", "EndOnSeconds", "IsCleared", "InScheduledDownTime", "MonitorObjectGroup0Id", "MonitorObjectGroup1Id", "MonitorObjectGroup2Id", "MonitorObjectGroup3Id", "MonitorObjectGroup4Id", "MonitorObjectGroup5Id", "MonitorObjectGroup6Id", "MonitorObjectGroup7Id", "MonitorObjectGroup8Id", "MonitorObjectGroup9Id")
 						.HasDatabaseName("IX_Alerts_FasterPercentageAvailability");
 
-					NpgsqlIndexBuilderExtensions.IncludeProperties(b.HasIndex("StartOnSeconds", "EndOnSeconds", "IsCleared", "InScheduledDownTime", "MonitorObjectGroup0Id", "MonitorObjectGroup1Id", "MonitorObjectGroup2Id", "MonitorObjectGroup3Id", "MonitorObjectGroup4Id", "MonitorObjectGroup5Id", "MonitorObjectGroup6Id", "MonitorObjectGroup7Id", "MonitorObjectGroup8Id", "MonitorObjectGroup9Id"), new[] { "Id", "Severity", "ClearValue", "MonitorObjectId", "ResourceTemplateName", "InstanceId", "InstanceName" });
+					SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("StartOnSeconds", "EndOnSeconds", "IsCleared", "InScheduledDownTime", "MonitorObjectGroup0Id", "MonitorObjectGroup1Id", "MonitorObjectGroup2Id", "MonitorObjectGroup3Id", "MonitorObjectGroup4Id", "MonitorObjectGroup5Id", "MonitorObjectGroup6Id", "MonitorObjectGroup7Id", "MonitorObjectGroup8Id", "MonitorObjectGroup9Id"), new[] { "Id", "Severity", "ClearValue", "MonitorObjectId", "ResourceTemplateName", "InstanceId", "InstanceName" });
 
 					b.ToTable("Alerts");
 				});
@@ -406,153 +409,153 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 				{
 					b.Property<Guid>("Id")
 						.ValueGeneratedOnAdd()
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<string>("ActionType")
 						.IsRequired()
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("AlertId")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("AlertNote")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("ApiMethod")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("ApiPath")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("ApiTokenId")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("CollectorDescription")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<int?>("CollectorGroupId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("CollectorGroupName")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<int?>("CollectorId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("CollectorName")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("Command")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("DataSourceDeletedInstanceIds")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("DataSourceDeletedInstanceNames")
 						.HasMaxLength(200)
-						.HasColumnType("character varying(200)");
+						.HasColumnType("nvarchar(200)");
 
 					b.Property<string>("DataSourceNewInstanceIds")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("DataSourceNewInstanceNames")
 						.HasMaxLength(200)
-						.HasColumnType("character varying(200)");
+						.HasColumnType("nvarchar(200)");
 
 					b.Property<DateTimeOffset>("DatamartCreated")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastModified")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DateTime")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<string>("Description")
 						.HasMaxLength(1000)
-						.HasColumnType("character varying(1000)");
+						.HasColumnType("nvarchar(1000)");
 
 					b.Property<int?>("DeviceDataSourceId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("EndDownTime")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("EntityType")
 						.IsRequired()
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("Host")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<int?>("InstanceId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("InstanceName")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<int?>("LogicModuleId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("LogicModuleName")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<int?>("LogicModuleVersion")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("LogicMonitorId")
 						.IsRequired()
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<int>("MatchedRegExId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<long?>("MonthlyMetrics")
 						.HasColumnType("bigint");
 
 					b.Property<string>("OriginalDescription")
 						.HasMaxLength(1000)
-						.HasColumnType("character varying(1000)");
+						.HasColumnType("nvarchar(1000)");
 
 					b.Property<string>("OriginatorType")
 						.IsRequired()
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("OutcomeType")
 						.IsRequired()
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("PerformedByUsername")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("PropertyName")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("PropertyValue")
 						.HasMaxLength(100)
-						.HasColumnType("character varying(100)");
+						.HasColumnType("nvarchar(100)");
 
 					b.Property<long?>("RemoteSessionId")
 						.HasMaxLength(50)
@@ -560,64 +563,64 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 
 					b.Property<string>("RemoteSessionType")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<long?>("RequestId")
 						.HasColumnType("bigint");
 
 					b.Property<int?>("ResourceGroupId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("ResourceGroupName")
 						.HasMaxLength(100)
-						.HasColumnType("character varying(100)");
+						.HasColumnType("nvarchar(100)");
 
 					b.Property<string>("ResourceHostname")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("ResourceIds")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("ResourceNames")
 						.HasMaxLength(200)
-						.HasColumnType("character varying(200)");
+						.HasColumnType("nvarchar(200)");
 
 					b.Property<bool?>("RestrictSso")
 						.HasMaxLength(50)
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<string>("SessionId")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("StartDownTime")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("Time")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("UserEmail")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<int?>("UserId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("UserName")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("UserRole")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("WildValue")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.HasKey("Id");
 
@@ -628,33 +631,33 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 				{
 					b.Property<Guid>("Id")
 						.ValueGeneratedOnAdd()
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<int>("CollectorCount")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<long>("CreatedOnTimeStampSeconds")
 						.HasColumnType("bigint");
 
 					b.Property<DateTimeOffset>("DatamartCreated")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastModified")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastObserved")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<string>("Description")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("LogicMonitorId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("Name")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.HasKey("Id");
 
@@ -665,185 +668,185 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 				{
 					b.Property<Guid>("Id")
 						.ValueGeneratedOnAdd()
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<string>("AckComment")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<bool>("Acked")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<string>("AckedBy")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("AckedOnLocalString")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<long?>("AckedOnUtcTimestampUtc")
 						.HasColumnType("bigint");
 
 					b.Property<string>("Architecture")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("BackupCollectorId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("Build")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<bool>("CanDowngrade")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<string>("CanDowngradeReason")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<bool>("ClearSent")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<string>("CollectorConfiguration")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<Guid>("CollectorGroupId")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<string>("Configuration")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("ConfigurationVersion")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("CreatedOnLocalString")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<long>("CreatedOnTimeStampUtc")
 						.HasColumnType("bigint");
 
 					b.Property<string>("Credential")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Credential2")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<DateTimeOffset>("DatamartCreated")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastModified")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastObserved")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<string>("Description")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("DeviceCount")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<bool>("Ea")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<bool>("EnableFailBack")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<bool>("EnableFailOverOnCollectorDevice")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<int>("EscalationChainId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<bool>("HasFailOverDevice")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<string>("HostName")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<bool>("InSdt")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<bool>("IsDown")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<bool>("IsEncoded")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<bool>("IsLmLogsEnabled")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<bool>("IsLmLogsSyslogEnabled")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<string>("LastSentNotificationOnLocal")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("LastSentNotificationOnTimeStampUtc")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("LogicMonitorDeviceId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("LogicMonitorId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("Name")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<bool>("NeedAutoCreateCollectorDevice")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<int>("NetscanVersion")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("NextRecipient")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("OnetimeDowngradeInfo")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("OtelVersion")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Platform")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("PreviousVersion")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("ProxyConfiguration")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("ResendIntervalSeconds")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("Size")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("SpecifiedCollectorDeviceGroupId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("Status")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<bool>("SuppressAlertClear")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<string>("UpdatedOnLocalString")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<long?>("UpdatedOnTimeStampUtc")
 						.HasColumnType("bigint");
@@ -852,45 +855,45 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 						.HasColumnType("bigint");
 
 					b.Property<int>("UptimeSeconds")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("UserChangeOnLocal")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<long>("UserChangeOnUtcSeconds")
 						.HasColumnType("bigint");
 
 					b.Property<int>("UserPermission")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("UserVisibleDeviceCount")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("UserVisibleWebsiteCount")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("WatchdogConfiguration")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("WatchdogUpdatedOnLocal")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<long?>("WatchdogUpdatedOnSeconds")
 						.HasColumnType("bigint");
 
 					b.Property<string>("WebsiteConfiguration")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("WebsiteCount")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("WrapperConfiguration")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.HasKey("Id");
 
@@ -903,55 +906,55 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 				{
 					b.Property<Guid>("Id")
 						.ValueGeneratedOnAdd()
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<string>("AppliesTo")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("AuditVersion")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Checksum")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("CollectionMethod")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<DateTimeOffset>("DatamartCreated")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastModified")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastObserved")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<string>("Description")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("DisplayName")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Group")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("LogicMonitorId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("Name")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Version")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.HasKey("Id");
 
@@ -962,99 +965,99 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 				{
 					b.Property<Guid>("Id")
 						.ValueGeneratedOnAdd()
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<string>("Calculation")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<Guid?>("DataSourceGraphId")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<Guid?>("DataSourceGraphStoreItemId")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<Guid>("DataSourceId")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<DateTimeOffset>("DatamartCreated")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastModified")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastObserved")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<string>("Description")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("GlobalAlertExpression")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("LogicMonitorId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("MeasurementUnit")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Name")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("PercentageAvailabilityCalculation")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property1")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property10")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property2")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property3")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property4")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property5")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property6")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property7")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property8")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property9")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<bool>("ResyncTimeSeriesData")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<string>("Tags")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.HasKey("Id");
 
@@ -1069,62 +1072,62 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 				{
 					b.Property<Guid>("Id")
 						.ValueGeneratedOnAdd()
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<Guid>("DataSourceId")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<DateTimeOffset>("DatamartCreated")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastModified")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastObserved")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<int>("DisplayPriority")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("Height")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<bool>("IsBase1024")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<bool>("IsOverview")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<bool>("IsRigid")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<int>("LogicMonitorId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<double?>("MaxValue")
-						.HasColumnType("double precision");
+						.HasColumnType("float");
 
 					b.Property<double?>("MinValue")
-						.HasColumnType("double precision");
+						.HasColumnType("float");
 
 					b.Property<string>("Name")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Timescale")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Title")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("VerticalLabel")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("Width")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.HasKey("Id");
 
@@ -1137,137 +1140,137 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 				{
 					b.Property<Guid>("Id")
 						.ValueGeneratedOnAdd()
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<string>("AppliesTo")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("AuditVersion")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Checksum")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("CollectionAttributeIp")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("CollectionAttributeName")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("CollectionMethod")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<DateTimeOffset>("DatamartCreated")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastModified")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastObserved")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<string>("Description")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("DisplayName")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Group")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<bool>("HasMultiInstances")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<string>("InstallationMetadataAuditedRegistryId")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstallationMetadataAuditedVersion")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<bool?>("InstallationMetadataIsChangedFromOrigin")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<bool?>("InstallationMetadataIsChangedFromTargetLastPublished")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<int?>("InstallationMetadataLogicModuleId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("InstallationMetadataLogicModuleType")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstallationMetadataOriginAuthorCompanyUuid")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstallationMetadataOriginAuthorNamespace")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstallationMetadataOriginChecksum")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstallationMetadataOriginLineageId")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstallationMetadataOriginRegistryId")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstallationMetadataOriginVersion")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstallationMetadataTargetLastPublishedChecksum")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstallationMetadataTargetLastPublishedId")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstallationMetadataTargetLastPublishedVersion")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstallationMetadataTargetLineageId")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<long?>("LastTimeSeriesDataSyncDurationMs")
 						.HasColumnType("bigint");
 
 					b.Property<string>("LineageId")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("LogicMonitorId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("Name")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("PayloadVersion")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("PollingIntervalSeconds")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("Tags")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Technology")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<bool>("UseWildValueAsUuid")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<string>("Version")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.HasKey("Id");
 
@@ -1278,55 +1281,55 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 				{
 					b.Property<Guid>("Id")
 						.ValueGeneratedOnAdd()
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<string>("CcDestination")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("CcDestinations")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<DateTimeOffset>("DatamartCreated")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastModified")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastObserved")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<string>("Description")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Destination")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Destinations")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<bool>("EnableThrottling")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<bool>("InAlerting")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<int>("LogicMonitorId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("Name")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("ThrottlingAlertCount")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("ThrottlingPeriodMinutes")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.HasKey("Id");
 
@@ -1337,27 +1340,27 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 				{
 					b.Property<Guid>("Id")
 						.ValueGeneratedOnAdd()
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<DateTimeOffset>("DatamartCreated")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastModified")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastObserved")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<string>("Description")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("LogicMonitorId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("Name")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.HasKey("Id");
 
@@ -1368,297 +1371,297 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 				{
 					b.Property<Guid>("Id")
 						.ValueGeneratedOnAdd()
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<int?>("AccountId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("AckAlertDataType")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("AckHeaders")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("AckMethod")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("AckOAuthAccessTokenUrl")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("AckOAuthClientId")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("AckOAuthClientSecret")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("AckOAuthGrantType")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("AckOAuthScope")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("AckOAuthVersion")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("AckPassword")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("AckPayload")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("AckPayloadFormat")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("AckUrl")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("AckUsername")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("AlertDataType")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Body")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("ClearAlertDataType")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("ClearHeaders")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("ClearMethod")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("ClearOAuthAccessTokenUrl")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("ClearOAuthClientId")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("ClearOAuthClientSecret")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("ClearOAuthGrantType")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("ClearOAuthScope")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("ClearOAuthVersion")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("ClearPassword")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("ClearPayload")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("ClearPayloadFormat")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("ClearUrl")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("ClearUsername")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int?>("CriticalPriority")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<DateTimeOffset>("DatamartCreated")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastModified")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastObserved")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<string>("Description")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("DueDateTime")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("EnabledStatus")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int?>("ErrorPriority")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("Extra")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Headers")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("LogicMonitorId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("Method")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Name")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("OAuthAccessTokenUrl")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("OAuthClientId")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("OAuthClientSecret")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("OAuthGrantType")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("OAuthScope")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("OAuthVersion")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("ParseExpression")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("ParseMethod")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Password")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Payload")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("PayloadFormat")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int?>("QueueId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("Receivers")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Sender")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int?>("StatusAckTicket")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int?>("StatusCloseTicket")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int?>("StatusNewTicket")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int?>("StatusUpdateTicket")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("Subject")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Type")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("UpdateAlertDataType")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("UpdateDataAlertDataType")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("UpdateDataHeaders")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("UpdateDataMethod")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("UpdateDataOAuthAccessTokenUrl")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("UpdateDataOAuthClientId")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("UpdateDataOAuthClientSecret")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("UpdateDataOAuthGrantType")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("UpdateDataOAuthScope")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("UpdateDataOAuthVersion")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("UpdateDataPassword")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("UpdateDataPayload")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("UpdateDataPayloadFormat")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("UpdateDataUrl")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("UpdateDataUsername")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("UpdateHeaders")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("UpdateMethod")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("UpdateOAuthAccessTokenUrl")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("UpdateOAuthClientId")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("UpdateOAuthClientSecret")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("UpdateOAuthGrantType")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("UpdateOAuthScope")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("UpdateOAuthVersion")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("UpdatePassword")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("UpdatePayload")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("UpdatePayloadFormat")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("UpdateUrl")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("UpdateUsername")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Url")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Username")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int?>("WarnPriority")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int?>("Zone")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.HasKey("Id");
 
@@ -1669,17 +1672,17 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 				{
 					b.Property<Guid>("Id")
 						.ValueGeneratedOnAdd()
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<DateTimeOffset>("DatamartCreated")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastModified")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<string>("Description")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<long>("HappenedOnTimeStampUtc")
 						.HasColumnType("bigint");
@@ -1687,21 +1690,21 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 					b.Property<string>("IpAddress")
 						.IsRequired()
 						.HasMaxLength(200)
-						.HasColumnType("character varying(200)");
+						.HasColumnType("nvarchar(200)");
 
 					b.Property<string>("LogicMonitorId")
 						.IsRequired()
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("SessionId")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("UserName")
 						.IsRequired()
 						.HasMaxLength(100)
-						.HasColumnType("character varying(100)");
+						.HasColumnType("nvarchar(100)");
 
 					b.HasKey("Id");
 
@@ -1712,12 +1715,12 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 				{
 					b.Property<Guid>("Id")
 						.ValueGeneratedOnAdd()
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<string>("AppliesTo")
 						.IsRequired()
 						.HasMaxLength(1000)
-						.HasColumnType("character varying(1000)");
+						.HasColumnType("nvarchar(1000)");
 
 					b.Property<long>("AuditVersion")
 						.HasColumnType("bigint");
@@ -1725,43 +1728,43 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 					b.Property<string>("Category")
 						.IsRequired()
 						.HasMaxLength(20)
-						.HasColumnType("character varying(20)");
+						.HasColumnType("nvarchar(20)");
 
 					b.Property<string>("CollectionMethod")
 						.IsRequired()
 						.HasMaxLength(20)
-						.HasColumnType("character varying(20)");
+						.HasColumnType("nvarchar(20)");
 
 					b.Property<string>("CurrentUuid")
 						.IsRequired()
 						.HasMaxLength(30)
-						.HasColumnType("character varying(30)");
+						.HasColumnType("nvarchar(30)");
 
 					b.Property<DateTimeOffset>("DatamartCreated")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastModified")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTime>("DatamartLastObserved")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetime2");
 
 					b.Property<string>("Description")
 						.IsRequired()
 						.HasMaxLength(1000)
-						.HasColumnType("character varying(1000)");
+						.HasColumnType("nvarchar(1000)");
 
 					b.Property<string>("Group")
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<string>("Local")
 						.IsRequired()
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<int>("LocalId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<long>("LocalVersion")
 						.HasColumnType("bigint");
@@ -1769,17 +1772,17 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 					b.Property<string>("Locator")
 						.IsRequired()
 						.HasMaxLength(20)
-						.HasColumnType("character varying(20)");
+						.HasColumnType("nvarchar(20)");
 
 					b.Property<string>("Name")
 						.IsRequired()
 						.HasMaxLength(200)
-						.HasColumnType("character varying(200)");
+						.HasColumnType("nvarchar(200)");
 
 					b.Property<string>("Namespace")
 						.IsRequired()
 						.HasMaxLength(50)
-						.HasColumnType("character varying(50)");
+						.HasColumnType("nvarchar(50)");
 
 					b.Property<long>("PublishedAtMilliseconds")
 						.HasColumnType("bigint");
@@ -1787,26 +1790,26 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 					b.Property<string>("Quality")
 						.IsRequired()
 						.HasMaxLength(20)
-						.HasColumnType("character varying(20)");
+						.HasColumnType("nvarchar(20)");
 
 					b.Property<string>("RegistryVersion")
 						.IsRequired()
 						.HasMaxLength(20)
-						.HasColumnType("character varying(20)");
+						.HasColumnType("nvarchar(20)");
 
 					b.Property<string>("Remote")
 						.IsRequired()
 						.HasMaxLength(1000)
-						.HasColumnType("character varying(1000)");
+						.HasColumnType("nvarchar(1000)");
 
 					b.Property<string>("RestLm")
 						.HasMaxLength(200)
-						.HasColumnType("character varying(200)");
+						.HasColumnType("nvarchar(200)");
 
 					b.Property<string>("Type")
 						.IsRequired()
 						.HasMaxLength(20)
-						.HasColumnType("character varying(20)");
+						.HasColumnType("nvarchar(20)");
 
 					b.Property<long>("Version")
 						.HasColumnType("bigint");
@@ -1820,21 +1823,21 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 				{
 					b.Property<Guid>("Id")
 						.ValueGeneratedOnAdd()
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<DateTimeOffset>("DatamartCreated")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastModified")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<string>("FullPath")
 						.IsRequired()
 						.HasMaxLength(200)
-						.HasColumnType("character varying(200)");
+						.HasColumnType("nvarchar(200)");
 
 					b.Property<int>("MonitoredObjectType")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.HasKey("Id");
 
@@ -1847,48 +1850,48 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 				{
 					b.Property<Guid>("Id")
 						.ValueGeneratedOnAdd()
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<string>("ChangeStatus")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Config")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("ConfigErrorMessage")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("ConfigStatus")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<DateTimeOffset>("DatamartCreated")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastModified")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastObserved")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<Guid>("DeviceConfigSourceInstanceId")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<int>("LogicMonitorId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("LogicMonitorStringId")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<DateTimeOffset>("PollUtc")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<string>("Version")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.HasKey("Id");
 
@@ -1901,86 +1904,86 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 				{
 					b.Property<Guid>("Id")
 						.ValueGeneratedOnAdd()
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<int>("AlertDisableStatus")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("AlertStatus")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("AlertStatusPriority")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<DateTimeOffset>("DatamartCreated")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastModified")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastObserved")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<string>("Description")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<Guid>("DeviceConfigSourceId")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<bool>("DisableAlerting")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<string>("DisplayName")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("GroupId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("GroupName")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceProperty1")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceProperty10")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceProperty2")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceProperty3")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceProperty4")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceProperty5")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceProperty6")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceProperty7")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceProperty8")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceProperty9")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<long>("LastCollectedTimeSeconds")
 						.HasColumnType("bigint");
@@ -1989,34 +1992,34 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 						.HasColumnType("bigint");
 
 					b.Property<DateTimeOffset?>("LastWentMissing")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<bool>("LockDescription")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<int>("LogicMonitorId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("Name")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("SdtAt")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("SdtStatus")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<bool>("StopMonitoring")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<string>("WildValue")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("WildValue2")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.HasKey("Id");
 
@@ -2029,31 +2032,31 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 				{
 					b.Property<Guid>("Id")
 						.ValueGeneratedOnAdd()
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<long>("AssignedOnSeconds")
 						.HasColumnType("bigint");
 
 					b.Property<Guid>("ConfigSourceId")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<long>("CreatedOnSeconds")
 						.HasColumnType("bigint");
 
 					b.Property<DateTimeOffset>("DatamartCreated")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastModified")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastObserved")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<Guid>("DeviceId")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<int>("LogicMonitorId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<long>("UpdatedOnSeconds")
 						.HasColumnType("bigint");
@@ -2071,71 +2074,71 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 				{
 					b.Property<Guid>("Id")
 						.ValueGeneratedOnAdd()
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<DateTimeOffset?>("DataCompleteTo")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<Guid>("DataSourceDataPointId")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<Guid?>("DataSourceStoreItemId")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<DateTimeOffset>("DatamartCreated")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastModified")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastObserved")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<Guid>("DeviceDataSourceInstanceId")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<string>("InstanceDatapointProperty1")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceDatapointProperty10")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceDatapointProperty2")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceDatapointProperty3")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceDatapointProperty4")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceDatapointProperty5")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceDatapointProperty6")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceDatapointProperty7")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceDatapointProperty8")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceDatapointProperty9")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("LogicMonitorId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.HasKey("Id");
 
@@ -2152,86 +2155,86 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 				{
 					b.Property<Guid>("Id")
 						.ValueGeneratedOnAdd()
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<int>("AlertDisableStatus")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("AlertStatus")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("AlertStatusPriority")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<DateTimeOffset>("DatamartCreated")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastModified")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastObserved")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<string>("Description")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<Guid>("DeviceDataSourceId")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<bool>("DisableAlerting")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<string>("DisplayName")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("GroupId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("GroupName")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceProperty1")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceProperty10")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceProperty2")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceProperty3")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceProperty4")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceProperty5")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceProperty6")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceProperty7")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceProperty8")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("InstanceProperty9")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<long>("LastCollectedTimeSeconds")
 						.HasColumnType("bigint");
@@ -2240,34 +2243,34 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 						.HasColumnType("bigint");
 
 					b.Property<DateTimeOffset?>("LastWentMissing")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<bool>("LockDescription")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<int>("LogicMonitorId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("Name")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("SdtAt")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("SdtStatus")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<bool>("StopMonitoring")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<string>("WildValue")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("WildValue2")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.HasKey("Id");
 
@@ -2282,7 +2285,7 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 				{
 					b.Property<Guid>("Id")
 						.ValueGeneratedOnAdd()
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<long>("AssignedOnSeconds")
 						.HasColumnType("bigint");
@@ -2291,22 +2294,22 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 						.HasColumnType("bigint");
 
 					b.Property<Guid>("DataSourceId")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<DateTimeOffset>("DatamartCreated")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastModified")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastObserved")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<Guid>("DeviceId")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<int>("LogicMonitorId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<long>("UpdatedOnSeconds")
 						.HasColumnType("bigint");
@@ -2324,145 +2327,145 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 				{
 					b.Property<Guid>("Id")
 						.ValueGeneratedOnAdd()
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<int>("AlertDisableStatus")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<bool>("AlertEnable")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<int>("AlertStatus")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("AlertStatusPriority")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("AppliesTo")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("AutoVisualResult")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("AwsDeviceCount")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("AwsRegionsInfo")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("AwsTestResult")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("AwsTestResultCode")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("AzureDeviceCount")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("AzureRegionsInfo")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("AzureTestResult")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("AzureTestResultCode")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("ClusterAlertStatus")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("ClusterAlertStatusPriority")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int?>("CreatedOnTimestampUtc")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<DateTimeOffset>("DatamartCreated")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastModified")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastObserved")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<int>("DefaultAgentId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("DefaultCollectorDescription")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("DefaultCollectorId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("Description")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("DeviceCount")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("DeviceGroupType")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("DirectDeviceCount")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("DirectSubGroupCount")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<bool>("EffectiveAlertEnabled")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<string>("FullPath")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("GcpDeviceCount")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("GcpRegionsInfo")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("GcpTestResult")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("GcpTestResultCode")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("GroupStatus")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<bool>("HasNetflowEnabledDevices")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<bool>("IsAlertingDisabled")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<bool>("IsNetflowEnabled")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<int>("LogicMonitorId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("Name")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("ParentId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("SdtStatus")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("UserPermission")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.HasKey("Id");
 
@@ -2473,19 +2476,19 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 				{
 					b.Property<Guid>("Id")
 						.ValueGeneratedOnAdd()
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<int>("AlertDisableStatus")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("AlertStatus")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("AlertStatusPriority")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<bool>("AncestorHasDisabledLogicModule")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<long?>("AutoPropertiesAssignedOnSeconds")
 						.HasColumnType("bigint");
@@ -2494,74 +2497,74 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 						.HasColumnType("bigint");
 
 					b.Property<int>("AwsState")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("AzureState")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<bool>("CanUseRemoteSession")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<string>("CollectorDescription")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<long?>("CreatedOnSeconds")
 						.HasColumnType("bigint");
 
 					b.Property<int>("CurrentCollectorId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<DateTimeOffset>("DatamartCreated")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastModified")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastObserved")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<long>("DeletedTimeInMs")
 						.HasColumnType("bigint");
 
 					b.Property<string>("Description")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("DeviceGroupIdsString")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<byte>("DeviceStatus")
-						.HasColumnType("smallint");
+						.HasColumnType("tinyint");
 
 					b.Property<int>("DeviceType")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("DisplayName")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<bool>("EffectiveAlertEnabled")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<bool>("EnableNetflow")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<int>("GcpState")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<bool>("HasActiveInstance")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<bool>("HasDisabledSubResource")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<bool>("HasMore")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<bool>("IsAlertingDisabled")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<long>("LastAlertClosedTimeSeconds")
 						.HasColumnType("bigint");
@@ -2576,98 +2579,98 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 						.HasColumnType("bigint");
 
 					b.Property<string>("Link")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("LogicMonitorId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("Name")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("NetflowCollectorDescription")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("NetflowCollectorGroupId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("NetflowCollectorGroupName")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("NetflowCollectorId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<Guid?>("PreferredCollectorId")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<string>("Property1")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property10")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property11")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property12")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property13")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property14")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property15")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property16")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property17")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property18")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property19")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property2")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property20")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property3")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property4")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property5")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property6")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property7")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property8")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Property9")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("RelatedDeviceId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("ScanConfigId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("SdtStatus")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<long>("ToDeleteTimeInMs")
 						.HasColumnType("bigint");
@@ -2676,10 +2679,10 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 						.HasColumnType("bigint");
 
 					b.Property<int>("UptimeInSeconds")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("UserPermission")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.HasKey("Id");
 
@@ -2692,82 +2695,82 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 				{
 					b.Property<Guid>("Id")
 						.ValueGeneratedOnAdd()
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<double?>("AvailabilityPercent")
-						.HasColumnType("double precision");
+						.HasColumnType("float");
 
 					b.Property<double?>("Centile05")
-						.HasColumnType("double precision");
+						.HasColumnType("float");
 
 					b.Property<double?>("Centile10")
-						.HasColumnType("double precision");
+						.HasColumnType("float");
 
 					b.Property<double?>("Centile25")
-						.HasColumnType("double precision");
+						.HasColumnType("float");
 
 					b.Property<double?>("Centile50")
-						.HasColumnType("double precision");
+						.HasColumnType("float");
 
 					b.Property<double?>("Centile75")
-						.HasColumnType("double precision");
+						.HasColumnType("float");
 
 					b.Property<double?>("Centile90")
-						.HasColumnType("double precision");
+						.HasColumnType("float");
 
 					b.Property<double?>("Centile95")
-						.HasColumnType("double precision");
+						.HasColumnType("float");
 
 					b.Property<int?>("CriticalCount")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("DataCount")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<Guid>("DeviceDataSourceInstanceDataPointId")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<int?>("ErrorCount")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<double?>("First")
-						.HasColumnType("double precision");
+						.HasColumnType("float");
 
 					b.Property<double?>("FirstWithData")
-						.HasColumnType("double precision");
+						.HasColumnType("float");
 
 					b.Property<double?>("Last")
-						.HasColumnType("double precision");
+						.HasColumnType("float");
 
 					b.Property<double?>("LastWithData")
-						.HasColumnType("double precision");
+						.HasColumnType("float");
 
 					b.Property<double?>("Max")
-						.HasColumnType("double precision");
+						.HasColumnType("float");
 
 					b.Property<double?>("Min")
-						.HasColumnType("double precision");
+						.HasColumnType("float");
 
 					b.Property<int>("NoDataCount")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int?>("NormalCount")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<DateTimeOffset>("PeriodEnd")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("PeriodStart")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<double>("Sum")
-						.HasColumnType("double precision");
+						.HasColumnType("float");
 
 					b.Property<double>("SumSquared")
-						.HasColumnType("double precision");
+						.HasColumnType("float");
 
 					b.Property<int?>("WarningCount")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.HasKey("Id");
 
@@ -2780,70 +2783,70 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 				{
 					b.Property<Guid>("Id")
 						.ValueGeneratedOnAdd()
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<int>("AlertDisableStatus")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("AlertStatus")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("AlertStatusPriority")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<DateTimeOffset>("DatamartCreated")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastModified")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastObserved")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<string>("Description")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("DirectWebsiteCount")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("DirectWebsiteGroupCount")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<bool>("DisableAlerting")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<string>("FullPath")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("GroupStatus")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<bool>("HasWebsitesDisabled")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<int>("LogicMonitorId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("Name")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("ParentId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("SdtStatus")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<bool?>("StopMonitoring")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<int>("UserPermissionString")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("WebsiteCount")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.HasKey("Id");
 
@@ -2854,127 +2857,127 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 				{
 					b.Property<Guid>("Id")
 						.ValueGeneratedOnAdd()
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<int>("AlertDisableStatus")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("AlertExpression")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("AlertStatus")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("AlertStatusPriority")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("Count")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<DateTimeOffset>("DatamartCreated")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastModified")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<DateTimeOffset>("DatamartLastObserved")
-						.HasColumnType("timestamp with time zone");
+						.HasColumnType("datetimeoffset");
 
 					b.Property<string>("Description")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Domain")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("GlobalSmAlertCond")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("HostName")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<bool>("IgnoreSsl")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<byte>("IndividualAlertLevel")
-						.HasColumnType("smallint");
+						.HasColumnType("tinyint");
 
 					b.Property<bool>("IndividualSmAlertEnable")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<bool>("IsAlertingDisabled")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<bool>("IsInternal")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<int>("LogicMonitorId")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("Name")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<byte>("OverallAlertLevel")
-						.HasColumnType("smallint");
+						.HasColumnType("tinyint");
 
 					b.Property<int>("PacketsNotReceivedTimeoutMs")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("PageLoadAlertTimeInMs")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("PercentPacketsNotReceiveInTime")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("PollingIntervalMinutes")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<string>("Schema")
 						.IsRequired()
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<string>("Script")
-						.HasColumnType("text");
+						.HasColumnType("nvarchar(max)");
 
 					b.Property<int>("SdtStatus")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<int>("Status")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<bool>("StopMonitoring")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<bool>("StopMonitoringByWebsiteGroup")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<int>("Transition")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<bool>("TriggerSslExpirationAlerts")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<bool>("TriggerSslStatusAlerts")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<int>("Type")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<bool>("UseDefaultAlertSetting")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<bool>("UseDefaultLocationSetting")
-						.HasColumnType("boolean");
+						.HasColumnType("bit");
 
 					b.Property<int>("UserPermissionString")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.Property<Guid>("WebsiteGroupId")
-						.HasColumnType("uuid");
+						.HasColumnType("uniqueidentifier");
 
 					b.Property<int>("WebsiteMethod")
-						.HasColumnType("integer");
+						.HasColumnType("int");
 
 					b.HasKey("Id");
 

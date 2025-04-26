@@ -3,6 +3,7 @@ using System;
 using LogicMonitor.Datamart;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 {
 	[DbContext(typeof(NpgsqlContext))]
-	partial class ContextModelSnapshot : ModelSnapshot
+	[Migration("20250426200858_AddedDeviceConfigSourceHierarchy")]
+	partial class AddedDeviceConfigSourceHierarchy
 	{
-		protected override void BuildModel(ModelBuilder modelBuilder)
+		/// <inheritdoc />
+		protected override void BuildTargetModel(ModelBuilder modelBuilder)
 		{
 #pragma warning disable 612, 618
 			modelBuilder
@@ -1843,60 +1846,6 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 					b.ToTable("MonitorObjectGroups");
 				});
 
-			modelBuilder.Entity("LogicMonitor.Datamart.Models.ResourceConfigSourceInstanceConfigStoreItem", b =>
-				{
-					b.Property<Guid>("Id")
-						.ValueGeneratedOnAdd()
-						.HasColumnType("uuid");
-
-					b.Property<string>("ChangeStatus")
-						.IsRequired()
-						.HasColumnType("text");
-
-					b.Property<string>("Config")
-						.IsRequired()
-						.HasColumnType("text");
-
-					b.Property<string>("ConfigErrorMessage")
-						.IsRequired()
-						.HasColumnType("text");
-
-					b.Property<int>("ConfigStatus")
-						.HasColumnType("integer");
-
-					b.Property<DateTimeOffset>("DatamartCreated")
-						.HasColumnType("timestamp with time zone");
-
-					b.Property<DateTimeOffset>("DatamartLastModified")
-						.HasColumnType("timestamp with time zone");
-
-					b.Property<DateTimeOffset>("DatamartLastObserved")
-						.HasColumnType("timestamp with time zone");
-
-					b.Property<Guid>("DeviceConfigSourceInstanceId")
-						.HasColumnType("uuid");
-
-					b.Property<int>("LogicMonitorId")
-						.HasColumnType("integer");
-
-					b.Property<string>("LogicMonitorStringId")
-						.IsRequired()
-						.HasColumnType("text");
-
-					b.Property<DateTimeOffset>("PollUtc")
-						.HasColumnType("timestamp with time zone");
-
-					b.Property<string>("Version")
-						.IsRequired()
-						.HasColumnType("text");
-
-					b.HasKey("Id");
-
-					b.HasIndex("DeviceConfigSourceInstanceId");
-
-					b.ToTable("DeviceConfigSourceInstanceConfigs");
-				});
-
 			modelBuilder.Entity("LogicMonitor.Datamart.Models.ResourceConfigSourceInstanceStoreItem", b =>
 				{
 					b.Property<Guid>("Id")
@@ -3109,17 +3058,6 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 						.IsRequired();
 
 					b.Navigation("DataSource");
-				});
-
-			modelBuilder.Entity("LogicMonitor.Datamart.Models.ResourceConfigSourceInstanceConfigStoreItem", b =>
-				{
-					b.HasOne("LogicMonitor.Datamart.Models.ResourceConfigSourceInstanceStoreItem", "DeviceConfigSourceInstance")
-						.WithMany()
-						.HasForeignKey("DeviceConfigSourceInstanceId")
-						.OnDelete(DeleteBehavior.Cascade)
-						.IsRequired();
-
-					b.Navigation("DeviceConfigSourceInstance");
 				});
 
 			modelBuilder.Entity("LogicMonitor.Datamart.Models.ResourceConfigSourceInstanceStoreItem", b =>

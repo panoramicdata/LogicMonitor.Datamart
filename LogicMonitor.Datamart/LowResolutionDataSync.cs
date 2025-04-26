@@ -672,7 +672,7 @@ internal class LowResolutionDataSync(
 					databaseDeviceDataSourceInstanceDataPointGroup.FirstOrDefault()?.Id.ToString() ?? string.Empty,
 					databaseDeviceDataSourceInstanceDataPointGroup.FirstOrDefault()?.DeviceDataSourceInstance?.Name ?? string.Empty,
 					databaseDeviceDataSourceInstanceDataPointGroup.FirstOrDefault()?.DataSourceDataPoint?.Name ?? string.Empty,
-					databaseDeviceDataSourceInstanceDataPointGroup.FirstOrDefault()?.DeviceDataSourceInstance?.LogicMonitorId.ToString() ?? string.Empty,
+					databaseDeviceDataSourceInstanceDataPointGroup.FirstOrDefault()?.DeviceDataSourceInstance?.LogicMonitorId.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
 					exception.Message);
 
 				// Go to the next group

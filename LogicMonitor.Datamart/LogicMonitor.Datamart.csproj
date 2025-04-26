@@ -11,7 +11,7 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor API Datamart</PackageTags>
 		<PackageReleaseNotes>
-			Changed a LogWarning back to a LogInformation.
+			Added ConfigSource Configs.
 		</PackageReleaseNotes>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
@@ -22,6 +22,7 @@
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/panoramicdata/LogicMonitor.Datamart/</RepositoryUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<UserSecretsId>d870b896-8725-450e-938a-3a75f2d9a8e8</UserSecretsId>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -31,18 +32,19 @@
 	<ItemGroup>
 		<PackageReference Include="AutoMapper" Version="13.0.1" />
 		<PackageReference Include="Humanizer.Core" Version="2.14.1" />
-		<PackageReference Include="LogicMonitor.Api" Version="3.216.6" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.2" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.2" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.2">
+		<PackageReference Include="LogicMonitor.Api" Version="3.220.3" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.4" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.4" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.4">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.2" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.4" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.4" />
 		<PackageReference Include="Nerdbank.GitVersioning" />
-		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.3" />
-		<PackageReference Include="PanoramicData.NCalcExtensions" Version="3.1.37" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+		<PackageReference Include="PanoramicData.NCalcExtensions" Version="3.2.1" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="Icon.png" Pack="true" PackagePath="" />

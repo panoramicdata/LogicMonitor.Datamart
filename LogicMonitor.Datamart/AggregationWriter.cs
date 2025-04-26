@@ -141,6 +141,6 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 			.Date
 			.AddDays(-countAggregationDaysToRetain)
 			.ToString("yyyyMMdd", CultureInfo.InvariantCulture);
-		return existingTables.Where(t => string.CompareOrdinal(t, TableNamePrefix.Length + 1, ageBoundary, 0, 8) < 0).ToList();
+		return [.. existingTables.Where(t => string.CompareOrdinal(t, TableNamePrefix.Length + 1, ageBoundary, 0, 8) < 0)];
 	}
 }

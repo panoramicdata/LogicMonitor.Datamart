@@ -1,6 +1,6 @@
 namespace LogicMonitor.Datamart.Models;
 
-public class DataSourceStoreItem : IdentifiedStoreItem
+public class DataSourceStoreItem : LogicModuleStoreItem
 {
 	// Navigation properties
 	public virtual ICollection<ResourceDataSourceStoreItem>? DeviceDataSources { get; set; } = null!;
@@ -10,17 +10,9 @@ public class DataSourceStoreItem : IdentifiedStoreItem
 	public virtual ICollection<ResourceDataSourceInstanceDataPointStoreItem>? DataPoints { get; set; } = null!;
 
 	// Database properties
-	public required string Description { get; set; }
-
-	public required string Group { get; set; } = string.Empty;
-
-	public required string AppliesTo { get; set; }
-
 	public required string Technology { get; set; }
 
 	public required string Tags { get; set; }
-
-	public required string Checksum { get; set; }
 
 	public required string LineageId { get; set; }
 
@@ -56,14 +48,6 @@ public class DataSourceStoreItem : IdentifiedStoreItem
 
 	public required bool? InstallationMetadataIsChangedFromTargetLastPublished { get; set; }
 
-	public required string Name { get; set; }
-
-	public required string DisplayName { get; set; }
-
-	public required string Version { get; set; }
-
-	public required string AuditVersion { get; set; }
-
 	public required string PayloadVersion { get; set; }
 
 	public required bool HasMultiInstances { get; set; }
@@ -71,8 +55,6 @@ public class DataSourceStoreItem : IdentifiedStoreItem
 	public required bool UseWildValueAsUuid { get; set; }
 
 	public required int PollingIntervalSeconds { get; set; }
-
-	public required string CollectionMethod { get; set; }
 
 	public required string? CollectionAttributeName { get; set; }
 
