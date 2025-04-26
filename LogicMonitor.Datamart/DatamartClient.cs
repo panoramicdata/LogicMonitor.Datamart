@@ -1716,7 +1716,6 @@ public class DatamartClient : LogicMonitorClient
 				context,
 				databaseDeviceConfigSourceInstance,
 				apiDeviceConfigSourceInstance,
-				configSourceConfigurationItem,
 				oldestUtc,
 				logger,
 				cancellationToken)
@@ -1767,7 +1766,6 @@ public class DatamartClient : LogicMonitorClient
 		Context context,
 		ResourceConfigSourceInstanceStoreItem databaseDeviceConfigSourceInstance,
 		ResourceDataSourceInstance apiDeviceConfigSourceInstance,
-		ConfigSourceConfigurationItem configSourceConfigurationItem,
 		DateTimeOffset oldestUtc,
 		ILogger logger,
 		CancellationToken cancellationToken)
