@@ -6,4 +6,7 @@ public class ResourceConfigSourceInstanceStoreItem : ResourceLogicModuleInstance
 	public ResourceConfigSourceStoreItem? DeviceConfigSource { get; set; }
 
 	public Guid DeviceConfigSourceId { get; set; }
+
+	public virtual ICollection<ResourceConfigSourceInstanceConfigStoreItem>? DeviceConfigSourceInstanceConfigs { get; set; }
+
 }

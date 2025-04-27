@@ -127,6 +127,14 @@ public class Context : DbContext
 			.WithMany(ar => ar.AlertStoreItems)
 			.OnDelete(DeleteBehavior.Restrict);
 
+		modelBuilder.Entity<ResourceConfigSourceInstanceConfigStoreItem>()
+			.HasIndex(rds => rds.LogicMonitorStringId);
+
+		modelBuilder.Entity<ResourceConfigSourceInstanceConfigStoreItem>()
+			.HasOne(rds => rds.DeviceConfigSourceInstance)
+			.WithMany(rds => rds.DeviceConfigSourceInstanceConfigs)
+			.OnDelete(DeleteBehavior.Restrict);
+
 		// DeviceDataSourceInstance indexes
 		modelBuilder.Entity<ResourceDataSourceInstanceStoreItem>()
 			.HasIndex(ddsi => ddsi.LastWentMissing);

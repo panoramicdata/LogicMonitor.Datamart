@@ -1535,7 +1535,9 @@ public class DatamartClient : LogicMonitorClient
 		ResourceDataSource deviceConfigSource,
 		CancellationToken cancellationToken)
 	{
-		var oldestUtc = DateTime.UtcNow.AddDays(-configSourceConfigurationItem.MaxAgeDays);
+		var oldestUtc = configSourceConfigurationItem.MaxAgeDays == 0
+			? (DateTimeOffset?)null
+			: DateTimeOffset.UtcNow.AddDays(-configSourceConfigurationItem.MaxAgeDays);
 
 		// Ensure that this ConfigSource exists in the database
 		var deviceConfigSourceStoreItem = await context
@@ -1766,29 +1768,27 @@ public class DatamartClient : LogicMonitorClient
 		Context context,
 		ResourceConfigSourceInstanceStoreItem databaseDeviceConfigSourceInstance,
 		ResourceDataSourceInstance apiDeviceConfigSourceInstance,
-		DateTimeOffset oldestUtc,
+		DateTimeOffset? oldestUtc,
 		ILogger logger,
 		CancellationToken cancellationToken)
 	{
 		// Always get the most recent
 
+		var mostRecentFilter = new Filter<ResourceDataSourceInstanceConfig>
+		{
+			Take = 1,
+			Order = new Order<ResourceDataSourceInstanceConfig>()
+			{
+				Property = nameof(ResourceDataSourceInstanceConfig.PollTimestampUtc),
+				Direction = OrderDirection.Desc
+			}
+		};
+
 		var configs = await GetAllResourceDataSourceInstanceConfigsAsync(
 				apiDeviceConfigSourceInstance.ResourceId,
 				apiDeviceConfigSourceInstance.ResourceDataSourceId,
 				apiDeviceConfigSourceInstance.Id,
-				new()
-				{
-					FilterItems =
-					[
-						new Gt<ResourceDataSourceInstanceConfig>(nameof(ResourceDataSourceInstanceConfig.PollTimestampUtc), oldestUtc.ToUnixTimeSeconds())
-					],
-					Take = 1,
-					Order = new Order<ResourceDataSourceInstanceConfig>()
-					{
-						Property = nameof(ResourceDataSourceInstanceConfig.PollTimestampUtc),
-						Direction = OrderDirection.Desc
-					}
-				},
+				mostRecentFilter,
 				cancellationToken)
 			.ConfigureAwait(false);
 
@@ -1804,7 +1804,7 @@ public class DatamartClient : LogicMonitorClient
 				mostRecentResourceDataSourceInstanceConfig = configs[0];
 				break;
 			default:
-				// Our filter didn't work.  Error
+				// Our "take 1" didn't work.  Error
 				logger.LogError(
 					"More than one config was returned for {DeviceName} instance {InstanceName} for ConfigSource {ConfigSourceName} ({DataSourceId})",
 					apiDeviceConfigSourceInstance.ResourceDisplayName,
@@ -1814,7 +1814,10 @@ public class DatamartClient : LogicMonitorClient
 				return;
 		}
 
-		var otherConfigs = await GetAllResourceDataSourceInstanceConfigsAsync(
+		// Only get the other configs if the settings' maxAgeDays is greater than 0
+		var otherConfigs = oldestUtc is null
+			? []
+			: await GetAllResourceDataSourceInstanceConfigsAsync(
 				apiDeviceConfigSourceInstance.ResourceId,
 				apiDeviceConfigSourceInstance.ResourceDataSourceId,
 				apiDeviceConfigSourceInstance.Id,
@@ -1825,7 +1828,7 @@ public class DatamartClient : LogicMonitorClient
 						// We want to get the configs that are older than the one we just got
 						new Lt<ResourceDataSourceInstanceConfig>(nameof(ResourceDataSourceInstanceConfig.PollTimestampUtc), mostRecentResourceDataSourceInstanceConfig.PollTimestampUtc!),
 						// More recent than the oldest permitted
-						new Gt<ResourceDataSourceInstanceConfig>(nameof(ResourceDataSourceInstanceConfig.PollTimestampUtc), oldestUtc.ToUnixTimeSeconds())
+						new Gt<ResourceDataSourceInstanceConfig>(nameof(ResourceDataSourceInstanceConfig.PollTimestampUtc), oldestUtc.Value.ToUnixTimeSeconds())
 					]
 				},
 				cancellationToken)
@@ -1857,6 +1860,40 @@ public class DatamartClient : LogicMonitorClient
 			}
 
 			databaseConfigSourceInstanceConfig.DeviceConfigSourceInstanceId = databaseDeviceConfigSourceInstance.Id;
+			databaseConfigSourceInstanceConfig.DatamartLastObserved = _timeProviderService.UtcOffsetNow;
+			databaseConfigSourceInstanceConfig.PollUtc = config.PollUtc is null ? DateTimeOffset.MinValue : new(config.PollUtc.Value);
+			databaseConfigSourceInstanceConfig.LogicMonitorStringId = config.Id;
+		}
+
+		// Remove old ones
+		switch (oldestUtc)
+		{
+			case null:
+				// Remove all but the mostRecentResourceDataSourceInstanceConfig
+				await context
+					.DeviceConfigSourceInstanceConfigs
+					.Where(ddsic =>
+						// Must be for this instance
+						ddsic.DeviceConfigSourceInstanceId == databaseDeviceConfigSourceInstance.Id
+						// Don't delete the most recent one
+						&& ddsic.LogicMonitorStringId != mostRecentResourceDataSourceInstanceConfig.Id)
+					.ExecuteDeleteAsync(cancellationToken: cancellationToken)
+					.ConfigureAwait(false);
+				break;
+			case DateTimeOffset oldestDateTimeOffset:
+				// Remove all configs older than the oldestDateTimeOffset
+				var configIdsToDelete = await context
+					.DeviceConfigSourceInstanceConfigs
+					.Where(ddsic =>
+						// Must be for this instance
+						ddsic.DeviceConfigSourceInstanceId == databaseDeviceConfigSourceInstance.Id
+						// Don't delete the most recent one
+						&& ddsic.LogicMonitorStringId != mostRecentResourceDataSourceInstanceConfig.Id
+						// The older ones
+						&& ddsic.PollUtc < oldestDateTimeOffset)
+					.ExecuteDeleteAsync(cancellationToken: cancellationToken)
+					.ConfigureAwait(false);
+				break;
 		}
 	}
 

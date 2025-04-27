@@ -15,6 +15,9 @@ public class ResourceConfigSourceInstanceProfile : Profile
 				dest => dest.DeviceConfigSourceId,
 				opts => opts.Ignore())
 			.ForMember(
+				dest => dest.DeviceConfigSourceInstanceConfigs,
+				opts => opts.Ignore())
+			.ForMember(
 				dest => dest.DatamartCreated,
 				opts => opts.Ignore())
 			.ForMember(

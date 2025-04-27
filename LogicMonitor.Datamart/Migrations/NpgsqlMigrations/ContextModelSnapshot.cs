@@ -1894,6 +1894,8 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 
 					b.HasIndex("DeviceConfigSourceInstanceId");
 
+					b.HasIndex("LogicMonitorStringId");
+
 					b.ToTable("DeviceConfigSourceInstanceConfigs");
 				});
 
@@ -3114,9 +3116,9 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 			modelBuilder.Entity("LogicMonitor.Datamart.Models.ResourceConfigSourceInstanceConfigStoreItem", b =>
 				{
 					b.HasOne("LogicMonitor.Datamart.Models.ResourceConfigSourceInstanceStoreItem", "DeviceConfigSourceInstance")
-						.WithMany()
+						.WithMany("DeviceConfigSourceInstanceConfigs")
 						.HasForeignKey("DeviceConfigSourceInstanceId")
-						.OnDelete(DeleteBehavior.Cascade)
+						.OnDelete(DeleteBehavior.Restrict)
 						.IsRequired();
 
 					b.Navigation("DeviceConfigSourceInstance");
@@ -3296,6 +3298,11 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
 					b.Navigation("AlertsFromGroup8");
 
 					b.Navigation("AlertsFromGroup9");
+				});
+
+			modelBuilder.Entity("LogicMonitor.Datamart.Models.ResourceConfigSourceInstanceStoreItem", b =>
+				{
+					b.Navigation("DeviceConfigSourceInstanceConfigs");
 				});
 
 			modelBuilder.Entity("LogicMonitor.Datamart.Models.ResourceConfigSourceStoreItem", b =>
