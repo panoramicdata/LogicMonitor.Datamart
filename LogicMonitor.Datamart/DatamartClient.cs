@@ -1065,6 +1065,9 @@ public class DatamartClient : LogicMonitorClient
 
 	public async Task SyncDeviceLogicModuleSourcesAndInstancesAsync(
 		LogicModuleConfigurationItem logicModuleConfigurationItem,
+		int logicModuleIndex,
+		int logicModuleCount,
+		INotificationReceiver notificationReceiver,
 		ILogger logger,
 		CancellationToken cancellationToken)
 	{
@@ -1075,11 +1078,23 @@ public class DatamartClient : LogicMonitorClient
 			string databaseAppliesTo;
 			Guid databaseLogicModuleId;
 			List<DataSourceDataPointStoreItem> dataSourceDataPoints = [];
+			var logicModuleType = logicModuleConfigurationItem switch
+			{
+				DataSourceConfigurationItem => nameof(DataSource),
+				ConfigSourceConfigurationItem => nameof(ConfigSource),
+				_ => throw new NotSupportedException($"LogicModuleType {logicModuleConfigurationItem.GetType().Name} is not supported."),
+			};
+
+			logger.LogInformation(
+				$"Syncing {nameof(ResourceDataSourceInstance)}s for {{LogicModuleType}} {{LogicModuleName}} ({{LogicModuleIndex}}/{{LogicModuleCount}})...",
+				logicModuleType,
+				logicModuleConfigurationItem.Name,
+				logicModuleIndex,
+				logicModuleCount);
 
 			switch (logicModuleConfigurationItem)
 			{
 				case DataSourceConfigurationItem dataSourceConfigurationItem:
-					logger.LogInformation($"Syncing {nameof(ResourceDataSourceInstance)}s for DataSource {{DataSourceName}}...", logicModuleConfigurationItem.Name);
 					var dataSourceStoreItem = await context
 						.DataSources
 						.SingleOrDefaultAsync(ds => ds.Name == dataSourceConfigurationItem.Name, cancellationToken)
@@ -1107,8 +1122,6 @@ public class DatamartClient : LogicMonitorClient
 						.ConfigureAwait(false);
 					break;
 				case ConfigSourceConfigurationItem configSourceConfigurationItem:
-					logger.LogInformation($"Syncing {nameof(ResourceDataSourceInstance)}s for ConfigSource {{ConfigSourceName}}...", logicModuleConfigurationItem.Name);
-
 					var configSourceStoreItem = await context
 							.ConfigSources
 							.Where(cs => cs.Name == configSourceConfigurationItem.Name)
@@ -1157,29 +1170,37 @@ public class DatamartClient : LogicMonitorClient
 			var markedMissing = 0;
 
 			// Not all of these will have instances
+			var appliesToMatchIndex = 0;
+			var appliesToMatchCount = appliesToMatches.Count;
 			foreach (var appliesToMatch in appliesToMatches)
 			{
-				// Get the device
-				var device = await GetAsync<Resource>(appliesToMatch.Id, cancellationToken)
+				appliesToMatchIndex++;
+				await notificationReceiver.SetStageNameAsync(
+					$"Syncing {logicModuleType} {logicModuleConfigurationItem.Name} ({logicModuleIndex}/{logicModuleCount}) instances for Resource {appliesToMatchIndex}/{appliesToMatchCount})",
+					cancellationToken)
 					.ConfigureAwait(false);
 
-				// Get the DeviceDataSource
-				var deviceDataSource = await GetResourceDataSourceByResourceIdAndDataSourceIdAsync(
-						device.Id,
+				// Get the resource
+				var resource = await GetAsync<Resource>(appliesToMatch.Id, cancellationToken)
+					.ConfigureAwait(false);
+
+				// Get the ResourceDataSource
+				var resourceDataSource = await GetResourceDataSourceByResourceIdAndDataSourceIdAsync(
+						resource.Id,
 						logicModuleId,
 						cancellationToken
 					)
 					.ConfigureAwait(false);
-				if (deviceDataSource is null)
+				if (resourceDataSource is null)
 				{
 					continue;
 				}
+				// We have a ResourceDataSource
 
-				// We have a DeviceDataSource
 				markedMissing = logicModuleConfigurationItem switch
 				{
 					DataSourceConfigurationItem dataSourceConfigurationItem
-						=> await ProcessDeviceDataSourceAsync(
+						=> await ProcessResourceDataSourceAsync(
 							dataSourceConfigurationItem,
 							logger,
 							context,
@@ -1187,20 +1208,20 @@ public class DatamartClient : LogicMonitorClient
 							dataSourceDataPoints,
 							instanceProperties,
 							markedMissing,
-							device,
-							deviceDataSource,
+							resource,
+							resourceDataSource,
 							cancellationToken)
 								.ConfigureAwait(false),
 					ConfigSourceConfigurationItem configSourceConfigurationItem
-						=> await ProcessDeviceConfigSourceAsync(
+						=> await ProcessResourceConfigSourceAsync(
 							configSourceConfigurationItem,
 							logger,
 							context,
 							databaseLogicModuleId,
 							instanceProperties,
 							markedMissing,
-							device,
-							deviceDataSource,
+							resource,
+							resourceDataSource,
 							cancellationToken)
 								.ConfigureAwait(false),
 					_ => throw new NotSupportedException($"LogicModuleType {logicModuleConfigurationItem.GetType().Name} is not supported."),
@@ -1244,7 +1265,7 @@ public class DatamartClient : LogicMonitorClient
 		}
 	}
 
-	private async Task<int> ProcessDeviceDataSourceAsync(
+	private async Task<int> ProcessResourceDataSourceAsync(
 		DataSourceConfigurationItem dataSourceConfigurationItem,
 		ILogger logger,
 		Context context,
@@ -1524,7 +1545,7 @@ public class DatamartClient : LogicMonitorClient
 		return markedMissing;
 	}
 
-	private async Task<int> ProcessDeviceConfigSourceAsync(
+	private async Task<int> ProcessResourceConfigSourceAsync(
 		ConfigSourceConfigurationItem configSourceConfigurationItem,
 		ILogger logger,
 		Context context,

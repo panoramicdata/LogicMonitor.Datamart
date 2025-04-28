@@ -82,19 +82,31 @@ internal class DimensionSync : LoopInterval
 		if (_types?.Contains(nameof(ResourceDataSourceInstance)) ?? true)
 		{
 			var stopwatch = new Stopwatch();
+			var dataSourceIndex = 0;
 			foreach (var dataSourceSpecification in _configuration.DataSources)
 			{
 				try
 				{
+					dataSourceIndex++;
+					var dataSourceCount = _configuration.DataSources.Count;
 					Logger.LogInformation(
-						$"Syncing {nameof(ResourceDataSourceInstance)}s for DataSource '{{DataSource}}'...",
-						dataSourceSpecification.Name);
+						$"Syncing {nameof(ResourceDataSourceInstance)}s for DataSource {{DataSource}} ({{DataSourceIndex}}/{{DataSourceCount}})...",
+						dataSourceSpecification.Name,
+						dataSourceIndex,
+						dataSourceCount);
+
+					await _notificationReceiver
+						.SetStageNameAsync($"DataSource {dataSourceSpecification.Name} ({dataSourceIndex}/{dataSourceCount})", cancellationToken)
+						.ConfigureAwait(false);
 
 					stopwatch.Restart();
 
 					await _datamartClient
 						.SyncDeviceLogicModuleSourcesAndInstancesAsync(
 							dataSourceSpecification,
+							dataSourceIndex,
+							dataSourceCount,
+							_notificationReceiver,
 							Logger,
 							cancellationToken
 						)
@@ -120,17 +132,29 @@ internal class DimensionSync : LoopInterval
 			}
 
 			// ResourceConfigSources
+			var configSourceIndex = 0;
+			var configSourceCount = _configuration.ConfigSources.Count;
 			foreach (var configSourceSpecification in _configuration.ConfigSources)
 			{
 				try
 				{
+					configSourceIndex++;
 					Logger.LogInformation(
-						$"Syncing {nameof(ResourceDataSourceInstance)}s for ConfigSource '{{ConfigSource}}'...",
-						configSourceSpecification.Name);
+						$"Syncing {nameof(ResourceDataSourceInstance)}s for ConfigSource {{ConfigSource}} ({{ConfigSourceIndex}}/{{ConfigSourceCount}})...",
+						configSourceSpecification.Name,
+						configSourceIndex,
+						configSourceCount);
+					await _notificationReceiver
+						.SetStageNameAsync($"ConfigSource {configSourceSpecification.Name} ({configSourceIndex}/{configSourceCount})", cancellationToken)
+						.ConfigureAwait(false);
+
 					stopwatch.Restart();
 					await _datamartClient
 						.SyncDeviceLogicModuleSourcesAndInstancesAsync(
 							configSourceSpecification,
+							configSourceIndex,
+							configSourceCount,
+							_notificationReceiver,
 							Logger,
 							cancellationToken
 						)
