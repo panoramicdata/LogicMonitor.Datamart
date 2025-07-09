@@ -1,6 +1,6 @@
 ﻿global using AutoMapper;
+global using AwesomeAssertions;
 global using Divergic.Logging.Xunit;
-global using FluentAssertions;
 global using LogicMonitor.Api.Alerts;
 global using LogicMonitor.Api.Resources;
 global using LogicMonitor.Datamart.Config;
