@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net9.0</TargetFrameworks>
+		<TargetFramework>net9.0</TargetFramework>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<Authors>Panoramic Data Limited</Authors>
 		<Copyright>Copyright © Panoramic Data Limited 2021-2025</Copyright>
@@ -11,7 +11,7 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor API Datamart</PackageTags>
 		<PackageReleaseNotes>
-			Updated nuget packages
+			Updated the LogicMonitor nuget from 3.222.5 to 3.222.8
 		</PackageReleaseNotes>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
@@ -32,7 +32,7 @@
 	<ItemGroup>
 		<PackageReference Include="AutoMapper" Version="13.0.1" />
 		<PackageReference Include="Humanizer.Core" Version="2.14.1" />
-		<PackageReference Include="LogicMonitor.Api" Version="3.222.5" />
+		<PackageReference Include="LogicMonitor.Api" Version="3.222.8" />
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.7" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.7" />

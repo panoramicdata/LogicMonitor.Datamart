@@ -1,5 +1,6 @@
 ﻿using LogicMonitor.Api;
 using LogicMonitor.Datamart.Interfaces;
+using LogicMonitor.Datamart.Config;
 
 namespace LogicMonitor.Datamart.Test;
 
