@@ -44,7 +44,7 @@
 		<PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.9" />
 		<PackageReference Include="Nerdbank.GitVersioning" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
-		<PackageReference Include="PanoramicData.NCalcExtensions" Version="3.2.1" />
+		<PackageReference Include="PanoramicData.NCalcExtensions" Version="3.2.4" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="Icon.png" Pack="true" PackagePath="" />
