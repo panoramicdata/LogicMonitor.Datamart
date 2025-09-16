@@ -64,6 +64,9 @@ public class CollectorGroupProfile : Profile
 			.ForMember(
 				dest => dest.HighestPriorityCollectorStatus,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.CalThreshold,
+				opts => opts.Ignore())
 			;
 	}
 }

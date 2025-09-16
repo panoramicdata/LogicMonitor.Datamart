@@ -11,7 +11,7 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor API Datamart</PackageTags>
 		<PackageReleaseNotes>
-			Updated the LogicMonitor nuget from 3.222.5 to 3.222.8
+			Updated CollectorProfile.cs and CollectorGroup.Profile.cs to ignore new members on Collector and CollectorGroup from the LogicMonitor API nuget.
 		</PackageReleaseNotes>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>

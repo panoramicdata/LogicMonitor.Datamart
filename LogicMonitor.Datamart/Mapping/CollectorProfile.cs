@@ -149,6 +149,9 @@ public class CollectorProfile : Profile
 			.ForMember(
 				dest => dest.SpecifiedCollectorResourceGroupId,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.CalculatedThreshold,
+				opts => opts.Ignore())
 			;
 	}
 }
