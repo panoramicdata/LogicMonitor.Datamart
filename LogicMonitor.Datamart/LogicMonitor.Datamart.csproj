@@ -11,7 +11,7 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor API Datamart</PackageTags>
 		<PackageReleaseNotes>
-			Updated CollectorProfile.cs and CollectorGroup.Profile.cs to ignore new members on Collector and CollectorGroup from the LogicMonitor API nuget.
+			Added the AvailabilityPercent2 to the database which uses an updated percent up-time calculation.
 		</PackageReleaseNotes>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
