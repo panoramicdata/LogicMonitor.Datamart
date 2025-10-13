@@ -29,6 +29,27 @@ public class AggregationTests
 			.BeNull();
 	}
 
+	// See unpublished up-time algorithm documentation at: https://www.blogger.com/blog/page/edit/preview/289149861252142016/4567219761703676543
+	[Theory]
+	// Simple sequence with a gap
+	[InlineData(83.33d, 1d, 2d, 3d, null, 4d, 5d)]
+	// Sequence with counter reset
+	[InlineData(100d, 1d, 2d, 3d, 4d, 1d, 2d, 3d)]
+	// Sequence with humps / gaps
+	[InlineData(71.43d, 1d, 2d, 3d, 10d, 11d)]
+	// Multiple gaps and counter reset
+	[InlineData(57.14d, 1d, 2d, null, 3d, 10d, null, 11d, 1d, 2d, null, 3d)]
+	// Long sequence with multiple jumps and resets
+	[InlineData(59.09d, 5d, 6d, 7d, 20d, null, 21d, 22d, 5d, 6d, 7d, 8d, 30d, 31d, null, 32d)]
+	public void PercentageUptime2Test(double? expectedUptimePercent, params double?[] values)
+	{
+		// MS-21394 DataMagic: PercentUpTime availability calculation should calculate downtime based on up-time after no data
+		LowResolutionDataSync
+			.CalculatePercentageAvailabilityNew([.. values], "PercentUpTime")
+			.Should()
+			.BeApproximately(expectedUptimePercent, 2);
+	}
+
 	/// <summary>
 	/// This test aims to have a realistic number of data points
 	/// The shape of the input data is as follows:

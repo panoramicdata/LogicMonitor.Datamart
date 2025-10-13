@@ -17,3 +17,18 @@ Read-Host "Enter the migration name" | ForEach-Object {
 		--output-dir Migrations/SqlServerMigrations
 }
 ```
+
+You must have the EF Core CLI Tool installed.
+
+If not installed and the migration complains, you can can install it using:
+
+```powershell
+dotnet tool install --global dotnet-ef
+
+# or update it using:
+dotnet tool update --global dotnet-ef
+```
+After installation, veryify the installation using:
+```powershell
+dotnet ef --version
+```

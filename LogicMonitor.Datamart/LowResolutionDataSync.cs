@@ -743,11 +743,13 @@ internal class LowResolutionDataSync(
 			// Remove all DataPoint values before the device was added to LogicMonitor
 			foreach (var graphDataLine in graphData.Lines)
 			{
-				graphDataLine.Data = [.. graphDataLine.Data
-			.Where((dp, index) =>
-			{
-				return graphData.TimeStamps[index] >= deviceNotTracked.CreatedOnSeconds * 1000;
-			})];
+				graphDataLine.Data =
+					[.. graphDataLine.Data
+						.Where((dp, index) =>
+						{
+							return graphData.TimeStamps[index] >= deviceNotTracked.CreatedOnSeconds * 1000;
+						})
+					];
 			}
 
 			graphData.TimeStamps = [.. graphData.TimeStamps.Where(ts => ts >= deviceNotTracked.CreatedOnSeconds * 1000)];
@@ -833,11 +835,18 @@ internal class LowResolutionDataSync(
 					dataPointStoreItemNotTracked.GlobalAlertExpression,
 					CountAlertLevel.Critical
 				),
+
+				// MS-21394 DataMagic: PercentUpTime availability calculation should calculate downtime based on up-time after no data
+				AvailabilityPercent2 = CalculatePercentageAvailabilityNew(
+					line.Data,
+					dataPointStoreItemNotTracked.PercentageAvailabilityCalculation
+				),
+
 				// IMPORTANT! This must be calculated last as this process can reverse the array.
 				AvailabilityPercent = CalculatePercentageAvailability(
 					line.Data,
 					dataPointStoreItemNotTracked.PercentageAvailabilityCalculation
-				),
+				)
 			};
 
 			return bulkWriteModel;
@@ -991,6 +1000,47 @@ internal class LowResolutionDataSync(
 		return 100 * upTimeCount / totalCount;
 	}
 
+	// MS-21394 DataMagic: PercentUpTime availability calculation should calculate downtime based on up-time after no data
+	public static double? CalculatePercentageAvailabilityNew(
+		List<double?> values,
+		string percentageAvailabilityCalculation
+	)
+	{
+		if (string.IsNullOrWhiteSpace(percentageAvailabilityCalculation))
+		{
+			return null;
+		}
+
+		if (percentageAvailabilityCalculation != "PercentUpTime")
+		{
+			return null;
+		}
+
+		if (values.Count == 0 || values.All(v => v is null))
+		{
+			return null;
+		}
+
+		var doubleValues = values.Select(v => v as double?).ToList();
+		var gradient = CalculatePercentUptimeGradient(doubleValues);
+
+		if (Math.Abs(gradient) < 1e-6)
+		{
+			return null;
+		}
+
+		var (totalDowntime, totalExpectedDataPoints) = CalculateDowntime(doubleValues, gradient);
+		var totalTime = totalExpectedDataPoints;
+		var uptime = totalTime - totalDowntime;
+
+		if (totalTime == 0)
+		{
+			return 0d;
+		}
+
+		return 100d * uptime / totalTime;
+	}
+
 	public static double? CalculatePercentageAvailabilityOld(
 		double?[] values,
 		string percentageAvailabilityCalculation
@@ -1141,5 +1191,76 @@ internal class LowResolutionDataSync(
 			default:
 				throw new ArgumentException($"Unexpected {nameof(CountAlertLevel)} '{countAlertLevel}'");
 		}
+	}
+
+	private static double CalculatePercentUptimeGradient(List<double?> values)
+	{
+		double gradientSum = 0;
+		var gradientCount = 0;
+		double? prev = null;
+		for (var i = 0; i < values.Count; i++)
+		{
+			if (values[i] is double v)
+			{
+				if (prev.HasValue && v > prev.Value)
+				{
+					gradientSum += v - prev.Value;
+					gradientCount++;
+				}
+
+				prev = v;
+			}
+		}
+
+		return gradientCount > 0 ? gradientSum / gradientCount : 0;
+	}
+
+	private static (int totalDowntime, int totalExpectedDataPoints) CalculateDowntime(List<double?> values, double gradient)
+	{
+		var totalDowntime = 0;
+		var totalExpectedDataPoints = 0;
+		double? previousValue = null;
+
+		for (var i = 0; i < values.Count; i++)
+		{
+			var value = values[i];
+			if (value is double doubleValue)
+			{
+				if (previousValue.HasValue)
+				{
+					// Explicitly handle counter resets
+					if (doubleValue < previousValue.Value)
+					{
+						// Counter reset detected, skip gap/downtime calculation for this pair
+						previousValue = doubleValue;
+						continue;
+					}
+
+					var expectedNext = previousValue.Value + gradient;
+					// Use a tolerance for floating-point comparison
+					if (doubleValue > previousValue.Value && Math.Abs(doubleValue - expectedNext) > gradient * 1.1)
+					{
+						var gap = (int)Math.Round((doubleValue - previousValue.Value) / gradient) - 1;
+						if (gap > 0)
+						{
+							var projectedStart = doubleValue - gap * gradient - gradient;
+							var downtimeForGap = gap + (int)Math.Round((previousValue.Value - projectedStart) / gradient);
+							totalDowntime += downtimeForGap;
+							totalExpectedDataPoints += gap;
+						}
+					}
+				}
+
+				previousValue = doubleValue;
+			}
+			else
+			{
+				totalDowntime++;
+				totalExpectedDataPoints++;
+			}
+		}
+		// Add actual data points to total expected
+		totalExpectedDataPoints += values.Count(v => v is double);
+		return (totalDowntime, totalExpectedDataPoints);
 	}
 }

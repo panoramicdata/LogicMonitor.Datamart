@@ -28,6 +28,8 @@ public class TimeSeriesDataAggregationStoreItem
 
 	public double? AvailabilityPercent { get; set; }
 
+	public double? AvailabilityPercent2 { get; set; }
+
 	public double? First { get; set; }
 
 	public double? Last { get; set; }
