@@ -1,4 +1,5 @@
-﻿using LogicMonitor.Datamart.Services;
+﻿using LogicMonitor.Api.ScheduledDownTimes;
+using LogicMonitor.Datamart.Services;
 
 namespace LogicMonitor.Datamart.Test;
 
@@ -48,10 +49,13 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 			startDateTimeUtc,
 			endDateTimeUtc,
 			LoggerFactory.CreateLogger<DataTests>(),
-			default
-			);
+			default);
 
-		var result = LowResolutionDataSync.GetTimeSeriesDataAggregationStoreItem(
+		// MS-21395: Create empty SDT cache for test
+		var sdtCache = new Dictionary<string, List<ScheduledDownTimeHistory>>();
+
+		var result = await LowResolutionDataSync.GetTimeSeriesDataAggregationStoreItem(
+			DatamartClient,
 			device,
 			deviceDataSourceInstanceDataPoint,
 			dataPointName,
@@ -59,8 +63,11 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 			startDateTimeUtc,
 			endDateTimeUtc,
 			graphData,
-			LoggerFactory.CreateLogger<DataTests>()
-		);
+			false,
+			sdtCache,
+			LoggerFactory.CreateLogger<DataTests>(),
+			default
+		).ConfigureAwait(false);
 
 		result.Should().NotBeNull();
 		result!.PeriodStart.Should().Be(startDateTimeUtc);
