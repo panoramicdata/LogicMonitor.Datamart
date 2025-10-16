@@ -11,7 +11,7 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor API Datamart</PackageTags>
 		<PackageReleaseNotes>
-			Added the AvailabilityPercent2 to the database which uses an updated percent up-time calculation.
+			Configuration now supports "ExcludeSdtPeriod" to exclude periods of SDT from the time series data aggregations.
 		</PackageReleaseNotes>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
