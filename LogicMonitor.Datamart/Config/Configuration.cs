@@ -109,6 +109,8 @@ public class Configuration
 
 	public DateTime? FakeExecutionTime { get; set; }
 
+	public bool ExcludeSdtPeriods { get; set; } = false;
+
 	public void Validate()
 	{
 		if (string.IsNullOrWhiteSpace(Name))
