@@ -63,7 +63,7 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 			startDateTimeUtc,
 			endDateTimeUtc,
 			graphData,
-			false,
+			Configuration.ExcludeSdtPeriods,
 			sdtCache,
 			LoggerFactory.CreateLogger<DataTests>(),
 			default

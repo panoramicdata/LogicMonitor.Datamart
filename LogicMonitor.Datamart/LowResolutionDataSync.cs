@@ -1439,7 +1439,8 @@ internal class LowResolutionDataSync(
 		ILogger logger,
 		CancellationToken cancellationToken)
 	{
-		logger.LogDebug("Getting historical SDTs for Device ID {DeviceId} ({Start:yyyy-MM-dd HH:mm:ss} .. {End:yyyy-MM-dd HH:mm:ss})...",
+		logger.LogDebug(
+			"Getting historical SDTs for Device ID {DeviceId} ({Start:yyyy-MM-dd HH:mm:ss} .. {End:yyyy-MM-dd HH:mm:ss})...",
 			deviceNotTracked.LogicMonitorId,
 			startDateTimeUtc,
 			endDateTimeUtc);
