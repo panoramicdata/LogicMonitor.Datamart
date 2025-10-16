@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 namespace LogicMonitor.Datamart.Test;
 
 /// <summary>
-/// MS-21395: Unit tests for SDT period merging functionality
+/// MS-21395: Unit tests for SDT period merging functionality which is part of the LowResolutionDataSync aggregation process if SDT is excluded
 /// </summary>
 public class SdtMergingTests
 {
@@ -59,7 +59,7 @@ public class SdtMergingTests
 	}
 
 	[Theory]
-	[InlineData(0, 8, 7, 9, 0, 9)]		// Partial overlap (your example case)
+	[InlineData(0, 8, 7, 9, 0, 9)]		// Partial overlap
 	[InlineData(0, 10, 5, 15, 0, 15)]	// Partial overlap
 	[InlineData(0, 10, 10, 20, 0, 20)]	// Adjacent periods (touching)
 	public void MergeSdtPeriods_TwoPeriodsVariousOverlaps_MergesCorrectly(
@@ -123,8 +123,8 @@ public class SdtMergingTests
 		// Arrange - One period completely inside another
 		var sdtPeriods = new List<(long StartTimestampMs, long EndTimestampMs)>
 		{
-			(1000L, 10000L), // Outer period
-			(3000L, 5000L)   // Inner period
+			(1000L, 10000L),	// Outer period
+			(3000L, 5000L)		// Inner period
 		};
 
 		// Act
@@ -182,10 +182,10 @@ public class SdtMergingTests
 		var sdtPeriods = new List<(long StartTimestampMs, long EndTimestampMs)>
 		{
 			(1000L, 2000L),
-			(1500L, 2500L),  // Overlaps with first
-			(5000L, 6000L),  // Separate
-			(10000L, 11000L), // Separate
-			(10500L, 12000L)  // Overlaps with previous
+			(1500L, 2500L),		// Overlaps with first
+			(5000L, 6000L),		// Separate
+			(10000L, 11000L),	// Separate
+			(10500L, 12000L)	// Overlaps with previous
 		};
 
 		// Act
@@ -193,9 +193,9 @@ public class SdtMergingTests
 
 		// Assert
 		result.Should().HaveCount(3);
-		result[0].Should().Be((1000L, 2500L));   // First two merged
-		result[1].Should().Be((5000L, 6000L));    // Separate
-		result[2].Should().Be((10000L, 12000L));  // Last two merged
+		result[0].Should().Be((1000L, 2500L));		// First two merged
+		result[1].Should().Be((5000L, 6000L));		// Separate
+		result[2].Should().Be((10000L, 12000L));	// Last two merged
 	}
 
 	[Fact]
