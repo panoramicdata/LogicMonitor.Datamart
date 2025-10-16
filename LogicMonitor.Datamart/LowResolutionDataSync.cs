@@ -815,8 +815,7 @@ internal class LowResolutionDataSync(
 			
 			if (excludeStdPeriods)
 			{
-				// Can be removed once validated
-				logger.LogInformation(
+				logger.LogDebug(
 					"Excluding SDT periods for DeviceDataSourceInstanceDataPointId {DeviceDataSourceInstanceDataPointId} ({Start:yyyy-MM-dd HH:mm:ss} .. {End:yyyy-MM-dd HH:mm:ss})...",
 					databaseDeviceDataSourceInstanceDataPoint.Id,
 					startDateTimeUtc,
@@ -854,8 +853,8 @@ internal class LowResolutionDataSync(
 			}
 			else
 			{
-				// Can be removed once validated
-				logger.LogInformation("Skipping SDT exclusion for DeviceDataSourceInstanceDataPointId {DeviceDataSourceInstanceDataPointId} ({Start:yyyy-MM-dd HH:mm:ss} .. {End:yyyy-MM-dd HH:mm:ss})...",
+				logger.LogDebug(
+					"Skipping SDT exclusion for DeviceDataSourceInstanceDataPointId {DeviceDataSourceInstanceDataPointId} ({Start:yyyy-MM-dd HH:mm:ss} .. {End:yyyy-MM-dd HH:mm:ss})...",
 					databaseDeviceDataSourceInstanceDataPoint.Id,
 					startDateTimeUtc,
 					endDateTimeUtc);
@@ -1361,6 +1360,61 @@ internal class LowResolutionDataSync(
 	#region SDT Handling
 
 	/// <summary>
+	/// Merges overlapping or adjacent SDT periods into a flattened list.
+	/// MS-21395: Ensures that SDT periods from different levels (instance, data source, device, groups) are combined correctly.
+	/// For example, if we have Device level: 00:00-08:00 and DataSource level: 07:55-09:00,
+	/// they will be merged into a single period: 00:00-09:00.
+	/// </summary>
+	/// <param name="sdtPeriods">List of SDT periods that may overlap</param>
+	/// <param name="logger">Logger for diagnostics</param>
+	/// <returns>Flattened list of non-overlapping SDT periods</returns>
+	internal static List<(long StartTimestampMs, long EndTimestampMs)> MergeSdtPeriods(
+		List<(long StartTimestampMs, long EndTimestampMs)> sdtPeriods,
+		ILogger logger)
+	{
+		if (sdtPeriods.Count <= 1)
+		{
+			return sdtPeriods;
+		}
+
+		var originalCount = sdtPeriods.Count;
+
+		// Sort by start time
+		var sorted = sdtPeriods.OrderBy(p => p.StartTimestampMs).ToList();
+		var merged = new List<(long StartTimestampMs, long EndTimestampMs)>();
+
+		var current = sorted[0];
+
+		for (var i = 1; i < sorted.Count; i++)
+		{
+			var next = sorted[i];
+
+			// Check if periods overlap or are adjacent
+			if (next.StartTimestampMs <= current.EndTimestampMs)
+			{
+				// Merge: extend the current period's end time to the maximum of both
+				current = (current.StartTimestampMs, Math.Max(current.EndTimestampMs, next.EndTimestampMs));
+			}
+			else
+			{
+				// No overlap: add current to result and move to next
+				merged.Add(current);
+				current = next;
+			}
+		}
+
+		// Add the last period
+		merged.Add(current);
+
+		logger.LogDebug(
+			"Merged {OriginalCount} SDT periods into {MergedCount} non-overlapping periods",
+			originalCount,
+			merged.Count);
+
+		return merged;
+	}
+
+	/// <summary>
 	/// Gets the SDT (Scheduled Down Time) periods for a device data source instance within the specified time range.
 	/// MS-21395: This method retrieves ScheduledDownTimeHistory from the LogicMonitor API at multiple levels:
 	/// - Device Data Source Instance level
@@ -1374,7 +1428,7 @@ internal class LowResolutionDataSync(
 	/// <param name="endDateTimeUtc">End of the time range</param>
 	/// <param name="sdtCache">Cache for Device and DeviceGroup SDTs</param>
 	/// <param name="cancellationToken">Cancellation token</param>
-	/// <returns>List of SDT periods as (start timestamp in ms, end timestamp in ms) tuples</returns>
+	/// <returns>List of merged, non-overlapping SDT periods as (start timestamp in ms, end timestamp in ms) tuples</returns>
 	private async static Task<List<(long StartTimestampMs, long EndTimestampMs)>> GetHistoricalSdtPeriodsAsync(
 		DatamartClient datamartClient,
 		ResourceStoreItem deviceNotTracked,
@@ -1385,7 +1439,7 @@ internal class LowResolutionDataSync(
 		ILogger logger,
 		CancellationToken cancellationToken)
 	{
-		logger.LogInformation("Getting historical SDTs for Device ID {DeviceId} ({Start:yyyy-MM-dd HH:mm:ss} .. {End:yyyy-MM-dd HH:mm:ss})...",
+		logger.LogDebug("Getting historical SDTs for Device ID {DeviceId} ({Start:yyyy-MM-dd HH:mm:ss} .. {End:yyyy-MM-dd HH:mm:ss})...",
 			deviceNotTracked.LogicMonitorId,
 			startDateTimeUtc,
 			endDateTimeUtc);
@@ -1516,11 +1570,20 @@ internal class LowResolutionDataSync(
 				.Distinct()
 				.ToList();
 			
-			return sdtPeriods;
+			// MS-21395: Merge overlapping SDT periods from different levels
+			var mergedSdtPeriods = MergeSdtPeriods(sdtPeriods, logger);
+			
+			logger.LogDebug(
+				"Retrieved {OriginalCount} SDT periods for Device ID {DeviceId}, merged into {MergedCount} non-overlapping periods",
+				sdtPeriods.Count,
+				deviceId,
+				mergedSdtPeriods.Count);
+			
+			return mergedSdtPeriods;
 		}
 		catch (Exception ex)
 		{
-			logger.LogError("Error retrieving SDTs for device ID {DeviceId}. Returning empty SDT list. Failure: {Message}", deviceId, ex.Message);
+			logger.LogError("ex, Error retrieving SDTs for device ID {DeviceId}. Returning empty SDT list. Failure: {Message}", deviceId, ex.Message);
 			return [];
 		}
 	}
