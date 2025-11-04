@@ -469,6 +469,11 @@ internal class LowResolutionDataSync(
 			var floorValue = values[floorIndex];
 			var ceilValue = values[ceilIndex];
 
+			if (double.IsInfinity(floorValue) || double.IsInfinity(ceilValue))
+			{
+				return null;
+			}
+
 			return floorValue + ((index - floorIndex) * (ceilValue - floorValue));
 		}
 	}
@@ -519,7 +524,7 @@ internal class LowResolutionDataSync(
 			try
 			{
 				var graphDataCache = new Dictionary<string, GraphData>();
-				
+
 				// MS-21395: Cache for Device and DeviceGroup SDTs to reduce API calls
 				// Key format: "Device_{deviceId}" or "DeviceGroup_{groupId}"
 				var sdtCache = new Dictionary<string, List<ScheduledDownTimeHistory>>();
@@ -772,7 +777,7 @@ internal class LowResolutionDataSync(
 
 			// MS-21395: Create paired timestamp/value data to ensure synchronization
 			List<(long timestamp, double? value)> pairedData;
-			
+
 			if (string.IsNullOrWhiteSpace(databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint!.Calculation))
 			{
 				// No calculation - get data directly from the graph
@@ -786,16 +791,14 @@ internal class LowResolutionDataSync(
 				}
 
 				// Pair timestamps with values
-				pairedData = graphData.TimeStamps
-					.Select((ts, index) => (ts, line.Data[index]))
-					.ToList();
+				pairedData = [.. graphData.TimeStamps.Select((ts, index) => (ts, line.Data[index]))];
 			}
 			else
 			{
 				// Calculation exists - evaluate expression for each timestamp
 				var expression = new ExtendedExpression(databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint.Calculation);
-				
-				pairedData = graphData.TimeStamps
+
+				pairedData = [.. graphData.TimeStamps
 					.Select((ts, index) =>
 					{
 						expression.Parameters.Clear();
@@ -805,14 +808,19 @@ internal class LowResolutionDataSync(
 						}
 
 						var calculatedValue = expression.Evaluate() as double?;
+
+						// MS-22318 Prevent infinite and NaN values from being included
+						if (calculatedValue.HasValue && (double.IsInfinity(calculatedValue.Value) || double.IsNaN(calculatedValue.Value)))
+						{
+							calculatedValue = null;
+						}
 						return (ts, calculatedValue);
-					})
-					.ToList();
+					})];
 			}
 
 			// MS-21395: Transform paired data into TimeSeriesDataPoint structure with SDT information
 			List<TimeSeriesDataPoint> timeSeriesDataPoints;
-			
+
 			if (excludeStdPeriods)
 			{
 				logger.LogDebug(
@@ -834,15 +842,15 @@ internal class LowResolutionDataSync(
 						cancellationToken)
 					.ConfigureAwait(false);
 
-				timeSeriesDataPoints = new List<TimeSeriesDataPoint>();
+				timeSeriesDataPoints = [];
 
 				foreach (var (timestamp, value) in pairedData)
 				{
 					// Check if timestamp falls within any SDT period
-					var isInSdt = sdtPeriods.Any(sdt => 
-						timestamp >= sdt.StartTimestampMs && 
+					var isInSdt = sdtPeriods.Any(sdt =>
+						timestamp >= sdt.StartTimestampMs &&
 						timestamp <= sdt.EndTimestampMs);
-					
+
 					timeSeriesDataPoints.Add(new TimeSeriesDataPoint
 					{
 						IsInSdt = isInSdt,
@@ -860,14 +868,13 @@ internal class LowResolutionDataSync(
 					endDateTimeUtc);
 
 				// Performance optimization: Skip SDT checking entirely when not needed
-				timeSeriesDataPoints = pairedData
+				timeSeriesDataPoints = [.. pairedData
 					.Select(pair => new TimeSeriesDataPoint
 					{
 						Value = pair.value,
 						Timestamp = pair.timestamp,
 						IsInSdt = false
-					})
-					.ToList();
+					})];
 			}
 
 			// MS-21395: Filter out SDT periods when configured
@@ -1448,7 +1455,7 @@ internal class LowResolutionDataSync(
 		// MS-21395 - Retrieve all historical SDT periods that overlap with the time range
 		var allSdtHistories = new List<ScheduledDownTimeHistory>();
 		var deviceId = deviceNotTracked.LogicMonitorId;
-		
+
 		try
 		{
 			using var context = datamartClient.GetContext();
@@ -1476,12 +1483,12 @@ internal class LowResolutionDataSync(
 
 				return [];
 			}
-				
+
 			var resourceDataSourceInstanceLmId = resourceDataSourceInstanceStoreItem.LogicMonitorId;
 			var resourceDataSourceLmId = resourceDataSource.LogicMonitorId;
 
 			// Device Data Source Instance historical SDTs (not cached - instance-specific)
-			var deviceDataSourceInstanceSdts = 
+			var deviceDataSourceInstanceSdts =
 				await GetHistoricSdtsForDeviceDataSourceInstance(
 					datamartClient,
 					deviceId,
@@ -1514,7 +1521,7 @@ internal class LowResolutionDataSync(
 						deviceId,
 						cancellationToken)
 					.ConfigureAwait(false);
-				
+
 				sdtCache[deviceCacheKey] = deviceSdts;
 
 				logger.LogDebug(
@@ -1530,7 +1537,7 @@ internal class LowResolutionDataSync(
 
 			// Add them
 			allSdtHistories.AddRange(deviceSdts);
-			
+
 			// Device Group level SDTs (up to root) - cached
 			if (!string.IsNullOrWhiteSpace(deviceNotTracked.DeviceGroupIdsString))
 			{
@@ -1538,7 +1545,7 @@ internal class LowResolutionDataSync(
 					.Split(',')
 					.Select(id => int.TryParse(id, out var parsed) ? parsed : 0)
 					.Where(id => id > 0);
-				
+
 				foreach (var deviceGroupId in deviceGroupIds)
 				{
 					var groupSdts =
@@ -1554,15 +1561,15 @@ internal class LowResolutionDataSync(
 					allSdtHistories.AddRange(groupSdts);
 				}
 			}
-			
+
 			// Processing - convert SDT histories to timestamp tuples, filtering by date range
 			var sEpochSeconds = startDateTimeUtc.ToUnixTimeSeconds();
 			var eEpochSeconds = endDateTimeUtc.ToUnixTimeSeconds();
-			
+
 			var sdtPeriods = allSdtHistories
-				.Where(sdt => 
+				.Where(sdt =>
 					// SDT overlaps with our time range
-					sdt.ApproximateStartEpoch < eEpochSeconds && 
+					sdt.ApproximateStartEpoch < eEpochSeconds &&
 					sdt.ApproximateEndEpoch > sEpochSeconds)
 				.Select(sdt => (
 					StartTimestampMs: sdt.ApproximateStartEpoch * 1000L,
@@ -1570,16 +1577,16 @@ internal class LowResolutionDataSync(
 				))
 				.Distinct()
 				.ToList();
-			
+
 			// MS-21395: Merge overlapping SDT periods from different levels
 			var mergedSdtPeriods = MergeSdtPeriods(sdtPeriods, logger);
-			
+
 			logger.LogDebug(
 				"Retrieved {OriginalCount} SDT periods for Device ID {DeviceId}, merged into {MergedCount} non-overlapping periods",
 				sdtPeriods.Count,
 				deviceId,
 				mergedSdtPeriods.Count);
-			
+
 			return mergedSdtPeriods;
 		}
 		catch (Exception ex)
@@ -1588,7 +1595,7 @@ internal class LowResolutionDataSync(
 			return [];
 		}
 	}
-	
+
 	/// <summary>
 	/// Gets historical SDTs for a device group and all parent groups up to root.
 	/// MS-21395: Helper method to traverse the device group hierarchy with caching.
@@ -1605,7 +1612,7 @@ internal class LowResolutionDataSync(
 		CancellationToken cancellationToken)
 	{
 		var sdts = new List<ScheduledDownTimeHistory>();
-		
+
 		try
 		{
 			// Get SDTs for current group (cached)
@@ -1617,9 +1624,9 @@ internal class LowResolutionDataSync(
 						deviceGroupId,
 						cancellationToken)
 					.ConfigureAwait(false);
-				
+
 				sdtCache[groupCacheKey] = groupSdts;
-				
+
 				logger.LogDebug(
 					"Retrieved and cached DeviceGroup SDTs for DeviceGroup ID {DeviceGroupId} (cache miss)",
 					deviceGroupId);
@@ -1638,7 +1645,7 @@ internal class LowResolutionDataSync(
 			logger.LogError("Error retrieving SDTs for device group ID {DeviceGroupId}. Stopping traversal. Failure: {Message}", deviceGroupId, ex.Message);
 			return sdts;
 		}
-		
+
 		// Traverse up to root (parentId = 1)
 		while (deviceGroupId != 1)
 		{
@@ -1651,14 +1658,14 @@ internal class LowResolutionDataSync(
 						deviceGroupId,
 						cancellationToken)
 					.ConfigureAwait(false);
-				
+
 				if (deviceGroup == null || deviceGroup.ParentId == deviceGroupId)
 				{
 					break; // Avoid infinite loop
 				}
-				
+
 				deviceGroupId = deviceGroup.ParentId;
-				
+
 				// Get parent group SDTs (cached)
 				var parentGroupCacheKey = $"DeviceGroup_{deviceGroupId}";
 				if (!sdtCache.TryGetValue(parentGroupCacheKey, out var parentSdts))
@@ -1668,9 +1675,9 @@ internal class LowResolutionDataSync(
 							deviceGroupId,
 							cancellationToken)
 						.ConfigureAwait(false);
-					
+
 					sdtCache[parentGroupCacheKey] = parentSdts;
-					
+
 					logger.LogDebug(
 						"Retrieved and cached DeviceGroup SDTs for parent DeviceGroup ID {DeviceGroupId} (cache miss)",
 						deviceGroupId);
@@ -1681,7 +1688,7 @@ internal class LowResolutionDataSync(
 						"Using cached DeviceGroup SDTs for parent DeviceGroup ID {DeviceGroupId} (cache hit)",
 						deviceGroupId);
 				}
-				
+
 				sdts.AddRange(parentSdts);
 			}
 			catch (Exception ex)

@@ -11,7 +11,7 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor API Datamart</PackageTags>
 		<PackageReleaseNotes>
-			Configuration now supports "ExcludeSdtPeriod" to exclude periods of SDT from the time series data aggregations.
+			The TimeSeriesAggregations table now does not store Infinity values if the values are indeed Infinity or NaN, but uses null instead.
 		</PackageReleaseNotes>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
