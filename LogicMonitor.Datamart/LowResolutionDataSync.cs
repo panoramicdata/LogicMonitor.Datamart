@@ -469,11 +469,6 @@ internal class LowResolutionDataSync(
 			var floorValue = values[floorIndex];
 			var ceilValue = values[ceilIndex];
 
-			if (double.IsInfinity(floorValue) || double.IsInfinity(ceilValue))
-			{
-				return null;
-			}
-
 			return floorValue + ((index - floorIndex) * (ceilValue - floorValue));
 		}
 	}
