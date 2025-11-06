@@ -2726,6 +2726,9 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
                     b.Property<int?>("CriticalCount")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("CriticalSdtCount")
+                        .HasColumnType("integer");
+
                     b.Property<int>("DataCount")
                         .HasColumnType("integer");
 
@@ -2733,6 +2736,9 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
                         .HasColumnType("uuid");
 
                     b.Property<int?>("ErrorCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ErrorSdtCount")
                         .HasColumnType("integer");
 
                     b.Property<double?>("First")
@@ -2759,6 +2765,9 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
                     b.Property<int?>("NormalCount")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("NormalOrSdtCount")
+                        .HasColumnType("integer");
+
                     b.Property<DateTimeOffset>("PeriodEnd")
                         .HasColumnType("timestamp with time zone");
 
@@ -2772,6 +2781,9 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
                         .HasColumnType("double precision");
 
                     b.Property<int?>("WarningCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("WarningSdtCount")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");

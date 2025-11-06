@@ -522,7 +522,8 @@ internal class LowResolutionDataSync(
 
 				// MS-21395: Cache for Device and DeviceGroup SDTs to reduce API calls
 				// Key format: "Device_{deviceId}" or "DeviceGroup_{groupId}"
-				var sdtCache = new Dictionary<string, List<ScheduledDownTimeHistory>>();
+				// Typical size: 1 device + 1-5 device groups = 2-6 entries
+				var sdtCache = new Dictionary<string, List<ScheduledDownTimeHistory>>(capacity: 8);
 
 				foreach (var databaseDeviceDataSourceInstanceDataPoint in databaseDeviceDataSourceInstanceDataPointGroup)
 				{
@@ -739,6 +740,7 @@ internal class LowResolutionDataSync(
 	/// <summary>
 	/// Creates a TimeSeriesDataAggregationStoreItem from graph data.
 	/// MS-21395: Supports excluding SDT (Scheduled Down Time) periods from aggregations when excludeStdPeriods is true.
+	/// MS-21396: Always retrieves SDT data for new SDT-aware alert level count columns.
 	/// </summary>
 	internal static async Task<TimeSeriesDataAggregationStoreItem?> GetTimeSeriesDataAggregationStoreItem(
 		DatamartClient datamartClient,
@@ -813,68 +815,54 @@ internal class LowResolutionDataSync(
 					})];
 			}
 
-			// MS-21395: Transform paired data into TimeSeriesDataPoint structure with SDT information
-			List<TimeSeriesDataPoint> timeSeriesDataPoints;
+			// MS-21395 & MS-21396: ALWAYS get SDT data (needed for new SDT count columns in MS-21396)
+			logger.LogDebug(
+				"Retrieving SDT periods for DeviceDataSourceInstanceDataPointId {DeviceDataSourceInstanceDataPointId} ({Start:yyyy-MM-dd HH:mm:ss} .. {End:yyyy-MM-dd HH:mm:ss})...",
+				databaseDeviceDataSourceInstanceDataPoint.Id,
+				startDateTimeUtc,
+				endDateTimeUtc);
 
-			if (excludeStdPeriods)
-			{
-				logger.LogDebug(
-					"Excluding SDT periods for DeviceDataSourceInstanceDataPointId {DeviceDataSourceInstanceDataPointId} ({Start:yyyy-MM-dd HH:mm:ss} .. {End:yyyy-MM-dd HH:mm:ss})...",
-					databaseDeviceDataSourceInstanceDataPoint.Id,
+			var sdtPeriods =
+				await GetHistoricalSdtPeriodsAsync(
+					datamartClient,
+					deviceNotTracked,
+					databaseDeviceDataSourceInstanceDataPoint.DeviceDataSourceInstance,
 					startDateTimeUtc,
-					endDateTimeUtc);
+					endDateTimeUtc,
+					sdtCache,
+					logger,
+					cancellationToken)
+				.ConfigureAwait(false);
 
-				// Get SDT periods only if we need to exclude them (with caching)
-				var sdtPeriods =
-					await GetHistoricalSdtPeriodsAsync(
-						datamartClient,
-						deviceNotTracked,
-						databaseDeviceDataSourceInstanceDataPoint.DeviceDataSourceInstance,
-						startDateTimeUtc,
-						endDateTimeUtc,
-						sdtCache,
-						logger,
-						cancellationToken)
-					.ConfigureAwait(false);
+			if (sdtPeriods == null)
+			{
+				logger.LogWarning(
+					"SDT retrieval failed for DeviceDataSourceInstanceDataPointId {DeviceDataSourceInstanceDataPointId}. " +
+					"Setting NormalOrSdtCount, WarningSdtCount, ErrorSdtCount and CriticalSdtCount columns to null.",
+					databaseDeviceDataSourceInstanceDataPoint.Id);
+			}
 
-				timeSeriesDataPoints = [];
+			// MS-21395 & MS-21396: Build timeSeriesDataPoints with SDT information (always needed for MS-21396)
+			var timeSeriesDataPoints = new List<TimeSeriesDataPoint>();
 
-				foreach (var (timestamp, value) in pairedData)
+			foreach (var (timestamp, value) in pairedData)
+			{
+				// Check if timestamp falls within any SDT period
+				var isInSdt = sdtPeriods?.Any(sdt =>
+					timestamp >= sdt.StartTimestampMs &&
+					timestamp <= sdt.EndTimestampMs) ?? false;
+
+				timeSeriesDataPoints.Add(new TimeSeriesDataPoint
 				{
-					// Check if timestamp falls within any SDT period
-					var isInSdt = sdtPeriods.Any(sdt =>
-						timestamp >= sdt.StartTimestampMs &&
-						timestamp <= sdt.EndTimestampMs);
-
-					timeSeriesDataPoints.Add(new TimeSeriesDataPoint
-					{
-						IsInSdt = isInSdt,
-						Timestamp = timestamp,
-						Value = value
-					});
-				}
-			}
-			else
-			{
-				logger.LogDebug(
-					"Skipping SDT exclusion for DeviceDataSourceInstanceDataPointId {DeviceDataSourceInstanceDataPointId} ({Start:yyyy-MM-dd HH:mm:ss} .. {End:yyyy-MM-dd HH:mm:ss})...",
-					databaseDeviceDataSourceInstanceDataPoint.Id,
-					startDateTimeUtc,
-					endDateTimeUtc);
-
-				// Performance optimization: Skip SDT checking entirely when not needed
-				timeSeriesDataPoints = [.. pairedData
-					.Select(pair => new TimeSeriesDataPoint
-					{
-						Value = pair.value,
-						Timestamp = pair.timestamp,
-						IsInSdt = false
-					})];
+					IsInSdt = isInSdt,
+					Timestamp = timestamp,
+					Value = value
+				});
 			}
 
-			// MS-21395: Filter out SDT periods when configured
+			// MS-21395: Filter out SDT periods when configured (for existing aggregations only)
 			var effectiveDataPoints = excludeStdPeriods
-				? timeSeriesDataPoints.Where(dp => !dp.IsInSdt).ToList()
+				? [.. timeSeriesDataPoints.Where(dp => !dp.IsInSdt)]
 				: timeSeriesDataPoints;
 
 			// Extract values for calculations
@@ -931,7 +919,30 @@ internal class LowResolutionDataSync(
 					CountAlertLevel.Critical
 				),
 
-				// MS-21394 DataMagic: PercentUpTime availability calculation should calculate downtime based on up-time after no data
+				// MS-21396 New columns to support alert levels taking into account SDT
+				// These columns ALWAYS use the full timeSeriesDataPoints (independent of excludeSdtPeriods)
+				// They will be NULL if the SDT retrieval failed
+				NormalOrSdtCount = sdtPeriods == null ? null : CountAtAlertLevelUseSdt(
+					timeSeriesDataPoints,
+					dataPointStoreItemNotTracked.GlobalAlertExpression,
+					CountAlertLevel.Normal),
+
+				WarningSdtCount = sdtPeriods == null ? null : CountAtAlertLevelUseSdt(
+					timeSeriesDataPoints,
+					dataPointStoreItemNotTracked.GlobalAlertExpression,
+					CountAlertLevel.Warning),
+
+				ErrorSdtCount = sdtPeriods == null ? null : CountAtAlertLevelUseSdt(
+					timeSeriesDataPoints,
+					dataPointStoreItemNotTracked.GlobalAlertExpression,
+					CountAlertLevel.Error),
+
+				CriticalSdtCount = sdtPeriods == null ? null : CountAtAlertLevelUseSdt(
+					timeSeriesDataPoints,
+					dataPointStoreItemNotTracked.GlobalAlertExpression,
+					CountAlertLevel.Critical),
+
+				// MS-21394 PercentUpTime availability calculation should calculate downtime based on up-time after no data
 				AvailabilityPercent2 = CalculatePercentageAvailabilityNew(
 					effectiveValues,
 					dataPointStoreItemNotTracked.PercentageAvailabilityCalculation
@@ -1187,6 +1198,219 @@ internal class LowResolutionDataSync(
 	}
 
 	/// <summary>
+	/// Counts the number of data points at a specific alert level, considering SDT periods.
+	/// </summary>
+	/// <param name="timeSeriesDataPoints">The time series data points including SDT information.</param>
+	/// <param name="effectiveAlertExpression">The effective alert expression.</param>
+	/// <param name="countAtAlertLevel">The alert level to count.</param>
+	/// <returns>The count of data points at the specified alert level.</returns>
+	/// <exception cref="ArgumentException">Thrown when the alert expression is invalid.</exception>
+	private static int? CountAtAlertLevelUseSdt(
+		List<TimeSeriesDataPoint> timeSeriesDataPoints,
+		string effectiveAlertExpression,
+		CountAlertLevel countAtAlertLevel)
+	{
+		// Handle empty or null alert expression
+		if (string.IsNullOrEmpty(effectiveAlertExpression))
+		{
+			// For Normal: count all points with values OR in SDT
+			// For other levels: return 0 (no thresholds defined)
+			return countAtAlertLevel == CountAlertLevel.Normal
+				? timeSeriesDataPoints.Count(dp => dp.Value.HasValue || dp.IsInSdt)
+				: 0;
+		}
+
+		// Parse the alert expression - same format as CountAtAlertLevel
+		// Format: "> 1 2 3" where operator, warning, error (optional), critical (optional)
+		var parts = effectiveAlertExpression.Split(' ');
+		if (parts.Length == 0)
+		{
+			return countAtAlertLevel == CountAlertLevel.Normal
+				? timeSeriesDataPoints.Count(dp => dp.Value.HasValue || dp.IsInSdt)
+				: 0;
+		}
+
+		var symbol = parts[0];
+
+		var alertLevels = parts
+			.Skip(1)
+			.Where(x => double.TryParse(x, out var _))
+			.Select(double.Parse)
+			.ToArray();
+
+		// Extract threshold levels
+		var criticalLevel = alertLevels.Length == 3 ? alertLevels[2] : (double?)null;
+		var errorLevel = alertLevels.Length >= 2 ? alertLevels[1] : (double?)null;
+		var warningLevel = alertLevels.Length >= 1 ? alertLevels[0] : (double?)null;
+
+		// Count based on alert level
+		switch (countAtAlertLevel)
+		{
+			case CountAlertLevel.Critical:
+				// Count points that are at Critical level AND in SDT
+				if (criticalLevel == null)
+				{
+					return 0;
+				}
+
+				return symbol switch
+				{
+					">" => timeSeriesDataPoints.Count(dp => dp.Value.HasValue && dp.IsInSdt && dp.Value.Value > criticalLevel),
+					">=" => timeSeriesDataPoints.Count(dp => dp.Value.HasValue && dp.IsInSdt && dp.Value.Value >= criticalLevel),
+					"<" => timeSeriesDataPoints.Count(dp => dp.Value.HasValue && dp.IsInSdt && dp.Value.Value < criticalLevel),
+					"<=" => timeSeriesDataPoints.Count(dp => dp.Value.HasValue && dp.IsInSdt && dp.Value.Value <= criticalLevel),
+					"=" => timeSeriesDataPoints.Count(dp => dp.Value.HasValue && dp.IsInSdt && dp.Value.Value == criticalLevel),
+					"!=" => timeSeriesDataPoints.Count(dp => dp.Value.HasValue && dp.IsInSdt && dp.Value.Value != criticalLevel),
+					_ => null,
+				};
+
+			case CountAlertLevel.Error:
+				// Count points that are at Error level (not Critical) AND in SDT
+				if (errorLevel == null)
+				{
+					return 0;
+				}
+
+				return symbol switch
+				{
+					">" => timeSeriesDataPoints.Count(dp =>
+						dp.Value.HasValue &&
+						dp.IsInSdt &&
+						(criticalLevel == null || dp.Value.Value <= criticalLevel) &&
+						dp.Value.Value > errorLevel),
+					">=" => timeSeriesDataPoints.Count(dp =>
+						dp.Value.HasValue &&
+						dp.IsInSdt &&
+						(criticalLevel == null || dp.Value.Value < criticalLevel) &&
+						dp.Value.Value >= errorLevel),
+					"<" => timeSeriesDataPoints.Count(dp =>
+						dp.Value.HasValue &&
+						dp.IsInSdt &&
+						(criticalLevel == null || dp.Value.Value >= criticalLevel) &&
+						dp.Value.Value < errorLevel),
+					"<=" => timeSeriesDataPoints.Count(dp =>
+						dp.Value.HasValue &&
+						dp.IsInSdt &&
+						(criticalLevel == null || dp.Value.Value > criticalLevel) &&
+						dp.Value.Value <= errorLevel),
+					"=" => timeSeriesDataPoints.Count(dp =>
+						dp.Value.HasValue &&
+						dp.IsInSdt &&
+						(criticalLevel == null || dp.Value.Value != criticalLevel) &&
+						dp.Value.Value == errorLevel),
+					"!=" => timeSeriesDataPoints.Count(dp =>
+						dp.Value.HasValue &&
+						dp.IsInSdt &&
+						(criticalLevel == null || dp.Value.Value == criticalLevel) &&
+						dp.Value.Value != errorLevel),
+					_ => null,
+				};
+
+			case CountAlertLevel.Warning:
+				// Count points that are at Warning level (not Error or Critical) AND in SDT
+				if (warningLevel == null)
+				{
+					return 0;
+				}
+
+				return symbol switch
+				{
+					">" => timeSeriesDataPoints.Count(dp =>
+						dp.Value.HasValue &&
+						dp.IsInSdt &&
+						(criticalLevel == null || dp.Value.Value <= criticalLevel) &&
+						(errorLevel == null || dp.Value.Value <= errorLevel) &&
+						dp.Value.Value > warningLevel),
+					">=" => timeSeriesDataPoints.Count(dp =>
+						dp.Value.HasValue &&
+						dp.IsInSdt &&
+						(criticalLevel == null || dp.Value.Value < criticalLevel) &&
+						(errorLevel == null || dp.Value.Value < errorLevel) &&
+						dp.Value.Value >= warningLevel),
+					"<" => timeSeriesDataPoints.Count(dp =>
+						dp.Value.HasValue &&
+						dp.IsInSdt &&
+						(criticalLevel == null || dp.Value.Value >= criticalLevel) &&
+						(errorLevel == null || dp.Value.Value >= errorLevel) &&
+						dp.Value.Value < warningLevel),
+					"<=" => timeSeriesDataPoints.Count(dp =>
+						dp.Value.HasValue &&
+						dp.IsInSdt &&
+						(criticalLevel == null || dp.Value.Value > criticalLevel) &&
+						(errorLevel == null || dp.Value.Value > errorLevel) &&
+						dp.Value.Value <= warningLevel),
+					"=" => timeSeriesDataPoints.Count(dp =>
+						dp.Value.HasValue &&
+						dp.IsInSdt &&
+						(criticalLevel == null || dp.Value.Value != criticalLevel) &&
+						(errorLevel == null || dp.Value.Value != errorLevel) &&
+						dp.Value.Value == warningLevel),
+					"!=" => timeSeriesDataPoints.Count(dp =>
+						dp.Value.HasValue &&
+						dp.IsInSdt &&
+						(criticalLevel == null || dp.Value.Value == criticalLevel) &&
+						(errorLevel == null || dp.Value.Value == errorLevel) &&
+						dp.Value.Value != warningLevel),
+					_ => null,
+				};
+
+			case CountAlertLevel.Normal:
+				// Special case: Count points that are Normal (not alerting) OR in SDT
+				// This provides a "healthy or maintained" count
+				if (alertLevels.Length == 0)
+				{
+					// No thresholds defined - all points with values or in SDT are considered normal
+					return timeSeriesDataPoints.Count(dp => dp.Value.HasValue || dp.IsInSdt);
+				}
+
+				return symbol switch
+				{
+					">" => timeSeriesDataPoints.Count(dp =>
+						// Point is in SDT (regardless of value) OR is Normal (has value and not alerting)
+						dp.IsInSdt ||
+						(dp.Value.HasValue &&
+						 (criticalLevel == null || dp.Value.Value <= criticalLevel) &&
+						 (errorLevel == null || dp.Value.Value <= errorLevel) &&
+						 (warningLevel == null || dp.Value.Value <= warningLevel))),
+					">=" => timeSeriesDataPoints.Count(dp =>
+						dp.IsInSdt ||
+						(dp.Value.HasValue &&
+						 (criticalLevel == null || dp.Value.Value < criticalLevel) &&
+						 (errorLevel == null || dp.Value.Value < errorLevel) &&
+						 (warningLevel == null || dp.Value.Value < warningLevel))),
+					"<" => timeSeriesDataPoints.Count(dp =>
+						dp.IsInSdt ||
+						(dp.Value.HasValue &&
+						 (criticalLevel == null || dp.Value.Value >= criticalLevel) &&
+						 (errorLevel == null || dp.Value.Value >= errorLevel) &&
+						 (warningLevel == null || dp.Value.Value >= warningLevel))),
+					"<=" => timeSeriesDataPoints.Count(dp =>
+						dp.IsInSdt ||
+						(dp.Value.HasValue &&
+						 (criticalLevel == null || dp.Value.Value > criticalLevel) &&
+						 (errorLevel == null || dp.Value.Value > errorLevel) &&
+						 (warningLevel == null || dp.Value.Value > warningLevel))),
+					"=" => timeSeriesDataPoints.Count(dp =>
+						dp.IsInSdt ||
+						(dp.Value.HasValue &&
+						 (criticalLevel == null || dp.Value.Value != criticalLevel) &&
+						 (errorLevel == null || dp.Value.Value != errorLevel) &&
+						 (warningLevel == null || dp.Value.Value != warningLevel))),
+					"!=" => timeSeriesDataPoints.Count(dp =>
+						dp.IsInSdt ||
+						(dp.Value.HasValue &&
+						 (criticalLevel == null || dp.Value.Value == criticalLevel) &&
+						 (errorLevel == null || dp.Value.Value == errorLevel) &&
+						 (warningLevel == null || dp.Value.Value == warningLevel))),
+					_ => null,
+				};
+
+			default:
+				throw new ArgumentException($"Unexpected {nameof(CountAlertLevel)} '{countAtAlertLevel}'");
+		}
+	}
+
+	/// <summary>
 	/// TODO - implement this
 	/// </summary>
 	/// <param name="data"></param>
@@ -1431,7 +1655,7 @@ internal class LowResolutionDataSync(
 	/// <param name="sdtCache">Cache for Device and DeviceGroup SDTs</param>
 	/// <param name="cancellationToken">Cancellation token</param>
 	/// <returns>List of merged, non-overlapping SDT periods as (start timestamp in ms, end timestamp in ms) tuples</returns>
-	private async static Task<List<(long StartTimestampMs, long EndTimestampMs)>> GetHistoricalSdtPeriodsAsync(
+	private async static Task<List<(long StartTimestampMs, long EndTimestampMs)>?> GetHistoricalSdtPeriodsAsync(
 		DatamartClient datamartClient,
 		ResourceStoreItem deviceNotTracked,
 		ResourceDataSourceInstanceStoreItem? resourceDataSourceInstanceStoreItem,
@@ -1584,10 +1808,35 @@ internal class LowResolutionDataSync(
 
 			return mergedSdtPeriods;
 		}
+		catch (LogicMonitorApiException ex)
+		{
+			logger.LogError(
+				ex,
+				"LogicMonitor API error retrieving SDTs for device ID {DeviceId}. Returning null. Failure: {Message}",
+				deviceId,
+				ex.Message);
+
+			return null;    // Indicates failure
+		}
+		catch (TimeoutException ex)
+		{
+			logger.LogError(
+				ex,
+				"Timeout error retrieving SDTs for device ID {DeviceId}. Returning null. Failure: {Message}",
+				deviceId,
+				ex.Message);
+
+			return null;    // Indicates failure
+		}
 		catch (Exception ex)
 		{
-			logger.LogError("ex, Error retrieving SDTs for device ID {DeviceId}. Returning empty SDT list. Failure: {Message}", deviceId, ex.Message);
-			return [];
+			logger.LogError(
+				ex,
+				"Error retrieving SDTs for device ID {DeviceId}. Returning null. Failure: {Message}",
+				deviceId,
+				ex.Message);
+
+			return null;	// Indicates failure
 		}
 	}
 
@@ -1608,90 +1857,75 @@ internal class LowResolutionDataSync(
 	{
 		var sdts = new List<ScheduledDownTimeHistory>();
 
-		try
+		// Get SDTs for current group (cached)
+		var groupCacheKey = $"DeviceGroup_{deviceGroupId}";
+		if (!sdtCache.TryGetValue(groupCacheKey, out var groupSdts))
 		{
-			// Get SDTs for current group (cached)
-			var groupCacheKey = $"DeviceGroup_{deviceGroupId}";
-			if (!sdtCache.TryGetValue(groupCacheKey, out var groupSdts))
+			groupSdts = await datamartClient
+				.GetResourceGroupHistorySdtsAsync(
+					deviceGroupId,
+					cancellationToken)
+				.ConfigureAwait(false);
+
+			sdtCache[groupCacheKey] = groupSdts;
+
+			logger.LogDebug(
+				"Retrieved and cached DeviceGroup SDTs for DeviceGroup ID {DeviceGroupId} (cache miss)",
+				deviceGroupId);
+		}
+		else
+		{
+			logger.LogDebug(
+				"Using cached DeviceGroup SDTs for DeviceGroup ID {DeviceGroupId} (cache hit)",
+				deviceGroupId);
+		}
+
+		sdts.AddRange(groupSdts);
+
+		// Traverse up to root (parentId = 1)
+		while (deviceGroupId != 1)
+		{
+			// Fetch the device group to get parent ID
+			var deviceGroup =
+				await datamartClient
+					.GetAsync<ResourceGroup>(
+					deviceGroupId,
+					cancellationToken)
+				.ConfigureAwait(false);
+
+			if (deviceGroup == null || deviceGroup.ParentId == deviceGroupId)
 			{
-				groupSdts = await datamartClient
+				break; // Avoid infinite loop
+			}
+
+			deviceGroupId = deviceGroup.ParentId;
+
+			// Get parent group SDTs (cached)
+			var parentGroupCacheKey = $"DeviceGroup_{deviceGroupId}";
+			if (!sdtCache.TryGetValue(parentGroupCacheKey, out var parentSdts))
+			{
+				parentSdts = await datamartClient
 					.GetResourceGroupHistorySdtsAsync(
 						deviceGroupId,
 						cancellationToken)
 					.ConfigureAwait(false);
 
-				sdtCache[groupCacheKey] = groupSdts;
+				sdtCache[parentGroupCacheKey] = parentSdts;
 
 				logger.LogDebug(
-					"Retrieved and cached DeviceGroup SDTs for DeviceGroup ID {DeviceGroupId} (cache miss)",
+					"Retrieved and cached DeviceGroup SDTs for parent DeviceGroup ID {DeviceGroupId} (cache miss)",
 					deviceGroupId);
 			}
 			else
 			{
 				logger.LogDebug(
-					"Using cached DeviceGroup SDTs for DeviceGroup ID {DeviceGroupId} (cache hit)",
+					"Using cached DeviceGroup SDTs for parent DeviceGroup ID {DeviceGroupId} (cache hit)",
 					deviceGroupId);
 			}
 
-			sdts.AddRange(groupSdts);
-		}
-		catch (Exception ex)
-		{
-			logger.LogError("Error retrieving SDTs for device group ID {DeviceGroupId}. Stopping traversal. Failure: {Message}", deviceGroupId, ex.Message);
-			return sdts;
+			sdts.AddRange(parentSdts);
 		}
 
-		// Traverse up to root (parentId = 1)
-		while (deviceGroupId != 1)
-		{
-			try
-			{
-				// Fetch the device group to get parent ID
-				var deviceGroup =
-					await datamartClient
-						.GetAsync<ResourceGroup>(
-						deviceGroupId,
-						cancellationToken)
-					.ConfigureAwait(false);
-
-				if (deviceGroup == null || deviceGroup.ParentId == deviceGroupId)
-				{
-					break; // Avoid infinite loop
-				}
-
-				deviceGroupId = deviceGroup.ParentId;
-
-				// Get parent group SDTs (cached)
-				var parentGroupCacheKey = $"DeviceGroup_{deviceGroupId}";
-				if (!sdtCache.TryGetValue(parentGroupCacheKey, out var parentSdts))
-				{
-					parentSdts = await datamartClient
-						.GetResourceGroupHistorySdtsAsync(
-							deviceGroupId,
-							cancellationToken)
-						.ConfigureAwait(false);
-
-					sdtCache[parentGroupCacheKey] = parentSdts;
-
-					logger.LogDebug(
-						"Retrieved and cached DeviceGroup SDTs for parent DeviceGroup ID {DeviceGroupId} (cache miss)",
-						deviceGroupId);
-				}
-				else
-				{
-					logger.LogDebug(
-						"Using cached DeviceGroup SDTs for parent DeviceGroup ID {DeviceGroupId} (cache hit)",
-						deviceGroupId);
-				}
-
-				sdts.AddRange(parentSdts);
-			}
-			catch (Exception ex)
-			{
-				logger.LogError("Error retrieving SDTs for device group ID {DeviceGroupId}. Stopping traversal. Error: {Message}", deviceGroupId, ex.Message);
-				break;
-			}
-		}
 		return sdts;
 	}
 

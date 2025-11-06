@@ -11,7 +11,7 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor API Datamart</PackageTags>
 		<PackageReleaseNotes>
-			The TimeSeriesAggregations table now does not store Infinity values if the values are indeed Infinity or NaN, but uses null instead.
+			Updated the `TimeSeriesDataAggregations` table to include new columns for SDT-aware alert level counts: `NormalOrSdtCount`, `WarningSdtCount`, `ErrorSdtCount`, and `CriticalSdtCount`.
 		</PackageReleaseNotes>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>

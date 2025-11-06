@@ -57,4 +57,24 @@ public class TimeSeriesDataAggregationStoreItem
 	public int? ErrorCount { get; set; }
 
 	public int? CriticalCount { get; set; }
+
+	/// <summary>
+	/// MS-21396: this is the total of the number of polls in the aggregation period that are in a normal state (not alerting) or during a period of SDT (service down time)
+	/// </summary>
+	public int? NormalOrSdtCount { get; set; }
+
+	/// <summary>
+	/// MS-21396: this is the total of the number of polls in the aggregation period that are in a warning state only and are in SDT (service down time)
+	/// </summary>
+	public int? WarningSdtCount { get; set; }
+
+	/// <summary>
+	/// MS-21396: this is the total of the number of polls in the aggregation period that are in an error state only and are in SDT (service down time)
+	/// </summary>
+	public int? ErrorSdtCount { get; set; }
+
+	/// <summary>
+	/// MS-21396 : this is the total of the number of polls in the aggregation period that are in a critical state only and are in SDT (service down time)
+	/// </summary>
+	public int? CriticalSdtCount { get; set; }
 }
