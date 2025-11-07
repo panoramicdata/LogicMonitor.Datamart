@@ -67,7 +67,7 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 			sdtCache,
 			LoggerFactory.CreateLogger<DataTests>(),
 			default
-		).ConfigureAwait(false);
+		);
 
 		result.Should().NotBeNull();
 		result!.PeriodStart.Should().Be(startDateTimeUtc);

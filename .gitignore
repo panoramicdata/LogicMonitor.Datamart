@@ -344,3 +344,4 @@ healthchecksdb
 appsettings.json
 /LogicMonitor.Datamart.Cli/Properties/launchSettings.json
 /LogicMonitor.Datamart/nuget-api-key.txt
+/nuget-key.txt

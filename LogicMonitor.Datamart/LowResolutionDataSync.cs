@@ -1164,7 +1164,9 @@ internal class LowResolutionDataSync(
 			return null;
 		}
 
-		values.Reverse();
+		// Reverse the array to process from oldest to newest
+		Array.Reverse(values);
+
 		var previousDoubleValue = double.NaN;
 		var upTimeCount = 0;
 		var downTimeCount = 0;
