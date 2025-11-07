@@ -21,10 +21,10 @@
 
 .EXAMPLE
     .\publish.ps1
-
+    
 .EXAMPLE
-    .\publish.ps1 -ApiKey "your-api-key-here"
-
+  .\publish.ps1 -ApiKey "your-api-key-here"
+    
 .EXAMPLE
     .\publish.ps1 -SkipTests -Configuration Release
 #>
@@ -33,14 +33,14 @@
 param(
     [Parameter(Mandatory = $false)]
     [string]$ApiKey,
-
+    
     [Parameter(Mandatory = $false)]
     [switch]$SkipTests,
-
+    
     [Parameter(Mandatory = $false)]
     [ValidateSet("Debug", "Release")]
     [string]$Configuration = "Release",
-
+    
     [Parameter(Mandatory = $false)]
     [string]$Source = "https://api.nuget.org/v3/index.json"
 )
@@ -69,18 +69,18 @@ if ([string]::IsNullOrWhiteSpace($ApiKey)) {
     $ApiKeyFile = Join-Path $SolutionRoot "nuget-key.txt"
     if (Test-Path $ApiKeyFile) {
         Write-Host "Reading API key from nuget-key.txt..." -ForegroundColor Yellow
-        $ApiKey = (Get-Content $ApiKeyFile -Raw).Trim()
-
+   $ApiKey = (Get-Content $ApiKeyFile -Raw).Trim()
+ 
         if ([string]::IsNullOrWhiteSpace($ApiKey)) {
-     Write-Error "API key file exists but is empty: $ApiKeyFile"
-     exit 1
-      }
+         Write-Error "API key file exists but is empty: $ApiKeyFile"
+      exit 1
+}
     }
     else {
-      Write-Error "No API key provided and nuget-key.txt file not found in solution root."
+        Write-Error "No API key provided and nuget-key.txt file not found in solution root."
         Write-Host "Please either:" -ForegroundColor Yellow
         Write-Host "  1. Create a nuget-key.txt file in the solution root with your NuGet API key" -ForegroundColor Yellow
-      Write-Host "  2. Pass the API key using the -ApiKey parameter" -ForegroundColor Yellow
+   Write-Host "  2. Pass the API key using the -ApiKey parameter" -ForegroundColor Yellow
         exit 1
     }
 }
@@ -89,6 +89,11 @@ if ([string]::IsNullOrWhiteSpace($ApiKey)) {
 Write-Host "Cleaning previous builds..." -ForegroundColor Green
 if (Test-Path $OutputPath) {
     Remove-Item $OutputPath -Recurse -Force
+}
+
+dotnet clean $ProjectPath --configuration $Configuration --verbosity quiet
+if ($LASTEXITCODE -ne 0) {
+    Write-Warning "Clean command returned non-zero exit code, but continuing..."
 }
 
 # Restore dependencies
@@ -103,16 +108,16 @@ if ($LASTEXITCODE -ne 0) {
 if (-not $SkipTests) {
     Write-Host "Running tests..." -ForegroundColor Green
     $TestProjectPath = Join-Path $SolutionRoot "LogicMonitor.Datamart.Test" "LogicMonitor.Datamart.Test.csproj"
-
+    
     if (Test-Path $TestProjectPath) {
- dotnet test $TestProjectPath --configuration $Configuration --no-restore
+        dotnet test $TestProjectPath --configuration $Configuration --no-restore
         if ($LASTEXITCODE -ne 0) {
-        Write-Error "Tests failed. Aborting publish."
-            exit $LASTEXITCODE
+         Write-Error "Tests failed. Aborting publish."
+exit $LASTEXITCODE
         }
     }
     else {
-        Write-Warning "Test project not found, skipping tests."
+ Write-Warning "Test project not found, skipping tests."
     }
 }
 else {
@@ -124,22 +129,30 @@ Write-Host "Building project in $Configuration configuration..." -ForegroundColo
 dotnet build $ProjectPath --configuration $Configuration --no-restore
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Build failed"
-    exit $LASTEXITCODE
+  exit $LASTEXITCODE
 }
 
 # Pack the NuGet package
 Write-Host "Packing NuGet package..." -ForegroundColor Green
-dotnet pack $ProjectPath --configuration $Configuration --no-build --output $OutputPath
+# Use /p:PackageOutputPath to ensure package goes to our output folder
+dotnet pack $ProjectPath --configuration $Configuration --no-build --output $OutputPath /p:PackageOutputPath=$OutputPath
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Pack failed"
     exit $LASTEXITCODE
 }
 
 # Find the generated .nupkg file
-$NuGetPackages = Get-ChildItem -Path $OutputPath -Filter "*.nupkg" -Exclude "*.symbols.nupkg"
-if ($NuGetPackages.Count -eq 0) {
- Write-Error "No NuGet package found in $OutputPath"
-    exit 1
+$NuGetPackages = Get-ChildItem -Path $OutputPath -Filter "*.nupkg" -Exclude "*.symbols.nupkg" -ErrorAction SilentlyContinue
+if ($null -eq $NuGetPackages -or $NuGetPackages.Count -eq 0) {
+    # Try looking in the bin folder as fallback
+    $BinOutputPath = Join-Path $SolutionRoot "LogicMonitor.Datamart" "bin" $Configuration
+    Write-Host "No package found in $OutputPath, checking $BinOutputPath..." -ForegroundColor Yellow
+    $NuGetPackages = Get-ChildItem -Path $BinOutputPath -Filter "*.nupkg" -Exclude "*.symbols.nupkg" -Recurse -ErrorAction SilentlyContinue
+    
+ if ($null -eq $NuGetPackages -or $NuGetPackages.Count -eq 0) {
+        Write-Error "No NuGet package found in $OutputPath or $BinOutputPath"
+        exit 1
+    }
 }
 
 $PackageFile = $NuGetPackages[0]
