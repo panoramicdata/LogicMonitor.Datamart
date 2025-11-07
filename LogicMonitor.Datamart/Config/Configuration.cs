@@ -109,7 +109,7 @@ public class Configuration
 
 	public DateTime? FakeExecutionTime { get; set; }
 
-	public bool ExcludeSdtPeriods { get; set; } = false;
+	public bool ExcludeSdtPeriods { get; set; }
 
 	public void Validate()
 	{

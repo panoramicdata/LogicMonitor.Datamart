@@ -811,6 +811,7 @@ internal class LowResolutionDataSync(
 						{
 							calculatedValue = null;
 						}
+
 						return (ts, calculatedValue);
 					})];
 			}
@@ -1048,7 +1049,8 @@ internal class LowResolutionDataSync(
 			return null;
 		}
 
-		var reversedValues = values.ToArray().Reverse();
+		var reversedValues = values.ToArray();
+		Array.Reverse(reversedValues);
 		//var previousButOneDoubleValue = double.NaN;
 		var previousDoubleValue = double.NaN;
 		var upTimeCount = 0;
@@ -1162,11 +1164,11 @@ internal class LowResolutionDataSync(
 			return null;
 		}
 
-		var reversedValues = values.Reverse();
+		values.Reverse();
 		var previousDoubleValue = double.NaN;
 		var upTimeCount = 0;
 		var downTimeCount = 0;
-		foreach (var value in reversedValues)
+		foreach (var value in values)
 		{
 			if (value is double doubleValue)
 			{
@@ -1836,7 +1838,7 @@ internal class LowResolutionDataSync(
 				deviceId,
 				ex.Message);
 
-			return null;	// Indicates failure
+			return null;    // Indicates failure
 		}
 	}
 
