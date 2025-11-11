@@ -142,12 +142,12 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # Find the generated .nupkg file
-$NuGetPackages = Get-ChildItem -Path $OutputPath -Filter "*.nupkg" -Exclude "*.symbols.nupkg" -ErrorAction SilentlyContinue
+$NuGetPackages = Get-ChildItem -Path $OutputPath -Filter "*.nupkg" -Exclude "*.symbols.nupkg" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending
 if ($null -eq $NuGetPackages -or $NuGetPackages.Count -eq 0) {
     # Try looking in the bin folder as fallback
     $BinOutputPath = Join-Path $SolutionRoot "LogicMonitor.Datamart" "bin" $Configuration
     Write-Host "No package found in $OutputPath, checking $BinOutputPath..." -ForegroundColor Yellow
-    $NuGetPackages = Get-ChildItem -Path $BinOutputPath -Filter "*.nupkg" -Exclude "*.symbols.nupkg" -Recurse -ErrorAction SilentlyContinue
+    $NuGetPackages = Get-ChildItem -Path $BinOutputPath -Filter "*.nupkg" -Exclude "*.symbols.nupkg" -Recurse -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending
     
  if ($null -eq $NuGetPackages -or $NuGetPackages.Count -eq 0) {
         Write-Error "No NuGet package found in $OutputPath or $BinOutputPath"
