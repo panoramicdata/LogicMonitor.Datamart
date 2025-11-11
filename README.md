@@ -8,6 +8,13 @@ The LogicMonitor Datamart creates a copy of major aspects of your LogicMonitor s
 - Audit log history
 - Time Series data aggregations
 
+## Requirements
+
+- **.NET 10.0** or later
+- **LogicMonitor Account** with API access
+- **Database Server** (PostgreSQL or SQL Server)
+- **Docker** (for containerized deployment)
+
 ## Support
 
 * Customers with an active project and available hours can request support via your project manager.
@@ -104,8 +111,20 @@ docker run -d --name lm_datamart_panoramicdata -p 5000:8080 -v C:\Users\david\Pr
 
 # For developers
 
-Developers can use the LogicMonitor.Datamart nuget package to create their own data mart.
-The package is available on nuget.org and is licensed under the MIT license.
+Developers can use the LogicMonitor.Datamart NuGet package to create their own data mart.
+The package is available on [nuget.org](https://www.nuget.org/packages/LogicMonitor.Datamart) and is licensed under the MIT license.
+
+## Installation
+
+```bash
+dotnet add package LogicMonitor.Datamart
+```
+
+## Version Information
+
+- **Current Version**: Targets .NET 10.0
+- Uses Entity Framework Core 10.0 (RC)
+- Supports both SQL Server and PostgreSQL databases
 
 # Contributors
 
