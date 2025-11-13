@@ -36,7 +36,7 @@
 		<PackageReference Include="PanoramicData.HealthChecks.Versions" Version="9.0.1" />
 		<PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.0" />
 		<PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0" />
-		<PackageReference Include="Serilog.Sinks.ApplicationInsights" Version="4.0.0" />
+		<PackageReference Include="Serilog.Sinks.ApplicationInsights" Version="4.1.0" />
 		<PackageReference Include="Serilog.Sinks.AzureAnalytics" Version="5.0.0" />
 		<PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
 		<PackageReference Include="Serilog.Sinks.ElasticSearch" Version="10.0.0" />
