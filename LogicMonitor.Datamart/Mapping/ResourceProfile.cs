@@ -221,6 +221,11 @@ public class ResourceProfile : Profile
 			.ForMember(
 				dest => dest.ResourceType,
 				opts => opts.Ignore())
+
+			.ForMember(
+				dest => dest.Type,
+				opts => opts.Ignore())
+
 			;
 	}
 }

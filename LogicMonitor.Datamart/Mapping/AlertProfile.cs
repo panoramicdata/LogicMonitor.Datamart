@@ -72,6 +72,7 @@ public class AlertProfile : Profile
 				.ForMember(
 					dest => dest.CustomColumn5,
 					opts => opts.Ignore())
+
 				.AfterMap<TruncateMappingAction<Alert, AlertStoreItem>>()
 					;
 
@@ -97,6 +98,9 @@ public class AlertProfile : Profile
 			.ForMember(dest => dest.MonitorObjectGroups, opts => opts.Ignore())
 			.ForMember(dest => dest.Sdt, opts => opts.Ignore())
 			.ForMember(dest => dest.SessionId, opts => opts.Ignore())
+			.ForMember(dest => dest.LastUpdatedOnMs, opts => opts.Ignore())
+			.ForMember(dest => dest.SdtIds, opts => opts.Ignore())
+			.ForMember(dest => dest.ThresholdMetadata, opts => opts.Ignore())
 			;
 	}
 }

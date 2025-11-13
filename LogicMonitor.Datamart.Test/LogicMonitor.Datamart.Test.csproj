@@ -8,6 +8,8 @@
 		<AnalysisMode>All</AnalysisMode>
 
 		<IsPackable>false</IsPackable>
+
+		<UserSecretsId>95bc8f2b-2071-495e-abe9-97f214270374</UserSecretsId>
 	</PropertyGroup>
 
 	<ItemGroup>

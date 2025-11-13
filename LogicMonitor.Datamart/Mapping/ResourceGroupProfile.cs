@@ -115,6 +115,20 @@ public class ResourceGroupProfile : Profile
 			.ForMember(
 				dest => dest.ResourceCount,
 				opts => opts.Ignore())
+
+			.ForMember(
+				dest => dest.OciResourceCount,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.OciRegionsInfo,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.OciTestResultCode,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.OciTestResult,
+				opts => opts.Ignore())
+
 			.IgnoreAllPropertiesWithAnInaccessibleSetter()
 			;
 	}
