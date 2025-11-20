@@ -1,6 +1,3 @@
-using Humanizer;
-using Humanizer.Localisation;
-
 namespace LogicMonitor.Datamart;
 
 internal abstract class LoopInterval(string name, ILoggerFactory loggerFactory)
@@ -48,9 +45,9 @@ internal abstract class LoopInterval(string name, ILoggerFactory loggerFactory)
 
 			stopwatch.Stop();
 			Logger.LogInformation(
-				"Finished {Name} in {StopwatchHumanized}.",
+				"Finished {Name} in {StopwatchHumanized} seconds.",
 				name,
-				stopwatch.Elapsed.Humanize(7, minUnit: TimeUnit.Second));
+				stopwatch.Elapsed.TotalSeconds);
 
 			// Are we repeating?
 			if (intervalMinutes == LoopIntervals.ExecuteOnce)
@@ -67,9 +64,9 @@ internal abstract class LoopInterval(string name, ILoggerFactory loggerFactory)
 			if (remainingTimeInInterval.TotalSeconds > 0)
 			{
 				Logger.LogInformation(
-					"Next {Name} will start in {RemainingTimeInInterval} at {StartTime}.",
+					"Next {Name} will start in {RemainingTimeInInterval} seconds at {StartTime}.",
 					name,
-					remainingTimeInInterval.Humanize(7, minUnit: TimeUnit.Second),
+					remainingTimeInInterval.TotalSeconds,
 					DateTime.UtcNow.Add(remainingTimeInInterval)
 					);
 				await Task.Delay(remainingTimeInInterval, cancellationToken).ConfigureAwait(false);
