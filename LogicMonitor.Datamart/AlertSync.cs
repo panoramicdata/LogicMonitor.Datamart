@@ -255,7 +255,11 @@ internal class AlertSync(
 
 					if (alertsToBulkInsert.Values.Count > 0)
 					{
-						await BulkInsertAlertsAsync(_datamartClient.DbContextOptions, [.. alertsToBulkInsert.Values]).ConfigureAwait(false);
+						await BulkInsertAlertsAsync(
+							_datamartClient.DbContextOptions,
+							[.. alertsToBulkInsert.Values],
+							CancellationToken.None // Don't cancel mid-write
+							).ConfigureAwait(false);
 						alertsToBulkInsert.Clear();
 					}
 					// Update the device
@@ -448,51 +452,38 @@ internal class AlertSync(
 			stopwatch.Elapsed.Seconds);
 	}
 
-	internal async Task BulkInsertAlertsAsync(DbContextOptions<Context> contextOptions, List<AlertStoreItem> alertStoreItems)
+	internal async Task BulkInsertAlertsAsync(
+		DbContextOptions<Context> contextOptions,
+		List<AlertStoreItem> alertStoreItems,
+		CancellationToken cancellationToken)
 	{
 		Logger.LogDebug("Bulk inserting {AlertStoreItemCount} alerts...", alertStoreItems.Count);
 
 		var stopwatch = Stopwatch.StartNew();
-		switch (_datamartClient.DatabaseType)
+
+		// Use batched AddRange for all database types
+		// Batch size of 1000 provides a good balance between memory usage and performance
+		const int BatchSize = 1000;
+		var totalBatches = (alertStoreItems.Count + BatchSize - 1) / BatchSize;
+
+		for (var batch = 0; batch < totalBatches; batch++)
 		{
-			case DatabaseType.SqlServer:
-				// Bulk insert
-				using (var context = new Context(contextOptions))
-				{
-					await context.BulkInsertAsync(
-						alertStoreItems,
-						new BulkConfig
-						{
-							BulkCopyTimeout = 0,
-							BatchSize = 10000,
-						},
-						n => Logger.LogDebug(
-							"Bulk inserted {ItemNumber}/{AlertStoreItemCount}",
-							(int)(n * alertStoreItems.Count),
-							alertStoreItems.Count))
-						.ConfigureAwait(false);
-				}
+			Logger.LogDebug(
+				"Bulk inserting batch {BatchNumber}/{TotalBatches} of up to {BatchSize} alerts...",
+				batch + 1,
+				totalBatches,
+				BatchSize);
 
-				break;
-			case DatabaseType.Postgres:
-			case DatabaseType.InMemory:
-				// Add and save in chunks to avoid over usage of memory. This can be done using proper bulk insert once the ef core libraries can be updated.
-				const int BatchSize = 1000;
-				for (var batch = 0; batch * BatchSize < alertStoreItems.Count; batch++)
-				{
-					Logger.LogDebug(
-						"Bulk inserting batch {BatchNumber} of up to {BatchSize} alerts...",
-						batch + 1,
-						BatchSize);
+			using var context = new Context(contextOptions);
+			// Disable change tracking for better insert performance
+			context.ChangeTracker.AutoDetectChangesEnabled = false;
 
-					using var context = new Context(contextOptions);
-					context.Alerts.AddRange(alertStoreItems.Skip(batch * BatchSize).Take(BatchSize));
-					await context.SaveChangesAsync().ConfigureAwait(false);
-				}
+			context
+				.Alerts
+				.AddRange(alertStoreItems.Skip(batch * BatchSize).Take(BatchSize));
+			await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-				break;
-			default:
-				throw new NotSupportedException($"The Database type {_datamartClient.DatabaseType} is not supported for bulk inserts");
+			// No need to clear the change tracker as we disposed of the context
 		}
 
 		Logger.LogInformation(

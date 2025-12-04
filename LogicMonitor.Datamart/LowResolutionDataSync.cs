@@ -1,4 +1,4 @@
-﻿using LogicMonitor.Api.Data;
+using LogicMonitor.Api.Data;
 using LogicMonitor.Api.ScheduledDownTimes;
 using LogicMonitor.Api.Time;
 using LogicMonitor.Datamart.Interfaces;
@@ -654,13 +654,17 @@ internal class LowResolutionDataSync(
 						}
 
 						// Write out the aggregations
-						await context
-							.BulkInsertAsync(aggregationsToWrite, cancellationToken: cancellationToken)
-							.ConfigureAwait(false);
+
+						// Disable change tracking for better insert performance
+						context.ChangeTracker.AutoDetectChangesEnabled = false;
+						context.TimeSeriesDataAggregations.AddRange(aggregationsToWrite);
 
 						await context
 							.SaveChangesAsync(cancellationToken)
 							.ConfigureAwait(false);
+
+						// Re-enable change tracking
+						context.ChangeTracker.AutoDetectChangesEnabled = true;
 
 						aggregationsToWrite.Clear();
 					}
@@ -1000,10 +1004,10 @@ internal class LowResolutionDataSync(
 		}
 
 		logger.LogInformation(
-			"Re-syncing {ResyncDataPointStoreItemCount} DataPoints for {Device} / {DataSource}...",
+			"Re-syncing {ResyncDataPointStoreItemCount} DataPoints for Device: {Device} / DataSource: {DataSourceName}...",
 			resyncDataPointStoreItemsNotTracked.Count,
-			firstDeviceDataSourceInstanceDataPointStoreItem.DeviceDataSourceInstance!.DeviceDataSource!.Device!.DisplayName,
-			firstDeviceDataSourceInstanceDataPointStoreItem.DataSourceDataPoint!.DataSource.Name
+			firstDeviceDataSourceInstanceDataPointStoreItem.DeviceDataSourceInstance?.DeviceDataSource?.Device?.DisplayName ?? "Unknown",
+			firstDeviceDataSourceInstanceDataPointStoreItem.DataSourceDataPoint?.DataSource?.Name ?? "Unknown"
 		);
 
 		var databaseDeviceDataSourceInstanceDataPointsToResync = databaseDeviceDataSourceInstanceDataPoints
@@ -1309,7 +1313,6 @@ internal class LowResolutionDataSync(
 						dp.Value.Value != errorLevel),
 					_ => null,
 				};
-
 			case CountAlertLevel.Warning:
 				// Count points that are at Warning level (not Error or Critical) AND in SDT
 				if (warningLevel == null)

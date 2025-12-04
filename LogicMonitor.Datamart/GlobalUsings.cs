@@ -1,5 +1,4 @@
 ﻿global using AutoMapper;
-global using EFCore.BulkExtensions;
 global using LogicMonitor.Api;
 global using LogicMonitor.Api.Alerts;
 global using LogicMonitor.Api.Collectors;
