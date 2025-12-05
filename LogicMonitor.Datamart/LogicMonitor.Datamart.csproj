@@ -31,6 +31,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="AutoMapper" Version="14.0.0" />
+		<PackageReference Include="EFCore.BulkExtensions.Dotnet10.PostgreSql" Version="10.0.0" />
+		<PackageReference Include="EFCore.BulkExtensions.Dotnet10.SqlServer" Version="10.0.0" />
 		<PackageReference Include="LogicMonitor.Api" Version="3.229.11" />
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.3" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.0" />

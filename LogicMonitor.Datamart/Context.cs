@@ -1,3 +1,5 @@
+using EFCore.BulkExtensions;
+
 namespace LogicMonitor.Datamart;
 
 public class Context : DbContext
@@ -9,7 +11,6 @@ public class Context : DbContext
 
 	public Context(DbContextOptions<Context> options) : base(options)
 	{
-		//Database.SetCommandTimeout(TimeSpan.FromHours(1));
 	}
 
 	public DbSet<AlertStoreItem> Alerts { get; set; } = null!;
@@ -210,6 +211,67 @@ public class Context : DbContext
 			.HasOne(ws => ws.WebsiteGroup)
 			.WithMany(wsg => wsg.Websites)
 			.OnDelete(DeleteBehavior.Restrict);
+	}
+
+	public async Task BulkInsertAsync<T>(
+		IEnumerable<T> items,
+		DatabaseType databaseType,
+		ILogger logger,
+		CancellationToken cancellationToken) where T : class
+	{
+		try
+		{
+			// Add and save in chunks to avoid over usage of memory. This can be done using proper bulk insert once the ef core libraries can be updated.
+			const int BatchSize = 10000;
+			var typeName = typeof(T).Name;
+			var itemCount = items.Count();
+
+			switch (databaseType)
+			{
+				case DatabaseType.Postgres:
+				case DatabaseType.SqlServer:
+					// Bulk insert
+					await this.BulkInsertAsync(
+						items,
+						new BulkConfig
+						{
+							BulkCopyTimeout = 0,
+							BatchSize = BatchSize,
+						},
+						n => logger.LogDebug(
+							"Bulk inserted {ItemType} {ItemNumber}/{AlertStoreItemCount}",
+							typeName,
+							(int)(n * itemCount),
+							itemCount),
+						cancellationToken: cancellationToken
+						).ConfigureAwait(false);
+					break;
+				default:
+					// Disable change tracking for better insert performance
+					ChangeTracker.AutoDetectChangesEnabled = false;
+
+					for (var batch = 0; batch * BatchSize < itemCount; batch++)
+					{
+						logger.LogDebug(
+							"Bulk inserting batch {BatchNumber} of up to {BatchSize} alerts...",
+							batch + 1,
+							BatchSize);
+
+						AddRange(items.Skip(batch * BatchSize).Take(BatchSize));
+						await SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+					}
+
+					// Re-enable change tracking
+					ChangeTracker.AutoDetectChangesEnabled = true;
+
+					break;
+			}
+		}
+		catch (Exception ex)
+		{
+			logger.LogError(ex, "An error occurred during bulk insert: {Message}", ex.Message);
+			throw;
+		}
 	}
 
 	public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken)

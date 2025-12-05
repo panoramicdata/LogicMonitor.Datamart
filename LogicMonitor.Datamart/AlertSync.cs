@@ -262,6 +262,7 @@ internal class AlertSync(
 							).ConfigureAwait(false);
 						alertsToBulkInsert.Clear();
 					}
+
 					// Update the device
 					device.LastAlertClosedTimeSeconds = timeCursor;
 					await context
@@ -461,29 +462,14 @@ internal class AlertSync(
 
 		var stopwatch = Stopwatch.StartNew();
 
-		// Use batched AddRange for all database types
-		// Batch size of 1000 provides a good balance between memory usage and performance
-		const int BatchSize = 1000;
-		var totalBatches = (alertStoreItems.Count + BatchSize - 1) / BatchSize;
-
-		for (var batch = 0; batch < totalBatches; batch++)
+		using (var context = new Context(contextOptions))
 		{
-			Logger.LogDebug(
-				"Bulk inserting batch {BatchNumber}/{TotalBatches} of up to {BatchSize} alerts...",
-				batch + 1,
-				totalBatches,
-				BatchSize);
-
-			using var context = new Context(contextOptions);
-			// Disable change tracking for better insert performance
-			context.ChangeTracker.AutoDetectChangesEnabled = false;
-
-			context
-				.Alerts
-				.AddRange(alertStoreItems.Skip(batch * BatchSize).Take(BatchSize));
-			await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-			// No need to clear the change tracker as we disposed of the context
+			await context.BulkInsertAsync(
+				alertStoreItems,
+				_datamartClient.DatabaseType,
+				Logger,
+				cancellationToken)
+				.ConfigureAwait(false);
 		}
 
 		Logger.LogInformation(

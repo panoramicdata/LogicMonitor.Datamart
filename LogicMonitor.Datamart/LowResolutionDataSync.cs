@@ -655,16 +655,17 @@ internal class LowResolutionDataSync(
 
 						// Write out the aggregations
 
-						// Disable change tracking for better insert performance
-						context.ChangeTracker.AutoDetectChangesEnabled = false;
-						context.TimeSeriesDataAggregations.AddRange(aggregationsToWrite);
+						await context
+							.BulkInsertAsync(
+								aggregationsToWrite,
+								_datamartClient.DatabaseType,
+								logger,
+								cancellationToken
+							).ConfigureAwait(false);
 
 						await context
 							.SaveChangesAsync(cancellationToken)
 							.ConfigureAwait(false);
-
-						// Re-enable change tracking
-						context.ChangeTracker.AutoDetectChangesEnabled = true;
 
 						aggregationsToWrite.Clear();
 					}
