@@ -214,7 +214,7 @@ public class Context : DbContext
 	}
 
 	public async Task BulkInsertAsync<T>(
-		IEnumerable<T> items,
+		List<T> items,
 		DatabaseType databaseType,
 		ILogger logger,
 		CancellationToken cancellationToken) where T : class
@@ -224,7 +224,7 @@ public class Context : DbContext
 			// Add and save in chunks to avoid over usage of memory. This can be done using proper bulk insert once the ef core libraries can be updated.
 			const int BatchSize = 10000;
 			var typeName = typeof(T).Name;
-			var itemCount = items.Count();
+			var itemCount = items.Count;
 
 			switch (databaseType)
 			{
