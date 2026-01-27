@@ -11,7 +11,7 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor API Datamart</PackageTags>
 		<PackageReleaseNotes>
-			Updated the LogicMonitor.Api from version 3.229.11 to version 3.229.16 to fix an issue with de-serialization of LogicModuleType.
+			Added new 'xxxExcludingSdt' time series aggregation columns, which will be populated if 'ExcludeSdtPeriods' is true in the config.
 		</PackageReleaseNotes>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>

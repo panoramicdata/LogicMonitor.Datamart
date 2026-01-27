@@ -17,7 +17,7 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.7")
+                .HasAnnotation("ProductVersion", "10.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -2702,25 +2702,52 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
                     b.Property<double?>("AvailabilityPercent2")
                         .HasColumnType("double precision");
 
+                    b.Property<double?>("AvailabilityPercent2ExcludingSdt")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("AvailabilityPercentExcludingSdt")
+                        .HasColumnType("double precision");
+
                     b.Property<double?>("Centile05")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("Centile05ExcludingSdt")
                         .HasColumnType("double precision");
 
                     b.Property<double?>("Centile10")
                         .HasColumnType("double precision");
 
+                    b.Property<double?>("Centile10ExcludingSdt")
+                        .HasColumnType("double precision");
+
                     b.Property<double?>("Centile25")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("Centile25ExcludingSdt")
                         .HasColumnType("double precision");
 
                     b.Property<double?>("Centile50")
                         .HasColumnType("double precision");
 
+                    b.Property<double?>("Centile50ExcludingSdt")
+                        .HasColumnType("double precision");
+
                     b.Property<double?>("Centile75")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("Centile75ExcludingSdt")
                         .HasColumnType("double precision");
 
                     b.Property<double?>("Centile90")
                         .HasColumnType("double precision");
 
+                    b.Property<double?>("Centile90ExcludingSdt")
+                        .HasColumnType("double precision");
+
                     b.Property<double?>("Centile95")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("Centile95ExcludingSdt")
                         .HasColumnType("double precision");
 
                     b.Property<int?>("CriticalCount")
@@ -2730,6 +2757,9 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
                         .HasColumnType("integer");
 
                     b.Property<int>("DataCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("DataCountExcludingSdt")
                         .HasColumnType("integer");
 
                     b.Property<Guid>("DeviceDataSourceInstanceDataPointId")
@@ -2744,22 +2774,43 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
                     b.Property<double?>("First")
                         .HasColumnType("double precision");
 
+                    b.Property<double?>("FirstExcludingSdt")
+                        .HasColumnType("double precision");
+
                     b.Property<double?>("FirstWithData")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("FirstWithDataExcludingSdt")
                         .HasColumnType("double precision");
 
                     b.Property<double?>("Last")
                         .HasColumnType("double precision");
 
+                    b.Property<double?>("LastExcludingSdt")
+                        .HasColumnType("double precision");
+
                     b.Property<double?>("LastWithData")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("LastWithDataExcludingSdt")
                         .HasColumnType("double precision");
 
                     b.Property<double?>("Max")
                         .HasColumnType("double precision");
 
+                    b.Property<double?>("MaxExcludingSdt")
+                        .HasColumnType("double precision");
+
                     b.Property<double?>("Min")
                         .HasColumnType("double precision");
 
+                    b.Property<double?>("MinExcludingSdt")
+                        .HasColumnType("double precision");
+
                     b.Property<int>("NoDataCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("NoDataCountExcludingSdt")
                         .HasColumnType("integer");
 
                     b.Property<int?>("NormalCount")
@@ -2777,7 +2828,13 @@ namespace LogicMonitor.Datamart.Migrations.NpgsqlMigrations
                     b.Property<double>("Sum")
                         .HasColumnType("double precision");
 
+                    b.Property<double?>("SumExcludingSdt")
+                        .HasColumnType("double precision");
+
                     b.Property<double>("SumSquared")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("SumSquaredExcludingSdt")
                         .HasColumnType("double precision");
 
                     b.Property<int?>("WarningCount")

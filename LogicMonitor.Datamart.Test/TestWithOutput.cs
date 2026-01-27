@@ -1,6 +1,5 @@
 ﻿using LogicMonitor.Api;
 using LogicMonitor.Datamart.Interfaces;
-using LogicMonitor.Datamart.Config;
 
 namespace LogicMonitor.Datamart.Test;
 
@@ -12,11 +11,15 @@ public abstract class TestWithOutput
 
 	protected static readonly Configuration Configuration = new()
 	{
+		//AggregationReset = true,
+		//ExcludeSdtPeriods = true,	// To test MS-22557
 		Name = "Test",
+		// MS-22557: Use a historical start date to ensure there are completed months to aggregate
+		// This allows testing the new ExcludingSdt columns with actual data
 		StartDateTimeUtc =
 		new DateTimeOffset(
-			TwelveHoursAgo.Year,
-			1,
+			2025,
+			12,
 			1,
 			0,
 			0,

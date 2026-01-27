@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Logging.Abstractions;
-
 namespace LogicMonitor.Datamart.Test;
 
 /// <summary>
@@ -8,8 +6,6 @@ namespace LogicMonitor.Datamart.Test;
 /// </summary>
 public class SdtAlertCountTests(ITestOutputHelper testOutputHelper) : TestWithOutput(testOutputHelper)
 {
-	private static readonly NullLogger<SdtAlertCountTests> _logger = new();
-
 	#region Test Data Builders
 
 	private static List<TimeSeriesDataPoint> CreateTestDataPoints((double? value, bool isInSdt)[] dataPoints) => [.. dataPoints

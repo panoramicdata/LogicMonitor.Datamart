@@ -744,8 +744,11 @@ internal class LowResolutionDataSync(
 
 	/// <summary>
 	/// Creates a TimeSeriesDataAggregationStoreItem from graph data.
-	/// MS-21395: Supports excluding SDT (Scheduled Down Time) periods from aggregations when excludeStdPeriods is true.
-	/// MS-21396: Always retrieves SDT data for new SDT-aware alert level count columns.
+	/// MS-22557: When excludeSdtPeriods is true, retrieves SDT data and populates:
+	/// - Main aggregation columns use ALL data points
+	/// - ExcludingSdt columns use data points excluding SDT periods
+	/// - SDT count columns (NormalOrSdtCount, WarningSdtCount, etc.)
+	/// When excludeSdtPeriods is false, SDT API calls are skipped for performance.
 	/// </summary>
 	internal static async Task<TimeSeriesDataAggregationStoreItem?> GetTimeSeriesDataAggregationStoreItem(
 		DatamartClient datamartClient,
@@ -821,39 +824,52 @@ internal class LowResolutionDataSync(
 					})];
 			}
 
-			// MS-21395 & MS-21396: ALWAYS get SDT data (needed for new SDT count columns in MS-21396)
-			logger.LogDebug(
-				"Retrieving SDT periods for DeviceDataSourceInstanceDataPointId {DeviceDataSourceInstanceDataPointId} ({Start:yyyy-MM-dd HH:mm:ss} .. {End:yyyy-MM-dd HH:mm:ss})...",
-				databaseDeviceDataSourceInstanceDataPoint.Id,
-				startDateTimeUtc,
-				endDateTimeUtc);
+			// MS-22557: Only get SDT data when excludeSdtPeriods is true (for performance)
+			// When false, skip SDT API calls entirely to reduce sync time
+			List<(long StartTimestampMs, long EndTimestampMs)>? sdtPeriods = null;
 
-			var sdtPeriods =
-				await GetHistoricalSdtPeriodsAsync(
-					datamartClient,
-					deviceNotTracked,
-					databaseDeviceDataSourceInstanceDataPoint.DeviceDataSourceInstance,
-					startDateTimeUtc,
-					endDateTimeUtc,
-					sdtCache,
-					logger,
-					cancellationToken)
-				.ConfigureAwait(false);
-
-			if (sdtPeriods == null)
+			if (excludeStdPeriods)
 			{
-				logger.LogWarning(
-					"SDT retrieval failed for DeviceDataSourceInstanceDataPointId {DeviceDataSourceInstanceDataPointId}. " +
-					"Setting NormalOrSdtCount, WarningSdtCount, ErrorSdtCount and CriticalSdtCount columns to null.",
+				logger.LogDebug(
+					"Retrieving SDT periods for DeviceDataSourceInstanceDataPointId {DeviceDataSourceInstanceDataPointId} ({Start:yyyy-MM-dd HH:mm:ss} .. {End:yyyy-MM-dd HH:mm:ss})...",
+					databaseDeviceDataSourceInstanceDataPoint.Id,
+					startDateTimeUtc,
+					endDateTimeUtc);
+
+				sdtPeriods =
+					await GetHistoricalSdtPeriodsAsync(
+						datamartClient,
+						deviceNotTracked,
+						databaseDeviceDataSourceInstanceDataPoint.DeviceDataSourceInstance,
+						startDateTimeUtc,
+						endDateTimeUtc,
+						sdtCache,
+						logger,
+						cancellationToken)
+					.ConfigureAwait(false);
+
+				if (sdtPeriods == null)
+				{
+					logger.LogWarning(
+						"SDT retrieval failed for DeviceDataSourceInstanceDataPointId {DeviceDataSourceInstanceDataPointId}. " +
+						"ExcludingSdt columns will be set to null.",
+						databaseDeviceDataSourceInstanceDataPoint.Id);
+				}
+			}
+			else
+			{
+				logger.LogDebug(
+					"Skipping SDT retrieval for DeviceDataSourceInstanceDataPointId {DeviceDataSourceInstanceDataPointId} " +
+					"because ExcludeSdtPeriods is false (performance optimization).",
 					databaseDeviceDataSourceInstanceDataPoint.Id);
 			}
 
-			// MS-21395 & MS-21396: Build timeSeriesDataPoints with SDT information (always needed for MS-21396)
+			// MS-22557: Build timeSeriesDataPoints with SDT information (only when SDT data is available)
 			var timeSeriesDataPoints = new List<TimeSeriesDataPoint>();
 
 			foreach (var (timestamp, value) in pairedData)
 			{
-				// Check if timestamp falls within any SDT period
+				// Check if timestamp falls within any SDT period (only if we have SDT data)
 				var isInSdt = sdtPeriods?.Any(sdt =>
 					timestamp >= sdt.StartTimestampMs &&
 					timestamp <= sdt.EndTimestampMs) ?? false;
@@ -866,20 +882,32 @@ internal class LowResolutionDataSync(
 				});
 			}
 
-			// MS-21395: Filter out SDT periods when configured (for existing aggregations only)
-			var effectiveDataPoints = excludeStdPeriods
-				? [.. timeSeriesDataPoints.Where(dp => !dp.IsInSdt)]
-				: timeSeriesDataPoints;
+			// MS-22557: All data points (for main aggregations - always use all data)
+			var allValues = timeSeriesDataPoints.Select(dp => dp.Value).ToList();
 
-			// Extract values for calculations
-			var effectiveValues = effectiveDataPoints.Select(dp => dp.Value).ToList();
-
-			// Calculate and sort non-null values for percentile calculations
-			var sortedNonNullValues = effectiveValues
+			// Calculate and sort non-null values for percentile calculations (using all data)
+			var sortedNonNullValues = allValues
 				.Where(v => v.HasValue)
 				.Select(v => v!.Value)
 				.OrderBy(v => v)
 				.ToArray();
+
+			// MS-22557: Filtered data points excluding SDT periods (only when SDT data is available)
+			List<double?>? excludingSdtValues = null;
+			double[]? sortedNonNullValuesExcludingSdt = null;
+
+			if (sdtPeriods != null)
+			{
+				var excludingSdtDataPoints = timeSeriesDataPoints.Where(dp => !dp.IsInSdt).ToList();
+				excludingSdtValues = [.. excludingSdtDataPoints.Select(dp => dp.Value)];
+
+				sortedNonNullValuesExcludingSdt =
+				[.. excludingSdtValues
+					.Where(v => v.HasValue)
+					.Select(v => v!.Value)
+					.OrderBy(v => v)
+				];
+			}
 
 			var bulkWriteModel = new TimeSeriesDataAggregationStoreItem
 			{
@@ -887,16 +915,18 @@ internal class LowResolutionDataSync(
 				DeviceDataSourceInstanceDataPointId = databaseDeviceDataSourceInstanceDataPoint.Id,
 				PeriodStart = startDateTimeUtc.UtcDateTime,
 				PeriodEnd = endDateTimeUtc.UtcDateTime,
-				DataCount = effectiveValues.Count(d => d.HasValue),
-				NoDataCount = effectiveValues.Count(d => !d.HasValue),
-				Sum = effectiveValues.Sum(d => d ?? 0),
-				SumSquared = effectiveValues.Sum(d => d.HasValue ? d.Value * d.Value : 0),
-				Max = effectiveValues.Where(d => d != null).DefaultIfEmpty(null).Max(),
-				Min = effectiveValues.Where(d => d != null).DefaultIfEmpty(null).Min(),
-				First = effectiveValues.DefaultIfEmpty(null).First(),
-				Last = effectiveValues.DefaultIfEmpty(null).Last(),
-				FirstWithData = effectiveValues.Where(d => d != null).DefaultIfEmpty(null).First(),
-				LastWithData = effectiveValues.Where(d => d != null).DefaultIfEmpty(null).Last(),
+
+				// MS-22557: Main aggregation columns use ALL data points
+				DataCount = allValues.Count(d => d.HasValue),
+				NoDataCount = allValues.Count(d => !d.HasValue),
+				Sum = allValues.Sum(d => d ?? 0),
+				SumSquared = allValues.Sum(d => d.HasValue ? d.Value * d.Value : 0),
+				Max = allValues.Where(d => d != null).DefaultIfEmpty(null).Max(),
+				Min = allValues.Where(d => d != null).DefaultIfEmpty(null).Min(),
+				First = allValues.DefaultIfEmpty(null).First(),
+				Last = allValues.DefaultIfEmpty(null).Last(),
+				FirstWithData = allValues.Where(d => d != null).DefaultIfEmpty(null).First(),
+				LastWithData = allValues.Where(d => d != null).DefaultIfEmpty(null).Last(),
 				Centile05 = CalculatePercentile(sortedNonNullValues, 5),
 				Centile10 = CalculatePercentile(sortedNonNullValues, 10),
 				Centile25 = CalculatePercentile(sortedNonNullValues, 25),
@@ -905,58 +935,78 @@ internal class LowResolutionDataSync(
 				Centile90 = CalculatePercentile(sortedNonNullValues, 90),
 				Centile95 = CalculatePercentile(sortedNonNullValues, 95),
 				NormalCount = CountAtAlertLevel(
-					effectiveValues,
+					allValues,
 					dataPointStoreItemNotTracked.GlobalAlertExpression,
 					CountAlertLevel.Normal
 				),
 				WarningCount = CountAtAlertLevel(
-					effectiveValues,
+					allValues,
 					dataPointStoreItemNotTracked.GlobalAlertExpression,
 					CountAlertLevel.Warning
 				),
 				ErrorCount = CountAtAlertLevel(
-					effectiveValues,
+					allValues,
 					dataPointStoreItemNotTracked.GlobalAlertExpression,
 					CountAlertLevel.Error
 				),
 				CriticalCount = CountAtAlertLevel(
-					effectiveValues,
+					allValues,
 					dataPointStoreItemNotTracked.GlobalAlertExpression,
 					CountAlertLevel.Critical
 				),
+				AvailabilityPercent2 = CalculatePercentageAvailabilityNew(
+					allValues,
+					dataPointStoreItemNotTracked.PercentageAvailabilityCalculation
+				),
 
-				// MS-21396 New columns to support alert levels taking into account SDT
-				// These columns ALWAYS use the full timeSeriesDataPoints (independent of excludeSdtPeriods)
-				// They will be NULL if the SDT retrieval failed
+				// MS-22557: SDT count columns (only populated when ExcludeSdtPeriods = true and SDT data available)
 				NormalOrSdtCount = sdtPeriods == null ? null : CountAtAlertLevelUseSdt(
 					timeSeriesDataPoints,
 					dataPointStoreItemNotTracked.GlobalAlertExpression,
 					CountAlertLevel.Normal),
-
 				WarningSdtCount = sdtPeriods == null ? null : CountAtAlertLevelUseSdt(
 					timeSeriesDataPoints,
 					dataPointStoreItemNotTracked.GlobalAlertExpression,
 					CountAlertLevel.Warning),
-
 				ErrorSdtCount = sdtPeriods == null ? null : CountAtAlertLevelUseSdt(
 					timeSeriesDataPoints,
 					dataPointStoreItemNotTracked.GlobalAlertExpression,
 					CountAlertLevel.Error),
-
 				CriticalSdtCount = sdtPeriods == null ? null : CountAtAlertLevelUseSdt(
 					timeSeriesDataPoints,
 					dataPointStoreItemNotTracked.GlobalAlertExpression,
 					CountAlertLevel.Critical),
 
-				// MS-21394 PercentUpTime availability calculation should calculate downtime based on up-time after no data
-				AvailabilityPercent2 = CalculatePercentageAvailabilityNew(
-					effectiveValues,
+				// MS-22557: ExcludingSdt columns (only populated when ExcludeSdtPeriods = true and SDT data available)
+				DataCountExcludingSdt = excludingSdtValues?.Count(d => d.HasValue),
+				NoDataCountExcludingSdt = excludingSdtValues?.Count(d => !d.HasValue),
+				SumExcludingSdt = excludingSdtValues?.Sum(d => d ?? 0),
+				SumSquaredExcludingSdt = excludingSdtValues?.Sum(d => d.HasValue ? d.Value * d.Value : 0),
+				MaxExcludingSdt = excludingSdtValues?.Where(d => d != null).DefaultIfEmpty(null).Max(),
+				MinExcludingSdt = excludingSdtValues?.Where(d => d != null).DefaultIfEmpty(null).Min(),
+				FirstExcludingSdt = excludingSdtValues?.DefaultIfEmpty(null).First(),
+				LastExcludingSdt = excludingSdtValues?.DefaultIfEmpty(null).Last(),
+				FirstWithDataExcludingSdt = excludingSdtValues?.Where(d => d != null).DefaultIfEmpty(null).First(),
+				LastWithDataExcludingSdt = excludingSdtValues?.Where(d => d != null).DefaultIfEmpty(null).Last(),
+				Centile05ExcludingSdt = sortedNonNullValuesExcludingSdt == null ? null : CalculatePercentile(sortedNonNullValuesExcludingSdt, 5),
+				Centile10ExcludingSdt = sortedNonNullValuesExcludingSdt == null ? null : CalculatePercentile(sortedNonNullValuesExcludingSdt, 10),
+				Centile25ExcludingSdt = sortedNonNullValuesExcludingSdt == null ? null : CalculatePercentile(sortedNonNullValuesExcludingSdt, 25),
+				Centile50ExcludingSdt = sortedNonNullValuesExcludingSdt == null ? null : CalculatePercentile(sortedNonNullValuesExcludingSdt, 50),
+				Centile75ExcludingSdt = sortedNonNullValuesExcludingSdt == null ? null : CalculatePercentile(sortedNonNullValuesExcludingSdt, 75),
+				Centile90ExcludingSdt = sortedNonNullValuesExcludingSdt == null ? null : CalculatePercentile(sortedNonNullValuesExcludingSdt, 90),
+				Centile95ExcludingSdt = sortedNonNullValuesExcludingSdt == null ? null : CalculatePercentile(sortedNonNullValuesExcludingSdt, 95),
+				AvailabilityPercent2ExcludingSdt = excludingSdtValues == null ? null : CalculatePercentageAvailabilityNew(
+					excludingSdtValues,
+					dataPointStoreItemNotTracked.PercentageAvailabilityCalculation
+				),
+				AvailabilityPercentExcludingSdt = excludingSdtValues == null ? null : CalculatePercentageAvailability(
+					excludingSdtValues,
 					dataPointStoreItemNotTracked.PercentageAvailabilityCalculation
 				),
 
 				// IMPORTANT! This must be calculated last as this process can reverse the array.
 				AvailabilityPercent = CalculatePercentageAvailability(
-					effectiveValues,
+					allValues,
 					dataPointStoreItemNotTracked.PercentageAvailabilityCalculation
 				)
 			};
@@ -1698,10 +1748,11 @@ internal class LowResolutionDataSync(
 			}
 
 			// Find the ResourceDataSourceStoreItem (DeviceDataSource)
-			if (context.
+			if (await context.
 					DeviceDataSources.
-					SingleOrDefault(dds => dds.Id == resourceDataSourceInstanceStoreItem.DeviceDataSourceId)
-					is not ResourceDataSourceStoreItem resourceDataSource)
+					SingleOrDefaultAsync(dds => dds.Id == resourceDataSourceInstanceStoreItem.DeviceDataSourceId, cancellationToken)
+				.ConfigureAwait(false)
+				is not ResourceDataSourceStoreItem resourceDataSource)
 			{
 				// Log a warning to help with logging / issues...
 				logger.LogWarning(
