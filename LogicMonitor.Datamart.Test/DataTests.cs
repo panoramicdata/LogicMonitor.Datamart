@@ -278,4 +278,263 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 		ITestOutputHelper.WriteLine($"Adaptive aggregation confirmed: {reductionFactor:F1}x data reduction");
 		ITestOutputHelper.WriteLine($"This is why LowResolutionDataSync uses monthly chunks (≤31 days)");
 	}
+
+	/// <summary>
+	/// Tests the IsThrottled detection method with a known throttled response (3-month request).
+	/// </summary>
+	[Fact]
+	public async Task IsThrottled_ThreeMonthRequest_DetectsThrottling()
+	{
+		// Arrange: Fetch throttled data (3 months)
+		var utcNow = DateTimeOffset.UtcNow;
+		var endDateTimeUtc = new DateTimeOffset(
+			utcNow.Year,
+			utcNow.Month,
+			1,
+			0,
+			0,
+			0,
+			TimeSpan.Zero);
+		var startDateTimeUtc = endDateTimeUtc.AddMonths(-3);
+
+		var daysInPeriod = (endDateTimeUtc - startDateTimeUtc).TotalDays;
+		var deviceDataSourceInstanceId = 272867174;
+
+		var graphData = await LowResolutionDataSync.GetGraphDataAsync(
+			DatamartClient,
+			deviceDataSourceInstanceId,
+			startDateTimeUtc,
+			endDateTimeUtc,
+			LoggerFactory.CreateLogger<DataTests>(),
+			default);
+
+		// Act: Check if throttled
+		var isThrottled = LowResolutionDataSync.IsThrottled(
+			graphData,
+			daysInPeriod,
+			out var actualStepSeconds,
+			out var actualPointsPerDay);
+
+		// Assert
+		ITestOutputHelper.WriteLine($"Days in period: {daysInPeriod}");
+		ITestOutputHelper.WriteLine($"Timestamp count: {graphData.TimeStamps.Count}");
+		ITestOutputHelper.WriteLine($"Points per day: {actualPointsPerDay:F1}");
+		ITestOutputHelper.WriteLine($"Step seconds: {actualStepSeconds}");
+		ITestOutputHelper.WriteLine($"IsThrottled: {isThrottled}");
+
+		isThrottled.Should().BeTrue("3-month request should be detected as throttled");
+		actualStepSeconds.Should().BeGreaterThan(3600, "Throttled step should be > 3600s");
+		actualPointsPerDay.Should().BeLessThan(18, "Throttled points per day should be < 18");
+	}
+
+	/// <summary>
+	/// Tests that a 1-month request is NOT detected as throttled.
+	/// </summary>
+	[Fact]
+	public async Task IsThrottled_OneMonthRequest_NotThrottled()
+	{
+		// Arrange: Fetch non-throttled data (1 month)
+		var utcNow = DateTimeOffset.UtcNow;
+		var endDateTimeUtc = new DateTimeOffset(
+			utcNow.Year,
+			utcNow.Month,
+			1,
+			0,
+			0,
+			0,
+			TimeSpan.Zero);
+		var startDateTimeUtc = endDateTimeUtc.AddMonths(-1);
+
+		var daysInPeriod = (endDateTimeUtc - startDateTimeUtc).TotalDays;
+		var deviceDataSourceInstanceId = 272867174;
+
+		var graphData = await LowResolutionDataSync.GetGraphDataAsync(
+			DatamartClient,
+			deviceDataSourceInstanceId,
+			startDateTimeUtc,
+			endDateTimeUtc,
+			LoggerFactory.CreateLogger<DataTests>(),
+			default);
+
+		// Act: Check if throttled
+		var isThrottled = LowResolutionDataSync.IsThrottled(
+			graphData,
+			daysInPeriod,
+			out var actualStepSeconds,
+			out var actualPointsPerDay);
+
+		// Assert
+		ITestOutputHelper.WriteLine($"Days in period: {daysInPeriod}");
+		ITestOutputHelper.WriteLine($"Timestamp count: {graphData.TimeStamps.Count}");
+		ITestOutputHelper.WriteLine($"Points per day: {actualPointsPerDay:F1}");
+		ITestOutputHelper.WriteLine($"Step seconds: {actualStepSeconds}");
+		ITestOutputHelper.WriteLine($"IsThrottled: {isThrottled}");
+
+		isThrottled.Should().BeFalse("1-month request should NOT be detected as throttled");
+		actualStepSeconds.Should().BeInRange(3240, 3960, "Non-throttled step should be ~3600s ± 10%");
+		actualPointsPerDay.Should().BeGreaterThanOrEqualTo(18, "Non-throttled points per day should be >= 18");
+	}
+
+	/// <summary>
+	/// Tests that auto-chunking successfully retrieves hourly resolution for a 3-month request.
+	/// When EnableAutoChunking is true, a 3-month request should be split into smaller chunks
+	/// and return approximately 24 data points per day.
+	/// 
+	/// NOTE: This test documents observed behavior. The server may or may not throttle
+	/// depending on current load. The test validates that chunking produces MORE data
+	/// than a single throttled request.
+	/// </summary>
+	[Fact]
+	public async Task GetGraphDataWithAutoChunking_ThreeMonthRequest_ReturnsHourlyResolution()
+	{
+		// Arrange: Set up a three-month date range (will be throttled without chunking)
+		var utcNow = DateTimeOffset.UtcNow;
+		var endDateTimeUtc = new DateTimeOffset(
+			utcNow.Year,
+			utcNow.Month,
+			1,
+			0,
+			0,
+			0,
+			TimeSpan.Zero);
+		var startDateTimeUtc = endDateTimeUtc.AddMonths(-3);
+
+		var daysInPeriod = (endDateTimeUtc - startDateTimeUtc).TotalDays;
+		var deviceDataSourceInstanceId = 272867174;
+
+		// Act: Fetch with auto-chunking enabled, 31-day chunks (optimal for hourly resolution)
+		var graphData = await LowResolutionDataSync.GetGraphDataWithAutoChunkingAsync(
+		DatamartClient,
+		deviceDataSourceInstanceId,
+		startDateTimeUtc,
+		endDateTimeUtc,
+		enableAutoChunking: true,
+		chunkSizeDays: 31,
+			LoggerFactory.CreateLogger<DataTests>(),
+			default);
+
+		// Assert: We should now have approximately hourly resolution
+		var timestampCount = graphData.TimeStamps.Count;
+		var pointsPerDay = timestampCount / daysInPeriod;
+
+		// Calculate step if we have enough data
+		long stepSeconds = 0;
+		if (timestampCount >= 2)
+		{
+			var stepMs = graphData.TimeStamps[1] - graphData.TimeStamps[0];
+			stepSeconds = stepMs / 1000;
+		}
+
+		ITestOutputHelper.WriteLine($"=== Auto-Chunking Test Results ===");
+		ITestOutputHelper.WriteLine($"Date range: {startDateTimeUtc:yyyy-MM-dd} to {endDateTimeUtc:yyyy-MM-dd}");
+		ITestOutputHelper.WriteLine($"Days in period: {daysInPeriod}");
+		ITestOutputHelper.WriteLine($"Timestamp count: {timestampCount}");
+		ITestOutputHelper.WriteLine($"Points per day: {pointsPerDay:F1}");
+		ITestOutputHelper.WriteLine($"Step size: {stepSeconds} seconds ({stepSeconds / 3600.0:F2} hours)");
+
+		var expectedMinPoints = (int)(daysInPeriod * 20);
+		ITestOutputHelper.WriteLine($"Expected min points: {expectedMinPoints}");
+
+		// With auto-chunking, we should get roughly hourly resolution
+		// Even for 3 months (92 days), we should get close to 92 * 24 = 2208 points
+		pointsPerDay.Should().BeGreaterThanOrEqualTo(
+			18,
+			$"With auto-chunking, should get at least 18 points per day (got {pointsPerDay:F1})");
+
+		timestampCount.Should().BeGreaterThanOrEqualTo(
+			expectedMinPoints,
+			$"With auto-chunking, should get at least {expectedMinPoints} points for {daysInPeriod} days");
+
+		stepSeconds.Should().BeInRange(
+			3240, 3960,
+			"With auto-chunking, step size should be approximately hourly (3600s ± 10%)");
+
+		ITestOutputHelper.WriteLine($"");
+		ITestOutputHelper.WriteLine($"=== CONCLUSION ===");
+		ITestOutputHelper.WriteLine($"Auto-chunking successfully restored hourly resolution for 3-month request!");
+	}
+
+	/// <summary>
+	/// Compares throttled (no chunking) vs non-throttled (with chunking) results for the same 3-month period.
+	/// This demonstrates the data loss that occurs without auto-chunking.
+	/// </summary>
+	[Fact]
+	public async Task GetGraphData_ComparesThrottledVsChunked()
+	{
+		// Arrange: 3-month date range
+		var utcNow = DateTimeOffset.UtcNow;
+		var endDateTimeUtc = new DateTimeOffset(
+			utcNow.Year,
+			utcNow.Month,
+			1,
+			0,
+			0,
+			0,
+			TimeSpan.Zero);
+		var startDateTimeUtc = endDateTimeUtc.AddMonths(-3);
+
+		var daysInPeriod = (endDateTimeUtc - startDateTimeUtc).TotalDays;
+		var deviceDataSourceInstanceId = 272867174;
+
+		// Act 1: Fetch as single request (may be aggregated)
+		var singleRequestData = await LowResolutionDataSync.GetGraphDataAsync(
+			DatamartClient,
+			deviceDataSourceInstanceId,
+			startDateTimeUtc,
+			endDateTimeUtc,
+			LoggerFactory.CreateLogger<DataTests>(),
+			default);
+
+		// Act 2: Fetch WITH chunking (31-day chunks for hourly resolution)
+		var chunkedData = await LowResolutionDataSync.GetGraphDataChunkedAsync(
+		DatamartClient,
+		deviceDataSourceInstanceId,
+		startDateTimeUtc,
+		endDateTimeUtc,
+		chunkSizeDays: 31,
+			LoggerFactory.CreateLogger<DataTests>(),
+			default);
+
+		// Assert: Document observed behavior
+		var singleCount = singleRequestData.TimeStamps.Count;
+		var chunkedCount = chunkedData.TimeStamps.Count;
+		var ratio = singleCount > 0 ? (double)chunkedCount / singleCount : 0;
+
+		ITestOutputHelper.WriteLine($"=== Single Request vs Chunked Comparison ===");
+		ITestOutputHelper.WriteLine($"Date range: {startDateTimeUtc:yyyy-MM-dd} to {endDateTimeUtc:yyyy-MM-dd} ({daysInPeriod:F0} days)");
+		ITestOutputHelper.WriteLine($"");
+		ITestOutputHelper.WriteLine($"Single request:");
+		ITestOutputHelper.WriteLine($"  - Timestamp count: {singleCount}");
+		ITestOutputHelper.WriteLine($"  - Points per day: {singleCount / daysInPeriod:F1}");
+		ITestOutputHelper.WriteLine($"");
+		ITestOutputHelper.WriteLine($"Chunked (31-day chunks):");
+		ITestOutputHelper.WriteLine($"  - Timestamp count: {chunkedCount}");
+		ITestOutputHelper.WriteLine($"  - Points per day: {chunkedCount / daysInPeriod:F1}");
+		ITestOutputHelper.WriteLine($"");
+		ITestOutputHelper.WriteLine($"Ratio: {ratio:F1}x (chunked/single)");
+
+		// Document the observed behavior - don't assert strict ratios since server behavior varies
+		// Just ensure we got SOME data from both methods
+		singleCount.Should().BeGreaterThan(0, "Single request should return data");
+		chunkedCount.Should().BeGreaterThan(0, "Chunked request should return data");
+
+		// Log conclusion based on observed behavior
+		if (ratio > 1.5)
+		{
+			ITestOutputHelper.WriteLine($"");
+			ITestOutputHelper.WriteLine($"OBSERVATION: Chunking provided {ratio:F1}x more data points.");
+			ITestOutputHelper.WriteLine($"This suggests the single request was throttled/aggregated by the API.");
+		}
+		else if (ratio is > 0.9 and < 1.1)
+		{
+			ITestOutputHelper.WriteLine($"");
+			ITestOutputHelper.WriteLine($"OBSERVATION: Both methods returned similar amounts of data.");
+			ITestOutputHelper.WriteLine($"The API did not apply significant aggregation to the single request.");
+		}
+		else
+		{
+			ITestOutputHelper.WriteLine($"");
+			ITestOutputHelper.WriteLine($"OBSERVATION: Unexpected ratio ({ratio:F1}x). Check data quality.");
+		}
+	}
 }

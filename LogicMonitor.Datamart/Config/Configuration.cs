@@ -111,6 +111,38 @@ public class Configuration
 
 	public bool ExcludeSdtPeriods { get; set; }
 
+	/// <summary>
+	/// When enabled, if LogicMonitor API returns lower-than-expected resolution data
+	/// (indicating server-side throttling or adaptive aggregation), the system will
+	/// automatically retry with smaller time chunks to ensure hourly resolution.
+	/// Default: false (opt-in feature)
+	/// </summary>
+	public bool EnableAutoChunking { get; set; }
+
+	/// <summary>
+	/// The chunk size in days to use when auto-chunking is triggered.
+	/// 
+	/// LogicMonitor API Granularity by Date Range:
+	/// ┌─────────────┬──────────────────────────────────────────────────────────┐
+	/// │ Days        │ Resolution / Behaviour                                    │
+	/// ├─────────────┼──────────────────────────────────────────────────────────┤
+	/// │ 1 day       │ 2 points only (start + end) - NOT RECOMMENDED            │
+	/// │ 2 days      │ ~1 point - NOT RECOMMENDED                               │
+	/// │ 3-5 days    │ Sparse data, unpredictable - NOT RECOMMENDED             │
+	/// │ 6 days      │ ~962 points (~160 pts/day, ~9 min resolution)            │
+	/// │ 7 days      │ ~131 pts/day (~11 min resolution)                        │
+	/// │ 14 days     │ ~69 pts/day (~21 min resolution)                         │
+	/// │ 28-31 days  │ 24 pts/day (hourly resolution) - RECOMMENDED             │
+	/// │ 42+ days    │ ~1000 points total (adaptive aggregation, lower quality) │
+	/// └─────────────┴──────────────────────────────────────────────────────────┘
+	/// 
+	/// Recommended: 31 days to cover all calendar months (28-31 days) in a single 
+	/// chunk while maintaining hourly resolution.
+	/// 
+	/// Must be between 1 and 31 days. Default: 31 days.
+	/// </summary>
+	public int AutoChunkSizeDays { get; set; } = 31;
+
 	public void Validate()
 	{
 		if (string.IsNullOrWhiteSpace(Name))
@@ -163,6 +195,11 @@ public class Configuration
 		{
 			// RM-16049 states the permitted range of the UTC offset
 			throw new ConfigurationException($"{nameof(MinutesOffset)} should be in the range -780..780 (i.e. -13..13 hours).");
+		}
+
+		if (AutoChunkSizeDays is < 1 or > 31)
+		{
+			throw new ConfigurationException($"{nameof(AutoChunkSizeDays)} should be in the range 1..31 days.");
 		}
 
 		foreach (var dataSource in DataSources)
