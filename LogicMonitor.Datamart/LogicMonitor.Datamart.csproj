@@ -11,7 +11,7 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor API Datamart</PackageTags>
 		<PackageReleaseNotes>
-			Added new 'xxxExcludingSdt' time series aggregation columns, which will be populated if 'ExcludeSdtPeriods' is true in the config.
+			Added additional unit tests to validate that a monthly sync obtains 24 data points per day.
 		</PackageReleaseNotes>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
