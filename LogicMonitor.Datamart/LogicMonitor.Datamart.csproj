@@ -30,7 +30,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="PanoramicData.Mapper" Version="10.0.10" />
+		<PackageReference Include="PanoramicData.Mapper" Version="10.0.12" />
 		<PackageReference Include="EFCore.BulkExtensions.Dotnet10.PostgreSql" Version="10.0.0" />
 		<PackageReference Include="EFCore.BulkExtensions.Dotnet10.SqlServer" Version="10.0.0" />
 		<PackageReference Include="LogicMonitor.Api" Version="3.235.6" />
