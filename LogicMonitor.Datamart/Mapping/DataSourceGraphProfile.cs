@@ -46,6 +46,9 @@ public class DataSourceGraphProfile : Profile
 			.ForMember(
 				dest => dest.MinValue,
 				opts => opts.MapFrom(src => GetDouble(src.MinValue)))
+			.ForMember(
+				dest => dest.Timescale,
+				opts => opts.MapFrom(src => src.TimeScale))
 		;
 
 		CreateMap<DataSourceGraphStoreItem, DataSourceGraph>()
@@ -79,6 +82,9 @@ public class DataSourceGraphProfile : Profile
 			.ForMember(
 				dest => dest.VirtualDataPoints,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.TimeScale,
+				opts => opts.MapFrom(src => src.Timescale))
 			;
 	}
 

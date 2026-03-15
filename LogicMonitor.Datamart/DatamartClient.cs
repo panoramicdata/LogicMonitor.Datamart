@@ -39,10 +39,10 @@ public class DatamartClient : LogicMonitorClient
 
 		_timeProviderService.SetDateTimeNow(configuration.FakeExecutionTime);
 
-		// Set up the AutoMapper CustomPropertyFetcher
+		// Set up the Mapper CustomPropertyFetcher
 		CustomPropertyHandler.Configure(_configuration.DeviceProperties);
 
-		// Check AutoMapper
+		// Check Mapper
 		_mapperConfig.AssertConfigurationIsValid();
 
 		var dbContextOptionsBuilder = new DbContextOptionsBuilder<Context>();
@@ -1431,7 +1431,7 @@ public class DatamartClient : LogicMonitorClient
 			else
 			{
 				// Update - including clearing the LastWentMissingUtc field
-				// Update the existing entry using AutoMapper
+				// Update the existing entry using Mapper
 				MapperInstance.Map(apiDeviceDataSourceInstance, databaseDeviceDataSourceInstance);
 				databaseDeviceDataSourceInstance.DeviceDataSourceId = deviceDataSourceStoreItem.Id;
 				databaseDeviceDataSourceInstance.LastWentMissing = null;
@@ -1713,7 +1713,7 @@ public class DatamartClient : LogicMonitorClient
 			else
 			{
 				// Update - including clearing the LastWentMissingUtc field
-				// Update the existing entry using AutoMapper
+				// Update the existing entry using Mapper
 				MapperInstance.Map(apiDeviceConfigSourceInstance, databaseDeviceConfigSourceInstance);
 				databaseDeviceConfigSourceInstance.DeviceConfigSourceId = deviceConfigSourceStoreItem.Id;
 				databaseDeviceConfigSourceInstance.LastWentMissing = null;
@@ -1876,7 +1876,7 @@ public class DatamartClient : LogicMonitorClient
 			}
 			else
 			{
-				// Update the existing entry using AutoMapper
+				// Update the existing entry using Mapper
 				databaseConfigSourceInstanceConfig = MapperInstance.Map(config, databaseConfigSourceInstanceConfig);
 			}
 

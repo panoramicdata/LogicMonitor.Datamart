@@ -50,6 +50,42 @@ public class DataSourceProfile : Profile
 			.ForMember(
 				dest => dest.CollectionAttributeIp,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.InstallationMetadataOriginRegistryId,
+				opts => opts.MapFrom(src => src.InstallationMetadata.OriginRegistryId))
+			.ForMember(
+				dest => dest.InstallationMetadataOriginLineageId,
+				opts => opts.MapFrom(src => src.InstallationMetadata.OriginLineageId))
+			.ForMember(
+				dest => dest.InstallationMetadataOriginAuthorCompanyUuid,
+				opts => opts.MapFrom(src => src.InstallationMetadata.OriginAuthorCompanyUUID))
+			.ForMember(
+				dest => dest.InstallationMetadataOriginAuthorNamespace,
+				opts => opts.MapFrom(src => src.InstallationMetadata.OriginAuthorNamespace))
+			.ForMember(
+				dest => dest.InstallationMetadataOriginVersion,
+				opts => opts.MapFrom(src => src.InstallationMetadata.OriginVersion))
+			.ForMember(
+				dest => dest.InstallationMetadataOriginChecksum,
+				opts => opts.MapFrom(src => src.InstallationMetadata.OriginChecksum))
+			.ForMember(
+				dest => dest.InstallationMetadataAuditedRegistryId,
+				opts => opts.MapFrom(src => src.InstallationMetadata.AuditedRegistryId))
+			.ForMember(
+				dest => dest.InstallationMetadataAuditedVersion,
+				opts => opts.MapFrom(src => src.InstallationMetadata.AuditedVersion))
+			.ForMember(
+				dest => dest.InstallationMetadataTargetLineageId,
+				opts => opts.MapFrom(src => src.InstallationMetadata.TargetLineageId))
+			.ForMember(
+				dest => dest.InstallationMetadataLogicModuleType,
+				opts => opts.MapFrom(src => src.InstallationMetadata.LogicModuleType))
+			.ForMember(
+				dest => dest.InstallationMetadataIsChangedFromOrigin,
+				opts => opts.MapFrom(src => src.InstallationMetadata.IsChangedFromOrigin))
+			.ForMember(
+				dest => dest.InstallationMetadataIsChangedFromTargetLastPublished,
+				opts => opts.MapFrom(src => src.InstallationMetadata.IsChangedFromTargetLastPublished))
 			;
 
 		CreateMap<DataSourceStoreItem, DataSource>()

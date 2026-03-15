@@ -1,4 +1,4 @@
-﻿global using AutoMapper;
+﻿global using PanoramicData.Mapper;
 global using AwesomeAssertions;
 global using Divergic.Logging.Xunit;
 global using LogicMonitor.Api.Alerts;

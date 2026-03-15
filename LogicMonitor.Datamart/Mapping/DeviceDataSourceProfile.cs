@@ -119,6 +119,12 @@ public class DeviceDataSourceProfile : Profile
 			.ForMember(
 				dest => dest.ResourceDisplayName,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.DataSourceName,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.DataSourceDescription,
+				opts => opts.Ignore())
 			;
 	}
 }

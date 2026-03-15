@@ -53,6 +53,9 @@ public class CollectorProfile : Profile
 			.ForMember(
 				dest => dest.CollectorGroup,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.OnetimeDowngradeInfo,
+				opts => opts.MapFrom(src => src.OneTimeDowngradeInfo))
 			;
 
 		CreateMap<CollectorStoreItem, Collector>()
@@ -152,6 +155,9 @@ public class CollectorProfile : Profile
 			.ForMember(
 				dest => dest.CalculatedThreshold,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.OneTimeDowngradeInfo,
+				opts => opts.MapFrom(src => src.OnetimeDowngradeInfo))
 			;
 	}
 }
