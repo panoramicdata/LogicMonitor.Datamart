@@ -30,7 +30,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="AutoMapper" Version="14.0.0" />
+		<PackageReference Include="AutoMapper" Version="16.1.1" />
 		<PackageReference Include="EFCore.BulkExtensions.Dotnet10.PostgreSql" Version="10.0.0" />
 		<PackageReference Include="EFCore.BulkExtensions.Dotnet10.SqlServer" Version="10.0.0" />
 		<PackageReference Include="LogicMonitor.Api" Version="3.235.6" />
