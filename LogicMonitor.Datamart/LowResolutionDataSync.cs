@@ -17,6 +17,28 @@ internal class LowResolutionDataSync(
 {
 	private const int DeviceDownTimeWindowSeconds = 3000;
 
+	/// <summary>
+	/// Expected data points per day for hourly resolution (3600s step).
+	/// Used for logging context only.
+	/// </summary>
+	private const int ExpectedPointsPerDayHourly = 24;
+
+	/// <summary>
+	/// Expected step size in seconds for hourly resolution.
+	/// </summary>
+	private const long ExpectedHourlyStepSeconds = 3600;
+
+	/// <summary>
+	/// Maximum acceptable step size in seconds before considering it throttled.
+	/// Set to 4500s (1.25 hours) to allow for minor variations in timing.
+	/// 
+	/// Note: We use step size as the PRIMARY throttling indicator because:
+	/// - Throttled data has larger step sizes (e.g., 7200s for 2-hour aggregation)
+	/// - Sparse data (device offline) still has hourly step sizes between available points
+	/// - Points-per-day can be misleading when device was legitimately offline
+	/// </summary>
+	private const long MaxAcceptableStepSeconds = 4500;
+
 	private readonly DatamartClient _datamartClient = datamartClient;
 	private readonly Configuration _configuration = configuration;
 	private readonly ITimeProviderService _timeProviderService = timeProviderService;
@@ -604,13 +626,15 @@ internal class LowResolutionDataSync(
 							var cacheKey = deviceDataSourceInstanceId + "_" + startDateTimeUtcWithOffset.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture) + "_" + endDateTimeUtcWithOffset.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture);
 							if (!graphDataCache.TryGetValue(cacheKey, out var graphData))
 							{
-								graphData = graphDataCache[cacheKey] = await GetGraphDataAsync(
-								datamartClient,
-								deviceDataSourceInstanceId,
-								startDateTimeUtcWithOffset,
-								endDateTimeUtcWithOffset,
-								logger,
-								cancellationToken);
+								graphData = graphDataCache[cacheKey] = await GetGraphDataWithAutoChunkingAsync(
+									datamartClient,
+									deviceDataSourceInstanceId,
+									startDateTimeUtcWithOffset,
+									endDateTimeUtcWithOffset,
+									configuration.EnableAutoChunking,
+									configuration.AutoChunkSizeDays,
+									logger,
+									cancellationToken);
 
 								cacheStats.AddMiss();
 							}
@@ -695,9 +719,480 @@ internal class LowResolutionDataSync(
 			}
 		}
 
-		// Re-enable caching
+	// Re-enable caching
 		datamartClient.UseCache = oldCacheState;
 	}
+
+	/// <summary>
+	/// Detects if the graph data response has lower-than-expected resolution.
+	/// This can occur due to:
+	/// - LogicMonitor's adaptive aggregation for large date ranges (expected for >42 days)
+	/// - Server-side throttling due to load (unexpected, can affect any request)
+	/// 
+	/// Either way, the solution is the same: chunk the requests into smaller periods.
+	/// 
+	/// Detection strategy:
+	/// - Primary indicator: Step size between data points (most reliable)
+	/// - Secondary indicator: Points per day (only used when step size is borderline)
+	/// 
+	/// Important: Sparse data (device offline) is NOT throttling. If step size is hourly (3600s),
+	/// we accept the data even if there are few points - this is legitimate missing data.
+	/// </summary>
+	internal static bool IsThrottled(
+		GraphData graphData,
+		double daysInPeriod,
+		out long actualStepSeconds,
+		out double actualPointsPerDay)
+	{
+		actualStepSeconds = 0;
+		actualPointsPerDay = 0;
+
+		var timestampCount = graphData.TimeStamps.Count;
+		if (timestampCount < 2)
+		{
+			// Not enough data to determine throttling - could be device offline
+			// This is NOT throttling, just no data
+			return false;
+		}
+
+		// Calculate actual step size (primary throttling indicator)
+		var firstTimestamp = graphData.TimeStamps[0];
+		var secondTimestamp = graphData.TimeStamps[1];
+		var stepMs = secondTimestamp - firstTimestamp;
+		actualStepSeconds = stepMs / 1000;
+
+		// Calculate actual points per day (informational)
+		actualPointsPerDay = timestampCount / daysInPeriod;
+
+		// Primary check: Step size is the reliable indicator of throttling/aggregation
+		// If step size is hourly or better, the data is NOT throttled (may just be sparse)
+		if (actualStepSeconds <= MaxAcceptableStepSeconds)
+		{
+			// Step size is acceptable (hourly or better)
+			// Even if points-per-day is low, this is legitimate sparse data, not throttling
+			return false;
+		}
+
+		// Step size is too large - this is definitely throttled/aggregated data
+		// The points-per-day check is now just additional context for logging
+		return true;
+	}
+
+	/// <summary>
+	/// Adaptive chunk sizes to try when throttling is detected.
+	/// These are ordered from largest to smallest, with 31 days being optimal for hourly resolution
+	/// and covering all calendar months (28-31 days).
+	/// - 31 days: Gives hourly (24 pts/day) - ideal, covers all months
+	/// - 14 days: Gives 21-min resolution (69 pts/day) - acceptable fallback
+	/// - 7 days: Gives 11-min resolution (131 pts/day) - last resort, more granular than needed
+	/// We don't go below 6 days as 1-5 days gives weird behaviour (only start/end points).
+	/// </summary>
+	private static readonly int[] _adaptiveChunkSizes = [31, 14, 7];
+
+	/// <summary>
+	/// Delay between retry attempts when throttling is detected (milliseconds).
+	/// This gives the server time to recover from load.
+	/// </summary>
+	private const int ThrottlingRetryDelayMs = 500;
+
+	#region Auto-Chunking (Opt-in Feature)
+
+	// ============================================================================
+	// AUTO-CHUNKING FEATURE
+	// ============================================================================
+	// This feature is OPT-IN via Configuration.EnableAutoChunking (default: false).
+	// When disabled (default), these methods still work but return data unchanged.
+	// 
+	// Purpose: Work around LogicMonitor API throttling/adaptive aggregation that
+	// can reduce data resolution from hourly to multi-hour intervals.
+	// 
+	// Behaviour when EnableAutoChunking = false:
+	//   - GetGraphDataWithAutoChunkingAsync() fetches data normally
+	//   - If throttling detected, logs a warning but returns data as-is
+	//   - NO chunking, NO retries, NO behaviour change from previous versions
+	// 
+	// Behaviour when EnableAutoChunking = true:
+	//   - If throttling detected, splits request into smaller chunks
+	//   - Merges results to restore hourly resolution
+	//   - Uses adaptive fallback: 31 days -> 14 days -> 7 days
+	// ============================================================================
+
+	/// <summary>
+	/// Fetches graph data with automatic chunking if throttling is detected.
+	/// 
+	/// This is the main entry point for the auto-chunking feature.
+	/// When enableAutoChunking is FALSE (default), this method:
+	/// - Fetches data normally via GetGraphDataAsync
+	/// - Logs a warning if throttling is detected
+	/// - Returns the data unchanged (NO regression from previous behaviour)
+	/// 
+	/// When enableAutoChunking is TRUE:
+	/// - Detects throttling and retries with smaller chunks
+	/// - Merges chunk results to restore hourly resolution
+	/// </summary>
+	internal static async Task<GraphData> GetGraphDataWithAutoChunkingAsync(
+		DatamartClient datamartClient,
+		int resourceDataSourceInstanceId,
+		DateTimeOffset startDateTimeOffset,
+		DateTimeOffset endDateTimeOffset,
+		bool enableAutoChunking,
+		int chunkSizeDays,
+		ILogger logger,
+		CancellationToken cancellationToken)
+	{
+		var daysInPeriod = (endDateTimeOffset - startDateTimeOffset).TotalDays;
+
+		// First attempt: try the full period
+		var graphData = await GetGraphDataAsync(
+			datamartClient,
+			resourceDataSourceInstanceId,
+			startDateTimeOffset,
+			endDateTimeOffset,
+			logger,
+			cancellationToken)
+			.ConfigureAwait(false);
+
+		// Check for throttling
+		if (!IsThrottled(graphData, daysInPeriod, out var actualStepSeconds, out var actualPointsPerDay))
+		{
+			// Not throttled, return the data
+			logger.LogDebug(
+				"Graph data for DeviceDataSourceInstance {DeviceDataSourceInstanceId} received with {PointsPerDay:F1} points/day, step {StepSeconds}s - OK",
+				resourceDataSourceInstanceId,
+				actualPointsPerDay,
+				actualStepSeconds);
+
+			return graphData;
+		}
+
+		// Aggregation/throttling detected
+		logger.LogWarning(
+			"LogicMonitor API returned aggregated data for DeviceDataSourceInstance {DeviceDataSourceInstanceId}. " +
+			"Expected ~{ExpectedPointsPerDay} points/day with {ExpectedStep}s step, " +
+			"but received {ActualPointsPerDay:F1} points/day with {ActualStep}s step. " +
+			"Date range: {Start:yyyy-MM-dd} to {End:yyyy-MM-dd} ({Days:F0} days). " +
+			"This is expected for >42 days, or may indicate server load throttling.",
+			resourceDataSourceInstanceId,
+			ExpectedPointsPerDayHourly,
+			ExpectedHourlyStepSeconds,
+			actualPointsPerDay,
+			actualStepSeconds,
+			startDateTimeOffset,
+			endDateTimeOffset,
+			daysInPeriod);
+
+		if (!enableAutoChunking)
+		{
+			logger.LogInformation(
+				"Auto-chunking is disabled. Using throttled data for DeviceDataSourceInstance {DeviceDataSourceInstanceId}.",
+				resourceDataSourceInstanceId);
+
+			return graphData;
+		}
+
+		// Auto-chunking enabled - try adaptive chunk sizes
+		logger.LogInformation(
+			"Auto-chunking enabled. Attempting adaptive chunking for DeviceDataSourceInstance {DeviceDataSourceInstanceId}...",
+			resourceDataSourceInstanceId);
+
+		return await GetGraphDataAdaptiveChunkedAsync(
+			datamartClient,
+			resourceDataSourceInstanceId,
+			startDateTimeOffset,
+			endDateTimeOffset,
+			chunkSizeDays,
+			logger,
+			cancellationToken)
+			.ConfigureAwait(false);
+	}
+
+	/// <summary>
+	/// Fetches graph data using adaptive chunking with progressive fallback.
+	/// Tries the configured chunk size first, then falls back to smaller chunks if still throttled.
+	/// Tracks granularity consistency across chunks and logs warnings for mixed resolutions.
+	/// </summary>
+	internal static async Task<GraphData> GetGraphDataAdaptiveChunkedAsync(
+		DatamartClient datamartClient,
+		int resourceDataSourceInstanceId,
+		DateTimeOffset startDateTimeOffset,
+		DateTimeOffset endDateTimeOffset,
+		int preferredChunkSizeDays,
+		ILogger logger,
+		CancellationToken cancellationToken)
+	{
+		// Build list of chunk sizes to try, starting with preferred
+		var chunkSizesToTry = new List<int> { preferredChunkSizeDays };
+		foreach (var size in _adaptiveChunkSizes)
+		{
+			if (size < preferredChunkSizeDays && !chunkSizesToTry.Contains(size))
+			{
+				chunkSizesToTry.Add(size);
+			}
+		}
+
+		var allTimestamps = new List<long>();
+		var allLineData = new Dictionary<string, List<double?>>();
+		var chunkGranularities = new List<(DateTimeOffset Start, DateTimeOffset End, long StepSeconds, double PointsPerDay)>();
+
+		var currentStart = startDateTimeOffset;
+		var chunkCount = 0;
+		var currentChunkSizeIndex = 0;
+		var currentChunkSize = chunkSizesToTry[0];
+
+		while (currentStart < endDateTimeOffset)
+		{
+			var currentEnd = currentStart.AddDays(currentChunkSize);
+			if (currentEnd > endDateTimeOffset)
+			{
+				currentEnd = endDateTimeOffset;
+			}
+
+			var chunkDays = (currentEnd - currentStart).TotalDays;
+
+			// Skip very small chunks (< 1 day) as they give weird results
+			if (chunkDays < 1)
+			{
+				currentStart = currentEnd;
+				continue;
+			}
+
+			chunkCount++;
+			logger.LogDebug(
+				"Fetching chunk {ChunkNumber} ({ChunkSize} days) for DeviceDataSourceInstance {DeviceDataSourceInstanceId} ({Start:yyyy-MM-dd} .. {End:yyyy-MM-dd})...",
+				chunkCount,
+				currentChunkSize,
+				resourceDataSourceInstanceId,
+				currentStart,
+				currentEnd);
+
+			// Add small delay between chunks to reduce server load
+			if (chunkCount > 1)
+			{
+				await Task.Delay(ThrottlingRetryDelayMs, cancellationToken).ConfigureAwait(false);
+			}
+
+			var chunkData = await GetGraphDataAsync(
+				datamartClient,
+				resourceDataSourceInstanceId,
+				currentStart,
+				currentEnd,
+				logger,
+				cancellationToken)
+				.ConfigureAwait(false);
+
+			// Check if this chunk is throttled
+			if (IsThrottled(chunkData, chunkDays, out var chunkStepSeconds, out var chunkPointsPerDay))
+			{
+				// Chunk is still throttled - try smaller chunk size if available
+				if (currentChunkSizeIndex < chunkSizesToTry.Count - 1)
+				{
+					currentChunkSizeIndex++;
+					currentChunkSize = chunkSizesToTry[currentChunkSizeIndex];
+
+					logger.LogWarning(
+						"Chunk {ChunkNumber} still throttled ({PointsPerDay:F1} pts/day, {StepSeconds}s step). " +
+						"Reducing chunk size to {NewChunkSize} days and retrying...",
+						chunkCount,
+						chunkPointsPerDay,
+						chunkStepSeconds,
+						currentChunkSize);
+
+					// Don't advance currentStart - retry this period with smaller chunks
+					chunkCount--; // Adjust count since we're retrying
+					continue;
+				}
+				else
+				{
+					// Already at smallest chunk size - log warning and use what we got
+					logger.LogWarning(
+						"Chunk {ChunkNumber} throttled even at {ChunkSize}-day size ({PointsPerDay:F1} pts/day). " +
+						"Using available data. Data quality may be reduced.",
+						chunkCount,
+						currentChunkSize,
+						chunkPointsPerDay);
+				}
+			}
+
+			// Track granularity for consistency checking
+			chunkGranularities.Add((currentStart, currentEnd, chunkStepSeconds, chunkPointsPerDay));
+
+			// Merge timestamps
+			allTimestamps.AddRange(chunkData.TimeStamps);
+
+			// Merge line data
+			foreach (var line in chunkData.Lines)
+			{
+				if (!allLineData.TryGetValue(line.Legend, out var lineValues))
+				{
+					lineValues = [];
+					allLineData[line.Legend] = lineValues;
+				}
+
+				lineValues.AddRange(line.Data);
+			}
+
+			currentStart = currentEnd;
+		}
+
+		// Check for granularity consistency
+		LogGranularityConsistency(chunkGranularities, resourceDataSourceInstanceId, logger);
+
+		var totalDays = (endDateTimeOffset - startDateTimeOffset).TotalDays;
+
+		// Merge all chunks into a single GraphData with sorted, deduplicated timestamps
+		var mergedGraphData = MergeGraphDataChunks(
+			allTimestamps,
+			allLineData,
+			logger,
+			resourceDataSourceInstanceId);
+
+		logger.LogInformation(
+			"Adaptive chunked fetch complete for DeviceDataSourceInstance {DeviceDataSourceInstanceId}: " +
+			"{ChunkCount} chunks, {TotalPoints} total points ({PointsPerDay:F1} points/day)",
+			resourceDataSourceInstanceId,
+			chunkCount,
+			mergedGraphData.TimeStamps.Count,
+			mergedGraphData.TimeStamps.Count / totalDays);
+
+		return mergedGraphData;
+	}
+
+	/// <summary>
+	/// Logs warnings if chunks have inconsistent granularity (mixed resolutions).
+	/// </summary>
+	private static void LogGranularityConsistency(
+		List<(DateTimeOffset Start, DateTimeOffset End, long StepSeconds, double PointsPerDay)> chunkGranularities,
+		int resourceDataSourceInstanceId,
+		ILogger logger)
+	{
+		if (chunkGranularities.Count < 2)
+		{
+			return;
+		}
+
+		var stepSizes = chunkGranularities.Select(c => c.StepSeconds).Distinct().ToList();
+		if (stepSizes.Count > 1)
+		{
+			var minStep = stepSizes.Min();
+			var maxStep = stepSizes.Max();
+			var variance = (double)maxStep / minStep;
+
+			if (variance > 1.5) // More than 50% variance
+			{
+				logger.LogWarning(
+					"Mixed granularity detected for DeviceDataSourceInstance {DeviceDataSourceInstanceId}. " +
+					"Step sizes range from {MinStep}s to {MaxStep}s ({Variance:F1}x variance). " +
+					"Data quality may be inconsistent across the period. Chunk details: {ChunkDetails}",
+					resourceDataSourceInstanceId,
+					minStep,
+					maxStep,
+					variance,
+					string.Join(", ", chunkGranularities.Select(c => $"{c.Start:MM-dd}:{c.StepSeconds}s")));
+			}
+			else
+			{
+				logger.LogDebug(
+					"Minor granularity variation for DeviceDataSourceInstance {DeviceDataSourceInstanceId}: " +
+					"{MinStep}s to {MaxStep}s (within acceptable {Variance:F1}x variance)",
+					resourceDataSourceInstanceId,
+					minStep,
+					maxStep,
+					variance);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Fetches graph data by splitting the date range into smaller chunks and merging the results.
+	/// This ensures hourly resolution even when the API would otherwise apply adaptive aggregation.
+	/// </summary>
+	internal static async Task<GraphData> GetGraphDataChunkedAsync(
+		DatamartClient datamartClient,
+		int resourceDataSourceInstanceId,
+		DateTimeOffset startDateTimeOffset,
+		DateTimeOffset endDateTimeOffset,
+		int chunkSizeDays,
+		ILogger logger,
+		CancellationToken cancellationToken)
+	{
+		var allTimestamps = new List<long>();
+		var allLineData = new Dictionary<string, List<double?>>();
+
+		var currentStart = startDateTimeOffset;
+		var chunkCount = 0;
+
+		while (currentStart < endDateTimeOffset)
+		{
+			var currentEnd = currentStart.AddDays(chunkSizeDays);
+			if (currentEnd > endDateTimeOffset)
+			{
+				currentEnd = endDateTimeOffset;
+			}
+
+			chunkCount++;
+			logger.LogDebug(
+				"Fetching chunk {ChunkNumber} for DeviceDataSourceInstance {DeviceDataSourceInstanceId} ({Start:yyyy-MM-dd} .. {End:yyyy-MM-dd})...",
+				chunkCount,
+				resourceDataSourceInstanceId,
+				currentStart,
+				currentEnd);
+
+			var chunkData = await GetGraphDataAsync(
+				datamartClient,
+				resourceDataSourceInstanceId,
+				currentStart,
+				currentEnd,
+				logger,
+				cancellationToken)
+				.ConfigureAwait(false);
+
+			// Merge timestamps
+			allTimestamps.AddRange(chunkData.TimeStamps);
+
+			// Merge line data
+			foreach (var line in chunkData.Lines)
+			{
+				if (!allLineData.TryGetValue(line.Legend, out var lineValues))
+				{
+					lineValues = [];
+					allLineData[line.Legend] = lineValues;
+				}
+
+				lineValues.AddRange(line.Data);
+			}
+
+			currentStart = currentEnd;
+		}
+
+		logger.LogInformation(
+			"Chunked fetch complete for DeviceDataSourceInstance {DeviceDataSourceInstanceId}: {ChunkCount} chunks, {TotalPoints} total points ({PointsPerDay:F1} points/day)",
+			resourceDataSourceInstanceId,
+			chunkCount,
+			allTimestamps.Count,
+			allTimestamps.Count / (endDateTimeOffset - startDateTimeOffset).TotalDays);
+
+		// Build merged GraphData by creating Line objects
+		var mergedLines = new List<Line>();
+		foreach (var kvp in allLineData)
+		{
+			var line = new Line
+			{
+				Legend = kvp.Key,
+				Data = [.. kvp.Value]
+			};
+			mergedLines.Add(line);
+		}
+
+		var mergedGraphData = new GraphData
+		{
+			TimeStamps = [.. allTimestamps],
+			Lines = mergedLines
+		};
+
+		return mergedGraphData;
+	}
+
+	#endregion
 
 	internal static async Task<GraphData> GetGraphDataAsync(
 		DatamartClient datamartClient,
@@ -1639,6 +2134,76 @@ internal class LowResolutionDataSync(
 		// Add actual data points to total expected
 		totalExpectedDataPoints += values.Count(v => v is double);
 		return (totalDowntime, totalExpectedDataPoints);
+	}
+
+	/// <summary>
+	/// Merges multiple GraphData objects into a single GraphData, handling:
+	/// - Duplicate timestamps (takes first value)
+	/// - Out-of-order timestamps (sorts chronologically)
+	/// - Line data synchronization (keeps values aligned with timestamps)
+	/// </summary>
+	/// <param name="allTimestamps">All timestamps from merged chunks (may contain duplicates)</param>
+	/// <param name="allLineData">All line data from merged chunks, keyed by legend</param>
+	/// <param name="logger">Logger for diagnostics</param>
+	/// <param name="resourceDataSourceInstanceId">Instance ID for logging</param>
+	/// <returns>Merged GraphData with sorted, deduplicated timestamps and synchronized line data</returns>
+	internal static GraphData MergeGraphDataChunks(
+		List<long> allTimestamps,
+		Dictionary<string, List<double?>> allLineData,
+		ILogger logger,
+		int resourceDataSourceInstanceId)
+	{
+		if (allTimestamps.Count == 0)
+		{
+			return new GraphData
+			{
+				TimeStamps = [],
+				Lines = []
+			};
+		}
+
+		// Sort and deduplicate timestamps
+		var sortedTimestamps = allTimestamps.Distinct().OrderBy(t => t).ToList();
+
+		if (sortedTimestamps.Count != allTimestamps.Count)
+		{
+			logger.LogWarning(
+				"Removed {DuplicateCount} duplicate timestamps for DeviceDataSourceInstance {DeviceDataSourceInstanceId}. " +
+				"Original: {OriginalCount}, Deduplicated: {DeduplicatedCount}",
+				allTimestamps.Count - sortedTimestamps.Count,
+				resourceDataSourceInstanceId,
+				allTimestamps.Count,
+				sortedTimestamps.Count);
+		}
+
+		// Build index map: for each unique timestamp, find the first index where it appeared
+		var timestampIndexMap = allTimestamps
+			.Select((ts, idx) => (ts, idx))
+			.GroupBy(x => x.ts)
+			.ToDictionary(g => g.Key, g => g.First().idx);
+
+		// Build merged lines with reordered data
+		var mergedLines = new List<Line>();
+		foreach (var kvp in allLineData)
+		{
+			// Reorder line data to match sorted timestamps, taking first value for duplicates
+			var reorderedData = sortedTimestamps
+				.Select(ts => kvp.Value[timestampIndexMap[ts]])
+				.ToList();
+
+			var line = new Line
+			{
+				Legend = kvp.Key,
+				Data = [.. reorderedData]
+			};
+			mergedLines.Add(line);
+		}
+
+		return new GraphData
+		{
+			TimeStamps = [.. sortedTimestamps],
+			Lines = mergedLines
+		};
 	}
 
 	#region SDT Handling
