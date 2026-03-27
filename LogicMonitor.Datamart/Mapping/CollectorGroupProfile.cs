@@ -67,6 +67,15 @@ public class CollectorGroupProfile : Profile
 			.ForMember(
 				dest => dest.CalThreshold,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.PropertyForBalancing,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.PropertyForBalancingLastUpdatedOn,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.PropertyForBalancingUpdateLockedUpToMilliseconds,
+				opts => opts.Ignore())
 			;
 	}
 }
