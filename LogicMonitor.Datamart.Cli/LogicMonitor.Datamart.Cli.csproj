@@ -24,27 +24,26 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="AspNetCore.HealthChecks.Network" Version="9.0.0" />
-		<PackageReference Include="AspNetCore.HealthChecks.SystemMemory" Version="1.0.1" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.5">
+		<PackageReference Include="AspNetCore.HealthChecks.Network" />
+		<PackageReference Include="AspNetCore.HealthChecks.SystemMemory" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
-		<PackageReference Include="Nerdbank.GitVersioning" />
-		<PackageReference Include="PanoramicData.HealthChecks.Core" Version="10.0.3" />
-		<PackageReference Include="PanoramicData.HealthChecks.Versions" Version="10.0.3" />
-		<PackageReference Include="Serilog.Extensions.Hosting" Version="10.0.0" />
-		<PackageReference Include="Serilog.Settings.Configuration" Version="10.0.0" />
-		<PackageReference Include="Serilog.Sinks.ApplicationInsights" Version="5.0.0" />
-		<PackageReference Include="Serilog.Sinks.AzureAnalytics" Version="5.0.0" />
-		<PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
-		<PackageReference Include="Serilog.Sinks.ElasticSearch" Version="10.0.0" />
-		<PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
-		<PackageReference Update="Nerdbank.GitVersioning" Version="3.9.50">
+		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" />
+		<PackageReference Include="Nerdbank.GitVersioning">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+		<PackageReference Include="PanoramicData.HealthChecks.Core" />
+		<PackageReference Include="PanoramicData.HealthChecks.Versions" />
+		<PackageReference Include="Serilog.Extensions.Hosting" />
+		<PackageReference Include="Serilog.Settings.Configuration" />
+		<PackageReference Include="Serilog.Sinks.ApplicationInsights" />
+		<PackageReference Include="Serilog.Sinks.AzureAnalytics" />
+		<PackageReference Include="Serilog.Sinks.Console" />
+		<PackageReference Include="Serilog.Sinks.ElasticSearch" />
+		<PackageReference Include="Serilog.AspNetCore" />
 	</ItemGroup>
 
 	<ItemGroup>

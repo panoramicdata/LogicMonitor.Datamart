@@ -197,13 +197,13 @@ public class DatamartClient : LogicMonitorClient
 		return result ?? throw new NotSupportedException($"Type {typeof(TStore).Name} is not supported");
 	}
 
-	public async Task<List<T>> SqlListQuery<T>(string sql) where T : class, IHasEndpoint, new()
+	public async Task<List<T>> SqlListQuery<T>(FormattableString sql) where T : class, IHasEndpoint, new()
 	{
 		using var context = GetContext();
 		return !context.Database.IsSqlServer()
 			? throw new NotSupportedException("Only SQL Server types support SQL queries.")
 			: await Task.FromResult(GetDbSet<T>(context)
-				.FromSqlRaw(sql)
+				.FromSql(sql)
 				.ToList()).ConfigureAwait(false);
 	}
 

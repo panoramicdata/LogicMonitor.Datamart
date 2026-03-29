@@ -1,3 +1,5 @@
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/e9ed5029110e407eaabb5585b9e6b0a6)](https://app.codacy.com/gh/panoramicdata/LogicMonitor.Datamart/dashboard)
+
 # Introduction
 
 ## Purpose

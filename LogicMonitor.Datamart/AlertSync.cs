@@ -399,48 +399,46 @@ internal class AlertSync(
 		return result;
 	}
 
+	private static readonly HashSet<string> _validIndexColumns =
+	[
+		"InternalId",
+		"Id",
+		"MonitorObjectId",
+		"MonitorObjectName",
+		"MonitorObjectType",
+		"MonitorObjectGroup0",
+		"MonitorObjectGroup1",
+		"MonitorObjectGroup2",
+		"MonitorObjectGroup3",
+		"MonitorObjectGroup4",
+		"MonitorObjectGroup5",
+		"MonitorObjectGroup6",
+		"MonitorObjectGroup7",
+		"MonitorObjectGroup8",
+		"MonitorObjectGroup9",
+		"DataPointId",
+		"DataPointName",
+		"InstanceId",
+		"InstanceName",
+		"Severity",
+		"IsCleared",
+		"ResourceId",
+		"ResourceTemplateId",
+		"ResourceTemplateName",
+		"ResourceTemplateType",
+		"StartOnSeconds",
+		"EndOnSeconds",
+		"FasterPercentageAvailability"
+	];
+
 	private async Task AlterIndexes(Context context, bool enabled)
 	{
 		var stopwatch = Stopwatch.StartNew();
 		var indexAction = enabled ? "REBUILD" : "DISABLE";
 		Logger.LogDebug("Alert index {IndexAction}...", indexAction);
-		foreach (var column in new[] {
-					"InternalId",
-					"Id",
-					"MonitorObjectId",
-					"MonitorObjectName",
-					"MonitorObjectType",
-					"MonitorObjectGroup0",
-					"MonitorObjectGroup1",
-					"MonitorObjectGroup2",
-					"MonitorObjectGroup3",
-					"MonitorObjectGroup4",
-					"MonitorObjectGroup5",
-					"MonitorObjectGroup6",
-					"MonitorObjectGroup7",
-					"MonitorObjectGroup8",
-					"MonitorObjectGroup9",
-					"DataPointId",
-					"DataPointName",
-					"InstanceId",
-					"InstanceName",
-					"Severity",
-					"IsCleared",
-					"ResourceId",
-					"ResourceTemplateId",
-					"ResourceTemplateName",
-					"ResourceTemplateType",
-					"ResourceId",
-					"ResourceTemplateId",
-					"ResourceTemplateName",
-					"ResourceTemplateType",
-					"StartOnSeconds",
-					"EndOnSeconds",
-					"StartOnSeconds",
-					"FasterPercentageAvailability"
-				})
+		foreach (var column in _validIndexColumns)
 		{
-			var sql = "ALTER INDEX IX_Alerts_" + column + " ON [Alerts] " + indexAction;
+			var sql = $"ALTER INDEX [IX_Alerts_{column}] ON [Alerts] {indexAction}";
 			await context
 			  .Database
 			  .ExecuteSqlRawAsync(sql)

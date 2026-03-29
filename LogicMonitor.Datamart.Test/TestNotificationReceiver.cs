@@ -1,23 +1,32 @@
 ﻿using LogicMonitor.Datamart.Interfaces;
 
 namespace LogicMonitor.Datamart.Test;
-internal sealed class TestNotificationReceiver(ILogger logger) : INotificationReceiver
+internal sealed partial class TestNotificationReceiver(ILogger logger) : INotificationReceiver
 {
 	private int _itemCount;
 	private int _itemIndex;
 	private string _stageName = string.Empty;
 
+	[LoggerMessage(Level = LogLevel.Information, Message = "SetItemCountAsync: {ItemCount}")]
+	private static partial void LogSetItemCount(ILogger logger, int itemCount);
+
+	[LoggerMessage(Level = LogLevel.Information, Message = "SetItemIndexAsync: {ItemIndex}")]
+	private static partial void LogSetItemIndex(ILogger logger, int itemIndex);
+
+	[LoggerMessage(Level = LogLevel.Information, Message = "SetStageNameAsync: {StageName}")]
+	private static partial void LogSetStageName(ILogger logger, string stageName);
+
 	public Task SetItemCountAsync(int itemCount, CancellationToken cancellationToken)
 	{
 		_itemCount = itemCount;
-		logger.LogInformation("SetItemCountAsync: {ItemCount}", _itemCount);
+		LogSetItemCount(logger, itemCount);
 		return Task.CompletedTask;
 	}
 
 	public Task SetItemIndexAsync(int itemIndex, CancellationToken cancellationToken)
 	{
 		_itemIndex = itemIndex;
-		logger.LogInformation("SetItemIndexAsync: {ItemIndex}", _itemIndex);
+		LogSetItemIndex(logger, itemIndex);
 		return Task.CompletedTask;
 	}
 
@@ -26,7 +35,7 @@ internal sealed class TestNotificationReceiver(ILogger logger) : INotificationRe
 		_stageName = stageName;
 		_itemIndex = 1;
 		_itemCount = 1;
-		logger.LogInformation("SetStageNameAsync: {StageName}", _stageName);
+		LogSetStageName(logger, stageName);
 		return Task.CompletedTask;
 	}
 }

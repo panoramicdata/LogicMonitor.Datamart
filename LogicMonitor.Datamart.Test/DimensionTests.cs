@@ -11,7 +11,7 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 	public void Arrays_ReverseAsExpected()
 	{
 		var values = new double?[] { 1, 2, null, 4 };
-		values.Reverse();
+		Array.Reverse(values);
 		values.Should().BeEquivalentTo(new double?[] { 4, null, 2, 1 });
 	}
 

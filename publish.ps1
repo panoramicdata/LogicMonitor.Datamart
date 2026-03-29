@@ -50,13 +50,13 @@ $ErrorActionPreference = "Stop"
 
 # Get the script directory (solution root)
 $SolutionRoot = $PSScriptRoot
-$ProjectPath = Join-Path $SolutionRoot "LogicMonitor.Datamart" "LogicMonitor.Datamart.csproj"
-$OutputPath = Join-Path $SolutionRoot "artifacts"
+$ProjectPath = Join-Path -Path $SolutionRoot -ChildPath "LogicMonitor.Datamart" -AdditionalChildPath "LogicMonitor.Datamart.csproj"
+$OutputPath = Join-Path -Path $SolutionRoot -ChildPath "artifacts"
 
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "LogicMonitor.Datamart NuGet Publisher" -ForegroundColor Cyan
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host ""
+Write-Output "========================================"
+Write-Output "LogicMonitor.Datamart NuGet Publisher"
+Write-Output "========================================"
+Write-Output ""
 
 # Check if project file exists
 if (-not (Test-Path $ProjectPath)) {
@@ -68,7 +68,7 @@ if (-not (Test-Path $ProjectPath)) {
 if ([string]::IsNullOrWhiteSpace($ApiKey)) {
     $ApiKeyFile = Join-Path $SolutionRoot "nuget-key.txt"
     if (Test-Path $ApiKeyFile) {
-        Write-Host "Reading API key from nuget-key.txt..." -ForegroundColor Yellow
+        Write-Output "Reading API key from nuget-key.txt..."
    $ApiKey = (Get-Content $ApiKeyFile -Raw).Trim()
  
         if ([string]::IsNullOrWhiteSpace($ApiKey)) {
@@ -78,15 +78,15 @@ if ([string]::IsNullOrWhiteSpace($ApiKey)) {
     }
     else {
         Write-Error "No API key provided and nuget-key.txt file not found in solution root."
-        Write-Host "Please either:" -ForegroundColor Yellow
-        Write-Host "  1. Create a nuget-key.txt file in the solution root with your NuGet API key" -ForegroundColor Yellow
-   Write-Host "  2. Pass the API key using the -ApiKey parameter" -ForegroundColor Yellow
+        Write-Output "Please either:"
+        Write-Output "  1. Create a nuget-key.txt file in the solution root with your NuGet API key"
+   Write-Output "  2. Pass the API key using the -ApiKey parameter"
         exit 1
     }
 }
 
 # Clean previous builds
-Write-Host "Cleaning previous builds..." -ForegroundColor Green
+Write-Output "Cleaning previous builds..."
 if (Test-Path $OutputPath) {
     Remove-Item $OutputPath -Recurse -Force
 }
@@ -97,7 +97,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # Restore dependencies
-Write-Host "Restoring dependencies..." -ForegroundColor Green
+Write-Output "Restoring dependencies..."
 dotnet restore $ProjectPath
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Failed to restore dependencies"
@@ -106,8 +106,8 @@ if ($LASTEXITCODE -ne 0) {
 
 # Run tests unless skipped
 if (-not $SkipTests) {
-    Write-Host "Running tests..." -ForegroundColor Green
-    $TestProjectPath = Join-Path $SolutionRoot "LogicMonitor.Datamart.Test" "LogicMonitor.Datamart.Test.csproj"
+    Write-Output "Running tests..."
+    $TestProjectPath = Join-Path -Path $SolutionRoot -ChildPath "LogicMonitor.Datamart.Test" -AdditionalChildPath "LogicMonitor.Datamart.Test.csproj"
     
     if (Test-Path $TestProjectPath) {
         dotnet test $TestProjectPath --configuration $Configuration --no-restore
@@ -121,11 +121,11 @@ exit $LASTEXITCODE
     }
 }
 else {
-    Write-Host "Skipping tests..." -ForegroundColor Yellow
+    Write-Output "Skipping tests..."
 }
 
 # Build the project
-Write-Host "Building project in $Configuration configuration..." -ForegroundColor Green
+Write-Output "Building project in $Configuration configuration..."
 dotnet build $ProjectPath --configuration $Configuration --no-restore
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Build failed"
@@ -133,7 +133,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # Pack the NuGet package
-Write-Host "Packing NuGet package..." -ForegroundColor Green
+Write-Output "Packing NuGet package..."
 # Use /p:PackageOutputPath to ensure package goes to our output folder
 dotnet pack $ProjectPath --configuration $Configuration --no-build --output $OutputPath /p:PackageOutputPath=$OutputPath
 if ($LASTEXITCODE -ne 0) {
@@ -145,8 +145,8 @@ if ($LASTEXITCODE -ne 0) {
 $NuGetPackages = Get-ChildItem -Path $OutputPath -Filter "*.nupkg" -Exclude "*.symbols.nupkg" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending
 if ($null -eq $NuGetPackages -or $NuGetPackages.Count -eq 0) {
     # Try looking in the bin folder as fallback
-    $BinOutputPath = Join-Path $SolutionRoot "LogicMonitor.Datamart" "bin" $Configuration
-    Write-Host "No package found in $OutputPath, checking $BinOutputPath..." -ForegroundColor Yellow
+    $BinOutputPath = Join-Path -Path $SolutionRoot -ChildPath "LogicMonitor.Datamart" -AdditionalChildPath "bin", $Configuration
+    Write-Output "No package found in $OutputPath, checking $BinOutputPath..."
     $NuGetPackages = Get-ChildItem -Path $BinOutputPath -Filter "*.nupkg" -Exclude "*.symbols.nupkg" -Recurse -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending
     
  if ($null -eq $NuGetPackages -or $NuGetPackages.Count -eq 0) {
@@ -156,22 +156,22 @@ if ($null -eq $NuGetPackages -or $NuGetPackages.Count -eq 0) {
 }
 
 $PackageFile = $NuGetPackages[0]
-Write-Host ""
-Write-Host "Package created: $($PackageFile.Name)" -ForegroundColor Cyan
-Write-Host "Package path: $($PackageFile.FullName)" -ForegroundColor Gray
-Write-Host ""
+Write-Output ""
+Write-Output "Package created: $($PackageFile.Name)"
+Write-Output "Package path: $($PackageFile.FullName)"
+Write-Output ""
 
 # Publish to NuGet
-Write-Host "Publishing to NuGet.org..." -ForegroundColor Green
+Write-Output "Publishing to NuGet.org..."
 dotnet nuget push $PackageFile.FullName --api-key $ApiKey --source $Source --skip-duplicate
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Publish failed"
     exit $LASTEXITCODE
 }
 
-Write-Host ""
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "Successfully published $($PackageFile.Name)!" -ForegroundColor Green
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "Package URL: https://www.nuget.org/packages/LogicMonitor.Datamart" -ForegroundColor Gray
+Write-Output ""
+Write-Output "========================================"
+Write-Output "Successfully published $($PackageFile.Name)!"
+Write-Output "========================================"
+Write-Output ""
+Write-Output "Package URL: https://www.nuget.org/packages/LogicMonitor.Datamart"

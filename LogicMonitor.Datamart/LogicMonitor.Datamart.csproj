@@ -30,30 +30,27 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="PanoramicData.Mapper" Version="10.0.12" />
-		<PackageReference Include="EFCore.BulkExtensions.Dotnet10.PostgreSql" Version="10.0.0" />
-		<PackageReference Include="EFCore.BulkExtensions.Dotnet10.SqlServer" Version="10.0.0" />
-		<PackageReference Include="LogicMonitor.Api" Version="3.235.7" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.5" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.5" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.5">
+		<PackageReference Include="PanoramicData.Mapper" />
+		<PackageReference Include="EFCore.BulkExtensions.Dotnet10.PostgreSql" />
+		<PackageReference Include="EFCore.BulkExtensions.Dotnet10.SqlServer" />
+		<PackageReference Include="LogicMonitor.Api" />
+		<PackageReference Include="Microsoft.Data.SqlClient" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.5" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.5" />
-		<PackageReference Include="Nerdbank.GitVersioning" />
-		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
-		<PackageReference Include="PanoramicData.NCalcExtensions" Version="5.8.17" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Memory" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" />
+		<PackageReference Include="Nerdbank.GitVersioning">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+		<PackageReference Include="PanoramicData.NCalcExtensions" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="Icon.png" Pack="true" PackagePath="" />
-	</ItemGroup>
-	<ItemGroup>
-		<PackageReference Update="Nerdbank.GitVersioning" Version="3.9.50">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
 	</ItemGroup>
 </Project>

@@ -78,6 +78,7 @@ public class AlertProfile : Profile
 
 		CreateMap<AlertStoreItem, Alert>()
 			.ForMember(dest => dest.AlertRuleId, opts => opts.Ignore())
+         .ForMember(dest => dest.AlertTriggerValue, opts => opts.Ignore())
 			.ForMember(
 				dest => dest.DetailMessage,
 				opts => opts.MapFrom(

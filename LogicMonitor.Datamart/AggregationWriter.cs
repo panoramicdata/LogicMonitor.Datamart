@@ -1,12 +1,26 @@
 ﻿using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace LogicMonitor.Datamart;
 
-internal static class AggregationWriter
+internal static partial class AggregationWriter
 {
 	internal static string TableNamePrefix = "DeviceDataSourceInstanceAggregatedData";
 
 	internal static int SqlTimeoutSeconds = 100;
+
+	[GeneratedRegex(@"^DeviceDataSourceInstanceAggregatedData_\d{8}$")]
+	private static partial Regex SafeTableNameRegex();
+
+	private static string ValidateTableName(string tableName)
+	{
+		if (!SafeTableNameRegex().IsMatch(tableName))
+		{
+			throw new ArgumentException($"Invalid table name: {tableName}", nameof(tableName));
+		}
+
+		return tableName;
+	}
 
 	public static string GetTableName(DateTimeOffset start)
 		=> $"{TableNamePrefix}_{start.UtcDateTime:yyyyMMdd}";
@@ -20,10 +34,10 @@ internal static class AggregationWriter
 	{
 		ArgumentNullException.ThrowIfNull(sqlConnection);
 
-		var tableName = GetTableName(start);
-		var tableCreationSql = @"
-IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtype='U')
-	CREATE TABLE [" + tableName + @"](
+		var tableName = ValidateTableName(GetTableName(start));
+		var tableCreationSql = @$"
+IF NOT EXISTS (SELECT * FROM sysobjects WHERE name=@TableName and xtype='U')
+	CREATE TABLE [{tableName}](
 		[Id][int] IDENTITY(1, 1) NOT NULL,
 		[PeriodStart] [smalldatetime] NOT NULL,
 		[PeriodEnd] [smalldatetime] NOT NULL,
@@ -35,12 +49,13 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 		[SumSquared] [float] NOT NULL,
 		[DataCount] [int] NOT NULL,
 		[NoDataCount] [int] NOT NULL,
-		CONSTRAINT[PK_" + tableName + @"] PRIMARY KEY CLUSTERED ( [Id] ASC )
+		CONSTRAINT[PK_{tableName}] PRIMARY KEY CLUSTERED ( [Id] ASC )
 		WITH ( PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON ) ON[PRIMARY]
 	) ON[PRIMARY]";
 
 		using (var command = new SqlCommand(tableCreationSql, sqlConnection))
 		{
+			command.Parameters.AddWithValue("@TableName", tableName);
 			command.CommandTimeout = SqlTimeoutSeconds;
 			await command
 				.ExecuteNonQueryAsync()
@@ -61,13 +76,14 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 		ArgumentNullException.ThrowIfNull(dbContextOptions);
 
 		using var dbContext = new Context(dbContextOptions);
-		var tableName = GetTableName(start);
+		var tableName = ValidateTableName(GetTableName(start));
 		logger.LogDebug("Dropping table {TableName}", tableName);
-		var tableCreationSql = "DROP TABLE [" + tableName + "]";
+#pragma warning disable EF1003 // Table name is validated against a safe regex pattern
 		await dbContext
 			.Database
-			.ExecuteSqlRawAsync(tableCreationSql)
+			.ExecuteSqlRawAsync("DROP TABLE [" + tableName + "]")
 			.ConfigureAwait(false);
+#pragma warning restore EF1003
 	}
 
 	/// <summary>
@@ -85,11 +101,16 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 				.OpenAsync()
 				.ConfigureAwait(false);
 			using var command = connection.CreateCommand();
+			var likePattern = TableNamePrefix + "%";
+			var parameter = command.CreateParameter();
+			parameter.ParameterName = "@Prefix";
+			parameter.Value = likePattern;
+			command.Parameters.Add(parameter);
 			command.CommandText =
 				dbContext.Database.IsSqlServer()
-					? $"SELECT name FROM sys.Tables WHERE name LIKE '{TableNamePrefix}%' ORDER BY name"
+					? "SELECT name FROM sys.Tables WHERE name LIKE @Prefix ORDER BY name"
 				: dbContext.Database.IsNpgsql()
-					? $"SELECT table_name as name FROM information_schema.tables WHERE table_name LIKE '{TableNamePrefix}%' ORDER BY table_name"
+					? "SELECT table_name as name FROM information_schema.tables WHERE table_name LIKE @Prefix ORDER BY table_name"
 					: throw new NotSupportedException();
 			using var reader = await command
 				.ExecuteReaderAsync()
@@ -127,8 +148,9 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='" + tableName + @"' and xtyp
 			command.CommandTimeout = SqlTimeoutSeconds;
 			foreach (var tableName in tablesToRemove)
 			{
-				logger.LogInformation("Aging out table {TableName}", tableName);
-				command.CommandText = "drop table " + tableName;
+				var validatedName = ValidateTableName(tableName);
+				logger.LogInformation("Aging out table {TableName}", validatedName);
+				command.CommandText = $"DROP TABLE [{validatedName}]";
 				await command.ExecuteNonQueryAsync().ConfigureAwait(false);
 			}
 		}

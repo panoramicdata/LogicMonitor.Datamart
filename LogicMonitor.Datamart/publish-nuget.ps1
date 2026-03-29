@@ -12,7 +12,7 @@ if(-not (Test-Path($apiKeyFilename))){
 $apiKey = Get-Content $apiKeyFilename;
 
 # Getting changes into main branch
-Write-Host "Fetching latest commits..."
+Write-Output "Fetching latest commits..."
 &git fetch
 
 $branch= &git rev-parse --abbrev-ref HEAD
@@ -25,24 +25,24 @@ if ($branch -ne "main") {
 	$result = $host.ui.PromptForChoice($title, $message, $options, 0)
 	switch ($result)
    {
-		0 { Write-Host "Proceeding..." }
-		1 { Write-Host "ABORTED."; exit 1; }
+		0 { Write-Output "Proceeding..." }
+		1 { Write-Output "ABORTED."; exit 1; }
 	}
 
 	try {
-		Write-Host "Checking out main..."
+		Write-Output "Checking out main..."
 		&git checkout main
 		if (-not $?) {throw "Error with git checkout"}
 
-		Write-Host "Pulling..."
+		Write-Output "Pulling..."
 		&git pull
 		if (-not $?) {throw "Error with git pull"}
 
-		Write-Host "Merging $branch into main..."
+		Write-Output "Merging $branch into main..."
 		&git merge $branch --no-edit
 		if (-not $?) {throw "Error with git merge"}
 
-		Write-Host "Pushing main..."
+		Write-Output "Pushing main..."
 		&git push
 		if (-not $?) {throw "Error with git push"}
 	}
@@ -50,7 +50,7 @@ if ($branch -ne "main") {
 	{
 		# If there was a problem and we were not on main then switch back
 		if ($branch -ne "main") {
-			Write-Host "Switching back to branch: $branch"
+			Write-Output "Switching back to branch: $branch"
 			&git checkout $branch
 		}
 		exit 1;
@@ -71,7 +71,7 @@ try {
 	dotnet pack -c Release
 
 	$mostRecentPackage = Get-ChildItem bin\Release\*.nupkg | Sort-Object LastWriteTime | Select-Object -last 1
-	Write-Host "Publishing $mostRecentPackage..."
+	Write-Output "Publishing $mostRecentPackage..."
 	# If you don't have nuget.exe - download from https://www.nuget.org/downloads and place in "C:\Users\xxx\AppData\Local\Microsoft\WindowsApps"
 	nuget.exe push -Source https://api.nuget.org/v3/index.json -ApiKey $apiKey "$mostRecentPackage"
 }
@@ -79,7 +79,7 @@ finally
 {
 	# If we were not on main then switch back
 	if ($branch -ne "main") {
-		Write-Host "Switching back to branch: $branch"
+		Write-Output "Switching back to branch: $branch"
 		&git checkout $branch
 	}
 }
