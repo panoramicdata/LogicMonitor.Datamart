@@ -1,6 +1,4 @@
-﻿using System.Globalization;
-
-namespace LogicMonitor.Datamart.Mapping;
+﻿namespace LogicMonitor.Datamart.Mapping;
 
 public class DataSourceGraphProfile : Profile
 {

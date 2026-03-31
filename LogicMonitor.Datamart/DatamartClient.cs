@@ -643,14 +643,14 @@ public class DatamartClient : LogicMonitorClient
 		context.DataSourceGraphs.RemoveRange(graphsToRemove);
 		foreach (var graphToUpdate in graphsToUpdate)
 		{
-			var databaseGraph = databaseGraphs.SingleOrDefault(dg => dg.Name == graphToUpdate.Name && dg.IsOverview == areOverview);
-			if (databaseGraph is null)
+			var apiGraph = apiGraphs.SingleOrDefault(g => g.Name == graphToUpdate.Name);
+			if (apiGraph is null)
 			{
 				continue;
 			}
 
-			MapperInstance.Map(graphToUpdate, databaseGraph);
-			databaseGraph.IsOverview = areOverview;
+			MapperInstance.Map(apiGraph, graphToUpdate);
+			graphToUpdate.IsOverview = areOverview;
 		}
 	}
 
