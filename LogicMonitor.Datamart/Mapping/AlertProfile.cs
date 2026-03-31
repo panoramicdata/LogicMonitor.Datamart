@@ -72,6 +72,9 @@ public class AlertProfile : Profile
 				.ForMember(
 					dest => dest.CustomColumn5,
 					opts => opts.Ignore())
+				.ForMember(
+					dest => dest.MonitorObjectId,
+					opts => opts.MapFrom(src => ParseNullableInt(src.MonitorObjectId)))
 
 				.AfterMap<TruncateMappingAction<Alert, AlertStoreItem>>()
 					;
@@ -79,6 +82,9 @@ public class AlertProfile : Profile
 		CreateMap<AlertStoreItem, Alert>()
 			.ForMember(dest => dest.AlertRuleId, opts => opts.Ignore())
 			.ForMember(dest => dest.AlertTriggerValue, opts => opts.Ignore())
+			.ForMember(
+				dest => dest.MonitorObjectId,
+				opts => opts.MapFrom(src => src.MonitorObjectId.HasValue ? src.MonitorObjectId.Value.ToString(CultureInfo.InvariantCulture) : string.Empty))
 			.ForMember(
 				dest => dest.DetailMessage,
 				opts => opts.MapFrom(
@@ -104,4 +110,7 @@ public class AlertProfile : Profile
 			.ForMember(dest => dest.ThresholdMetadata, opts => opts.Ignore())
 			;
 	}
+
+	private static int? ParseNullableInt(string? value)
+		=> int.TryParse(value, CultureInfo.InvariantCulture, out var result) ? result : null;
 }

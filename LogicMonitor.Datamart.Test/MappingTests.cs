@@ -237,6 +237,40 @@ public class MappingTests
 		result.AuditVersion.Should().Be("99");
 	}
 
+	// Self-mapping tests (T -> T)
+
+	[Fact]
+	public void WhenSelfMappingDataSourceGraphStoreItem_ThenNewInstanceIsCreated()
+	{
+		var source = CreateDataSourceGraphStoreItem();
+		source.Name = "TestGraph";
+		source.Title = "Test Title";
+		source.Width = 800;
+
+		var result = _mapper.Map<DataSourceGraphStoreItem, DataSourceGraphStoreItem>(source);
+
+		result.Should().NotBeSameAs(source);
+		result.Name.Should().Be("TestGraph");
+		result.Title.Should().Be("Test Title");
+		result.Width.Should().Be(800);
+	}
+
+	[Fact]
+	public void WhenSelfMappingDataSourceGraphStoreItemToExisting_ThenTargetIsUpdated()
+	{
+		var source = CreateDataSourceGraphStoreItem();
+		source.Name = "UpdatedGraph";
+		source.Height = 600;
+
+		var target = CreateDataSourceGraphStoreItem();
+		target.Name = "OriginalGraph";
+
+		_mapper.Map(source, target);
+
+		target.Name.Should().Be("UpdatedGraph");
+		target.Height.Should().Be(600);
+	}
+
 	private static ConfigSourceStoreItem CreateConfigSourceStoreItem() => new()
 	{
 		AppliesTo = string.Empty,

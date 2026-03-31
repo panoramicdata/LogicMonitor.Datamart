@@ -11,7 +11,9 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor API Datamart</PackageTags>
 		<PackageReleaseNotes>
-			- Fixed DataSourceGraph self-mapping error in UpdateGraphs by mapping from API type instead of store item
+			- Updated PanoramicData.Mapper to 10.0.15
+			- Fixed Alert MonitorObjectId string-to-int convention mapping regression
+			- Fixed ResourceGroup GroupStatus string-to-enum convention mapping regression
 		</PackageReleaseNotes>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
