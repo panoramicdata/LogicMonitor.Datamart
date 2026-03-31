@@ -11,9 +11,8 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor API Datamart</PackageTags>
 		<PackageReleaseNotes>
-			- Fixed UpdateGraphsAsync aborting all graph/datapoint syncing when a single DataSource has duplicate graph names
-			- Used FirstOrDefault for duplicate graph name tolerance in UpdateGraphs
-			- Added per-DataSource error handling in UpdateGraphsAsync so one failure does not block remaining DataSources
+			- Added INotificationReceiver progress reporting to UpdateGraphsAsync
+			- Fixed duplicate DataSource name causing SingleOrDefaultAsync to throw in UpdateGraphsAsync and UpdateDataPointsAsync
 		</PackageReleaseNotes>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>

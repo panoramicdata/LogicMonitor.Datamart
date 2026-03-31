@@ -430,12 +430,12 @@ public class DatamartClient : LogicMonitorClient
 			switch (typeof(TStore).Name)
 			{
 				case nameof(DataSourceStoreItem):
-					await UpdateGraphsAsync(context, [.. apiItems.Cast<DataSource>()], cancellationToken)
-						.ConfigureAwait(false);
+						await UpdateGraphsAsync(context, [.. apiItems.Cast<DataSource>()], notificationReceiver, cancellationToken)
+							.ConfigureAwait(false);
 
-					await UpdateDataPointsAsync(context, [.. apiItems.Cast<DataSource>()], cancellationToken)
-						.ConfigureAwait(false);
-					break;
+						await UpdateDataPointsAsync(context, [.. apiItems.Cast<DataSource>()], cancellationToken)
+							.ConfigureAwait(false);
+						break;
 			}
 
 			logger.LogInformation(
@@ -558,11 +558,22 @@ public class DatamartClient : LogicMonitorClient
 	/// </summary>
 	/// <param name="context">The database context</param>
 	/// <param name="apiDataSources">The list of API DataSources</param>
-	private async Task UpdateGraphsAsync(Context context, List<DataSource> apiDataSources, CancellationToken cancellationToken)
+	/// <param name="notificationReceiver">The notification receiver for progress updates</param>
+	private async Task UpdateGraphsAsync(Context context, List<DataSource> apiDataSources, INotificationReceiver notificationReceiver, CancellationToken cancellationToken)
 	{
 		_logger.LogInformation("Updating DataSource Graphs...");
+
+		await notificationReceiver
+			.SetStageNameAsync("UpdateGraphs", cancellationToken)
+			.ConfigureAwait(false);
+
 		var graphsStopwatch = Stopwatch.StartNew();
 		var dataSourceCount = apiDataSources.Count;
+
+		await notificationReceiver
+			.SetItemCountAsync(dataSourceCount, cancellationToken)
+			.ConfigureAwait(false);
+
 		var dataSourceIndex = 0;
 		foreach (var apiDataSource in apiDataSources)
 		{
@@ -573,6 +584,10 @@ public class DatamartClient : LogicMonitorClient
 					"UpdateGraphsAsync: DataSource {DataSourceIndex}/{DataSourceCount}",
 					dataSourceIndex,
 					dataSourceCount);
+
+				await notificationReceiver
+					.SetItemIndexAsync(dataSourceIndex, cancellationToken)
+					.ConfigureAwait(false);
 				graphsStopwatch.Restart();
 			}
 
@@ -581,9 +596,11 @@ public class DatamartClient : LogicMonitorClient
 				var apiGraphs = await GetDataSourceGraphsAsync(apiDataSource.Id, cancellationToken).ConfigureAwait(false);
 				var apiOverviewGraphs = (await GetDataSourceOverviewGraphsPageAsync(apiDataSource.Id, null, cancellationToken).ConfigureAwait(false)).Items;
 
+				// FirstOrDefaultAsync because the database can contain duplicate DataSource names.
+				// SingleOrDefaultAsync would throw and abort the entire graph sync.
 				var databaseDataSource = await context
 					.DataSources
-					.SingleOrDefaultAsync(ds => ds.Name == apiDataSource.Name, cancellationToken)
+					.FirstOrDefaultAsync(ds => ds.Name == apiDataSource.Name, cancellationToken)
 					.ConfigureAwait(false);
 
 				if (databaseDataSource is null)
@@ -710,10 +727,11 @@ public class DatamartClient : LogicMonitorClient
 				continue;
 			}
 
-			// The DataSource from the database
+			// FirstOrDefaultAsync because the database can contain duplicate DataSource names.
+			// SingleOrDefaultAsync would throw and abort the entire DataPoints sync.
 			var databaseDataSource = await context
 				.DataSources
-				.SingleOrDefaultAsync(ds => ds.Name == dataSourceName, cancellationToken)
+				.FirstOrDefaultAsync(ds => ds.Name == dataSourceName, cancellationToken)
 				.ConfigureAwait(false);
 			if (databaseDataSource is null)
 			{
