@@ -79,7 +79,7 @@ public class DataSourceProfile : Profile
 				opts => opts.MapFrom(src => src.InstallationMetadata.TargetLineageId))
 			.ForMember(
 				dest => dest.InstallationMetadataLogicModuleType,
-				opts => opts.MapFrom(src => src.InstallationMetadata.LogicModuleType))
+				opts => opts.MapFrom(src => src.InstallationMetadata.LogicModuleType.ToString()))
 			.ForMember(
 				dest => dest.InstallationMetadataIsChangedFromOrigin,
 				opts => opts.MapFrom(src => src.InstallationMetadata.IsChangedFromOrigin))

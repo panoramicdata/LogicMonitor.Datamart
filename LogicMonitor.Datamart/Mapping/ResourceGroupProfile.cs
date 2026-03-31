@@ -22,13 +22,19 @@ public class ResourceGroupProfile : Profile
 				opts => opts.MapFrom(src => src.GcpResourceCount))
 			.ForMember(
 				dest => dest.DeviceCount,
-				opts => opts.MapFrom(src => src.ResourceCount))
+				opts => opts.MapFrom(src => (int)src.ResourceCount))
 			.ForMember(
 				dest => dest.DeviceGroupType,
 				opts => opts.MapFrom(src => src.ResourceGroupType))
 			.ForMember(
 				dest => dest.DirectDeviceCount,
-				opts => opts.MapFrom(src => src.DirectResourceCount))
+				opts => opts.MapFrom(src => (int)src.DirectResourceCount))
+			.ForMember(
+				dest => dest.AzureTestResultCode,
+				opts => opts.MapFrom(src => (int)src.AzureTestResultCode))
+			.ForMember(
+				dest => dest.DirectSubGroupCount,
+				opts => opts.MapFrom(src => (int)src.DirectSubGroupCount))
 			.ForMember(
 				dest => dest.DatamartCreated,
 				opts => opts.Ignore())

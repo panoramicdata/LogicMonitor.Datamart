@@ -11,7 +11,13 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor API Datamart</PackageTags>
 		<PackageReleaseNotes>
-			Added opt-in auto-chunking feature (EnableAutoChunking) to mitigate LogicMonitor API throttling and restore hourly resolution for time series data.
+			Fix mapping errors for Integration and ResourceGroup sync
+			- Add missing Integration -> IntegrationStoreItem mapping in IntegrationProfile
+			- Add explicit (int) casts for Int64 properties in ResourceGroupProfile
+			(ResourceCount, DirectResourceCount, AzureTestResultCode, DirectSubGroupCount)
+			- Fix DataSource LogicModuleType enum -> string conversion in DataSourceProfile
+			- Add MappingTests covering all forward and reverse mapping pairs to catch
+			type conversion issues that configuration validation alone does not detect
 		</PackageReleaseNotes>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
