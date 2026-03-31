@@ -576,35 +576,49 @@ public class DatamartClient : LogicMonitorClient
 				graphsStopwatch.Restart();
 			}
 
-			var apiGraphs = await GetDataSourceGraphsAsync(apiDataSource.Id, cancellationToken).ConfigureAwait(false);
-			var apiOverviewGraphs = (await GetDataSourceOverviewGraphsPageAsync(apiDataSource.Id, null, cancellationToken).ConfigureAwait(false)).Items;
-
-			var databaseDataSource = await context
-				.DataSources
-				.SingleOrDefaultAsync(ds => ds.Name == apiDataSource.Name, cancellationToken)
-				.ConfigureAwait(false);
-
-			if (databaseDataSource is null)
+			try
 			{
-				_logger.LogError(
-					"For LogicMonitor instance {LogicMonitorAccount}, expected to find Database DataSource called '{DataSourceName}', but it was missing.",
-					_configuration.LogicMonitorClientOptions.Account,
-					apiDataSource.Name);
-				continue;
+				var apiGraphs = await GetDataSourceGraphsAsync(apiDataSource.Id, cancellationToken).ConfigureAwait(false);
+				var apiOverviewGraphs = (await GetDataSourceOverviewGraphsPageAsync(apiDataSource.Id, null, cancellationToken).ConfigureAwait(false)).Items;
+
+				var databaseDataSource = await context
+					.DataSources
+					.SingleOrDefaultAsync(ds => ds.Name == apiDataSource.Name, cancellationToken)
+					.ConfigureAwait(false);
+
+				if (databaseDataSource is null)
+				{
+					_logger.LogError(
+						"For LogicMonitor instance {LogicMonitorAccount}, expected to find Database DataSource called '{DataSourceName}', but it was missing.",
+						_configuration.LogicMonitorClientOptions.Account,
+						apiDataSource.Name);
+					continue;
+				}
+
+				var databaseGraphs = await context
+					.DataSourceGraphs
+					.Where(g => g.DataSource!.LogicMonitorId == apiDataSource.Id)
+					.ToListAsync(cancellationToken)
+					.ConfigureAwait(false);
+
+				UpdateGraphs(context, apiGraphs, databaseDataSource.Id, databaseGraphs, false);
+				UpdateGraphs(context, apiOverviewGraphs, databaseDataSource.Id, databaseGraphs, true);
+
+				await context
+					.SaveChangesAsync(cancellationToken)
+					.ConfigureAwait(false);
 			}
-
-			var databaseGraphs = await context
-				.DataSourceGraphs
-				.Where(g => g.DataSource!.LogicMonitorId == apiDataSource.Id)
-				.ToListAsync(cancellationToken)
-				.ConfigureAwait(false);
-
-			UpdateGraphs(context, apiGraphs, databaseDataSource.Id, databaseGraphs, false);
-			UpdateGraphs(context, apiOverviewGraphs, databaseDataSource.Id, databaseGraphs, true);
-
-			await context
-				.SaveChangesAsync(cancellationToken)
-				.ConfigureAwait(false);
+			catch (Exception e) when (e is not OperationCanceledException and not TaskCanceledException)
+			{
+				// Log and continue - a single DataSource's graph failure should not abort the entire graph sync
+				_logger.LogError(
+					e,
+					"Error updating graphs for DataSource '{DataSourceName}' ({DataSourceIndex}/{DataSourceCount}): {Message}",
+					apiDataSource.Name,
+					dataSourceIndex,
+					dataSourceCount,
+					e.Message);
+			}
 		}
 
 		_logger.LogInformation("Updating DataSource Graphs done.");
@@ -643,7 +657,9 @@ public class DatamartClient : LogicMonitorClient
 		context.DataSourceGraphs.RemoveRange(graphsToRemove);
 		foreach (var graphToUpdate in graphsToUpdate)
 		{
-			var apiGraph = apiGraphs.SingleOrDefault(g => g.Name == graphToUpdate.Name);
+			// FirstOrDefault because the API can return duplicate graph names for a DataSource.
+			// SingleOrDefault would throw and abort the entire DataSource dimension sync.
+			var apiGraph = apiGraphs.FirstOrDefault(g => g.Name == graphToUpdate.Name);
 			if (apiGraph is null)
 			{
 				continue;

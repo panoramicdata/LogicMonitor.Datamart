@@ -11,8 +11,9 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor API Datamart</PackageTags>
 		<PackageReleaseNotes>
-			- Updated PanoramicData.Mapper to 10.0.16 (convention matching fixes for string/int/enum)
-			- Removed Alert MonitorObjectId and ResourceGroup GroupStatus mapping workarounds (handled by mapper)
+			- Fixed UpdateGraphsAsync aborting all graph/datapoint syncing when a single DataSource has duplicate graph names
+			- Used FirstOrDefault for duplicate graph name tolerance in UpdateGraphs
+			- Added per-DataSource error handling in UpdateGraphsAsync so one failure does not block remaining DataSources
 		</PackageReleaseNotes>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
