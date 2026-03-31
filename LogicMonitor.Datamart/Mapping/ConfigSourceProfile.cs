@@ -12,6 +12,15 @@ public class ConfigSourceProfile : Profile
 				dest => dest.LogicMonitorId,
 				opts => opts.MapFrom(src => src.Id))
 			.ForMember(
+				dest => dest.AuditVersion,
+				opts => opts.MapFrom(src => src.AuditVersion.ToString(CultureInfo.InvariantCulture)))
+			.ForMember(
+				dest => dest.Version,
+				opts => opts.MapFrom(src => src.Version.ToString(CultureInfo.InvariantCulture)))
+			.ForMember(
+				dest => dest.CollectionMethod,
+				opts => opts.MapFrom(src => src.CollectionMethod.ToString()))
+			.ForMember(
 				dest => dest.DatamartCreated,
 				opts => opts.Ignore())
 			.ForMember(
@@ -25,6 +34,15 @@ public class ConfigSourceProfile : Profile
 			.ForMember(
 				dest => dest.Id,
 				opts => opts.MapFrom(src => src.LogicMonitorId))
+			.ForMember(
+				dest => dest.AuditVersion,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.Version,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.CollectionMethod,
+				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.ConfigChecks,
 				opts => opts.Ignore())

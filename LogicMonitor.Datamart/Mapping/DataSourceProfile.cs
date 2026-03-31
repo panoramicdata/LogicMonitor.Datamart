@@ -12,6 +12,15 @@ public class DataSourceProfile : Profile
 				dest => dest.LogicMonitorId,
 				opts => opts.MapFrom(src => src.Id))
 			.ForMember(
+				dest => dest.AuditVersion,
+				opts => opts.MapFrom(src => src.AuditVersion.ToString(CultureInfo.InvariantCulture)))
+			.ForMember(
+				dest => dest.Version,
+				opts => opts.MapFrom(src => src.Version.ToString(CultureInfo.InvariantCulture)))
+			.ForMember(
+				dest => dest.PayloadVersion,
+				opts => opts.MapFrom(src => src.PayloadVersion.ToString(CultureInfo.InvariantCulture)))
+			.ForMember(
 				dest => dest.Graphs,
 				opts => opts.Ignore())
 			.ForMember(

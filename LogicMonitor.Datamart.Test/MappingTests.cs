@@ -207,6 +207,36 @@ public class MappingTests
 		roundTripped.InternalId.Should().Be("INT456");
 	}
 
+	[Fact]
+	public void WhenMappingDataSourceWithAuditVersion_ThenAuditVersionIsString()
+	{
+		var source = new DataSource { AuditVersion = 42 };
+
+		var result = _mapper.Map<DataSource, DataSourceStoreItem>(source);
+
+		result.AuditVersion.Should().Be("42");
+	}
+
+	[Fact]
+	public void WhenMappingDataSourceWithVersion_ThenVersionIsString()
+	{
+		var source = new DataSource { Version = 7 };
+
+		var result = _mapper.Map<DataSource, DataSourceStoreItem>(source);
+
+		result.Version.Should().Be("7");
+	}
+
+	[Fact]
+	public void WhenMappingConfigSourceWithAuditVersion_ThenAuditVersionIsString()
+	{
+		var source = new ConfigSource { AuditVersion = 99 };
+
+		var result = _mapper.Map<ConfigSource, ConfigSourceStoreItem>(source);
+
+		result.AuditVersion.Should().Be("99");
+	}
+
 	private static ConfigSourceStoreItem CreateConfigSourceStoreItem() => new()
 	{
 		AppliesTo = string.Empty,
