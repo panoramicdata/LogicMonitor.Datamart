@@ -11,6 +11,10 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor API Datamart</PackageTags>
 		<PackageReleaseNotes>
+			- Fixed NullReferenceException when DataSource.InstallationMetadata is null
+			- Added base Integration type mapping to resolve missing type map error
+			- Fixed Int64-to-Int32 conversion in ResourceGroup property mappings
+			- Fixed enum-to-string conversion for DataSource LogicModuleType
 			- Reverted Microsoft.Data.SqlClient to 6.1.4 for downstream compatibility
 		</PackageReleaseNotes>
 		<LangVersion>latest</LangVersion>

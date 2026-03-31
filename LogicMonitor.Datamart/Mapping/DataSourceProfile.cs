@@ -34,16 +34,16 @@ public class DataSourceProfile : Profile
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.InstallationMetadataTargetLastPublishedId,
-				opts => opts.MapFrom(src => src.InstallationMetadata.TargetLastPublishedId))
+				opts => opts.MapFrom(src => src.InstallationMetadata == null ? null : src.InstallationMetadata.TargetLastPublishedId))
 			.ForMember(
 				dest => dest.InstallationMetadataTargetLastPublishedVersion,
-				opts => opts.MapFrom(src => src.InstallationMetadata.TargetLastPublishedVersion))
+				opts => opts.MapFrom(src => src.InstallationMetadata == null ? null : src.InstallationMetadata.TargetLastPublishedVersion))
 			.ForMember(
 				dest => dest.InstallationMetadataTargetLastPublishedChecksum,
-				opts => opts.MapFrom(src => src.InstallationMetadata.TargetLastPublishedChecksum))
+				opts => opts.MapFrom(src => src.InstallationMetadata == null ? null : src.InstallationMetadata.TargetLastPublishedChecksum))
 			.ForMember(
 				dest => dest.InstallationMetadataLogicModuleId,
-				opts => opts.MapFrom(src => src.InstallationMetadata.LocalModuleId))
+				opts => opts.MapFrom(src => src.InstallationMetadata == null ? null : (int?)src.InstallationMetadata.LocalModuleId))
 			.ForMember(
 				dest => dest.CollectionAttributeName,
 				opts => opts.Ignore())
@@ -52,40 +52,40 @@ public class DataSourceProfile : Profile
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.InstallationMetadataOriginRegistryId,
-				opts => opts.MapFrom(src => src.InstallationMetadata.OriginRegistryId))
+				opts => opts.MapFrom(src => src.InstallationMetadata == null ? null : src.InstallationMetadata.OriginRegistryId))
 			.ForMember(
 				dest => dest.InstallationMetadataOriginLineageId,
-				opts => opts.MapFrom(src => src.InstallationMetadata.OriginLineageId))
+				opts => opts.MapFrom(src => src.InstallationMetadata == null ? null : src.InstallationMetadata.OriginLineageId))
 			.ForMember(
 				dest => dest.InstallationMetadataOriginAuthorCompanyUuid,
-				opts => opts.MapFrom(src => src.InstallationMetadata.OriginAuthorCompanyUUID))
+				opts => opts.MapFrom(src => src.InstallationMetadata == null ? null : src.InstallationMetadata.OriginAuthorCompanyUUID))
 			.ForMember(
 				dest => dest.InstallationMetadataOriginAuthorNamespace,
-				opts => opts.MapFrom(src => src.InstallationMetadata.OriginAuthorNamespace))
+				opts => opts.MapFrom(src => src.InstallationMetadata == null ? null : src.InstallationMetadata.OriginAuthorNamespace))
 			.ForMember(
 				dest => dest.InstallationMetadataOriginVersion,
-				opts => opts.MapFrom(src => src.InstallationMetadata.OriginVersion))
+				opts => opts.MapFrom(src => src.InstallationMetadata == null ? null : src.InstallationMetadata.OriginVersion))
 			.ForMember(
 				dest => dest.InstallationMetadataOriginChecksum,
-				opts => opts.MapFrom(src => src.InstallationMetadata.OriginChecksum))
+				opts => opts.MapFrom(src => src.InstallationMetadata == null ? null : src.InstallationMetadata.OriginChecksum))
 			.ForMember(
 				dest => dest.InstallationMetadataAuditedRegistryId,
-				opts => opts.MapFrom(src => src.InstallationMetadata.AuditedRegistryId))
+				opts => opts.MapFrom(src => src.InstallationMetadata == null ? null : src.InstallationMetadata.AuditedRegistryId))
 			.ForMember(
 				dest => dest.InstallationMetadataAuditedVersion,
-				opts => opts.MapFrom(src => src.InstallationMetadata.AuditedVersion))
+				opts => opts.MapFrom(src => src.InstallationMetadata == null ? null : src.InstallationMetadata.AuditedVersion))
 			.ForMember(
 				dest => dest.InstallationMetadataTargetLineageId,
-				opts => opts.MapFrom(src => src.InstallationMetadata.TargetLineageId))
+				opts => opts.MapFrom(src => src.InstallationMetadata == null ? null : src.InstallationMetadata.TargetLineageId))
 			.ForMember(
 				dest => dest.InstallationMetadataLogicModuleType,
-				opts => opts.MapFrom(src => src.InstallationMetadata.LogicModuleType.ToString()))
+				opts => opts.MapFrom(src => src.InstallationMetadata == null ? null : src.InstallationMetadata.LogicModuleType.ToString()))
 			.ForMember(
 				dest => dest.InstallationMetadataIsChangedFromOrigin,
-				opts => opts.MapFrom(src => src.InstallationMetadata.IsChangedFromOrigin))
+				opts => opts.MapFrom(src => src.InstallationMetadata == null ? null : (bool?)src.InstallationMetadata.IsChangedFromOrigin))
 			.ForMember(
 				dest => dest.InstallationMetadataIsChangedFromTargetLastPublished,
-				opts => opts.MapFrom(src => src.InstallationMetadata.IsChangedFromTargetLastPublished))
+				opts => opts.MapFrom(src => src.InstallationMetadata == null ? null : (bool?)src.InstallationMetadata.IsChangedFromTargetLastPublished))
 			;
 
 		CreateMap<DataSourceStoreItem, DataSource>()

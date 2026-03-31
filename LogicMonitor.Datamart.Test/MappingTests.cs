@@ -46,6 +46,10 @@ public class MappingTests
 		=> _mapper.Map<DataSource, DataSourceStoreItem>(new DataSource()).Should().NotBeNull();
 
 	[Fact]
+	public void WhenMappingDataSourceWithNullInstallationMetadata_ThenStoreItemIsCreated()
+		=> _mapper.Map<DataSource, DataSourceStoreItem>(new DataSource { InstallationMetadata = null! }).Should().NotBeNull();
+
+	[Fact]
 	public void WhenMappingDataSourceGraph_ThenStoreItemIsCreated()
 		=> _mapper.Map<DataSourceGraph, DataSourceGraphStoreItem>(new DataSourceGraph()).Should().NotBeNull();
 
