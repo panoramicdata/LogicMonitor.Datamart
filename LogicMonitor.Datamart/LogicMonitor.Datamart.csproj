@@ -11,13 +11,7 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor API Datamart</PackageTags>
 		<PackageReleaseNotes>
-			Fix mapping errors for Integration and ResourceGroup sync
-			- Add missing Integration -> IntegrationStoreItem mapping in IntegrationProfile
-			- Add explicit (int) casts for Int64 properties in ResourceGroupProfile
-			(ResourceCount, DirectResourceCount, AzureTestResultCode, DirectSubGroupCount)
-			- Fix DataSource LogicModuleType enum -> string conversion in DataSourceProfile
-			- Add MappingTests covering all forward and reverse mapping pairs to catch
-			type conversion issues that configuration validation alone does not detect
+			- Reverted Microsoft.Data.SqlClient to 6.1.4 for downstream compatibility
 		</PackageReleaseNotes>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>

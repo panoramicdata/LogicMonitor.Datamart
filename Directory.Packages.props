@@ -6,8 +6,8 @@
 		<!-- LogicMonitor.Datamart -->
 		<PackageVersion Include="EFCore.BulkExtensions.Dotnet10.PostgreSql" Version="10.0.0" />
 		<PackageVersion Include="EFCore.BulkExtensions.Dotnet10.SqlServer" Version="10.0.0" />
-     <PackageVersion Include="LogicMonitor.Api" Version="3.236.2" />
-		<PackageVersion Include="Microsoft.Data.SqlClient" Version="7.0.0" />
+		<PackageVersion Include="LogicMonitor.Api" Version="3.236.2" />
+		<PackageVersion Include="Microsoft.Data.SqlClient" Version="6.1.4" />
 		<PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.5" />
 		<PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.5" />
 		<PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.5" />
@@ -16,7 +16,7 @@
 		<PackageVersion Include="Nerdbank.GitVersioning" Version="3.9.50" />
 		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
 		<PackageVersion Include="PanoramicData.Mapper" Version="10.0.13" />
-     <PackageVersion Include="PanoramicData.NCalcExtensions" Version="5.8.21" />
+		<PackageVersion Include="PanoramicData.NCalcExtensions" Version="5.8.21" />
 		<!-- LogicMonitor.Datamart.Cli -->
 		<PackageVersion Include="AspNetCore.HealthChecks.Network" Version="9.0.0" />
 		<PackageVersion Include="AspNetCore.HealthChecks.SystemMemory" Version="1.0.1" />
