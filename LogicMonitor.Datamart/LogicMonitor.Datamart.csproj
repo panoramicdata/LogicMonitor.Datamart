@@ -11,8 +11,7 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageTags>LogicMonitor API Datamart</PackageTags>
 		<PackageReleaseNotes>
-			- Added INotificationReceiver progress reporting to UpdateGraphsAsync
-			- Fixed duplicate DataSource name causing SingleOrDefaultAsync to throw in UpdateGraphsAsync and UpdateDataPointsAsync
+			- Updated PanoramicData.Mapper to 10.0.19
 		</PackageReleaseNotes>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
