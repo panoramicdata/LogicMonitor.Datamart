@@ -1,3 +1,4 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Solution>
   <Configurations>
     <Platform Name="Any CPU" />
@@ -22,6 +23,9 @@
       <Property Name="f_5_4code_4LogicMonitor_1Datamart_4version_1json__JsonSchema" />
       <Property Name="F_5_4Projects_4LogicMonitor_1DataMart_4version_1json__JsonSchema" />
     </Properties>
+    <File Path="CONTRIBUTING.md" />
+    <File Path="Directory.Packages.props" />
+    <File Path="SECURITY.md" />
   </Folder>
   <Project Path="LogicMonitor.Datamart.Cli/LogicMonitor.Datamart.Cli.csproj" />
   <Project Path="LogicMonitor.Datamart.Test/LogicMonitor.Datamart.Test.csproj" />

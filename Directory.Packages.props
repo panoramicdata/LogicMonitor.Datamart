@@ -1,3 +1,4 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
@@ -6,8 +7,8 @@
     <!-- LogicMonitor.Datamart -->
     <PackageVersion Include="EFCore.BulkExtensions.Dotnet10.PostgreSql" Version="10.0.0" />
     <PackageVersion Include="EFCore.BulkExtensions.Dotnet10.SqlServer" Version="10.0.0" />
-    <PackageVersion Include="LogicMonitor.Api" Version="3.236.2" />
-    <PackageVersion Include="Microsoft.Data.SqlClient" Version="6.1.4" />
+    <PackageVersion Include="LogicMonitor.Api" Version="3.236.13" />
+    <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.0.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.5" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.5" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.5" />
@@ -15,14 +16,14 @@
     <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.5" />
     <PackageVersion Include="Nerdbank.GitVersioning" Version="3.9.50" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
-    <PackageVersion Include="PanoramicData.Mapper" Version="10.0.19" />
-    <PackageVersion Include="PanoramicData.NCalcExtensions" Version="5.8.21" />
+    <PackageVersion Include="PanoramicData.Mapper" Version="10.0.23" />
+    <PackageVersion Include="PanoramicData.NCalcExtensions" Version="5.8.30" />
     <!-- LogicMonitor.Datamart.Cli -->
     <PackageVersion Include="AspNetCore.HealthChecks.Network" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.SystemMemory" Version="1.0.1" />
     <PackageVersion Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
-    <PackageVersion Include="PanoramicData.HealthChecks.Core" Version="10.0.3" />
-    <PackageVersion Include="PanoramicData.HealthChecks.Versions" Version="10.0.3" />
+    <PackageVersion Include="PanoramicData.HealthChecks.Core" Version="10.0.17" />
+    <PackageVersion Include="PanoramicData.HealthChecks.Versions" Version="10.0.17" />
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageVersion Include="Serilog.Extensions.Hosting" Version="10.0.0" />
     <PackageVersion Include="Serilog.Settings.Configuration" Version="10.0.0" />
@@ -36,8 +37,10 @@
     <PackageVersion Include="FluentAssertions.Analyzers" Version="0.34.1" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.5" />
     <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.5" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.4.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageVersion Include="xunit.v3" Version="3.2.2" />
+    <PackageVersion Include="coverlet.collector" Version="8.0.1" />
   </ItemGroup>
 </Project>

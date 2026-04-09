@@ -2,10 +2,16 @@
 
 namespace LogicMonitor.Datamart.Mapping;
 
+/// <summary>
+/// AutoMapper profile for mapping LogicMonitor EscalationChain API objects to <see cref="EscalationChainStoreItem"/>.
+/// </summary>
 public class EscalationChainProfile : Profile
 {
 	private static readonly JsonSerializerOptions _jsonSerializerOptions = new();
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="EscalationChainProfile"/> class.
+	/// </summary>
 	public EscalationChainProfile()
 	{
 		CreateMap<EscalationChain, EscalationChainStoreItem>()

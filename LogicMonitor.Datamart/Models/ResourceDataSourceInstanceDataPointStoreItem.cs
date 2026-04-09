@@ -1,17 +1,28 @@
 ﻿namespace LogicMonitor.Datamart.Models;
 
+/// <summary>
+/// Represents a DataPoint value collected from a DataSource instance on a resource stored in the datamart.
+/// </summary>
 public class ResourceDataSourceInstanceDataPointStoreItem : IdentifiedStoreItem
 {
-	// Navigation properties
+	/// <summary>
+	/// Navigation property to the parent DataSource instance.
+	/// </summary>
 	public ResourceDataSourceInstanceStoreItem? DeviceDataSourceInstance { get; set; }
 
-	// Database properties
+	/// <summary>
+	/// The datamart identifier of the parent DataSource instance.
+	/// </summary>
 	public Guid DeviceDataSourceInstanceId { get; set; }
 
-	// Navigation properties
+	/// <summary>
+	/// Navigation property to the DataPoint definition.
+	/// </summary>
 	public DataSourceDataPointStoreItem? DataSourceDataPoint { get; set; }
 
-	// Database properties
+	/// <summary>
+	/// The datamart identifier of the DataPoint definition.
+	/// </summary>
 	public Guid DataSourceDataPointId { get; set; }
 
 	/// <summary>
@@ -69,5 +80,8 @@ public class ResourceDataSourceInstanceDataPointStoreItem : IdentifiedStoreItem
 	/// </summary>
 	public string InstanceDatapointProperty10 { get; set; } = string.Empty;
 
+	/// <summary>
+	/// Navigation property to the time series data aggregations for this DataPoint.
+	/// </summary>
 	public virtual ICollection<TimeSeriesDataAggregationStoreItem> TimeSeriesDataAggregations { get; set; } = null!;
 }

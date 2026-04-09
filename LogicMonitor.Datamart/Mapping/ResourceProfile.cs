@@ -1,7 +1,13 @@
 ﻿namespace LogicMonitor.Datamart.Mapping;
 
+/// <summary>
+/// AutoMapper profile for mapping LogicMonitor Device API objects to <see cref="ResourceStoreItem"/>.
+/// </summary>
 public class ResourceProfile : Profile
 {
+	/// <summary>
+	/// Initializes a new instance of the <see cref="ResourceProfile"/> class.
+	/// </summary>
 	public ResourceProfile()
 	{
 		CreateMap<Resource, ResourceStoreItem>()

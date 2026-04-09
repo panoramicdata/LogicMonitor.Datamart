@@ -1,7 +1,13 @@
 ﻿namespace LogicMonitor.Datamart.Mapping;
 
+/// <summary>
+/// AutoMapper profile for mapping LogicMonitor LogicModuleUpdate API objects to <see cref="LogicModuleUpdateStoreItem"/>.
+/// </summary>
 public class LogicModuleUpdateProfile : Profile
 {
+	/// <summary>
+	/// Initializes a new instance of the <see cref="LogicModuleUpdateProfile"/> class.
+	/// </summary>
 	public LogicModuleUpdateProfile()
 	{
 		CreateMap<LogicModuleUpdate, LogicModuleUpdateStoreItem>()

@@ -1,61 +1,148 @@
 ﻿namespace LogicMonitor.Datamart.Models;
 
+/// <summary>
+/// Represents an aggregated time series data record for a DataPoint stored in the datamart.
+/// </summary>
 public class TimeSeriesDataAggregationStoreItem
 {
+	/// <summary>
+	/// The unique identifier for this aggregation record.
+	/// </summary>
 	public Guid Id { get; set; }
 
+	/// <summary>
+	/// The datamart identifier of the parent DataPoint store item.
+	/// </summary>
 	public Guid DeviceDataSourceInstanceDataPointId { get; set; }
 
+	/// <summary>
+	/// Navigation property to the parent DataPoint store item.
+	/// </summary>
 	public ResourceDataSourceInstanceDataPointStoreItem DeviceDataSourceInstanceDataPoint { get; set; } = null!;
 
+	/// <summary>
+	/// The start of the aggregation period.
+	/// </summary>
 	public DateTimeOffset PeriodStart { get; set; }
 
+	/// <summary>
+	/// The end of the aggregation period.
+	/// </summary>
 	public DateTimeOffset PeriodEnd { get; set; }
 
+	/// <summary>
+	/// The 5th percentile value for the aggregation period.
+	/// </summary>
 	public double? Centile05 { get; set; }
 
+	/// <summary>
+	/// The 10th percentile value for the aggregation period.
+	/// </summary>
 	public double? Centile10 { get; set; }
 
+	/// <summary>
+	/// The 25th percentile value for the aggregation period.
+	/// </summary>
 	public double? Centile25 { get; set; }
 
+	/// <summary>
+	/// The 50th percentile (median) value for the aggregation period.
+	/// </summary>
 	public double? Centile50 { get; set; }
 
+	/// <summary>
+	/// The 75th percentile value for the aggregation period.
+	/// </summary>
 	public double? Centile75 { get; set; }
 
+	/// <summary>
+	/// The 90th percentile value for the aggregation period.
+	/// </summary>
 	public double? Centile90 { get; set; }
 
+	/// <summary>
+	/// The 95th percentile value for the aggregation period.
+	/// </summary>
 	public double? Centile95 { get; set; }
 
+	/// <summary>
+	/// The availability percentage for the aggregation period.
+	/// </summary>
 	public double? AvailabilityPercent { get; set; }
 
+	/// <summary>
+	/// The availability percentage (alternate calculation) for the aggregation period.
+	/// </summary>
 	public double? AvailabilityPercent2 { get; set; }
 
+	/// <summary>
+	/// The first value recorded in the aggregation period.
+	/// </summary>
 	public double? First { get; set; }
 
+	/// <summary>
+	/// The last value recorded in the aggregation period.
+	/// </summary>
 	public double? Last { get; set; }
 
+	/// <summary>
+	/// The first non-null value recorded in the aggregation period.
+	/// </summary>
 	public double? FirstWithData { get; set; }
 
+	/// <summary>
+	/// The last non-null value recorded in the aggregation period.
+	/// </summary>
 	public double? LastWithData { get; set; }
 
+	/// <summary>
+	/// The minimum value recorded in the aggregation period.
+	/// </summary>
 	public double? Min { get; set; }
 
+	/// <summary>
+	/// The maximum value recorded in the aggregation period.
+	/// </summary>
 	public double? Max { get; set; }
 
+	/// <summary>
+	/// The sum of all values in the aggregation period.
+	/// </summary>
 	public double Sum { get; set; }
 
+	/// <summary>
+	/// The sum of squared values in the aggregation period (for standard deviation calculation).
+	/// </summary>
 	public double SumSquared { get; set; }
 
+	/// <summary>
+	/// The count of data points with values in the aggregation period.
+	/// </summary>
 	public int DataCount { get; set; }
 
+	/// <summary>
+	/// The count of data points without values (no data) in the aggregation period.
+	/// </summary>
 	public int NoDataCount { get; set; }
 
+	/// <summary>
+	/// The count of polls in a normal (non-alerting) state.
+	/// </summary>
 	public int? NormalCount { get; set; }
 
+	/// <summary>
+	/// The count of polls in a warning alert state.
+	/// </summary>
 	public int? WarningCount { get; set; }
 
+	/// <summary>
+	/// The count of polls in an error alert state.
+	/// </summary>
 	public int? ErrorCount { get; set; }
 
+	/// <summary>
+	/// The count of polls in a critical alert state.
+	/// </summary>
 	public int? CriticalCount { get; set; }
 
 	/// <summary>

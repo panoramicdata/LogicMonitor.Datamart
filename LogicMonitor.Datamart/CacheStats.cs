@@ -1,22 +1,45 @@
 ﻿
 namespace LogicMonitor.Datamart;
 
+/// <summary>
+/// Tracks cache hit/miss statistics for a named cache.
+/// </summary>
+/// <param name="name">The name of the cache being tracked.</param>
 public class CacheStats(string name)
 {
+	/// <summary>
+	/// Gets the number of cache misses.
+	/// </summary>
 	public int Misses { get; private set; }
 
+	/// <summary>
+	/// Gets the number of cache hits.
+	/// </summary>
 	public int Hits { get; private set; }
 
+	/// <summary>
+	/// Records a cache miss.
+	/// </summary>
 	public void AddMiss() => Misses++;
 
+	/// <summary>
+	/// Records a cache hit.
+	/// </summary>
 	public void AddHit() => Hits++;
 
+	/// <summary>
+	/// Resets both hit and miss counters to zero.
+	/// </summary>
 	public void Reset()
 	{
 		Misses = 0;
 		Hits = 0;
 	}
 
+	/// <summary>
+	/// Adds the hit and miss counts from another <see cref="CacheStats"/> instance.
+	/// </summary>
+	/// <param name="cacheStats">The cache stats to merge in.</param>
 	public void Add(CacheStats cacheStats)
 	{
 		Misses += cacheStats.Misses;

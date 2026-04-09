@@ -1,6 +1,9 @@
 ﻿
 namespace LogicMonitor.Datamart.Models;
 
+/// <summary>
+/// Represents a LogicModule update record stored in the datamart.
+/// </summary>
 public class LogicModuleUpdateStoreItem : StoreItem
 {
 	/// <summary>

@@ -1,5 +1,8 @@
 ﻿namespace LogicMonitor.Datamart.Mapping;
 
+/// <summary>
+/// Handles mapping of custom resource properties from LogicMonitor API objects to store item property slots.
+/// </summary>
 public static class CustomPropertyHandler
 {
 	private const int MaxPropertyCount = 20;

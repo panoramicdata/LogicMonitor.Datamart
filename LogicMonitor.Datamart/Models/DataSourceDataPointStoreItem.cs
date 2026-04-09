@@ -1,29 +1,59 @@
 ﻿namespace LogicMonitor.Datamart.Models;
 
+/// <summary>
+/// Represents a DataSource DataPoint definition stored in the datamart.
+/// </summary>
 public class DataSourceDataPointStoreItem : IdentifiedStoreItem
 {
+	/// <summary>
+	/// Foreign key to the parent DataSource.
+	/// </summary>
 	public Guid DataSourceId { get; set; }
 
 	/// <summary>
-	/// An optional reference to a DataSourceGraph
-	/// If null, the DataPoint is a raw DataSource DataPoint
+	/// An optional reference to a DataSourceGraph.
+	/// If null, the DataPoint is a raw DataSource DataPoint.
 	/// </summary>
 	public Guid? DataSourceGraphId { get; set; }
 
+	/// <summary>
+	/// Navigation property to the parent DataSource.
+	/// </summary>
 	public DataSourceStoreItem DataSource { get; set; } = null!;
 
+	/// <summary>
+	/// The name of the DataPoint.
+	/// </summary>
 	public string Name { get; set; } = string.Empty;
 
+	/// <summary>
+	/// A description of the DataPoint.
+	/// </summary>
 	public string Description { get; set; } = string.Empty;
 
+	/// <summary>
+	/// The measurement unit for the DataPoint values.
+	/// </summary>
 	public string MeasurementUnit { get; set; } = string.Empty;
 
+	/// <summary>
+	/// The global alert expression for this DataPoint.
+	/// </summary>
 	public string GlobalAlertExpression { get; set; } = string.Empty;
 
+	/// <summary>
+	/// The calculation expression applied to the DataPoint values.
+	/// </summary>
 	public string Calculation { get; set; } = string.Empty;
 
+	/// <summary>
+	/// The NCalc expression for computing percentage availability.
+	/// </summary>
 	public string PercentageAvailabilityCalculation { get; set; } = string.Empty;
 
+	/// <summary>
+	/// Tags associated with this DataPoint.
+	/// </summary>
 	public string Tags { get; set; } = string.Empty;
 
 	/// <summary>
@@ -82,5 +112,8 @@ public class DataSourceDataPointStoreItem : IdentifiedStoreItem
 	/// </summary>
 	public bool ResyncTimeSeriesData { get; set; }
 
+	/// <summary>
+	/// Navigation property to the resource-DataSource instance DataPoint associations.
+	/// </summary>
 	public virtual ICollection<ResourceDataSourceInstanceDataPointStoreItem> DeviceDataSourceInstanceDataPoints { get; set; } = null!;
 }

@@ -1,7 +1,13 @@
 ﻿namespace LogicMonitor.Datamart.Mapping;
 
+/// <summary>
+/// AutoMapper profile for mapping LogicMonitor Log API objects to <see cref="LogStoreItem"/>.
+/// </summary>
 public class LogProfile : Profile
 {
+	/// <summary>
+	/// Initializes a new instance of the <see cref="LogProfile"/> class.
+	/// </summary>
 	public LogProfile()
 	{
 		CreateMap<LogItem, LogStoreItem>()

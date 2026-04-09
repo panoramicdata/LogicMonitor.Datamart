@@ -4,6 +4,9 @@ using PanoramicData.NCalcExtensions;
 
 namespace LogicMonitor.Datamart;
 
+/// <summary>
+/// The main datamart client that orchestrates syncing data from LogicMonitor into a local database.
+/// </summary>
 public class DatamartClient : LogicMonitorClient
 {
 	internal DbContextOptions<Context> DbContextOptions { get; }
@@ -28,6 +31,11 @@ public class DatamartClient : LogicMonitorClient
 
 	private readonly TimeProviderService _timeProviderService = new();
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="DatamartClient"/> class.
+	/// </summary>
+	/// <param name="configuration">The datamart configuration.</param>
+	/// <param name="loggerFactory">The logger factory.</param>
 	public DatamartClient(
 		Configuration configuration,
 		ILoggerFactory loggerFactory
@@ -104,6 +112,11 @@ public class DatamartClient : LogicMonitorClient
 		_logger = loggerFactory.CreateLogger<DatamartClient>();
 	}
 
+	/// <summary>
+	/// Checks whether the database has been created.
+	/// </summary>
+	/// <param name="cancellationToken">A cancellation token.</param>
+	/// <returns>True if the database exists.</returns>
 	public async Task<bool> IsDatabaseCreatedAsync(CancellationToken cancellationToken)
 	{
 		using var context = GetContext();
@@ -122,6 +135,11 @@ public class DatamartClient : LogicMonitorClient
 		_ => throw new NotSupportedException($"DatabaseType {DatabaseType} is not supported"),
 	};
 
+	/// <summary>
+	/// Checks whether the database schema is up to date with all migrations applied.
+	/// </summary>
+	/// <param name="cancellationToken">A cancellation token.</param>
+	/// <returns>True if the database exists and has no pending migrations.</returns>
 	public async Task<bool> IsDatabaseSchemaUpToDateAsync(CancellationToken cancellationToken)
 	{
 		using var context = GetContext();
@@ -143,6 +161,10 @@ public class DatamartClient : LogicMonitorClient
 		return !pendingMigrations.Any();
 	}
 
+	/// <summary>
+	/// Ensures the database is created and all pending migrations are applied.
+	/// </summary>
+	/// <param name="cancellationToken">A cancellation token.</param>
 	public async Task EnsureDatabaseCreatedAndSchemaUpdatedAsync(CancellationToken cancellationToken)
 	{
 		using var migrationsContext = GetContext();
@@ -156,6 +178,10 @@ public class DatamartClient : LogicMonitorClient
 		_logger.LogInformation("Migrations up to date.");
 	}
 
+	/// <summary>
+	/// Deletes the database if it exists.
+	/// </summary>
+	/// <param name="cancellationToken">A cancellation token.</param>
 	public async Task EnsureDatabaseDeletedAsync(CancellationToken cancellationToken)
 	{
 		using var context = GetContext();
@@ -197,6 +223,12 @@ public class DatamartClient : LogicMonitorClient
 		return result ?? throw new NotSupportedException($"Type {typeof(TStore).Name} is not supported");
 	}
 
+	/// <summary>
+	/// Executes a SQL query against the database and returns a list of results. SQL Server only.
+	/// </summary>
+	/// <typeparam name="T">The entity type to query.</typeparam>
+	/// <param name="sql">The interpolated SQL query.</param>
+	/// <returns>A list of matching entities.</returns>
 	public async Task<List<T>> SqlListQuery<T>(FormattableString sql) where T : class, IHasEndpoint, new()
 	{
 		using var context = GetContext();
@@ -207,6 +239,13 @@ public class DatamartClient : LogicMonitorClient
 				.ToList()).ConfigureAwait(false);
 	}
 
+	/// <summary>
+	/// Retrieves a cached API item by its LogicMonitor identifier.
+	/// </summary>
+	/// <typeparam name="TApi">The LogicMonitor API type.</typeparam>
+	/// <param name="id">The LogicMonitor identifier.</param>
+	/// <param name="cancellationToken">A cancellation token.</param>
+	/// <returns>The API item mapped from the cached store item.</returns>
 	public async Task<TApi> GetCachedAsync<TApi>(int id, CancellationToken cancellationToken)
 		where TApi : IdentifiedItem
 	{
@@ -229,6 +268,12 @@ public class DatamartClient : LogicMonitorClient
 		}
 	}
 
+	/// <summary>
+	/// Retrieves all cached API items of the specified type.
+	/// </summary>
+	/// <typeparam name="TApi">The LogicMonitor API type.</typeparam>
+	/// <param name="cancellationToken">A cancellation token.</param>
+	/// <returns>A list of API items mapped from cached store items.</returns>
 	public async Task<List<TApi>> GetAllCachedAsync<TApi>(CancellationToken cancellationToken)
 		where TApi : class, IHasEndpoint, new()
 	{
@@ -269,6 +314,12 @@ public class DatamartClient : LogicMonitorClient
 		}
 	}
 
+	/// <summary>
+	/// Synchronizes LogicMonitor dimensions (resources, groups, DataSources, etc.) into the datamart.
+	/// </summary>
+	/// <param name="desiredMaxIntervalMinutes">The loop interval in minutes, or a <see cref="LoopIntervals"/> constant.</param>
+	/// <param name="notificationReceiver">An optional notification receiver for progress updates.</param>
+	/// <param name="cancellationToken">A cancellation token.</param>
 	public Task SyncDimensionsAsync(
 		int desiredMaxIntervalMinutes,
 		INotificationReceiver? notificationReceiver,
@@ -282,6 +333,13 @@ public class DatamartClient : LogicMonitorClient
 		return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
 	}
 
+	/// <summary>
+	/// Synchronizes LogicMonitor dimensions for specific types into the datamart.
+	/// </summary>
+	/// <param name="desiredMaxIntervalMinutes">The loop interval in minutes, or a <see cref="LoopIntervals"/> constant.</param>
+	/// <param name="types">The dimension types to sync.</param>
+	/// <param name="notificationReceiver">An optional notification receiver for progress updates.</param>
+	/// <param name="cancellationToken">A cancellation token.</param>
 	public Task SyncDimensionsAsync(
 		int desiredMaxIntervalMinutes,
 		List<string> types,
@@ -297,6 +355,12 @@ public class DatamartClient : LogicMonitorClient
 		return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
 	}
 
+	/// <summary>
+	/// Synchronizes low-resolution (aggregated) time series data from LogicMonitor into the datamart.
+	/// </summary>
+	/// <param name="desiredMaxIntervalMinutes">The loop interval in minutes, or a <see cref="LoopIntervals"/> constant.</param>
+	/// <param name="notificationReceiver">An optional notification receiver for progress updates.</param>
+	/// <param name="cancellationToken">A cancellation token.</param>
 	public Task SyncLowResolutionDataAsync(
 		int desiredMaxIntervalMinutes,
 		INotificationReceiver? notificationReceiver,
@@ -311,6 +375,12 @@ public class DatamartClient : LogicMonitorClient
 		return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
 	}
 
+	/// <summary>
+	/// Synchronizes alerts from LogicMonitor into the datamart.
+	/// </summary>
+	/// <param name="desiredMaxIntervalMinutes">The loop interval in minutes, or a <see cref="LoopIntervals"/> constant.</param>
+	/// <param name="startDateTimeUtc">The UTC start time from which to sync alerts.</param>
+	/// <param name="cancellationToken">A cancellation token.</param>
 	public Task SyncAlertsAsync(
 		int desiredMaxIntervalMinutes,
 		DateTimeOffset startDateTimeUtc,
@@ -320,6 +390,12 @@ public class DatamartClient : LogicMonitorClient
 		return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
 	}
 
+	/// <summary>
+	/// Synchronizes audit log entries from LogicMonitor into the datamart.
+	/// </summary>
+	/// <param name="desiredMaxIntervalMinutes">The loop interval in minutes, or a <see cref="LoopIntervals"/> constant.</param>
+	/// <param name="startDateTimeUtc">The UTC start time from which to sync audit log entries.</param>
+	/// <param name="cancellationToken">A cancellation token.</param>
 	public Task SyncAuditLogAsync(
 		int desiredMaxIntervalMinutes,
 		DateTimeOffset startDateTimeUtc,
@@ -332,6 +408,12 @@ public class DatamartClient : LogicMonitorClient
 		return sync.LoopAsync(desiredMaxIntervalMinutes, cancellationToken);
 	}
 
+	/// <summary>
+	/// Performs data ageing, removing time series aggregation data older than the specified retention period.
+	/// </summary>
+	/// <param name="desiredMaxIntervalMinutes">The loop interval in minutes, or a <see cref="LoopIntervals"/> constant.</param>
+	/// <param name="CountAggregationDaysToRetain">The number of days of aggregation data to retain.</param>
+	/// <param name="cancellationToken">A cancellation token.</param>
 	public Task PerformDataAgeingAsync(
 	int desiredMaxIntervalMinutes,
 	int CountAggregationDaysToRetain,
@@ -349,8 +431,11 @@ public class DatamartClient : LogicMonitorClient
 	/// </summary>
 	/// <typeparam name="TApi">The LogicMonitor API type</typeparam>
 	/// <typeparam name="TStore">The Database StoreItem type</typeparam>
-	/// <param name="action"></param>
-	/// <param name="cancellationToken"></param>
+	/// <param name="action">A function that selects the target DbSet from the context.</param>
+	/// <param name="haltOnError">Whether to throw on error or log and continue.</param>
+	/// <param name="logger">The logger instance.</param>
+	/// <param name="notificationReceiver">The notification receiver for progress updates.</param>
+	/// <param name="cancellationToken">A cancellation token.</param>
 	internal async Task AddOrUpdate<TApi, TStore>(
 		Func<Context, DbSet<TStore>> action,
 		bool haltOnError,
@@ -460,10 +545,11 @@ public class DatamartClient : LogicMonitorClient
 	/// <summary>
 	/// Add or Update the Database using the items already retrieved from the LogicMonitor API
 	/// </summary>
-	/// <typeparam name="TApi">The LogicMonitor API type</typeparam>
-	/// <typeparam name="TStore">The Database StoreItem type</typeparam>
-	/// <param name="action"></param>
-	/// <param name="cancellationToken"></param>
+	/// <param name="action">A function that selects the target DbSet from the context.</param>
+	/// <param name="haltOnError">Whether to throw on error or log and continue.</param>
+	/// <param name="logger">The logger instance.</param>
+	/// <param name="notificationReceiver">The notification receiver for progress updates.</param>
+	/// <param name="cancellationToken">A cancellation token.</param>
 	internal async Task AddOrUpdateLogicModuleUpdates(
 		Func<Context, DbSet<LogicModuleUpdateStoreItem>> action,
 		bool haltOnError,
@@ -559,6 +645,7 @@ public class DatamartClient : LogicMonitorClient
 	/// <param name="context">The database context</param>
 	/// <param name="apiDataSources">The list of API DataSources</param>
 	/// <param name="notificationReceiver">The notification receiver for progress updates</param>
+	/// <param name="cancellationToken">A cancellation token.</param>
 	private async Task UpdateGraphsAsync(Context context, List<DataSource> apiDataSources, INotificationReceiver notificationReceiver, CancellationToken cancellationToken)
 	{
 		_logger.LogInformation("Updating DataSource Graphs...");
@@ -692,6 +779,7 @@ public class DatamartClient : LogicMonitorClient
 	/// </summary>
 	/// <param name="context">The database context</param>
 	/// <param name="apiDataSources">The list of API DataSources</param>
+	/// <param name="cancellationToken">A cancellation token.</param>
 	private async Task UpdateDataPointsAsync(Context context, List<DataSource> apiDataSources, CancellationToken cancellationToken)
 	{
 		_logger.LogInformation("Updating DataSource DataPoints...");
@@ -853,6 +941,9 @@ public class DatamartClient : LogicMonitorClient
 		_logger.LogInformation("Updating DataSource DataPoints done.");
 	}
 
+	/// <summary>
+	/// Retrieves cached alerts from the datamart with filtering and pagination support.
+	/// </summary>
 	public async Task<List<Alert>> GetCachedAlertsAsync(
 		long startSeconds,
 		long endSeconds,
@@ -1038,6 +1129,12 @@ public class DatamartClient : LogicMonitorClient
 			.ConvertAll(MapperInstance.Map<AlertStoreItem, Alert>);
 	}
 
+	/// <summary>
+	/// Retrieves all cached collector group IDs matching the specified group name.
+	/// </summary>
+	/// <param name="collectorGroups">The collector groups DbSet.</param>
+	/// <param name="groupName">The group name to match.</param>
+	/// <returns>A list of LogicMonitor collector group identifiers.</returns>
 	public static async Task<List<int>> GetAllCachedCollectorGroupIdsAsync(DbSet<CollectorGroupStoreItem> collectorGroups, string groupName)
 		=> await collectorGroups
 			.Where(cg => cg.Name == groupName)
@@ -1045,6 +1142,12 @@ public class DatamartClient : LogicMonitorClient
 			.ToListAsync()
 			.ConfigureAwait(false);
 
+	/// <summary>
+	/// Retrieves all cached resource group IDs matching the specified group name or path pattern.
+	/// </summary>
+	/// <param name="deviceGroups">The resource groups DbSet.</param>
+	/// <param name="groupName">The group name or wildcard path pattern (ending with *).</param>
+	/// <returns>A list of LogicMonitor resource group identifiers.</returns>
 	public static async Task<List<int>> GetAllCachedDeviceGroupIdsAsync(DbSet<ResourceGroupStoreItem> deviceGroups, string groupName)
 		=> (groupName ?? throw new ArgumentNullException(nameof(groupName))).EndsWith('*')
 			? await deviceGroups
@@ -1058,6 +1161,12 @@ public class DatamartClient : LogicMonitorClient
 				.ToListAsync()
 				.ConfigureAwait(false);
 
+	/// <summary>
+	/// Retrieves all cached website group IDs matching the specified group name or path pattern.
+	/// </summary>
+	/// <param name="websiteGroups">The website groups DbSet.</param>
+	/// <param name="groupName">The group name or wildcard path pattern (ending with *).</param>
+	/// <returns>A list of LogicMonitor website group identifiers.</returns>
 	public static async Task<List<int>> GetAllCachedWebsiteGroupIdsAsync(DbSet<WebsiteGroupStoreItem> websiteGroups, string groupName)
 		=> (groupName ?? throw new ArgumentNullException(nameof(groupName))).EndsWith('*')
 			? await websiteGroups
@@ -1097,6 +1206,15 @@ public class DatamartClient : LogicMonitorClient
 		return tableName;
 	}
 
+	/// <summary>
+	/// Synchronizes LogicModule sources and instances for a resource into the datamart.
+	/// </summary>
+	/// <param name="logicModuleConfigurationItem">The LogicModule configuration item to sync.</param>
+	/// <param name="logicModuleIndex">The zero-based index of the current LogicModule being processed.</param>
+	/// <param name="logicModuleCount">The total number of LogicModules to process.</param>
+	/// <param name="notificationReceiver">The notification receiver for progress updates.</param>
+	/// <param name="logger">The logger instance.</param>
+	/// <param name="cancellationToken">A cancellation token.</param>
 	public async Task SyncDeviceLogicModuleSourcesAndInstancesAsync(
 		LogicModuleConfigurationItem logicModuleConfigurationItem,
 		int logicModuleIndex,

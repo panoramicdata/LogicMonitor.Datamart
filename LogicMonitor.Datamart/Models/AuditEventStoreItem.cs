@@ -1,5 +1,8 @@
 ﻿namespace LogicMonitor.Datamart.Models;
 
+/// <summary>
+/// Represents a LogicMonitor audit event stored in the datamart.
+/// </summary>
 public class AuditEventStoreItem : StoreItem
 {
 	/// <summary>

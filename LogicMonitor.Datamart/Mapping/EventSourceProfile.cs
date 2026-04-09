@@ -1,7 +1,13 @@
 ﻿namespace LogicMonitor.Datamart.Mapping;
 
+/// <summary>
+/// AutoMapper profile for mapping LogicMonitor EventSource API objects to <see cref="EventSourceStoreItem"/>.
+/// </summary>
 public class EventSourceProfile : Profile
 {
+	/// <summary>
+	/// Initializes a new instance of the <see cref="EventSourceProfile"/> class.
+	/// </summary>
 	public EventSourceProfile()
 	{
 		CreateMap<EventSource, EventSourceStoreItem>()

@@ -2,8 +2,14 @@
 
 namespace LogicMonitor.Datamart.Mapping;
 
+/// <summary>
+/// AutoMapper profile for mapping LogicMonitor AuditEvent API objects to <see cref="AuditEventStoreItem"/>.
+/// </summary>
 public class AuditEventProfile : Profile
 {
+	/// <summary>
+	/// Initializes a new instance of the <see cref="AuditEventProfile"/> class.
+	/// </summary>
 	public AuditEventProfile()
 	{
 		CreateMap<AuditEvent, AuditEventStoreItem>()

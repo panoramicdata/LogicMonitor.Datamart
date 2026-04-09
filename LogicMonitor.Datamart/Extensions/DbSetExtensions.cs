@@ -1,7 +1,21 @@
 namespace LogicMonitor.Datamart.Extensions;
 
+/// <summary>
+/// Extension methods for Entity Framework <see cref="DbSet{TEntity}"/> operations in the datamart.
+/// </summary>
 public static class DbSetExtension
 {
+	/// <summary>
+	/// Adds a new identified item or updates an existing one in the DbSet, mapping from the API model.
+	/// </summary>
+	/// <typeparam name="TApi">The LogicMonitor API item type.</typeparam>
+	/// <typeparam name="TStore">The datamart store item type.</typeparam>
+	/// <param name="dbSet">The DbSet to add to or update in.</param>
+	/// <param name="context">The datamart database context.</param>
+	/// <param name="apiItem">The API item to map from.</param>
+	/// <param name="lastObservedUtc">The UTC timestamp when this item was last observed in the API.</param>
+	/// <param name="logger">The logger instance.</param>
+	/// <param name="cancellationToken">A cancellation token.</param>
 	public static async Task AddOrUpdateIdentifiedItemAsync<TApi, TStore>(
 			this DbSet<TStore> dbSet,
 			Context context,
@@ -68,6 +82,13 @@ public static class DbSetExtension
 		dbSet.Add(storeItem);
 	}
 
+	/// <summary>
+	/// Adds a new LogicModule update or updates an existing one in the DbSet, matching by CurrentUuid.
+	/// </summary>
+	/// <param name="dbSet">The DbSet to add to or update in.</param>
+	/// <param name="apiItem">The API LogicModule update item.</param>
+	/// <param name="lastObservedUtc">The UTC timestamp when this item was last observed in the API.</param>
+	/// <param name="logger">The logger instance.</param>
 	public static void AddOrUpdateLogicModuleUpdate(
 			this DbSet<LogicModuleUpdateStoreItem> dbSet,
 			LogicModuleUpdate apiItem,

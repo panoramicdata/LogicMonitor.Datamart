@@ -2271,11 +2271,13 @@ internal class LowResolutionDataSync(
 	/// - Device level (cached)
 	/// - All Device Group levels up to the root (cached)
 	/// </summary>
+	/// <param name="datamartClient">The datamart client for API calls.</param>
 	/// <param name="deviceNotTracked">The device to get SDT periods for</param>
 	/// <param name="resourceDataSourceInstanceStoreItem">The device data source instance</param>
 	/// <param name="startDateTimeUtc">Start of the time range</param>
 	/// <param name="endDateTimeUtc">End of the time range</param>
 	/// <param name="sdtCache">Cache for Device and DeviceGroup SDTs</param>
+	/// <param name="logger">The logger instance.</param>
 	/// <param name="cancellationToken">Cancellation token</param>
 	/// <returns>List of merged, non-overlapping SDT periods as (start timestamp in ms, end timestamp in ms) tuples</returns>
 	private async static Task<List<(long StartTimestampMs, long EndTimestampMs)>?> GetHistoricalSdtPeriodsAsync(
@@ -2468,8 +2470,10 @@ internal class LowResolutionDataSync(
 	/// Gets historical SDTs for a device group and all parent groups up to root.
 	/// MS-21395: Helper method to traverse the device group hierarchy with caching.
 	/// </summary>
+	/// <param name="datamartClient">The datamart client for API calls.</param>
 	/// <param name="deviceGroupId">The device group ID to start from</param>
 	/// <param name="sdtCache">Cache for DeviceGroup SDTs</param>
+	/// <param name="logger">The logger instance.</param>
 	/// <param name="cancellationToken">Cancellation token</param>
 	/// <returns>List of SDT histories for the group and all parent groups</returns>
 	private async static Task<List<ScheduledDownTimeHistory>> GetHistoricSdtsForDeviceGroupToRootAsync(

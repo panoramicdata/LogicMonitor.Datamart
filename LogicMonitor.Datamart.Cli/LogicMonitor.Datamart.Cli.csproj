@@ -1,53 +1,62 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
-
-	<PropertyGroup>
-		<OutputType>Exe</OutputType>
-		<TargetFramework>net10.0</TargetFramework>
-		<Authors>Panoramic Data Limited</Authors>
-		<Copyright>Copyright © Panoramic Data Limited 2023-2024</Copyright>
-		<LangVersion>latest</LangVersion>
-		<Nullable>enable</Nullable>
-		<EnableNETAnalyzers>true</EnableNETAnalyzers>
-		<AnalysisMode>All</AnalysisMode>
-		<UserSecretsId>13af64f5-b1d5-4026-aa04-0aa86fc1f582</UserSecretsId>
-		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-	</PropertyGroup>
-
-	<ItemGroup>
-		<Content Remove="appsettings.example.json" />
-		<Content Remove="appsettings.json" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<None Include="appsettings.example.json" />
-		<None Include="appsettings.json" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Include="AspNetCore.HealthChecks.Network" />
-		<PackageReference Include="AspNetCore.HealthChecks.SystemMemory" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" />
-		<PackageReference Include="Nerdbank.GitVersioning">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-		<PackageReference Include="PanoramicData.HealthChecks.Core" />
-		<PackageReference Include="PanoramicData.HealthChecks.Versions" />
-		<PackageReference Include="Serilog.Extensions.Hosting" />
-		<PackageReference Include="Serilog.Settings.Configuration" />
-		<PackageReference Include="Serilog.Sinks.ApplicationInsights" />
-		<PackageReference Include="Serilog.Sinks.AzureAnalytics" />
-		<PackageReference Include="Serilog.Sinks.Console" />
-		<PackageReference Include="Serilog.Sinks.ElasticSearch" />
-		<PackageReference Include="Serilog.AspNetCore" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<ProjectReference Include="..\LogicMonitor.Datamart\LogicMonitor.Datamart.csproj" />
-	</ItemGroup>
-
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Authors>Panoramic Data Limited</Authors>
+    <Copyright>Copyright © Panoramic Data Limited 2023-2024</Copyright>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisMode>All</AnalysisMode>
+    <UserSecretsId>13af64f5-b1d5-4026-aa04-0aa86fc1f582</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/panoramicdata/LogicMonitor.Datamart/</PackageProjectUrl>
+    <PackageIcon>Icon.png</PackageIcon>
+    <RepositoryUrl>https://github.com/panoramicdata/LogicMonitor.Datamart</RepositoryUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageId>LogicMonitor.Datamart.Cli</PackageId>
+    <NeutralResourcesLanguage>en</NeutralResourcesLanguage>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Remove="appsettings.example.json" />
+    <Content Remove="appsettings.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="appsettings.example.json" />
+    <None Include="appsettings.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="AspNetCore.HealthChecks.Network" />
+    <PackageReference Include="AspNetCore.HealthChecks.SystemMemory" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" />
+    <PackageReference Include="Nerdbank.GitVersioning">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="PanoramicData.HealthChecks.Core" />
+    <PackageReference Include="PanoramicData.HealthChecks.Versions" />
+    <PackageReference Include="Serilog.Extensions.Hosting" />
+    <PackageReference Include="Serilog.Settings.Configuration" />
+    <PackageReference Include="Serilog.Sinks.ApplicationInsights" />
+    <PackageReference Include="Serilog.Sinks.AzureAnalytics" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.ElasticSearch" />
+    <PackageReference Include="Serilog.AspNetCore" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LogicMonitor.Datamart\LogicMonitor.Datamart.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\LogicMonitor.Datamart\Icon.png" Pack="true" PackagePath="" />
+  </ItemGroup>
 </Project>

@@ -2,44 +2,158 @@ using EFCore.BulkExtensions;
 
 namespace LogicMonitor.Datamart;
 
+/// <summary>
+/// The Entity Framework database context for the LogicMonitor datamart.
+/// </summary>
 public class Context : DbContext
 {
+	/// <summary>
+	/// Initializes a new instance of the <see cref="Context"/> class. Required for adding migrations.
+	/// </summary>
 	public Context()
 	{
 		// Required for adding migrations
 	}
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="Context"/> class with the specified options.
+	/// </summary>
+	/// <param name="options">The database context options.</param>
 	public Context(DbContextOptions<Context> options) : base(options)
 	{
 	}
 
+	/// <summary>
+	/// Gets or sets the alerts DbSet.
+	/// </summary>
 	public DbSet<AlertStoreItem> Alerts { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the alert rules DbSet.
+	/// </summary>
 	public DbSet<AlertRuleStoreItem> AlertRules { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the audit events DbSet.
+	/// </summary>
 	public DbSet<AuditEventStoreItem> AuditEvents { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the collectors DbSet.
+	/// </summary>
 	public DbSet<CollectorStoreItem> Collectors { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the collector groups DbSet.
+	/// </summary>
 	public DbSet<CollectorGroupStoreItem> CollectorGroups { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the ConfigSources DbSet.
+	/// </summary>
 	public DbSet<ConfigSourceStoreItem> ConfigSources { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the DataSource graphs DbSet.
+	/// </summary>
 	public DbSet<DataSourceGraphStoreItem> DataSourceGraphs { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the DataSources DbSet.
+	/// </summary>
 	public DbSet<DataSourceStoreItem> DataSources { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the DataSource DataPoints DbSet.
+	/// </summary>
 	public DbSet<DataSourceDataPointStoreItem> DataSourceDataPoints { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the integrations DbSet.
+	/// </summary>
 	public DbSet<IntegrationStoreItem> Integrations { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the resource-ConfigSource assignments DbSet.
+	/// </summary>
 	public DbSet<ResourceConfigSourceStoreItem> DeviceConfigSources { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the resource-ConfigSource instances DbSet.
+	/// </summary>
 	public DbSet<ResourceConfigSourceInstanceStoreItem> DeviceConfigSourceInstances { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the resource-ConfigSource instance configuration snapshots DbSet.
+	/// </summary>
 	public DbSet<ResourceConfigSourceInstanceConfigStoreItem> DeviceConfigSourceInstanceConfigs { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the resource-DataSource assignments DbSet.
+	/// </summary>
 	public DbSet<ResourceDataSourceStoreItem> DeviceDataSources { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the resource-DataSource instances DbSet.
+	/// </summary>
 	public DbSet<ResourceDataSourceInstanceStoreItem> DeviceDataSourceInstances { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the escalation chains DbSet.
+	/// </summary>
 	public DbSet<EscalationChainStoreItem> EscalationChains { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the EventSources DbSet.
+	/// </summary>
 	public DbSet<EventSourceStoreItem> EventSources { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the LogicModule updates DbSet.
+	/// </summary>
 	public DbSet<LogicModuleUpdateStoreItem> LogicModuleUpdates { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the log items DbSet.
+	/// </summary>
 	public DbSet<LogStoreItem> LogItems { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the websites DbSet.
+	/// </summary>
 	public DbSet<WebsiteStoreItem> Websites { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the resource-DataSource instance DataPoints DbSet.
+	/// </summary>
 	public DbSet<ResourceDataSourceInstanceDataPointStoreItem> DeviceDataSourceInstanceDataPoints { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the resources (devices) DbSet.
+	/// </summary>
 	public DbSet<ResourceStoreItem> Devices { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the resource groups DbSet.
+	/// </summary>
 	public DbSet<ResourceGroupStoreItem> DeviceGroups { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the website groups DbSet.
+	/// </summary>
 	public DbSet<WebsiteGroupStoreItem> WebsiteGroups { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the monitor object groups DbSet.
+	/// </summary>
 	public DbSet<MonitorObjectGroupStoreItem> MonitorObjectGroups { get; set; } = null!;
+
+	/// <summary>
+	/// Gets or sets the time series data aggregations DbSet.
+	/// </summary>
 	public DbSet<TimeSeriesDataAggregationStoreItem> TimeSeriesDataAggregations { get; set; } = null!;
 
+	/// <inheritdoc />
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
 		// MonitorObjectGroup indexes
@@ -213,6 +327,14 @@ public class Context : DbContext
 			.OnDelete(DeleteBehavior.Restrict);
 	}
 
+	/// <summary>
+	/// Performs a bulk insert of items into the database, using native bulk insert for PostgreSQL and SQL Server, or batched AddRange for other providers.
+	/// </summary>
+	/// <typeparam name="T">The entity type to insert.</typeparam>
+	/// <param name="items">The items to insert.</param>
+	/// <param name="databaseType">The target database type.</param>
+	/// <param name="logger">The logger instance.</param>
+	/// <param name="cancellationToken">A cancellation token.</param>
 	public async Task BulkInsertAsync<T>(
 		List<T> items,
 		DatabaseType databaseType,
@@ -274,6 +396,7 @@ public class Context : DbContext
 		}
 	}
 
+	/// <inheritdoc />
 	public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken)
 	{
 		UpdateTimestamps();

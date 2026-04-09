@@ -1,5 +1,8 @@
 namespace LogicMonitor.Datamart.Models;
 
+/// <summary>
+/// Abstract base class for store items that correspond to an identified LogicMonitor entity.
+/// </summary>
 public abstract class IdentifiedStoreItem : StoreItem
 {
 	/// <summary>

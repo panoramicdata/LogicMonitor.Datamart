@@ -1,56 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-
-	<PropertyGroup>
-		<TargetFramework>net10.0</TargetFramework>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Authors>Panoramic Data Limited</Authors>
-		<Copyright>Copyright © Panoramic Data Limited 2021-2026</Copyright>
-		<PackageProjectUrl>https://github.com/panoramicdata/LogicMonitor.Datamart/</PackageProjectUrl>
-		<PackageIcon>Icon.png</PackageIcon>
-		<Description>LogicMonitor Datamart</Description>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageTags>LogicMonitor API Datamart</PackageTags>
-		<PackageReleaseNotes>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>Panoramic Data Limited</Authors>
+    <Copyright>Copyright © Panoramic Data Limited 2021-2026</Copyright>
+    <PackageProjectUrl>https://github.com/panoramicdata/LogicMonitor.Datamart/</PackageProjectUrl>
+    <PackageIcon>Icon.png</PackageIcon>
+    <Description>LogicMonitor Datamart</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>LogicMonitor API Datamart</PackageTags>
+    <PackageReleaseNotes>
 			- Updated PanoramicData.Mapper to 10.0.19
 		</PackageReleaseNotes>
-		<LangVersion>latest</LangVersion>
-		<Nullable>enable</Nullable>
-		<AnalysisMode>All</AnalysisMode>
-		<AnalysisLevel>latest-recommended</AnalysisLevel>
-		<IncludeSymbols>true</IncludeSymbols>
-		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-		<RepositoryType>git</RepositoryType>
-		<RepositoryUrl>https://github.com/panoramicdata/LogicMonitor.Datamart/</RepositoryUrl>
-		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<UserSecretsId>d870b896-8725-450e-938a-3a75f2d9a8e8</UserSecretsId>
-	</PropertyGroup>
-
-	<ItemGroup>
-		<None Include="..\README.md" Pack="true" PackagePath="\" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Include="PanoramicData.Mapper" />
-		<PackageReference Include="EFCore.BulkExtensions.Dotnet10.PostgreSql" />
-		<PackageReference Include="EFCore.BulkExtensions.Dotnet10.SqlServer" />
-		<PackageReference Include="LogicMonitor.Api" />
-		<PackageReference Include="Microsoft.Data.SqlClient" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-		<PackageReference Include="Microsoft.Extensions.Caching.Memory" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" />
-		<PackageReference Include="Nerdbank.GitVersioning">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
-		<PackageReference Include="PanoramicData.NCalcExtensions" />
-	</ItemGroup>
-	<ItemGroup>
-		<None Include="Icon.png" Pack="true" PackagePath="" />
-	</ItemGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <AnalysisMode>All</AnalysisMode>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/panoramicdata/LogicMonitor.Datamart/</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <UserSecretsId>d870b896-8725-450e-938a-3a75f2d9a8e8</UserSecretsId>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PackageId>LogicMonitor.Datamart</PackageId>
+    <NeutralResourcesLanguage>en</NeutralResourcesLanguage>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="PanoramicData.Mapper" />
+    <PackageReference Include="EFCore.BulkExtensions.Dotnet10.PostgreSql" />
+    <PackageReference Include="EFCore.BulkExtensions.Dotnet10.SqlServer" />
+    <PackageReference Include="LogicMonitor.Api" />
+    <PackageReference Include="Microsoft.Data.SqlClient" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" />
+    <PackageReference Include="Nerdbank.GitVersioning">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="PanoramicData.NCalcExtensions" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Icon.png" Pack="true" PackagePath="" />
+  </ItemGroup>
 </Project>

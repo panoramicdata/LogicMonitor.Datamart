@@ -1,7 +1,13 @@
 ﻿namespace LogicMonitor.Datamart.Mapping;
 
+/// <summary>
+/// AutoMapper profile for mapping LogicMonitor ConfigSource API objects to <see cref="ConfigSourceStoreItem"/>.
+/// </summary>
 public class ConfigSourceProfile : Profile
 {
+	/// <summary>
+	/// Initializes a new instance of the <see cref="ConfigSourceProfile"/> class.
+	/// </summary>
 	public ConfigSourceProfile()
 	{
 		CreateMap<ConfigSource, ConfigSourceStoreItem>()

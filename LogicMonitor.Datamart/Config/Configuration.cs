@@ -1,5 +1,8 @@
 ﻿namespace LogicMonitor.Datamart.Config;
 
+/// <summary>
+/// The main configuration class for the LogicMonitor datamart.
+/// </summary>
 public class Configuration
 {
 	/// <summary>
@@ -96,19 +99,39 @@ public class Configuration
 	/// </summary>
 	public bool EnableSensitiveDatabaseLogging { get; set; }
 
+	/// <summary>
+	/// The batch size for fetching resource DataSource instance data. Must be between 1 and 100.
+	/// </summary>
 	public int DeviceDataSourceInstanceBatchSize { get; set; } = 100;
 
+	/// <summary>
+	/// The list of custom resource property names to sync into the datamart.
+	/// </summary>
 	public List<string> DeviceProperties { get; set; } = [];
 
+	/// <summary>
+	/// The operating mode of the datamart client.
+	/// </summary>
 	public DatamartClientMode Mode { get; set; } = DatamartClientMode.HighResolution;
 
+	/// <summary>
+	/// Whether to halt dimension sync when an error is encountered. Default true.
+	/// </summary>
 	public bool DimensionSyncHaltOnError { get; set; } = true;
 
-	// RM-16049 Ability to set a static UTC offset to apply to the reporting time period. Between -13 and 13 hours
+	/// <summary>
+	/// A static UTC offset in minutes to apply to the reporting time period. Range: -780..780 (i.e. -13..13 hours).
+	/// </summary>
 	public int MinutesOffset { get; set; }
 
+	/// <summary>
+	/// An optional fake execution time for testing purposes, overriding the real current time.
+	/// </summary>
 	public DateTime? FakeExecutionTime { get; set; }
 
+	/// <summary>
+	/// Whether to exclude Scheduled Down Time (SDT) periods from aggregation calculations.
+	/// </summary>
 	public bool ExcludeSdtPeriods { get; set; }
 
 	/// <summary>
@@ -143,6 +166,9 @@ public class Configuration
 	/// </summary>
 	public int AutoChunkSizeDays { get; set; } = 31;
 
+	/// <summary>
+	/// Validates the configuration, throwing <see cref="ConfigurationException"/> for any invalid settings.
+	/// </summary>
 	public void Validate()
 	{
 		if (string.IsNullOrWhiteSpace(Name))
@@ -208,6 +234,7 @@ public class Configuration
 		}
 	}
 
+	/// <inheritdoc />
 	public override string ToString()
 		=> $"{Name} ({DatabaseType} {DatabaseServerName}:{DatabaseServerPort}/{DatabaseName} password: {new string('*', DatabasePassword.Length)})";
 }

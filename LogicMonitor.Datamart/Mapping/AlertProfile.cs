@@ -1,7 +1,13 @@
 ﻿namespace LogicMonitor.Datamart.Mapping;
 
+/// <summary>
+/// AutoMapper profile for mapping LogicMonitor Alert API objects to <see cref="AlertStoreItem"/>.
+/// </summary>
 public class AlertProfile : Profile
 {
+	/// <summary>
+	/// Initializes a new instance of the <see cref="AlertProfile"/> class.
+	/// </summary>
 	public AlertProfile()
 	{
 		CreateMap<Alert, AlertStoreItem>()

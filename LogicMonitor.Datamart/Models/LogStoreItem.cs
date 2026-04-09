@@ -1,8 +1,13 @@
 ﻿namespace LogicMonitor.Datamart.Models;
 
+/// <summary>
+/// Represents a LogicMonitor log item stored in the datamart.
+/// </summary>
 public class LogStoreItem : StoreItem
 {
-	// Database properties
+	/// <summary>
+	/// The LogicMonitor log item identifier.
+	/// </summary>
 	[MaxLength(50)]
 	public string LogicMonitorId { get; set; } = string.Empty;
 

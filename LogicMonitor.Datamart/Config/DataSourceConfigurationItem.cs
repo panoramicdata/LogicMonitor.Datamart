@@ -1,5 +1,8 @@
 ﻿namespace LogicMonitor.Datamart.Config;
 
+/// <summary>
+/// Configuration item for a DataSource to sync into the datamart.
+/// </summary>
 public class DataSourceConfigurationItem : LogicModuleConfigurationItem
 {
 	/// <summary>
@@ -7,6 +10,9 @@ public class DataSourceConfigurationItem : LogicModuleConfigurationItem
 	/// </summary>
 	public List<DataPointConfigurationItem> DataPoints { get; set; } = [];
 
+	/// <summary>
+	/// Validates the DataSource configuration item and all its DataPoints.
+	/// </summary>
 	public void Validate()
 	{
 		ValidateBase();

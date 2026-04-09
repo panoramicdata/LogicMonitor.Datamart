@@ -1,7 +1,13 @@
 ﻿namespace LogicMonitor.Datamart.Mapping;
 
+/// <summary>
+/// AutoMapper profile for mapping LogicMonitor DataPoint API objects to <see cref="DataSourceDataPointStoreItem"/>.
+/// </summary>
 public class DataPointProfile : Profile
 {
+	/// <summary>
+	/// Initializes a new instance of the <see cref="DataPointProfile"/> class.
+	/// </summary>
 	public DataPointProfile()
 	{
 		CreateMap<DataPointConfigurationItem, DataSourceDataPointStoreItem>()

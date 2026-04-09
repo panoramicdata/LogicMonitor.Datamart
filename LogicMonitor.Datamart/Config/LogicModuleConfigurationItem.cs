@@ -1,5 +1,8 @@
 ﻿namespace LogicMonitor.Datamart.Config;
 
+/// <summary>
+/// Base configuration item for a LogicModule (DataSource or ConfigSource) to sync into the datamart.
+/// </summary>
 public class LogicModuleConfigurationItem
 {
 	/// <summary>

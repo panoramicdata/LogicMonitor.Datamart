@@ -2,8 +2,14 @@
 
 namespace LogicMonitor.Datamart.Mapping;
 
+/// <summary>
+/// AutoMapper profile for mapping LogicMonitor Integration API objects to <see cref="IntegrationStoreItem"/>.
+/// </summary>
 public class IntegrationProfile : Profile
 {
+	/// <summary>
+	/// Initializes a new instance of the <see cref="IntegrationProfile"/> class.
+	/// </summary>
 	public IntegrationProfile()
 	{
 		var serializationOptions = new JsonSerializerOptions

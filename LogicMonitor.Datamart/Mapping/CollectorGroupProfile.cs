@@ -1,7 +1,13 @@
 ﻿namespace LogicMonitor.Datamart.Mapping;
 
+/// <summary>
+/// AutoMapper profile for mapping LogicMonitor CollectorGroup API objects to <see cref="CollectorGroupStoreItem"/>.
+/// </summary>
 public class CollectorGroupProfile : Profile
 {
+	/// <summary>
+	/// Initializes a new instance of the <see cref="CollectorGroupProfile"/> class.
+	/// </summary>
 	public CollectorGroupProfile()
 	{
 		CreateMap<CollectorGroup, CollectorGroupStoreItem>()

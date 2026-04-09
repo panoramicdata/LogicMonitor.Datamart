@@ -1,7 +1,13 @@
 ﻿namespace LogicMonitor.Datamart.Mapping;
 
+/// <summary>
+/// AutoMapper profile for mapping LogicMonitor Website API objects to <see cref="WebsiteStoreItem"/>.
+/// </summary>
 public class WebsiteProfile : Profile
 {
+	/// <summary>
+	/// Initializes a new instance of the <see cref="WebsiteProfile"/> class.
+	/// </summary>
 	public WebsiteProfile()
 	{
 		CreateMap<Website, WebsiteStoreItem>()
