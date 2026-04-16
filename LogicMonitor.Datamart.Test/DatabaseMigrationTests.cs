@@ -6,8 +6,12 @@ namespace LogicMonitor.Datamart.Test;
 /// Simple test to ensure database migrations are applied.
 /// Running this test will apply all pending migrations to your test database.
 /// </summary>
+/// <param name="testOutputHelper">xUnit output helper for test diagnostics.</param>
 public class DatabaseMigrationTests(ITestOutputHelper testOutputHelper) : TestWithOutput(testOutputHelper)
 {
+	/// <summary>
+	/// Verifies the database is accessible after all pending migrations have been applied.
+	/// </summary>
 	[Fact]
 	public async Task ApplyMigrations_Succeeds()
 	{
@@ -22,6 +26,9 @@ public class DatabaseMigrationTests(ITestOutputHelper testOutputHelper) : TestWi
 		canConnect.Should().BeTrue("Database should be accessible after migrations");
 	}
 
+	/// <summary>
+	/// Verifies that the ExcludingSdt columns added in recent migrations exist in the database.
+	/// </summary>
 	[Fact]
 	public async Task NewExcludingSdtColumns_ExistInDatabase()
 	{

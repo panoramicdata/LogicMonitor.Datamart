@@ -2,8 +2,15 @@
 
 namespace LogicMonitor.Datamart.Test;
 
+/// <summary>
+/// Verifies AutoMapper profile registration and truncation behavior for mapped string fields.
+/// </summary>
+/// <param name="iTestOutputHelper">xUnit output helper used for test logging.</param>
 public class AutoMapperTruncateTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTestOutputHelper)
 {
+	/// <summary>
+	/// Asserts the selected mapping profiles build a valid AutoMapper configuration.
+	/// </summary>
 	[Fact]
 	public void Test()
 	{
@@ -29,6 +36,9 @@ public class AutoMapperTruncateTests(ITestOutputHelper iTestOutputHelper) : Test
 		config.AssertConfigurationIsValid();
 	}
 
+	/// <summary>
+	/// Verifies over-length source fields are truncated to destination schema limits during mapping.
+	/// </summary>
 	[Fact]
 	public void ResolveAndTruncate_LongValue_TruncatedValue()
 	{

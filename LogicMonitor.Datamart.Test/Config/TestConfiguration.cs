@@ -33,10 +33,19 @@ public class TestConfiguration
 	/// </summary>
 	public required string DatabaseName { get; set; }
 
+	/// <summary>
+	/// Database provider type used by tests.
+	/// </summary>
 	public DatabaseType DatabaseType { get; set; }
 
+	/// <summary>
+	/// Username used for database authentication.
+	/// </summary>
 	public required string DatabaseUsername { get; set; }
 
+	/// <summary>
+	/// Password used for database authentication.
+	/// </summary>
 	public required string DatabasePassword { get; set; }
 
 	/// <summary>

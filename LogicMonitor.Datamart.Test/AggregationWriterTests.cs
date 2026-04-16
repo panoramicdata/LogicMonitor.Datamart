@@ -1,7 +1,14 @@
 ﻿namespace LogicMonitor.Datamart.Test;
 
+/// <summary>
+/// Tests aggregation table lifecycle operations exposed through the Datamart client.
+/// </summary>
+/// <param name="iTestOutputHelper">xUnit output helper used for logging during test execution.</param>
 public class AggregationWriterTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTestOutputHelper)
 {
+	/// <summary>
+	/// Ensures an aggregation table can be created for a period and then removed successfully.
+	/// </summary>
 	[Fact]
 	public async Task ListCreateAndRemoveAggregationTableForAPeriod_ValidRequest_TableExists()
 	{

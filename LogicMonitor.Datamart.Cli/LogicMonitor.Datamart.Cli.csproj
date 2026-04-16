@@ -16,6 +16,7 @@
     <PackageProjectUrl>https://github.com/panoramicdata/LogicMonitor.Datamart/</PackageProjectUrl>
     <PackageIcon>Icon.png</PackageIcon>
     <RepositoryUrl>https://github.com/panoramicdata/LogicMonitor.Datamart</RepositoryUrl>
+    <IsPackable>false</IsPackable>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>

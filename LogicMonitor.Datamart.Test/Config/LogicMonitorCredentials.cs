@@ -1,5 +1,8 @@
 ﻿namespace LogicMonitor.Datamart.Test.Config;
 
+/// <summary>
+/// Stores API credentials used by tests when connecting to a LogicMonitor account.
+/// </summary>
 public class LogicMonitorCredentials
 {
 	/// <summary>

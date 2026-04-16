@@ -5,8 +5,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LogicMonitor.Datamart.Test;
 
+/// <summary>
+/// Exercises DimensionSync for all supported entity types to verify each can be fetched and stored.
+/// </summary>
+/// <param name="iTestOutputHelper">xUnit output helper for test diagnostics.</param>
 public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTestOutputHelper)
 {
+	/// <summary>
+	/// Verifies that a reversed array has elements in reverse order.
+	/// </summary>
 	[Fact]
 	public void Arrays_ReverseAsExpected()
 	{
@@ -15,6 +22,9 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 		values.Should().BeEquivalentTo(new double?[] { 4, null, 2, 1 });
 	}
 
+	/// <summary>
+	/// Syncs all dimension entity types and verifies the operation completes without error.
+	/// </summary>
 	[Fact]
 	public Task GetDimensions_All_RunsSuccessfully()
 		=> new DimensionSync(
@@ -24,6 +34,9 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 				default)
 			.ExecuteAsync(default);
 
+	/// <summary>
+	/// Syncs Resource entities and verifies the operation completes without error.
+	/// </summary>
 	[Fact]
 	public Task GetDimensions_Resource_RunsSuccessfully()
 		=> new DimensionSync(
@@ -36,6 +49,9 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 			TestNotificationReceiver)
 		.ExecuteAsync(default);
 
+	/// <summary>
+	/// Syncs Integration entities and verifies the operation completes without error.
+	/// </summary>
 	[Fact]
 	public Task GetDimensions_Integration_RunsSuccessfully()
 		=> new DimensionSync(
@@ -48,6 +64,9 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 			TestNotificationReceiver)
 		.ExecuteAsync(default);
 
+	/// <summary>
+	/// Syncs EscalationChain entities and verifies the operation completes without error.
+	/// </summary>
 	[Fact]
 	public Task GetDimensions_EscalationChain_RunsSuccessfully()
 		=> new DimensionSync(
@@ -60,6 +79,9 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 			TestNotificationReceiver)
 		.ExecuteAsync(default);
 
+	/// <summary>
+	/// Syncs Website entities and verifies the operation completes without error.
+	/// </summary>
 	[Fact]
 	public Task GetDimensions_Website_RunsSuccessfully()
 		=> new DimensionSync(
@@ -72,6 +94,9 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 				TestNotificationReceiver)
 			.ExecuteAsync(default);
 
+	/// <summary>
+	/// Syncs Resource and ResourceDataSourceInstance entities together and verifies the operation completes without error.
+	/// </summary>
 	[Fact]
 	public Task GetDimensions_DeviceAndDeviceDataSourceInstance_RunsSuccessfully()
 		=> new DimensionSync(
@@ -85,6 +110,9 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 				TestNotificationReceiver)
 			.ExecuteAsync(default);
 
+	/// <summary>
+	/// Syncs LogicModuleUpdate entities and verifies the operation completes without error.
+	/// </summary>
 	[Fact]
 	[Trait("Long Running Test", "")]
 	public Task GetDimensions_LogicModuleUpdates_RunsSuccessfully()
@@ -98,6 +126,9 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 				TestNotificationReceiver)
 			.ExecuteAsync(default);
 
+	/// <summary>
+	/// Syncs DataSource entities and verifies the operation completes without error.
+	/// </summary>
 	[Fact]
 	public Task GetDimensions_DataSources_RunsSuccessfully()
 		=> new DimensionSync(
@@ -110,6 +141,9 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 				TestNotificationReceiver)
 			.ExecuteAsync(default);
 
+	/// <summary>
+	/// Syncs Resource, ConfigSource, and ResourceDataSourceInstance entities together and verifies the operation completes without error.
+	/// </summary>
 	[Fact]
 	public Task GetDimensions_ConfigSources_RunsSuccessfully()
 		=> new DimensionSync(

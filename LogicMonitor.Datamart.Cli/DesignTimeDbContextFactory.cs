@@ -5,6 +5,11 @@
 /// </summary>
 public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<Context>
 {
+	/// <summary>
+	/// Creates a <see cref="Context"/> instance for Entity Framework design-time operations such as migrations.
+	/// </summary>
+	/// <param name="args">Design-time arguments supplied by Entity Framework tooling.</param>
+	/// <returns>A configured <see cref="Context"/> that targets the local Datamart database.</returns>
 	public Context CreateDbContext(string[] args)
 	{
 		var configuration = new ConfigurationBuilder()

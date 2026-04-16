@@ -1,0 +1,732 @@
+[
+  {
+    "File": "AggregationTests.cs",
+    "Line": 58,
+    "Member": "AggregationTests.PercentageUptime2Test(double?, params double?[])"
+  },
+  {
+    "File": "DatabaseMigrationTests.cs",
+    "Line": 12,
+    "Member": "DatabaseMigrationTests.ApplyMigrations_Succeeds()"
+  },
+  {
+    "File": "DatabaseMigrationTests.cs",
+    "Line": 26,
+    "Member": "DatabaseMigrationTests.NewExcludingSdtColumns_ExistInDatabase()"
+  },
+  {
+    "File": "DatabaseTests.cs",
+    "Line": 5,
+    "Member": "DatabaseTests"
+  },
+  {
+    "File": "DatabaseTests.cs",
+    "Line": 5,
+    "Member": "DatabaseTests.DatabaseTests(ITestOutputHelper)"
+  },
+  {
+    "File": "DatabaseTests.cs",
+    "Line": 8,
+    "Member": "DatabaseTests.GetDatabase_RunsSuccessFully()"
+  },
+  {
+    "File": "DataTests.cs",
+    "Line": 6,
+    "Member": "DataTests"
+  },
+  {
+    "File": "DataTests.cs",
+    "Line": 6,
+    "Member": "DataTests.DataTests(ITestOutputHelper)"
+  },
+  {
+    "File": "DataTests.cs",
+    "Line": 9,
+    "Member": "DataTests.GetData_Succeeds()"
+  },
+  {
+    "File": "DataTests.cs",
+    "Line": 78,
+    "Member": "DataTests.LowResolutionDataSync_RunsSuccessfully()"
+  },
+  {
+    "File": "DataTests.cs",
+    "Line": 89,
+    "Member": "DataTests.LowResolutionDataSync_ResettingAggregations_RunsSuccessfully()"
+  },
+  {
+    "File": "DimensionTests.cs",
+    "Line": 8,
+    "Member": "DimensionTests"
+  },
+  {
+    "File": "DimensionTests.cs",
+    "Line": 8,
+    "Member": "DimensionTests.DimensionTests(ITestOutputHelper)"
+  },
+  {
+    "File": "DimensionTests.cs",
+    "Line": 11,
+    "Member": "DimensionTests.Arrays_ReverseAsExpected()"
+  },
+  {
+    "File": "DimensionTests.cs",
+    "Line": 19,
+    "Member": "DimensionTests.GetDimensions_All_RunsSuccessfully()"
+  },
+  {
+    "File": "DimensionTests.cs",
+    "Line": 28,
+    "Member": "DimensionTests.GetDimensions_Resource_RunsSuccessfully()"
+  },
+  {
+    "File": "DimensionTests.cs",
+    "Line": 40,
+    "Member": "DimensionTests.GetDimensions_Integration_RunsSuccessfully()"
+  },
+  {
+    "File": "DimensionTests.cs",
+    "Line": 52,
+    "Member": "DimensionTests.GetDimensions_EscalationChain_RunsSuccessfully()"
+  },
+  {
+    "File": "DimensionTests.cs",
+    "Line": 64,
+    "Member": "DimensionTests.GetDimensions_Website_RunsSuccessfully()"
+  },
+  {
+    "File": "DimensionTests.cs",
+    "Line": 76,
+    "Member": "DimensionTests.GetDimensions_DeviceAndDeviceDataSourceInstance_RunsSuccessfully()"
+  },
+  {
+    "File": "DimensionTests.cs",
+    "Line": 90,
+    "Member": "DimensionTests.GetDimensions_LogicModuleUpdates_RunsSuccessfully()"
+  },
+  {
+    "File": "DimensionTests.cs",
+    "Line": 102,
+    "Member": "DimensionTests.GetDimensions_DataSources_RunsSuccessfully()"
+  },
+  {
+    "File": "DimensionTests.cs",
+    "Line": 114,
+    "Member": "DimensionTests.GetDimensions_ConfigSources_RunsSuccessfully()"
+  },
+  {
+    "File": "ExcludeSdtPeriodsConfigurationTests.cs",
+    "Line": 17,
+    "Member": "ExcludeSdtPeriodsConfigurationTests.WhenSdtPeriodsNull_ExcludingSdtColumnsAreNull()"
+  },
+  {
+    "File": "ExcludeSdtPeriodsConfigurationTests.cs",
+    "Line": 71,
+    "Member": "ExcludeSdtPeriodsConfigurationTests.WhenSdtPeriodsAvailable_ExcludingSdtColumnsArePopulated()"
+  },
+  {
+    "File": "ExcludeSdtPeriodsConfigurationTests.cs",
+    "Line": 128,
+    "Member": "ExcludeSdtPeriodsConfigurationTests.AllValues_AlwaysIncludesAllDataPoints_RegardlessOfSdt()"
+  },
+  {
+    "File": "ExcludeSdtPeriodsConfigurationTests.cs",
+    "Line": 163,
+    "Member": "ExcludeSdtPeriodsConfigurationTests.IsInSdt_CorrectlyIdentifiesPointsInSdtPeriod()"
+  },
+  {
+    "File": "ExcludeSdtPeriodsConfigurationTests.cs",
+    "Line": 193,
+    "Member": "ExcludeSdtPeriodsConfigurationTests.IsInSdt_WithMergedOverlappingPeriods_CorrectlyIdentifies()"
+  },
+  {
+    "File": "ExcludeSdtPeriodsConfigurationTests.cs",
+    "Line": 221,
+    "Member": "ExcludeSdtPeriodsConfigurationTests.WhenSdtPeriodsEmpty_AllPointsAreNotInSdt()"
+  },
+  {
+    "File": "ExcludeSdtPeriodsConfigurationTests.cs",
+    "Line": 251,
+    "Member": "ExcludeSdtPeriodsConfigurationTests.WhenSdtPeriodsNull_IsInSdtDefaultsToFalse()"
+  },
+  {
+    "File": "ExcludeSdtPeriodsConfigurationTests.cs",
+    "Line": 272,
+    "Member": "ExcludeSdtPeriodsConfigurationTests.SdtCountColumns_AreNullWhenSdtPeriodsNull()"
+  },
+  {
+    "File": "ExcludeSdtPeriodsConfigurationTests.cs",
+    "Line": 291,
+    "Member": "ExcludeSdtPeriodsConfigurationTests.SdtCountColumns_ArePopulatedWhenSdtPeriodsAvailable()"
+  },
+  {
+    "File": "ExcludingSdtAggregationTests.cs",
+    "Line": 33,
+    "Member": "ExcludingSdtAggregationTests.DataCount_AllValues_IncludesSdtPeriods()"
+  },
+  {
+    "File": "ExcludingSdtAggregationTests.cs",
+    "Line": 57,
+    "Member": "ExcludingSdtAggregationTests.DataCountExcludingSdt_ExcludesSdtPeriods()"
+  },
+  {
+    "File": "ExcludingSdtAggregationTests.cs",
+    "Line": 86,
+    "Member": "ExcludingSdtAggregationTests.Sum_AllValues_IncludesSdtPeriods()"
+  },
+  {
+    "File": "ExcludingSdtAggregationTests.cs",
+    "Line": 106,
+    "Member": "ExcludingSdtAggregationTests.SumExcludingSdt_ExcludesSdtPeriods()"
+  },
+  {
+    "File": "ExcludingSdtAggregationTests.cs",
+    "Line": 126,
+    "Member": "ExcludingSdtAggregationTests.SumSquared_AllValues_IncludesSdtPeriods()"
+  },
+  {
+    "File": "ExcludingSdtAggregationTests.cs",
+    "Line": 146,
+    "Member": "ExcludingSdtAggregationTests.SumSquaredExcludingSdt_ExcludesSdtPeriods()"
+  },
+  {
+    "File": "ExcludingSdtAggregationTests.cs",
+    "Line": 170,
+    "Member": "ExcludingSdtAggregationTests.MinMax_AllValues_IncludesSdtPeriods()"
+  },
+  {
+    "File": "ExcludingSdtAggregationTests.cs",
+    "Line": 193,
+    "Member": "ExcludingSdtAggregationTests.MinMaxExcludingSdt_ExcludesSdtPeriods()"
+  },
+  {
+    "File": "ExcludingSdtAggregationTests.cs",
+    "Line": 220,
+    "Member": "ExcludingSdtAggregationTests.FirstLast_AllValues_IncludesSdtPeriods()"
+  },
+  {
+    "File": "ExcludingSdtAggregationTests.cs",
+    "Line": 242,
+    "Member": "ExcludingSdtAggregationTests.FirstLastExcludingSdt_ExcludesSdtPeriods()"
+  },
+  {
+    "File": "ExcludingSdtAggregationTests.cs",
+    "Line": 264,
+    "Member": "ExcludingSdtAggregationTests.FirstLastWithData_AllValues_IncludesSdtPeriods()"
+  },
+  {
+    "File": "ExcludingSdtAggregationTests.cs",
+    "Line": 288,
+    "Member": "ExcludingSdtAggregationTests.FirstLastWithDataExcludingSdt_ExcludesSdtPeriods()"
+  },
+  {
+    "File": "ExcludingSdtAggregationTests.cs",
+    "Line": 317,
+    "Member": "ExcludingSdtAggregationTests.Percentiles_AllValues_IncludesSdtPeriods()"
+  },
+  {
+    "File": "ExcludingSdtAggregationTests.cs",
+    "Line": 340,
+    "Member": "ExcludingSdtAggregationTests.PercentilesExcludingSdt_ExcludesSdtPeriods()"
+  },
+  {
+    "File": "ExcludingSdtAggregationTests.cs",
+    "Line": 363,
+    "Member": "ExcludingSdtAggregationTests.PercentilesExcludingSdt_DifferentFromAllValues()"
+  },
+  {
+    "File": "ExcludingSdtAggregationTests.cs",
+    "Line": 396,
+    "Member": "ExcludingSdtAggregationTests.ExcludingSdt_AllValuesInSdt_ReturnsEmptyOrNull()"
+  },
+  {
+    "File": "ExcludingSdtAggregationTests.cs",
+    "Line": 413,
+    "Member": "ExcludingSdtAggregationTests.ExcludingSdt_NoValuesInSdt_SameAsAllValues()"
+  },
+  {
+    "File": "ExcludingSdtAggregationTests.cs",
+    "Line": 431,
+    "Member": "ExcludingSdtAggregationTests.ExcludingSdt_OnlyNullValuesOutsideSdt()"
+  },
+  {
+    "File": "ExcludingSdtAggregationTests.cs",
+    "Line": 454,
+    "Member": "ExcludingSdtAggregationTests.ExcludingSdt_MixedNullAndValues()"
+  },
+  {
+    "File": "ExcludingSdtAggregationTests.cs",
+    "Line": 478,
+    "Member": "ExcludingSdtAggregationTests.AvailabilityPercent_AllValues_IncludesSdtPeriods()"
+  },
+  {
+    "File": "ExcludingSdtAggregationTests.cs",
+    "Line": 502,
+    "Member": "ExcludingSdtAggregationTests.AvailabilityPercentExcludingSdt_ExcludesSdtPeriods()"
+  },
+  {
+    "File": "ExcludingSdtAggregationTests.cs",
+    "Line": 530,
+    "Member": "ExcludingSdtAggregationTests.CountAtAlertLevel_AllValues_IncludesSdtPeriods()"
+  },
+  {
+    "File": "ExcludingSdtAggregationTests.cs",
+    "Line": 552,
+    "Member": "ExcludingSdtAggregationTests.CountAtAlertLevelExcludingSdt_ExcludesSdtPeriods()"
+  },
+  {
+    "File": "ExcludingSdtAggregationTests.cs",
+    "Line": 578,
+    "Member": "ExcludingSdtAggregationTests.FullAggregation_ComparesAllVsExcludingSdt()"
+  },
+  {
+    "File": "GraphDataMergingTests.cs",
+    "Line": 20,
+    "Member": "GraphDataMergingTests.MergeGraphDataChunks_EmptyInput_ReturnsEmptyGraphData()"
+  },
+  {
+    "File": "GraphDataMergingTests.cs",
+    "Line": 39,
+    "Member": "GraphDataMergingTests.MergeGraphDataChunks_SingleChunk_ReturnsUnmodified()"
+  },
+  {
+    "File": "GraphDataMergingTests.cs",
+    "Line": 63,
+    "Member": "GraphDataMergingTests.MergeGraphDataChunks_DuplicateTimestamps_KeepsFirstValue()"
+  },
+  {
+    "File": "GraphDataMergingTests.cs",
+    "Line": 89,
+    "Member": "GraphDataMergingTests.MergeGraphDataChunks_OutOfOrderTimestamps_SortsChronologically()"
+  },
+  {
+    "File": "GraphDataMergingTests.cs",
+    "Line": 112,
+    "Member": "GraphDataMergingTests.MergeGraphDataChunks_MultipleLines_KeepsDataSynchronized()"
+  },
+  {
+    "File": "GraphDataMergingTests.cs",
+    "Line": 141,
+    "Member": "GraphDataMergingTests.MergeGraphDataChunks_WithNullValues_PreservesNulls()"
+  },
+  {
+    "File": "GraphDataMergingTests.cs",
+    "Line": 165,
+    "Member": "GraphDataMergingTests.MergeGraphDataChunks_ComplexScenario_HandlesCorrectly()"
+  },
+  {
+    "File": "GraphDataMergingTests.cs",
+    "Line": 201,
+    "Member": "GraphDataMergingTests.MergeGraphDataChunks_AllDuplicates_KeepsOnlyFirst()"
+  },
+  {
+    "File": "GraphDataMergingTests.cs",
+    "Line": 224,
+    "Member": "GraphDataMergingTests.MergeGraphDataChunks_LargeDataset_PerformsCorrectly()"
+  },
+  {
+    "File": "GraphDataMergingTests.cs",
+    "Line": 273,
+    "Member": "GraphDataMergingTests.MergeGraphDataChunks_SingleTimestamp_Works()"
+  },
+  {
+    "File": "GraphDataMergingTests.cs",
+    "Line": 295,
+    "Member": "GraphDataMergingTests.MergeGraphDataChunks_ReverseOrder_SortsCorrectly()"
+  },
+  {
+    "File": "LogSyncTests.cs",
+    "Line": 3,
+    "Member": "LogSyncTests"
+  },
+  {
+    "File": "LogSyncTests.cs",
+    "Line": 3,
+    "Member": "LogSyncTests.LogSyncTests(ITestOutputHelper)"
+  },
+  {
+    "File": "LogSyncTests.cs",
+    "Line": 6,
+    "Member": "LogSyncTests.GetLogs()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 25,
+    "Member": "MappingTests.WhenMappingAlert_ThenStoreItemIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 29,
+    "Member": "MappingTests.WhenMappingAlertRule_ThenStoreItemIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 33,
+    "Member": "MappingTests.WhenMappingCollector_ThenStoreItemIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 37,
+    "Member": "MappingTests.WhenMappingCollectorGroup_ThenStoreItemIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 41,
+    "Member": "MappingTests.WhenMappingConfigSource_ThenStoreItemIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 45,
+    "Member": "MappingTests.WhenMappingDataSource_ThenStoreItemIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 49,
+    "Member": "MappingTests.WhenMappingDataSourceWithNullInstallationMetadata_ThenStoreItemIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 53,
+    "Member": "MappingTests.WhenMappingDataSourceGraph_ThenStoreItemIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 57,
+    "Member": "MappingTests.WhenMappingEscalationChain_ThenStoreItemIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 61,
+    "Member": "MappingTests.WhenMappingEventSource_ThenStoreItemIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 65,
+    "Member": "MappingTests.WhenMappingIntegration_ThenStoreItemIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 69,
+    "Member": "MappingTests.WhenMappingHttpIntegration_ThenStoreItemIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 73,
+    "Member": "MappingTests.WhenMappingEmailIntegration_ThenStoreItemIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 77,
+    "Member": "MappingTests.WhenMappingAutoTaskIntegration_ThenStoreItemIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 81,
+    "Member": "MappingTests.WhenMappingLogicModuleUpdate_ThenStoreItemIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 85,
+    "Member": "MappingTests.WhenMappingLogItem_ThenStoreItemIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 89,
+    "Member": "MappingTests.WhenMappingResource_ThenStoreItemIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 93,
+    "Member": "MappingTests.WhenMappingResourceGroup_ThenStoreItemIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 97,
+    "Member": "MappingTests.WhenMappingResourceDataSource_ThenStoreItemIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 101,
+    "Member": "MappingTests.WhenMappingResourceDataSourceInstance_ThenStoreItemIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 105,
+    "Member": "MappingTests.WhenMappingWebsite_ThenStoreItemIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 109,
+    "Member": "MappingTests.WhenMappingWebsiteGroup_ThenStoreItemIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 115,
+    "Member": "MappingTests.WhenMappingAlertStoreItem_ThenAlertIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 119,
+    "Member": "MappingTests.WhenMappingAlertRuleStoreItem_ThenAlertRuleIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 123,
+    "Member": "MappingTests.WhenMappingCollectorStoreItem_ThenCollectorIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 127,
+    "Member": "MappingTests.WhenMappingCollectorGroupStoreItem_ThenCollectorGroupIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 131,
+    "Member": "MappingTests.WhenMappingConfigSourceStoreItem_ThenConfigSourceIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 135,
+    "Member": "MappingTests.WhenMappingDataSourceStoreItem_ThenDataSourceIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 139,
+    "Member": "MappingTests.WhenMappingDataSourceGraphStoreItem_ThenDataSourceGraphIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 143,
+    "Member": "MappingTests.WhenMappingEscalationChainStoreItem_ThenEscalationChainIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 147,
+    "Member": "MappingTests.WhenMappingEventSourceStoreItem_ThenEventSourceIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 151,
+    "Member": "MappingTests.WhenMappingResourceStoreItem_ThenResourceIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 155,
+    "Member": "MappingTests.WhenMappingResourceGroupStoreItem_ThenResourceGroupIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 159,
+    "Member": "MappingTests.WhenMappingResourceDataSourceStoreItem_ThenResourceDataSourceIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 163,
+    "Member": "MappingTests.WhenMappingResourceConfigSourceStoreItem_ThenResourceDataSourceIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 167,
+    "Member": "MappingTests.WhenMappingResourceDataSourceInstanceStoreItem_ThenInstanceIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 171,
+    "Member": "MappingTests.WhenMappingWebsiteStoreItem_ThenWebsiteIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 175,
+    "Member": "MappingTests.WhenMappingWebsiteGroupStoreItem_ThenWebsiteGroupIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 181,
+    "Member": "MappingTests.WhenMappingResourceGroupWithId_ThenLogicMonitorIdIsMapped()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 191,
+    "Member": "MappingTests.WhenRoundTrippingResourceGroup_ThenNameIsPreserved()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 201,
+    "Member": "MappingTests.WhenRoundTrippingAlert_ThenInternalIdIsPreserved()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 211,
+    "Member": "MappingTests.WhenMappingDataSourceWithAuditVersion_ThenAuditVersionIsString()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 221,
+    "Member": "MappingTests.WhenMappingDataSourceWithVersion_ThenVersionIsString()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 231,
+    "Member": "MappingTests.WhenMappingConfigSourceWithAuditVersion_ThenAuditVersionIsString()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 243,
+    "Member": "MappingTests.WhenSelfMappingDataSourceGraphStoreItem_ThenNewInstanceIsCreated()"
+  },
+  {
+    "File": "MappingTests.cs",
+    "Line": 259,
+    "Member": "MappingTests.WhenSelfMappingDataSourceGraphStoreItemToExisting_ThenTargetIsUpdated()"
+  },
+  {
+    "File": "SdtAlertCountTests.cs",
+    "Line": 24,
+    "Member": "SdtAlertCountTests.CountAtAlertLevelUseSdt_EmptyExpression_Normal_CountsValuesAndSdt()"
+  },
+  {
+    "File": "SdtAlertCountTests.cs",
+    "Line": 46,
+    "Member": "SdtAlertCountTests.CountAtAlertLevelUseSdt_EmptyExpression_Warning_ReturnsZero()"
+  },
+  {
+    "File": "SdtAlertCountTests.cs",
+    "Line": 70,
+    "Member": "SdtAlertCountTests.CountAtAlertLevelUseSdt_Normal_CountsNormalOrSdt()"
+  },
+  {
+    "File": "SdtAlertCountTests.cs",
+    "Line": 93,
+    "Member": "SdtAlertCountTests.CountAtAlertLevelUseSdt_Normal_GreaterThanThreshold()"
+  },
+  {
+    "File": "SdtAlertCountTests.cs",
+    "Line": 122,
+    "Member": "SdtAlertCountTests.CountAtAlertLevelUseSdt_Warning_CountsWarningAndSdt()"
+  },
+  {
+    "File": "SdtAlertCountTests.cs",
+    "Line": 145,
+    "Member": "SdtAlertCountTests.CountAtAlertLevelUseSdt_Warning_NoWarningThreshold_ReturnsZero()"
+  },
+  {
+    "File": "SdtAlertCountTests.cs",
+    "Line": 169,
+    "Member": "SdtAlertCountTests.CountAtAlertLevelUseSdt_Warning_OnlyErrorAndCritical_CountsCorrectly()"
+  },
+  {
+    "File": "SdtAlertCountTests.cs",
+    "Line": 195,
+    "Member": "SdtAlertCountTests.CountAtAlertLevelUseSdt_Error_CountsErrorAndSdt()"
+  },
+  {
+    "File": "SdtAlertCountTests.cs",
+    "Line": 222,
+    "Member": "SdtAlertCountTests.CountAtAlertLevelUseSdt_Critical_CountsCriticalAndSdt()"
+  },
+  {
+    "File": "SdtAlertCountTests.cs",
+    "Line": 244,
+    "Member": "SdtAlertCountTests.CountAtAlertLevelUseSdt_Critical_NoCriticalThreshold_ReturnsZero()"
+  },
+  {
+    "File": "SdtAlertCountTests.cs",
+    "Line": 268,
+    "Member": "SdtAlertCountTests.CountAtAlertLevelUseSdt_LessThan_Normal_CountsCorrectly()"
+  },
+  {
+    "File": "SdtAlertCountTests.cs",
+    "Line": 291,
+    "Member": "SdtAlertCountTests.CountAtAlertLevelUseSdt_LessThan_Warning_CountsCorrectly()"
+  },
+  {
+    "File": "SdtAlertCountTests.cs",
+    "Line": 317,
+    "Member": "SdtAlertCountTests.CountAtAlertLevelUseSdt_Equals_Normal_CountsCorrectly()"
+  },
+  {
+    "File": "SdtAlertCountTests.cs",
+    "Line": 343,
+    "Member": "SdtAlertCountTests.CountAtAlertLevelUseSdt_AllInSdt_CountsCorrectly()"
+  },
+  {
+    "File": "SdtAlertCountTests.cs",
+    "Line": 365,
+    "Member": "SdtAlertCountTests.CountAtAlertLevelUseSdt_NoneInSdt_CountsOnlyNormal()"
+  },
+  {
+    "File": "SdtAlertCountTests.cs",
+    "Line": 392,
+    "Member": "SdtAlertCountTests.CountAtAlertLevelUseSdt_EmptyDataPoints_ReturnsZero()"
+  },
+  {
+    "File": "SdtAlertCountTests.cs",
+    "Line": 408,
+    "Member": "SdtAlertCountTests.CountAtAlertLevelUseSdt_AllNullValues_CountsOnlySdt()"
+  },
+  {
+    "File": "SdtMergingTests.cs",
+    "Line": 13,
+    "Member": "SdtMergingTests.MergeSdtPeriods_EmptyList_ReturnsEmptyList()"
+  },
+  {
+    "File": "SdtMergingTests.cs",
+    "Line": 26,
+    "Member": "SdtMergingTests.MergeSdtPeriods_SinglePeriod_ReturnsSamePeriod()"
+  },
+  {
+    "File": "SdtMergingTests.cs",
+    "Line": 43,
+    "Member": "SdtMergingTests.MergeSdtPeriods_TwoNonOverlappingPeriods_ReturnsTwoPeriods()"
+  },
+  {
+    "File": "SdtMergingTests.cs",
+    "Line": 65,
+    "Member": "SdtMergingTests.MergeSdtPeriods_TwoPeriodsVariousOverlaps_MergesCorrectly(int, int, int, int, int, int)"
+  },
+  {
+    "File": "SdtMergingTests.cs",
+    "Line": 96,
+    "Member": "SdtMergingTests.MergeSdtPeriods_TwoPeriodsWithGap_DoesNotMerge()"
+  },
+  {
+    "File": "SdtMergingTests.cs",
+    "Line": 121,
+    "Member": "SdtMergingTests.MergeSdtPeriods_CompleteOverlap_MergesIntoOnePeriod()"
+  },
+  {
+    "File": "SdtMergingTests.cs",
+    "Line": 139,
+    "Member": "SdtMergingTests.MergeSdtPeriods_MultipleOverlappingPeriods_MergesAll()"
+  },
+  {
+    "File": "SdtMergingTests.cs",
+    "Line": 159,
+    "Member": "SdtMergingTests.MergeSdtPeriods_UnsortedPeriods_SortsAndMergesCorrectly()"
+  },
+  {
+    "File": "SdtMergingTests.cs",
+    "Line": 179,
+    "Member": "SdtMergingTests.MergeSdtPeriods_MixOfOverlappingAndNonOverlapping_MergesOnlyOverlapping()"
+  },
+  {
+    "File": "SdtMergingTests.cs",
+    "Line": 202,
+    "Member": "SdtMergingTests.MergeSdtPeriods_RealWorldScenario_DeviceAndDataSourceLevels()"
+  },
+  {
+    "File": "SdtMergingTests.cs",
+    "Line": 226,
+    "Member": "SdtMergingTests.MergeSdtPeriods_AdjacentPeriodsWithOneMillisecondGap_DoesNotMerge()"
+  },
+  {
+    "File": "SdtMergingTests.cs",
+    "Line": 245,
+    "Member": "SdtMergingTests.MergeSdtPeriods_IdenticalPeriods_MergesIntoOne()"
+  },
+  {
+    "File": "SdtMergingTests.cs",
+    "Line": 264,
+    "Member": "SdtMergingTests.MergeSdtPeriods_NestedPeriods_MergesIntoOuterPeriod()"
+  }
+]

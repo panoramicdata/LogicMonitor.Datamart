@@ -3,12 +3,24 @@ using LogicMonitor.Datamart.Interfaces;
 
 namespace LogicMonitor.Datamart.Test;
 
+/// <summary>
+/// Provides common setup and shared utilities for integration-style tests that emit xUnit output.
+/// </summary>
 public abstract class TestWithOutput
 {
+	/// <summary>
+	/// Baseline timestamp used by tests that need a point-in-time approximately half a day in the past.
+	/// </summary>
 	protected static readonly DateTimeOffset TwelveHoursAgo = DateTimeOffset.UtcNow.AddHours(-12);
 
+	/// <summary>
+	/// Receives runtime notifications raised during Datamart test execution.
+	/// </summary>
 	protected INotificationReceiver TestNotificationReceiver { get; }
 
+	/// <summary>
+	/// Shared Datamart configuration used by the test suite.
+	/// </summary>
 	protected static readonly Configuration Configuration = new()
 	{
 		//AggregationReset = true,
@@ -162,6 +174,10 @@ public abstract class TestWithOutput
 		],
 	};
 
+	/// <summary>
+	/// Initializes shared test infrastructure, loads configuration, and prepares a Datamart client.
+	/// </summary>
+	/// <param name="iTestOutputHelper">xUnit output helper used to route logs to the active test output stream.</param>
 	protected TestWithOutput(ITestOutputHelper iTestOutputHelper)
 	{
 		ITestOutputHelper = iTestOutputHelper;
@@ -208,6 +224,11 @@ public abstract class TestWithOutput
 		TestNotificationReceiver = new TestNotificationReceiver(LoggerFactory.CreateLogger<TestWithOutput>());
 	}
 
+	/// <summary>
+	/// Loads test settings from the supplied JSON configuration file.
+	/// </summary>
+	/// <param name="jsonFilePath">Relative path to the configuration file to load.</param>
+	/// <returns>A populated <see cref="TestConfiguration"/> instance.</returns>
 	protected static TestConfiguration LoadConfiguration(string jsonFilePath)
 	{
 		var location = typeof(TestWithOutput).GetTypeInfo().Assembly.Location;
@@ -231,18 +252,37 @@ public abstract class TestWithOutput
 		return configuration;
 	}
 
+	/// <summary>
+	/// Gets the xUnit output helper for the current test instance.
+	/// </summary>
 	protected ITestOutputHelper ITestOutputHelper { get; }
 
 	private Stopwatch Stopwatch { get; }
 
+	/// <summary>
+	/// Gets the logger factory used by tests to create strongly typed loggers.
+	/// </summary>
 	public ILoggerFactory LoggerFactory { get; }
 
+	/// <summary>
+	/// Gets the Unix epoch start timestamp used for Datamart data retrieval windows.
+	/// </summary>
 	protected long StartEpoch { get; }
 
+	/// <summary>
+	/// Gets the Unix epoch end timestamp used for Datamart data retrieval windows.
+	/// </summary>
 	protected long EndEpoch { get; }
 
+	/// <summary>
+	/// Gets the Datamart client initialized for the current test context.
+	/// </summary>
 	protected DatamartClient DatamartClient { get; }
 
+	/// <summary>
+	/// Asserts that elapsed test execution time stays within the specified duration.
+	/// </summary>
+	/// <param name="durationSeconds">Maximum allowed duration in seconds.</param>
 	protected void AssertIsFast(int durationSeconds)
 		=> Stopwatch.ElapsedMilliseconds.Should().BeInRange(0, durationSeconds * 1000);
 }

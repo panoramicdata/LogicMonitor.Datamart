@@ -5,10 +5,14 @@ namespace LogicMonitor.Datamart.Test;
 /// <summary>
 /// MS-21395: Unit tests for SDT period merging functionality which is part of the LowResolutionDataSync aggregation process if SDT is excluded
 /// </summary>
+/// <remarks>All tests use a null logger to avoid xUnit output helper complications for pure unit tests.</remarks>
 public class SdtMergingTests
 {
 	private readonly ILogger<SdtMergingTests> _logger = NullLogger<SdtMergingTests>.Instance;
 
+	/// <summary>
+	/// Verifies that merging an empty list of SDT periods returns an empty list.
+	/// </summary>
 	[Fact]
 	public void MergeSdtPeriods_EmptyList_ReturnsEmptyList()
 	{
@@ -22,6 +26,9 @@ public class SdtMergingTests
 		result.Should().BeEmpty();
 	}
 
+	/// <summary>
+	/// Verifies that a single SDT period is returned unchanged.
+	/// </summary>
 	[Fact]
 	public void MergeSdtPeriods_SinglePeriod_ReturnsSamePeriod()
 	{
@@ -39,6 +46,9 @@ public class SdtMergingTests
 		result[0].Should().Be((1000L, 2000L));
 	}
 
+	/// <summary>
+	/// Verifies that two non-overlapping SDT periods are returned separately.
+	/// </summary>
 	[Fact]
 	public void MergeSdtPeriods_TwoNonOverlappingPeriods_ReturnsTwoPeriods()
 	{
@@ -58,6 +68,15 @@ public class SdtMergingTests
 		result[1].Should().Be((3000L, 4000L));
 	}
 
+	/// <summary>
+	/// Verifies that two SDT periods with various overlapping configurations are merged into a single period.
+	/// </summary>
+	/// <param name="start1Hours">Start offset in hours of the first period.</param>
+	/// <param name="end1Hours">End offset in hours of the first period.</param>
+	/// <param name="start2Hours">Start offset in hours of the second period.</param>
+	/// <param name="end2Hours">End offset in hours of the second period.</param>
+	/// <param name="expectedStartHours">Expected start offset in hours of the merged period.</param>
+	/// <param name="expectedEndHours">Expected end offset in hours of the merged period.</param>
 	[Theory]
 	[InlineData(0, 8, 7, 9, 0, 9)]		// Partial overlap
 	[InlineData(0, 10, 5, 15, 0, 15)]	// Partial overlap
@@ -92,6 +111,9 @@ public class SdtMergingTests
 		result[0].EndTimestampMs.Should().Be(expectedEnd);
 	}
 
+	/// <summary>
+	/// Verifies that two SDT periods with a gap between them are not merged.
+	/// </summary>
 	[Fact]
 	public void MergeSdtPeriods_TwoPeriodsWithGap_DoesNotMerge()
 	{
@@ -117,6 +139,9 @@ public class SdtMergingTests
 		result[1].EndTimestampMs.Should().Be(baseTime.AddHours(20).ToUnixTimeMilliseconds());
 	}
 
+	/// <summary>
+	/// Verifies that when one SDT period is completely inside another they merge into the outer period.
+	/// </summary>
 	[Fact]
 	public void MergeSdtPeriods_CompleteOverlap_MergesIntoOnePeriod()
 	{
@@ -135,6 +160,9 @@ public class SdtMergingTests
 		result[0].Should().Be((1000L, 10000L));
 	}
 
+	/// <summary>
+	/// Verifies that a chain of overlapping SDT periods is merged into a single continuous period.
+	/// </summary>
 	[Fact]
 	public void MergeSdtPeriods_MultipleOverlappingPeriods_MergesAll()
 	{
@@ -155,6 +183,9 @@ public class SdtMergingTests
 		result[0].Should().Be((1000L, 9000L));
 	}
 
+	/// <summary>
+	/// Verifies that unsorted SDT periods are sorted before merging and overlapping ones are combined correctly.
+	/// </summary>
 	[Fact]
 	public void MergeSdtPeriods_UnsortedPeriods_SortsAndMergesCorrectly()
 	{
@@ -175,6 +206,9 @@ public class SdtMergingTests
 		result[1].Should().Be((6000L, 8000L)); // Last one separate
 	}
 
+	/// <summary>
+	/// Verifies that only overlapping SDT periods are merged while non-overlapping ones remain separate.
+	/// </summary>
 	[Fact]
 	public void MergeSdtPeriods_MixOfOverlappingAndNonOverlapping_MergesOnlyOverlapping()
 	{
@@ -198,6 +232,9 @@ public class SdtMergingTests
 		result[2].Should().Be((10000L, 12000L));	// Last two merged
 	}
 
+	/// <summary>
+	/// Verifies merging of a device-level and DataSource-level SDT that partially overlap, simulating a real monitoring scenario.
+	/// </summary>
 	[Fact]
 	public void MergeSdtPeriods_RealWorldScenario_DeviceAndDataSourceLevels()
 	{
@@ -222,6 +259,9 @@ public class SdtMergingTests
 		result[0].EndTimestampMs.Should().Be(midnight.AddHours(9).ToUnixTimeMilliseconds());
 	}
 
+	/// <summary>
+	/// Verifies that two adjacent SDT periods with a one-millisecond gap are not merged.
+	/// </summary>
 	[Fact]
 	public void MergeSdtPeriods_AdjacentPeriodsWithOneMillisecondGap_DoesNotMerge()
 	{
@@ -241,6 +281,9 @@ public class SdtMergingTests
 		result[1].Should().Be((2001L, 3000L));
 	}
 
+	/// <summary>
+	/// Verifies that identical duplicate SDT periods are merged into a single period.
+	/// </summary>
 	[Fact]
 	public void MergeSdtPeriods_IdenticalPeriods_MergesIntoOne()
 	{
@@ -260,6 +303,9 @@ public class SdtMergingTests
 		result[0].Should().Be((1000L, 2000L));
 	}
 
+	/// <summary>
+	/// Verifies that nested SDT periods (inner fully inside outer) are merged into the outermost period.
+	/// </summary>
 	[Fact]
 	public void MergeSdtPeriods_NestedPeriods_MergesIntoOuterPeriod()
 	{

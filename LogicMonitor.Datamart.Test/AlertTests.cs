@@ -1,7 +1,14 @@
 namespace LogicMonitor.Datamart.Test;
 
+/// <summary>
+/// Exercises alert-related Datamart synchronization and cached retrieval scenarios.
+/// </summary>
+/// <param name="iTestOutputHelper">xUnit output helper used for logging.</param>
 public class AlertTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTestOutputHelper)
 {
+	/// <summary>
+	/// Updates device entities required by downstream alert synchronization flows.
+	/// </summary>
 	[Fact]
 	public async Task UpdateDevices()
 	{
@@ -17,6 +24,9 @@ public class AlertTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iT
 			.ConfigureAwait(true);
 	}
 
+	/// <summary>
+	/// Synchronizes alert data for the previous 24-hour window and validates a result is returned.
+	/// </summary>
 	[Fact]
 	public async Task Get24HoursOfAlerts()
 	{
@@ -32,6 +42,9 @@ public class AlertTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iT
 		updatedAlertStats.Should().NotBeNull();
 	}
 
+	/// <summary>
+	/// Retrieves cached alerts for a historical range using explicit filter arguments.
+	/// </summary>
 	[Fact]
 	public async Task GetCachedAlertsAsync()
 	{

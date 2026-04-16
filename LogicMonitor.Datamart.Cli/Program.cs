@@ -8,10 +8,18 @@ using System.Diagnostics;
 
 namespace LogicMonitor.Datamart.Cli;
 
+/// <summary>
+/// Provides the executable entry point for the LogicMonitor Datamart CLI host.
+/// </summary>
 public static class Program
 {
 	private const string ConfigFileEnvironmentVariable = "CONFIG_FILE";
 
+	/// <summary>
+	/// Builds and runs the web host that executes Datamart background processing.
+	/// </summary>
+	/// <param name="args">Command-line arguments used to configure the host.</param>
+	/// <returns>An <see cref="ExitCode"/> value represented as an integer process exit code.</returns>
 	public static async Task<int> Main(string[] args)
 	{
 		var fileVersion = FileVersionInfo.GetVersionInfo(typeof(Program).Assembly.Location);

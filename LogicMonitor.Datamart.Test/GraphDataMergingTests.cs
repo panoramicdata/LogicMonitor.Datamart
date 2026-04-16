@@ -16,6 +16,9 @@ public class GraphDataMergingTests
 
 	#region MergeGraphDataChunks Tests
 
+	/// <summary>
+	/// Verifies that merging empty timestamp and line data collections returns an empty result.
+	/// </summary>
 	[Fact]
 	public void MergeGraphDataChunks_EmptyInput_ReturnsEmptyGraphData()
 	{
@@ -35,6 +38,9 @@ public class GraphDataMergingTests
 		result.Lines.Should().BeEmpty();
 	}
 
+	/// <summary>
+	/// Verifies that a single-chunk input passes through the merge operation unmodified.
+	/// </summary>
 	[Fact]
 	public void MergeGraphDataChunks_SingleChunk_ReturnsUnmodified()
 	{
@@ -59,6 +65,9 @@ public class GraphDataMergingTests
 		result.Lines[0].Data.Should().BeEquivalentTo([10.0, 20.0, 30.0]);
 	}
 
+	/// <summary>
+	/// Verifies that duplicate timestamps are removed and the first occurrence value is retained.
+	/// </summary>
 	[Fact]
 	public void MergeGraphDataChunks_DuplicateTimestamps_KeepsFirstValue()
 	{
@@ -85,6 +94,9 @@ public class GraphDataMergingTests
 		result.Lines[0].Data.Should().NotContain(99.0); // Duplicate value discarded
 	}
 
+	/// <summary>
+	/// Verifies that out-of-order timestamps are sorted into ascending order with values following.
+	/// </summary>
 	[Fact]
 	public void MergeGraphDataChunks_OutOfOrderTimestamps_SortsChronologically()
 	{
@@ -108,6 +120,9 @@ public class GraphDataMergingTests
 		result.Lines[0].Data.Should().BeEquivalentTo([10.0, 20.0, 30.0, 40.0]);
 	}
 
+	/// <summary>
+	/// Verifies that multiple data lines stay synchronized with their timestamps after deduplication.
+	/// </summary>
 	[Fact]
 	public void MergeGraphDataChunks_MultipleLines_KeepsDataSynchronized()
 	{
@@ -137,6 +152,9 @@ public class GraphDataMergingTests
 		memLine.Data.Should().BeEquivalentTo([100.0, 200.0, 300.0]);
 	}
 
+	/// <summary>
+	/// Verifies that null values in the input are preserved in the merged output.
+	/// </summary>
 	[Fact]
 	public void MergeGraphDataChunks_WithNullValues_PreservesNulls()
 	{
@@ -161,6 +179,9 @@ public class GraphDataMergingTests
 		result.Lines[0].Data[2].Should().Be(30.0);
 	}
 
+	/// <summary>
+	/// Validates merging two chunks with different sampling resolutions that share a boundary timestamp.
+	/// </summary>
 	[Fact]
 	public void MergeGraphDataChunks_ComplexScenario_HandlesCorrectly()
 	{
@@ -197,6 +218,9 @@ public class GraphDataMergingTests
 		result.Lines[0].Data.Should().NotContain(7200.5);
 	}
 
+	/// <summary>
+	/// Verifies that when all input timestamps are identical only one entry is retained in the result.
+	/// </summary>
 	[Fact]
 	public void MergeGraphDataChunks_AllDuplicates_KeepsOnlyFirst()
 	{
@@ -220,6 +244,9 @@ public class GraphDataMergingTests
 		result.Lines[0].Data.Should().BeEquivalentTo([10.0]);
 	}
 
+	/// <summary>
+	/// Verifies that merging a large dataset with interspersed duplicates performs correctly and retains first occurrence values.
+	/// </summary>
 	[Fact]
 	public void MergeGraphDataChunks_LargeDataset_PerformsCorrectly()
 	{
@@ -269,6 +296,9 @@ public class GraphDataMergingTests
 
 	#region Edge Cases
 
+	/// <summary>
+	/// Verifies that a single-timestamp dataset passes through the merge operation correctly.
+	/// </summary>
 	[Fact]
 	public void MergeGraphDataChunks_SingleTimestamp_Works()
 	{
@@ -291,6 +321,9 @@ public class GraphDataMergingTests
 		result.Lines[0].Data.Should().BeEquivalentTo([42.0]);
 	}
 
+	/// <summary>
+	/// Verifies that completely reversed timestamp input is sorted into ascending order with values re-aligned.
+	/// </summary>
 	[Fact]
 	public void MergeGraphDataChunks_ReverseOrder_SortsCorrectly()
 	{

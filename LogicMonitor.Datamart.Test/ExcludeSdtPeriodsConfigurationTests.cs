@@ -7,12 +7,16 @@ namespace LogicMonitor.Datamart.Test;
 /// Verifies that main aggregation columns always use all data, and ExcludingSdt columns
 /// are only populated when SDT data is available.
 /// </summary>
+/// <param name="testOutputHelper">xUnit output helper for test diagnostics.</param>
 public class ExcludeSdtPeriodsConfigurationTests(ITestOutputHelper testOutputHelper) : TestWithOutput(testOutputHelper)
 {
 	private readonly ILogger<ExcludeSdtPeriodsConfigurationTests> _logger = NullLogger<ExcludeSdtPeriodsConfigurationTests>.Instance;
 
 	#region Behavior Tests
 
+	/// <summary>
+	/// Verifies that ExcludingSdt aggregation columns are null when SDT periods are not provided (ExcludeSdtPeriods = false).
+	/// </summary>
 	[Fact]
 	public void WhenSdtPeriodsNull_ExcludingSdtColumnsAreNull()
 	{
@@ -67,6 +71,9 @@ public class ExcludeSdtPeriodsConfigurationTests(ITestOutputHelper testOutputHel
 		dataCountExcludingSdt.Should().BeNull();
 	}
 
+	/// <summary>
+	/// Verifies that ExcludingSdt aggregation columns are populated and SDT-period values are excluded when SDT periods are provided.
+	/// </summary>
 	[Fact]
 	public void WhenSdtPeriodsAvailable_ExcludingSdtColumnsArePopulated()
 	{
@@ -124,6 +131,9 @@ public class ExcludeSdtPeriodsConfigurationTests(ITestOutputHelper testOutputHel
 		sortedNonNullValuesExcludingSdt.Should().BeEquivalentTo([10.0, 30.0]);
 	}
 
+	/// <summary>
+	/// Verifies that the all-values collection always includes every data point regardless of SDT status.
+	/// </summary>
 	[Fact]
 	public void AllValues_AlwaysIncludesAllDataPoints_RegardlessOfSdt()
 	{
@@ -159,6 +169,9 @@ public class ExcludeSdtPeriodsConfigurationTests(ITestOutputHelper testOutputHel
 
 	#region IsInSdt Flag Tests
 
+	/// <summary>
+	/// Verifies that timestamps inside an SDT period are marked as in-SDT, and those outside are not.
+	/// </summary>
 	[Fact]
 	public void IsInSdt_CorrectlyIdentifiesPointsInSdtPeriod()
 	{
@@ -189,6 +202,9 @@ public class ExcludeSdtPeriodsConfigurationTests(ITestOutputHelper testOutputHel
 		results[7].IsInSdt.Should().BeFalse(); // 8000 - after second SDT
 	}
 
+	/// <summary>
+	/// Verifies that after overlapping SDT periods are merged, points inside the merged range are correctly identified as in-SDT.
+	/// </summary>
 	[Fact]
 	public void IsInSdt_WithMergedOverlappingPeriods_CorrectlyIdentifies()
 	{
@@ -217,6 +233,9 @@ public class ExcludeSdtPeriodsConfigurationTests(ITestOutputHelper testOutputHel
 
 	#region Null SDT Scenarios
 
+	/// <summary>
+	/// Verifies that when the SDT list is empty all data points are classified as not in SDT.
+	/// </summary>
 	[Fact]
 	public void WhenSdtPeriodsEmpty_AllPointsAreNotInSdt()
 	{
@@ -247,6 +266,9 @@ public class ExcludeSdtPeriodsConfigurationTests(ITestOutputHelper testOutputHel
 		excludingSdtValues.Should().BeEquivalentTo(allValues);
 	}
 
+	/// <summary>
+	/// Verifies that when the SDT list is null the IsInSdt flag defaults to false.
+	/// </summary>
 	[Fact]
 	public void WhenSdtPeriodsNull_IsInSdtDefaultsToFalse()
 	{
@@ -268,6 +290,9 @@ public class ExcludeSdtPeriodsConfigurationTests(ITestOutputHelper testOutputHel
 
 	#region SDT Count Column Behavior
 
+	/// <summary>
+	/// Verifies that SDT count columns return null when no SDT periods are available.
+	/// </summary>
 	[Fact]
 	public void SdtCountColumns_AreNullWhenSdtPeriodsNull()
 	{
@@ -287,6 +312,9 @@ public class ExcludeSdtPeriodsConfigurationTests(ITestOutputHelper testOutputHel
 		normalOrSdtCount.Should().BeNull();
 	}
 
+	/// <summary>
+	/// Verifies that SDT count columns are correctly populated when SDT periods are available.
+	/// </summary>
 	[Fact]
 	public void SdtCountColumns_ArePopulatedWhenSdtPeriodsAvailable()
 	{

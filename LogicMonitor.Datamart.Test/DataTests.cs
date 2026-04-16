@@ -3,8 +3,15 @@ using LogicMonitor.Datamart.Services;
 
 namespace LogicMonitor.Datamart.Test;
 
+/// <summary>
+/// Exercises time-series data retrieval, aggregation, and throttling detection logic.
+/// </summary>
+/// <param name="iTestOutputHelper">xUnit output helper for test diagnostics.</param>
 public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTestOutputHelper)
 {
+	/// <summary>
+	/// Retrieves a month of time-series data for a known DataSource instance and checks availability results.
+	/// </summary>
 	[Fact]
 	public async Task GetData_Succeeds()
 	{
@@ -74,6 +81,9 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 		result.AvailabilityPercent.Should().BeApproximately(70, 5);
 	}
 
+	/// <summary>
+	/// Runs the full low-resolution data sync pipeline end-to-end with the configured DataSource set.
+	/// </summary>
 	[Fact]
 	public Task LowResolutionDataSync_RunsSuccessfully()
 		=> new LowResolutionDataSync(
@@ -85,6 +95,9 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 			.ExecuteAsync(default);
 
 
+	/// <summary>
+	/// Runs the low-resolution data sync pipeline with the aggregation reset flag enabled to verify a full rebuild completes.
+	/// </summary>
 	[Fact]
 	public async Task LowResolutionDataSync_ResettingAggregations_RunsSuccessfully()
 	{

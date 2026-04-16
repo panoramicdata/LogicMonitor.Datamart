@@ -4,6 +4,7 @@ namespace LogicMonitor.Datamart.Test;
 /// Tests for MS-22557: ExcludingSdt aggregation columns
 /// Tests the logic that calculates aggregations for data excluding SDT periods
 /// </summary>
+/// <param name="testOutputHelper">xUnit output helper for test diagnostics.</param>
 public class ExcludingSdtAggregationTests(ITestOutputHelper testOutputHelper) : TestWithOutput(testOutputHelper)
 {
 	#region Test Data Helpers
@@ -29,6 +30,9 @@ public class ExcludingSdtAggregationTests(ITestOutputHelper testOutputHelper) : 
 
 	#region Data Count Tests
 
+	/// <summary>
+	/// Verifies that the data count across all values includes data points inside SDT periods.
+	/// </summary>
 	[Fact]
 	public void DataCount_AllValues_IncludesSdtPeriods()
 	{
@@ -53,6 +57,9 @@ public class ExcludingSdtAggregationTests(ITestOutputHelper testOutputHelper) : 
 		noDataCount.Should().Be(1); // 1 without value
 	}
 
+	/// <summary>
+	/// Verifies that the data count for the ExcludingSdt variant excludes data points inside SDT periods.
+	/// </summary>
 	[Fact]
 	public void DataCountExcludingSdt_ExcludesSdtPeriods()
 	{
@@ -82,6 +89,9 @@ public class ExcludingSdtAggregationTests(ITestOutputHelper testOutputHelper) : 
 
 	#region Sum and SumSquared Tests
 
+	/// <summary>
+	/// Verifies that the sum across all values includes those inside SDT periods.
+	/// </summary>
 	[Fact]
 	public void Sum_AllValues_IncludesSdtPeriods()
 	{
@@ -102,6 +112,9 @@ public class ExcludingSdtAggregationTests(ITestOutputHelper testOutputHelper) : 
 		sum.Should().Be(60.0); // 10 + 20 + 30
 	}
 
+	/// <summary>
+	/// Verifies that the ExcludingSdt sum excludes values inside SDT periods.
+	/// </summary>
 	[Fact]
 	public void SumExcludingSdt_ExcludesSdtPeriods()
 	{
@@ -122,6 +135,9 @@ public class ExcludingSdtAggregationTests(ITestOutputHelper testOutputHelper) : 
 		sumExcludingSdt.Should().Be(40.0); // 10 + 30 (excluding 20)
 	}
 
+	/// <summary>
+	/// Verifies that the sum-of-squares across all values includes those inside SDT periods.
+	/// </summary>
 	[Fact]
 	public void SumSquared_AllValues_IncludesSdtPeriods()
 	{
@@ -142,6 +158,9 @@ public class ExcludingSdtAggregationTests(ITestOutputHelper testOutputHelper) : 
 		sumSquared.Should().Be(29.0); // 4 + 9 + 16
 	}
 
+	/// <summary>
+	/// Verifies that the ExcludingSdt sum-of-squares excludes values inside SDT periods.
+	/// </summary>
 	[Fact]
 	public void SumSquaredExcludingSdt_ExcludesSdtPeriods()
 	{
@@ -166,6 +185,9 @@ public class ExcludingSdtAggregationTests(ITestOutputHelper testOutputHelper) : 
 
 	#region Min/Max Tests
 
+	/// <summary>
+	/// Verifies that min/max calculations over all values consider data points inside SDT periods.
+	/// </summary>
 	[Fact]
 	public void MinMax_AllValues_IncludesSdtPeriods()
 	{
@@ -189,6 +211,9 @@ public class ExcludingSdtAggregationTests(ITestOutputHelper testOutputHelper) : 
 		max.Should().Be(100.0);
 	}
 
+	/// <summary>
+	/// Verifies that the ExcludingSdt min/max excludes values inside SDT periods.
+	/// </summary>
 	[Fact]
 	public void MinMaxExcludingSdt_ExcludesSdtPeriods()
 	{
@@ -216,6 +241,9 @@ public class ExcludingSdtAggregationTests(ITestOutputHelper testOutputHelper) : 
 
 	#region First/Last Tests
 
+	/// <summary>
+	/// Verifies that first and last value calculations include data points inside SDT periods.
+	/// </summary>
 	[Fact]
 	public void FirstLast_AllValues_IncludesSdtPeriods()
 	{
@@ -238,6 +266,9 @@ public class ExcludingSdtAggregationTests(ITestOutputHelper testOutputHelper) : 
 		last.Should().Be(30.0);
 	}
 
+	/// <summary>
+	/// Verifies that the ExcludingSdt first and last value calculations exclude data points inside SDT periods.
+	/// </summary>
 	[Fact]
 	public void FirstLastExcludingSdt_ExcludesSdtPeriods()
 	{
@@ -260,6 +291,9 @@ public class ExcludingSdtAggregationTests(ITestOutputHelper testOutputHelper) : 
 		lastExcludingSdt.Should().Be(20.0);
 	}
 
+	/// <summary>
+	/// Verifies that first-and-last-with-data calculations include data points inside SDT periods.
+	/// </summary>
 	[Fact]
 	public void FirstLastWithData_AllValues_IncludesSdtPeriods()
 	{
@@ -284,6 +318,9 @@ public class ExcludingSdtAggregationTests(ITestOutputHelper testOutputHelper) : 
 		lastWithData.Should().Be(30.0);
 	}
 
+	/// <summary>
+	/// Verifies that the ExcludingSdt first-and-last-with-data calculations exclude data points inside SDT periods.
+	/// </summary>
 	[Fact]
 	public void FirstLastWithDataExcludingSdt_ExcludesSdtPeriods()
 	{
@@ -313,6 +350,9 @@ public class ExcludingSdtAggregationTests(ITestOutputHelper testOutputHelper) : 
 
 	#region Percentile Tests
 
+	/// <summary>
+	/// Verifies that percentile calculations over all values include those inside SDT periods.
+	/// </summary>
 	[Fact]
 	public void Percentiles_AllValues_IncludesSdtPeriods()
 	{
@@ -336,6 +376,9 @@ public class ExcludingSdtAggregationTests(ITestOutputHelper testOutputHelper) : 
 		centile50.Should().Be(30.0); // Median of [10, 20, 30, 40, 50]
 	}
 
+	/// <summary>
+	/// Verifies that the ExcludingSdt percentile calculation excludes values inside SDT periods.
+	/// </summary>
 	[Fact]
 	public void PercentilesExcludingSdt_ExcludesSdtPeriods()
 	{
@@ -359,6 +402,9 @@ public class ExcludingSdtAggregationTests(ITestOutputHelper testOutputHelper) : 
 		centile50ExcludingSdt.Should().Be(30.0); // Median of [10, 30, 50]
 	}
 
+	/// <summary>
+	/// Verifies that percentiles computed excluding SDT differ from percentiles computed over all values when SDT contains outliers.
+	/// </summary>
 	[Fact]
 	public void PercentilesExcludingSdt_DifferentFromAllValues()
 	{
@@ -392,6 +438,9 @@ public class ExcludingSdtAggregationTests(ITestOutputHelper testOutputHelper) : 
 
 	#region Edge Cases
 
+	/// <summary>
+	/// Verifies that the ExcludingSdt value list is empty when every data point falls inside an SDT period.
+	/// </summary>
 	[Fact]
 	public void ExcludingSdt_AllValuesInSdt_ReturnsEmptyOrNull()
 	{
@@ -409,6 +458,9 @@ public class ExcludingSdtAggregationTests(ITestOutputHelper testOutputHelper) : 
 		excludingSdtValues.Should().BeEmpty();
 	}
 
+	/// <summary>
+	/// Verifies that the ExcludingSdt value list matches the full value list when no data points fall inside an SDT period.
+	/// </summary>
 	[Fact]
 	public void ExcludingSdt_NoValuesInSdt_SameAsAllValues()
 	{
@@ -427,6 +479,9 @@ public class ExcludingSdtAggregationTests(ITestOutputHelper testOutputHelper) : 
 		excludingSdtValues.Should().BeEquivalentTo(allValues);
 	}
 
+	/// <summary>
+	/// Verifies data count and no-data count when only null values exist outside SDT periods.
+	/// </summary>
 	[Fact]
 	public void ExcludingSdt_OnlyNullValuesOutsideSdt()
 	{
@@ -450,6 +505,9 @@ public class ExcludingSdtAggregationTests(ITestOutputHelper testOutputHelper) : 
 		noDataCountExcludingSdt.Should().Be(2);
 	}
 
+	/// <summary>
+	/// Verifies correct ExcludingSdt filtering when the dataset contains a mix of null and non-null values in and out of SDT.
+	/// </summary>
 	[Fact]
 	public void ExcludingSdt_MixedNullAndValues()
 	{
@@ -474,6 +532,9 @@ public class ExcludingSdtAggregationTests(ITestOutputHelper testOutputHelper) : 
 
 	#region Availability Percent Tests
 
+	/// <summary>
+	/// Verifies that availability percent calculated over all values includes data points inside SDT periods.
+	/// </summary>
 	[Fact]
 	public void AvailabilityPercent_AllValues_IncludesSdtPeriods()
 	{
@@ -498,6 +559,9 @@ public class ExcludingSdtAggregationTests(ITestOutputHelper testOutputHelper) : 
 		availability.Should().BeGreaterThan(0);
 	}
 
+	/// <summary>
+	/// Verifies that availability percent for the ExcludingSdt variant excludes data points inside SDT periods.
+	/// </summary>
 	[Fact]
 	public void AvailabilityPercentExcludingSdt_ExcludesSdtPeriods()
 	{
@@ -526,6 +590,9 @@ public class ExcludingSdtAggregationTests(ITestOutputHelper testOutputHelper) : 
 
 	#region Count At Alert Level Tests
 
+	/// <summary>
+	/// Verifies that alert-level counts over all values include data points inside SDT periods.
+	/// </summary>
 	[Fact]
 	public void CountAtAlertLevel_AllValues_IncludesSdtPeriods()
 	{
@@ -548,6 +615,9 @@ public class ExcludingSdtAggregationTests(ITestOutputHelper testOutputHelper) : 
 		warningCount.Should().Be(2); // 60.0 and 70.0 are warning
 	}
 
+	/// <summary>
+	/// Verifies that the ExcludingSdt alert-level counts exclude data points inside SDT periods.
+	/// </summary>
 	[Fact]
 	public void CountAtAlertLevelExcludingSdt_ExcludesSdtPeriods()
 	{
@@ -574,6 +644,9 @@ public class ExcludingSdtAggregationTests(ITestOutputHelper testOutputHelper) : 
 
 	#region Integration-like Tests
 
+	/// <summary>
+	/// Performs a full aggregation comparison between all-values and ExcludingSdt variants to validate correctness.
+	/// </summary>
 	[Fact]
 	public void FullAggregation_ComparesAllVsExcludingSdt()
 	{

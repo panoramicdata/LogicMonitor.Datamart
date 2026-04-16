@@ -4,6 +4,7 @@ namespace LogicMonitor.Datamart.Test;
 /// Tests for MS-21396: SDT-aware alert level count columns
 /// Tests the CountAtAlertLevelUseSdt method and related SDT functionality
 /// </summary>
+/// <param name="testOutputHelper">xUnit output helper for test diagnostics.</param>
 public class SdtAlertCountTests(ITestOutputHelper testOutputHelper) : TestWithOutput(testOutputHelper)
 {
 	#region Test Data Builders
@@ -20,6 +21,9 @@ public class SdtAlertCountTests(ITestOutputHelper testOutputHelper) : TestWithOu
 
 	#region Empty or Null Alert Expression Tests
 
+	/// <summary>
+	/// Verifies that an empty alert expression causes Normal level to count all values and SDT-period entries.
+	/// </summary>
 	[Fact]
 	public void CountAtAlertLevelUseSdt_EmptyExpression_Normal_CountsValuesAndSdt()
 	{
@@ -42,6 +46,9 @@ public class SdtAlertCountTests(ITestOutputHelper testOutputHelper) : TestWithOu
 		result.Should().Be(3); // 2 with values + 1 in SDT (without value)
 	}
 
+	/// <summary>
+	/// Verifies that an empty alert expression causes Warning level to return zero because no thresholds are defined.
+	/// </summary>
 	[Fact]
 	public void CountAtAlertLevelUseSdt_EmptyExpression_Warning_ReturnsZero()
 	{
@@ -66,6 +73,9 @@ public class SdtAlertCountTests(ITestOutputHelper testOutputHelper) : TestWithOu
 
 	#region Normal Level Tests (OR Logic)
 
+	/// <summary>
+	/// Verifies that Normal level uses OR logic to count values that are either Normal or in an SDT period.
+	/// </summary>
 	[Fact]
 	public void CountAtAlertLevelUseSdt_Normal_CountsNormalOrSdt()
 	{
@@ -89,6 +99,9 @@ public class SdtAlertCountTests(ITestOutputHelper testOutputHelper) : TestWithOu
 		result.Should().Be(4); // Points 0, 2, 3, 4 (Normal OR in SDT)
 	}
 
+	/// <summary>
+	/// Verifies Normal-level counting using a three-threshold greater-than expression.
+	/// </summary>
 	[Fact]
 	public void CountAtAlertLevelUseSdt_Normal_GreaterThanThreshold()
 	{
@@ -118,6 +131,9 @@ public class SdtAlertCountTests(ITestOutputHelper testOutputHelper) : TestWithOu
 
 	#region Warning Level Tests (AND Logic)
 
+	/// <summary>
+	/// Verifies that Warning level uses AND logic to count only values that are both at Warning level and in an SDT period.
+	/// </summary>
 	[Fact]
 	public void CountAtAlertLevelUseSdt_Warning_CountsWarningAndSdt()
 	{
@@ -141,6 +157,9 @@ public class SdtAlertCountTests(ITestOutputHelper testOutputHelper) : TestWithOu
 		result.Should().Be(2); // Points 1, 2 (Warning AND in SDT)
 	}
 
+	/// <summary>
+	/// Verifies that a threshold so high that no values reach it effectively returns zero Warning-level results.
+	/// </summary>
 	[Fact]
 	public void CountAtAlertLevelUseSdt_Warning_NoWarningThreshold_ReturnsZero()
 	{
@@ -165,6 +184,9 @@ public class SdtAlertCountTests(ITestOutputHelper testOutputHelper) : TestWithOu
 		result.Should().Be(0); // No values exceed the very high threshold
 	}
 
+	/// <summary>
+	/// Verifies Warning-level counting when the expression contains two thresholds mapping to Warning and Error.
+	/// </summary>
 	[Fact]
 	public void CountAtAlertLevelUseSdt_Warning_OnlyErrorAndCritical_CountsCorrectly()
 	{
@@ -191,6 +213,9 @@ public class SdtAlertCountTests(ITestOutputHelper testOutputHelper) : TestWithOu
 
 	#region Error Level Tests (AND Logic)
 
+	/// <summary>
+	/// Verifies that Error level counts only values at Error alert level that are also in an SDT period.
+	/// </summary>
 	[Fact]
 	public void CountAtAlertLevelUseSdt_Error_CountsErrorAndSdt()
 	{
@@ -218,6 +243,9 @@ public class SdtAlertCountTests(ITestOutputHelper testOutputHelper) : TestWithOu
 
 	#region Critical Level Tests (AND Logic)
 
+	/// <summary>
+	/// Verifies that Critical level counts only values at Critical alert level that are also in an SDT period.
+	/// </summary>
 	[Fact]
 	public void CountAtAlertLevelUseSdt_Critical_CountsCriticalAndSdt()
 	{
@@ -240,6 +268,9 @@ public class SdtAlertCountTests(ITestOutputHelper testOutputHelper) : TestWithOu
 		result.Should().Be(2); // Points 1, 2 (Critical AND in SDT)
 	}
 
+	/// <summary>
+	/// Verifies that Critical level returns zero when the expression does not define a Critical threshold.
+	/// </summary>
 	[Fact]
 	public void CountAtAlertLevelUseSdt_Critical_NoCriticalThreshold_ReturnsZero()
 	{
@@ -264,6 +295,9 @@ public class SdtAlertCountTests(ITestOutputHelper testOutputHelper) : TestWithOu
 
 	#region Less Than Operator Tests
 
+	/// <summary>
+	/// Verifies Normal-level counting using a less-than alert expression operator.
+	/// </summary>
 	[Fact]
 	public void CountAtAlertLevelUseSdt_LessThan_Normal_CountsCorrectly()
 	{
@@ -287,6 +321,9 @@ public class SdtAlertCountTests(ITestOutputHelper testOutputHelper) : TestWithOu
 		result.Should().Be(4); // Points 0, 1, 3, 4
 	}
 
+	/// <summary>
+	/// Verifies Warning-level counting using a less-than alert expression operator.
+	/// </summary>
 	[Fact]
 	public void CountAtAlertLevelUseSdt_LessThan_Warning_CountsCorrectly()
 	{
@@ -313,6 +350,9 @@ public class SdtAlertCountTests(ITestOutputHelper testOutputHelper) : TestWithOu
 
 	#region Equals Operator Tests
 
+	/// <summary>
+	/// Verifies Normal-level counting using an equality alert expression operator.
+	/// </summary>
 	[Fact]
 	public void CountAtAlertLevelUseSdt_Equals_Normal_CountsCorrectly()
 	{
@@ -339,6 +379,9 @@ public class SdtAlertCountTests(ITestOutputHelper testOutputHelper) : TestWithOu
 
 	#region Edge Cases
 
+	/// <summary>
+	/// Verifies that all data points are counted for Normal level when every point falls inside an SDT period.
+	/// </summary>
 	[Fact]
 	public void CountAtAlertLevelUseSdt_AllInSdt_CountsCorrectly()
 	{
@@ -361,6 +404,9 @@ public class SdtAlertCountTests(ITestOutputHelper testOutputHelper) : TestWithOu
 		normalResult.Should().Be(4); // All points (all in SDT)
 	}
 
+	/// <summary>
+	/// Verifies that only Normal-level data points are counted when no points fall inside an SDT period.
+	/// </summary>
 	[Fact]
 	public void CountAtAlertLevelUseSdt_NoneInSdt_CountsOnlyNormal()
 	{
@@ -388,6 +434,9 @@ public class SdtAlertCountTests(ITestOutputHelper testOutputHelper) : TestWithOu
 		warningResult.Should().Be(0); // None (Warning but not in SDT)
 	}
 
+	/// <summary>
+	/// Verifies that an empty input list returns zero for any alert level.
+	/// </summary>
 	[Fact]
 	public void CountAtAlertLevelUseSdt_EmptyDataPoints_ReturnsZero()
 	{
@@ -404,6 +453,9 @@ public class SdtAlertCountTests(ITestOutputHelper testOutputHelper) : TestWithOu
 		result.Should().Be(0);
 	}
 
+	/// <summary>
+	/// Verifies that null-valued points inside SDT periods are still counted at Normal level.
+	/// </summary>
 	[Fact]
 	public void CountAtAlertLevelUseSdt_AllNullValues_CountsOnlySdt()
 	{

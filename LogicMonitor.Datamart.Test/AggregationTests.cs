@@ -1,6 +1,15 @@
 ﻿namespace LogicMonitor.Datamart.Test;
+
+/// <summary>
+/// Verifies percentage availability aggregation algorithms for representative data patterns.
+/// </summary>
 public class AggregationTests
 {
+	/// <summary>
+	/// Validates legacy PercentUpTime calculation behavior for varied raw value sequences.
+	/// </summary>
+	/// <param name="expectedUptimePercent">Expected calculated uptime percentage.</param>
+	/// <param name="values">Input datapoint values, including potential null gaps.</param>
 	[Theory]
 	[InlineData(50d, null, null, 0d, 60d)]
 	[InlineData(null, null, null, null, null)]
@@ -30,6 +39,11 @@ public class AggregationTests
 	}
 
 	// See unpublished up-time algorithm documentation at: https://www.blogger.com/blog/page/edit/preview/289149861252142016/4567219761703676543
+	/// <summary>
+	/// Validates the updated PercentUpTime calculation that handles no-data periods and counter resets.
+	/// </summary>
+	/// <param name="expectedUptimePercent">Expected uptime percentage result.</param>
+	/// <param name="values">Input datapoint values used to compute uptime.</param>
 	[Theory]
 	// Simple sequence with a gap
 	[InlineData(83.33d, 1d, 2d, 3d, null, 4d, 5d)]
@@ -41,14 +55,12 @@ public class AggregationTests
 	[InlineData(57.14d, 1d, 2d, null, 3d, 10d, null, 11d, 1d, 2d, null, 3d)]
 	// Long sequence with multiple jumps and resets
 	[InlineData(59.09d, 5d, 6d, 7d, 20d, null, 21d, 22d, 5d, 6d, 7d, 8d, 30d, 31d, null, 32d)]
-	public void PercentageUptime2Test(double? expectedUptimePercent, params double?[] values)
-	{
+	public void PercentageUptime2Test(double? expectedUptimePercent, params double?[] values) =>
 		// MS-21394 DataMagic: PercentUpTime availability calculation should calculate downtime based on up-time after no data
 		LowResolutionDataSync
 			.CalculatePercentageAvailabilityNew([.. values], "PercentUpTime")
 			.Should()
 			.BeApproximately(expectedUptimePercent, 2);
-	}
 
 	/// <summary>
 	/// This test aims to have a realistic number of data points
