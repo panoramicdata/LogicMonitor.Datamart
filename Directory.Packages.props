@@ -9,10 +9,10 @@
     <PackageVersion Include="EFCore.BulkExtensions.Dotnet10.SqlServer" Version="10.0.0" />
     <PackageVersion Include="LogicMonitor.Api" Version="3.236.15" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.0.0" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.6" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.7" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.6" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.6" />
-    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.6" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.7" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.6" />
     <PackageVersion Include="Nerdbank.GitVersioning" Version="3.9.50" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
