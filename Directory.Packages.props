@@ -7,17 +7,17 @@
     <!-- LogicMonitor.Datamart -->
     <PackageVersion Include="EFCore.BulkExtensions.Dotnet10.PostgreSql" Version="10.0.0" />
     <PackageVersion Include="EFCore.BulkExtensions.Dotnet10.SqlServer" Version="10.0.0" />
-    <PackageVersion Include="LogicMonitor.Api" Version="3.236.15" />
-    <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.0.0" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.6" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.6" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.6" />
-    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.6" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.6" />
+    <PackageVersion Include="LogicMonitor.Api" Version="3.237.4"/>
+    <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.0.1" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.7" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.7" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.7" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.7" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.7" />
     <PackageVersion Include="Nerdbank.GitVersioning" Version="3.9.50" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
-    <PackageVersion Include="PanoramicData.Mapper" Version="10.0.28" />
-    <PackageVersion Include="PanoramicData.NCalcExtensions" Version="5.8.30" />
+    <PackageVersion Include="PanoramicData.Mapper" Version="10.0.29" />
+    <PackageVersion Include="PanoramicData.NCalcExtensions" Version="5.8.33" />
     <!-- LogicMonitor.Datamart.Cli -->
     <PackageVersion Include="AspNetCore.HealthChecks.Network" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.SystemMemory" Version="1.0.1" />
@@ -27,7 +27,7 @@
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageVersion Include="Serilog.Extensions.Hosting" Version="10.0.0" />
     <PackageVersion Include="Serilog.Settings.Configuration" Version="10.0.0" />
-    <PackageVersion Include="Serilog.Sinks.ApplicationInsights" Version="5.0.0" />
+    <PackageVersion Include="Serilog.Sinks.ApplicationInsights" Version="5.0.1" />
     <PackageVersion Include="Serilog.Sinks.AzureAnalytics" Version="5.0.0" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageVersion Include="Serilog.Sinks.ElasticSearch" Version="10.0.0" />
@@ -35,12 +35,12 @@
     <PackageVersion Include="AwesomeAssertions" Version="9.4.0" />
     <PackageVersion Include="Divergic.Logging.Xunit" Version="4.3.1" />
     <PackageVersion Include="FluentAssertions.Analyzers" Version="0.34.1" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.6" />
-    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.6" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.4.0" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.7" />
+    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.7" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
     <PackageVersion Include="xunit.v3" Version="3.2.2" />
-    <PackageVersion Include="coverlet.collector" Version="8.0.1" />
+    <PackageVersion Include="coverlet.collector" Version="10.0.0" />
   </ItemGroup>
 </Project>
