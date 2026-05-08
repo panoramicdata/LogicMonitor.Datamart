@@ -11,8 +11,8 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>LogicMonitor API Datamart</PackageTags>
     <PackageReleaseNotes>
-			- Updated PanoramicData.Mapper to 10.0.19
-		</PackageReleaseNotes>
+		- Updated LogicMonitor.Api to version 3.237.6.
+	</PackageReleaseNotes>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <AnalysisMode>All</AnalysisMode>
