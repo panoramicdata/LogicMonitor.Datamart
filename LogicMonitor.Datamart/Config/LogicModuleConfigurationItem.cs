@@ -72,7 +72,8 @@ public class LogicModuleConfigurationItem
 	public string InstanceProperty10 { get; set; } = string.Empty;
 
 	/// <summary>
-	/// Validates the base properties
+	/// Validates the base properties.
+	/// Subclasses that support ID-based resolution should override this.
 	/// </summary>
 	/// <exception cref="ConfigurationException"></exception>
 	protected virtual void ValidateBase()

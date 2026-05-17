@@ -6,9 +6,28 @@
 public class DataSourceConfigurationItem : LogicModuleConfigurationItem
 {
 	/// <summary>
+	/// The LogicMonitor DataSource ID.
+	/// When provided, the sync resolves the DataSource by this ID rather than (or in addition to) <see cref="LogicModuleConfigurationItem.Name"/>.
+	/// Supported modes:
+	/// - Name only (backward compatible): resolves by name; warns if duplicates exist.
+	/// - LogicMonitorId only: resolves by ID; Name is treated as a label only.
+	/// - Both: resolves by ID and validates that the name matches; fails if they disagree.
+	/// </summary>
+	public int? LogicMonitorId { get; set; }
+
+	/// <summary>
 	/// The list of DataPoints which we are interested in for this DataSource
 	/// </summary>
 	public List<DataPointConfigurationItem> DataPoints { get; set; } = [];
+
+	/// <inheritdoc/>
+	protected override void ValidateBase()
+	{
+		if (LogicMonitorId is null && string.IsNullOrWhiteSpace(Name))
+		{
+			throw new ConfigurationException("Either Name or LogicMonitorId must be specified for a configured DataSource.");
+		}
+	}
 
 	/// <summary>
 	/// Validates the DataSource configuration item and all its DataPoints.

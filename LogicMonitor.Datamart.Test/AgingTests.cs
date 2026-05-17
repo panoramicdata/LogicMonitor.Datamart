@@ -26,7 +26,7 @@ public class AgingTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iT
 	[Fact]
 	public void DetermineTablesToAge_GivenList_CorrectResult()
 	{
-		var today = DateTimeOffset.UtcNow.Date;
+		var today = DateTime.UtcNow.Date;
 		var existingTables = new List<string>
 			{
 				AggregationWriter.GetTableName(today),

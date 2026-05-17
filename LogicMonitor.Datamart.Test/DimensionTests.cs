@@ -1,7 +1,6 @@
 using LogicMonitor.Api.LogicModules;
 using LogicMonitor.Api.Settings;
 using LogicMonitor.Api.Websites;
-using Microsoft.EntityFrameworkCore;
 
 namespace LogicMonitor.Datamart.Test;
 
