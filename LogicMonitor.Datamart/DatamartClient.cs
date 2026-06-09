@@ -775,6 +775,81 @@ public class DatamartClient : LogicMonitorClient
 	}
 
 	/// <summary>
+	/// Resolves a <see cref="DataSourceStoreItem"/> from the database using the identity fields on a
+	/// <see cref="DataSourceConfigurationItem"/>.
+	/// <list type="bullet">
+	///   <item><term>ID only</term><description>Queries by <c>LogicMonitorId</c>.</description></item>
+	///   <item><term>Name only</term><description>Queries by name; logs a warning when duplicates are found.</description></item>
+	///   <item><term>Both</term><description>Queries by ID and validates the stored name matches; returns null and logs an error on mismatch.</description></item>
+	/// </list>
+	/// </summary>
+	private async Task<DataSourceStoreItem?> ResolveDataSourceStoreItemAsync(
+		Context context,
+		DataSourceConfigurationItem config,
+		ILogger logger,
+		CancellationToken cancellationToken)
+	{
+		if (config.LogicMonitorId.HasValue)
+		{
+			var byId = await context
+				.DataSources
+				.FirstOrDefaultAsync(ds => ds.LogicMonitorId == config.LogicMonitorId.Value, cancellationToken)
+				.ConfigureAwait(false);
+
+			if (byId is null)
+			{
+				logger.LogError(
+					"For LogicMonitor instance {LogicMonitorAccount}, expected to find Database DataSource with LogicMonitorId {LogicMonitorId}, but it was missing.",
+					_configuration.LogicMonitorClientOptions.Account,
+					config.LogicMonitorId.Value);
+				return null;
+			}
+
+			// When both ID and Name are specified, validate they agree.
+			if (!string.IsNullOrWhiteSpace(config.Name) && byId.Name != config.Name)
+			{
+				logger.LogError(
+					"For LogicMonitor instance {LogicMonitorAccount}, DataSource with LogicMonitorId {LogicMonitorId} has name '{ActualName}' but configuration specifies name '{ConfigName}'. Fix the configuration.",
+					_configuration.LogicMonitorClientOptions.Account,
+					config.LogicMonitorId.Value,
+					byId.Name,
+					config.Name);
+				return null;
+			}
+
+			return byId;
+		}
+
+		// Name-only resolution (backward compatible).
+		var matches = await context
+			.DataSources
+			.Where(ds => ds.Name == config.Name)
+			.ToListAsync(cancellationToken)
+			.ConfigureAwait(false);
+
+		if (matches.Count == 0)
+		{
+			logger.LogError(
+				"For LogicMonitor instance {LogicMonitorAccount}, expected to find Database DataSource called '{DataSourceName}', but it was missing.",
+				_configuration.LogicMonitorClientOptions.Account,
+				config.Name);
+			return null;
+		}
+
+		if (matches.Count > 1)
+		{
+			logger.LogWarning(
+				"For LogicMonitor instance {LogicMonitorAccount}, found {Count} DataSources with name '{DataSourceName}' (LogicMonitorIds: {Ids}). Using the first. Consider adding LogicMonitorId to the configuration to resolve ambiguity.",
+				_configuration.LogicMonitorClientOptions.Account,
+				matches.Count,
+				config.Name,
+				string.Join(", ", matches.Select(ds => ds.LogicMonitorId)));
+		}
+
+		return matches[0];
+	}
+
+	/// <summary>
 	/// Update DataPoints, given a list of DataSources just retrieved from the LogicMonitor API
 	/// </summary>
 	/// <param name="context">The database context</param>
@@ -783,6 +858,7 @@ public class DatamartClient : LogicMonitorClient
 	private async Task UpdateDataPointsAsync(Context context, List<DataSource> apiDataSources, CancellationToken cancellationToken)
 	{
 		_logger.LogInformation("Updating DataSource DataPoints...");
+
 		var dataPointsStopwatch = Stopwatch.StartNew();
 		var dataSourceCount = apiDataSources.Count;
 		var dataSourceIndex = 0;
@@ -802,9 +878,19 @@ public class DatamartClient : LogicMonitorClient
 			// The DataSource name from the config
 			var dataSourceName = configDataSourceSpecification.Name;
 
-			// The DataSource from the API
-			var apiDataSource = apiDataSources
-				.SingleOrDefault(ds => ds.Name == dataSourceName);
+			// The DataSource from the API: resolve by ID when available, fall back to name.
+			DataSource? apiDataSource;
+			if (configDataSourceSpecification.LogicMonitorId.HasValue)
+			{
+				apiDataSource = apiDataSources
+					.FirstOrDefault(ds => ds.Id == configDataSourceSpecification.LogicMonitorId.Value);
+			}
+			else
+			{
+				apiDataSource = apiDataSources
+					.SingleOrDefault(ds => ds.Name == dataSourceName);
+			}
+
 			if (apiDataSource is null)
 			{
 				// May not happen if the config references a non-existent DataSource
@@ -815,19 +901,16 @@ public class DatamartClient : LogicMonitorClient
 				continue;
 			}
 
-			// FirstOrDefaultAsync because the database can contain duplicate DataSource names.
-			// SingleOrDefaultAsync would throw and abort the entire DataPoints sync.
-			var databaseDataSource = await context
-				.DataSources
-				.FirstOrDefaultAsync(ds => ds.Name == dataSourceName, cancellationToken)
+			// Resolve the database DataSource via the shared helper (supports ID, name, or both).
+			var databaseDataSource = await ResolveDataSourceStoreItemAsync(
+				context,
+				configDataSourceSpecification,
+				_logger,
+				cancellationToken)
 				.ConfigureAwait(false);
 			if (databaseDataSource is null)
 			{
-				// Should not happen, as we have only just updated the database with DataSources
-				_logger.LogError(
-					"For LogicMonitor instance {LogicMonitorAccount}, expected to find Database DataSource called '{DataSourceName}', but it was missing.",
-					_configuration.LogicMonitorClientOptions.Account,
-					dataSourceName);
+				// Error already logged inside the helper.
 				continue;
 			}
 			// We have a matching DataSource from both the API and the database.
@@ -1247,17 +1330,15 @@ public class DatamartClient : LogicMonitorClient
 			switch (logicModuleConfigurationItem)
 			{
 				case DataSourceConfigurationItem dataSourceConfigurationItem:
-					var dataSourceStoreItem = await context
-						.DataSources
-						.SingleOrDefaultAsync(ds => ds.Name == dataSourceConfigurationItem.Name, cancellationToken)
+					var dataSourceStoreItem = await ResolveDataSourceStoreItemAsync(
+						context,
+						dataSourceConfigurationItem,
+						logger,
+						cancellationToken)
 						.ConfigureAwait(false);
 
 					if (dataSourceStoreItem is null)
 					{
-						logger.LogError(
-							"For LogicMonitor instance {LogicMonitorAccount}, expected to find Database DataSource called '{DataSourceName}', but it was missing.",
-							_configuration.LogicMonitorClientOptions.Account,
-							dataSourceConfigurationItem.Name);
 						return;
 					}
 
@@ -2203,14 +2284,17 @@ public class DatamartClient : LogicMonitorClient
 			// This is the AppliesTo we have in the database (or LogicMonitor)
 			var dsAppliesTo = string.Empty;
 
-			// Find the DataSource in the database
-			if (await context
-				.DataSources
-				.SingleOrDefaultAsync(ds => ds.Name == configDataSource.Name, cancellationToken)
-				.ConfigureAwait(false)
-				is DataSourceStoreItem databaseDataSource)
+			// Find the DataSource in the database using ID-aware resolution.
+			var resolvedDataSource = await ResolveDataSourceStoreItemAsync(
+				context,
+				configDataSource,
+				_logger,
+				cancellationToken)
+				.ConfigureAwait(false);
+
+			if (resolvedDataSource is not null)
 			{
-				dsAppliesTo = databaseDataSource.AppliesTo;
+				dsAppliesTo = resolvedDataSource.AppliesTo;
 			}
 			else
 			{
@@ -2222,7 +2306,7 @@ public class DatamartClient : LogicMonitorClient
 				}
 				else
 				{
-					// Not in the database and not in LogicMonior
+					// Not in the database and not in LogicMonitor
 					throw new InvalidOperationException($"Could not find DataSource '{configDataSource.Name}' in database or LogicMonitor.");
 				}
 			}
