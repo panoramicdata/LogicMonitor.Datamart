@@ -15,4 +15,13 @@
     <AnalysisMode>All</AnalysisMode>
     <NuGetAuditMode>All</NuGetAuditMode>
   </PropertyGroup>
+  <ItemGroup>
+    <!--
+      NU1902: NCalc.Core / NCalcSync 5.12.0 (transitive via PanoramicData.NCalcExtensions)
+      carry moderate-severity advisory GHSA-3w5p-95mh-gq75. No patched NCalc has shipped yet;
+      the same dependency is tolerated in MagicSuite (ReportMagic Directory.Build.props).
+      Remove this suppression once PanoramicData.NCalcExtensions references a patched NCalc.
+    -->
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-3w5p-95mh-gq75" />
+  </ItemGroup>
 </Project>

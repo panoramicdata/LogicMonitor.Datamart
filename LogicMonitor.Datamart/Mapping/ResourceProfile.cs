@@ -231,6 +231,84 @@ public class ResourceProfile : Profile
 			.ForMember(
 				dest => dest.Type,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.ClonedFromHostId,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.StopMonitoring,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.StopMonitoringByFolder,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.IndividualSmAlertEnable,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.IndividualAlertLevel,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.OverallAlertLevel,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.PollingInterval,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.Transition,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.GlobalSmAlertCond,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.UseDefaultLocationSetting,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.UseDefaultAlertSetting,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.Checkpoints,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.IsInternal,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.Collectors,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.TestLocation,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.GroupIds,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.Properties,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.Status,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.Template,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.LastUpdated,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.Steps,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.Domain,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.Count,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.Host,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.PercentPktsNotReceiveInTime,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.TimeoutInMSPktsNotReceive,
+				opts => opts.Ignore())
 
 			;
 	}

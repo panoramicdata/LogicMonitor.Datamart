@@ -217,6 +217,9 @@ public class DataSourceProfile : Profile
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.AccessGroups,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.IsInUse,
 				opts => opts.Ignore());
 	}
 }

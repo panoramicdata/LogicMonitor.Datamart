@@ -124,6 +124,9 @@ public class EventSourceProfile : Profile
 			.ForMember(
 				dest => dest.Query,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.IsInUse,
+				opts => opts.Ignore())
 				;
 	}
 }
