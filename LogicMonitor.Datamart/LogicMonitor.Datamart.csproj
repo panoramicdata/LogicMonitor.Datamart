@@ -11,10 +11,10 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>LogicMonitor API Datamart</PackageTags>
 	<PackageReleaseNotes>
-		- Updated PanoramicData.Mapper to 10.0.29 and other NuGet packages.
-		- Added LogicMonitorId support to DataSourceConfigurationItem, allowing DataSource resolution by ID in addition to (or instead of) name.
-		- Fixed timezone bug in AgingTests causing DetermineTablesToAge to fail in non-UTC timezones.
-		- Added pure unit tests for DataSourceConfigurationItem validation (no live data required).
+		- Updated LogicMonitor.Api to 3.240.9, adding support for the otlpMetrics role privilege object type.
+		- Updated PanoramicData.Mapper to 10.0.37.
+		- Bumped Entity Framework Core and Microsoft.Extensions.* packages to 10.0.9.
+		- Updated Serilog.Settings.Configuration to 10.0.1 and other NuGet packages.
 	</PackageReleaseNotes>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>

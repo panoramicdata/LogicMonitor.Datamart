@@ -14,7 +14,7 @@ namespace LogicMonitor.Datamart.Test;
 public class MappingTests
 {
 	private static readonly MapperConfiguration _mapperConfig = new(cfg => cfg.AddMaps(typeof(DatamartClient).Assembly));
-	private static readonly Mapper _mapper = new Mapper(_mapperConfig);
+	private static readonly Mapper _mapper = new(_mapperConfig);
 
 	static MappingTests()
 	{
