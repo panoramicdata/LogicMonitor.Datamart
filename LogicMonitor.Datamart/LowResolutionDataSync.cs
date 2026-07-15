@@ -109,7 +109,7 @@ internal class LowResolutionDataSync(
 			{
 				try
 				{
-					Logger.BeginScope(
+					using var dataSourceScope = Logger.BeginScope(
 						"Syncing DataSource {DataSourceName} ({DataSourceIndex}/{DataSourceCount})... ",
 						matchingDatabaseDataSourceNotTracked.Name,
 						dataSourceIndex + 1,
