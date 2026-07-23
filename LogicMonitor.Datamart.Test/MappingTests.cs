@@ -238,7 +238,7 @@ public class MappingTests
 	/// </summary>
 	[Fact]
 	public void WhenMappingEventSourceStoreItem_ThenEventSourceIsCreated()
-		=> _mapper.Map<EventSourceStoreItem, EventSource>(new EventSourceStoreItem()).Should().NotBeNull();
+		=> _mapper.Map<EventSourceStoreItem, EventSource>(CreateEventSourceStoreItem()).Should().NotBeNull();
 
 	/// <summary>
 	/// Maps a <see cref="ResourceStoreItem"/> back to a <see cref="Resource"/> and verifies a non-null result.
@@ -419,7 +419,21 @@ public class MappingTests
 		DisplayName = string.Empty,
 		Group = string.Empty,
 		Name = string.Empty,
-		Version = string.Empty
+		Version = string.Empty,
+		IsInUse = null,
+	};
+
+	private static EventSourceStoreItem CreateEventSourceStoreItem() => new()
+	{
+		AppliesTo = string.Empty,
+		AuditVersion = string.Empty,
+		Checksum = string.Empty,
+		Description = string.Empty,
+		DisplayName = string.Empty,
+		Group = string.Empty,
+		Name = string.Empty,
+		Version = string.Empty,
+		IsInUse = null,
 	};
 
 	private static DataSourceStoreItem CreateDataSourceStoreItem() => new()
@@ -458,7 +472,8 @@ public class MappingTests
 		PollingIntervalSeconds = 0,
 		CollectionAttributeName = null,
 		CollectionAttributeIp = null,
-		LastTimeSeriesDataSyncDurationMs = null
+		LastTimeSeriesDataSyncDurationMs = null,
+		IsInUse = null,
 	};
 
 	private static DataSourceGraphStoreItem CreateDataSourceGraphStoreItem() => new()

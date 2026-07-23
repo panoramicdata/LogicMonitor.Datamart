@@ -21,19 +21,9 @@ public abstract class LogicModuleStoreItem : IdentifiedStoreItem
 	public required string Checksum { get; set; }
 
 	/// <summary>
-	/// The data collection method (e.g. SNMP, Script, WMI).
-	/// </summary>
-	public required string CollectionMethod { get; set; }
-
-	/// <summary>
 	/// A human-readable description of the LogicModule.
 	/// </summary>
 	public required string Description { get; set; }
-
-	/// <summary>
-	/// The display name shown in the LogicMonitor UI.
-	/// </summary>
-	public required string DisplayName { get; set; }
 
 	/// <summary>
 	/// The group classification for the LogicModule.
@@ -49,4 +39,9 @@ public abstract class LogicModuleStoreItem : IdentifiedStoreItem
 	/// The version string of the LogicModule definition.
 	/// </summary>
 	public required string Version { get; set; }
+
+	/// <summary>
+	/// Whether the LogicModule is currently in use by any resources.
+	/// </summary>
+	public required bool? IsInUse { get; set; }
 }

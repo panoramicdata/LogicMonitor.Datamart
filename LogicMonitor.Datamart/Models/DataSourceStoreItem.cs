@@ -11,6 +11,11 @@ public class DataSourceStoreItem : LogicModuleStoreItem
 	public virtual ICollection<ResourceDataSourceStoreItem>? DeviceDataSources { get; set; } = null!;
 
 	/// <summary>
+	/// The display name shown in the LogicMonitor UI.
+	/// </summary>
+	public required string DisplayName { get; set; }
+	
+	/// <summary>
 	/// Navigation property to the graphs defined for this DataSource.
 	/// </summary>
 	public virtual ICollection<DataSourceGraphStoreItem>? Graphs { get; set; } = null!;
@@ -19,6 +24,11 @@ public class DataSourceStoreItem : LogicModuleStoreItem
 	/// Navigation property to the DataPoints for this DataSource.
 	/// </summary>
 	public virtual ICollection<ResourceDataSourceInstanceDataPointStoreItem>? DataPoints { get; set; } = null!;
+
+	/// <summary>
+	/// The data collection method (e.g. SNMP, Script, WMI).
+	/// </summary>
+	public required string CollectionMethod { get; set; }
 
 	/// <summary>
 	/// The technology tag for the DataSource (e.g. WMI, SNMP).
