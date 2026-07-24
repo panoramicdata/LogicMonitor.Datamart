@@ -1,7 +1,7 @@
 ﻿namespace LogicMonitor.Datamart.Mapping;
 
 /// <summary>
-/// AutoMapper profile for mapping LogicMonitor LogicModuleUpdate API objects to <see cref="LogicModuleUpdateStoreItem"/>.
+/// AutoMapper profile for mapping LogicMonitor ExchangeLogicModule API objects to <see cref="LogicModuleUpdateStoreItem"/>.
 /// </summary>
 public class LogicModuleUpdateProfile : Profile
 {
@@ -10,7 +10,7 @@ public class LogicModuleUpdateProfile : Profile
 	/// </summary>
 	public LogicModuleUpdateProfile()
 	{
-		CreateMap<LogicModuleUpdate, LogicModuleUpdateStoreItem>()
+		CreateMap<ExchangeLogicModule, LogicModuleUpdateStoreItem>()
 			.ForMember(
 				dest => dest.Id,
 				opts => opts.Ignore())
@@ -24,11 +24,11 @@ public class LogicModuleUpdateProfile : Profile
 				dest => dest.DatamartLastObserved,
 				opts => opts.Ignore())
 			.ForMember(
-				dest => dest.Category,
-				opts => opts.MapFrom(src => src.Category.ToString())) // Convert enum to string
+				dest => dest.ExchangeId,
+				opts => opts.MapFrom(src => src.Id))
 			.ForMember(
 				dest => dest.Type,
-				opts => opts.MapFrom(src => src.Type.ToString())) // Convert enum to string
-			.AfterMap<TruncateMappingAction<LogicModuleUpdate, LogicModuleUpdateStoreItem>>();
+				opts => opts.MapFrom(src => src.Type.ToString()))
+			.AfterMap<TruncateMappingAction<ExchangeLogicModule, LogicModuleUpdateStoreItem>>();
 	}
 }

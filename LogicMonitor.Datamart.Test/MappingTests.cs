@@ -120,11 +120,11 @@ public class MappingTests
 		=> _mapper.Map<AutoTaskIntegration, IntegrationStoreItem>(new AutoTaskIntegration()).Should().NotBeNull();
 
 	/// <summary>
-	/// Maps a <see cref="LogicModuleUpdate"/> to <see cref="LogicModuleUpdateStoreItem"/> and verifies a non-null result.
+	/// Maps a <see cref="ExchangeLogicModule"/> to <see cref="LogicModuleUpdateStoreItem"/> and verifies a non-null result.
 	/// </summary>
 	[Fact]
 	public void WhenMappingLogicModuleUpdate_ThenStoreItemIsCreated()
-		=> _mapper.Map<LogicModuleUpdate, LogicModuleUpdateStoreItem>(new LogicModuleUpdate()).Should().NotBeNull();
+		=> _mapper.Map<ExchangeLogicModule, LogicModuleUpdateStoreItem>(new ExchangeLogicModule()).Should().NotBeNull();
 
 	/// <summary>
 	/// Maps a <see cref="LogItem"/> to <see cref="LogStoreItem"/> and verifies a non-null result.
@@ -429,7 +429,6 @@ public class MappingTests
 		AuditVersion = string.Empty,
 		Checksum = string.Empty,
 		Description = string.Empty,
-		DisplayName = string.Empty,
 		Group = string.Empty,
 		Name = string.Empty,
 		Version = string.Empty,

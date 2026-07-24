@@ -83,15 +83,15 @@ public static class DbSetExtension
 	}
 
 	/// <summary>
-	/// Adds a new LogicModule update or updates an existing one in the DbSet, matching by CurrentUuid.
+	/// Adds a new Exchange LogicModule or updates an existing one in the DbSet, matching by ExchangeId.
 	/// </summary>
 	/// <param name="dbSet">The DbSet to add to or update in.</param>
-	/// <param name="apiItem">The API LogicModule update item.</param>
+	/// <param name="apiItem">The API Exchange LogicModule item.</param>
 	/// <param name="lastObservedUtc">The UTC timestamp when this item was last observed in the API.</param>
 	/// <param name="logger">The logger instance.</param>
 	public static void AddOrUpdateLogicModuleUpdate(
 			this DbSet<LogicModuleUpdateStoreItem> dbSet,
-			LogicModuleUpdate apiItem,
+			ExchangeLogicModule apiItem,
 			DateTimeOffset lastObservedUtc,
 			ILogger logger
 		)
@@ -101,7 +101,7 @@ public static class DbSetExtension
 
 		// Do we have it already?
 		var storeItem = dbSet
-			.FirstOrDefault(si => si.CurrentUuid == apiItem.CurrentUuid);
+			.FirstOrDefault(si => si.ExchangeId == apiItem.Id);
 		if (storeItem is not null)
 		{
 			// Yes.  Update it
@@ -109,7 +109,7 @@ public static class DbSetExtension
 			{
 				logger.LogTrace("Updating existing {TypeName} with id {StoreItemId} ({StoreItemDatamartId})",
 					nameof(LogicModuleUpdateStoreItem),
-					storeItem.CurrentUuid,
+					storeItem.ExchangeId,
 					storeItem.Id);
 			}
 			// Map from data onto the existing storeItem which EF internal tracker will work out whether anything changed
@@ -126,12 +126,12 @@ public static class DbSetExtension
 		{
 			logger.LogTrace("Adding new {TypeName} with id {DataId}",
 				nameof(LogicModuleUpdateStoreItem),
-				apiItem.CurrentUuid
+				apiItem.Id
 				);
 		}
 
 		// Add a new entry
-		storeItem = DatamartClient.MapperInstance.Map<LogicModuleUpdate, LogicModuleUpdateStoreItem>(apiItem);
+		storeItem = DatamartClient.MapperInstance.Map<ExchangeLogicModule, LogicModuleUpdateStoreItem>(apiItem);
 
 		// TODO - Update foreign keys
 

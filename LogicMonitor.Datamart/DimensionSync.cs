@@ -346,7 +346,7 @@ internal class DimensionSync : LoopInterval
 		}
 
 
-		if (_types?.Contains(nameof(LogicModuleUpdate)) ?? true)
+		if (_types?.Contains(nameof(ExchangeLogicModule)) ?? true)
 		{
 			await _datamartClient
 				.AddOrUpdateLogicModuleUpdates(

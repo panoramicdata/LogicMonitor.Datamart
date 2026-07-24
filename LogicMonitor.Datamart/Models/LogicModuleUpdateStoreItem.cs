@@ -2,127 +2,172 @@
 namespace LogicMonitor.Datamart.Models;
 
 /// <summary>
-/// Represents a LogicModule update record stored in the datamart.
+/// Represents an Exchange LogicModule record stored in the datamart.
 /// </summary>
 public class LogicModuleUpdateStoreItem : StoreItem
 {
 	/// <summary>
-	/// The local ID
+	/// The Exchange module ID (from ExchangeLogicModule.Id).
 	/// </summary>
-	public int LocalId { get; set; }
+	[MaxLength(200)]
+	public string ExchangeId { get; set; } = string.Empty;
 
 	/// <summary>
-	/// The name
+	/// The name.
 	/// </summary>
 	[MaxLength(200)]
 	public string Name { get; set; } = string.Empty;
 
 	/// <summary>
-	/// The appliesTo
+	/// The display name.
 	/// </summary>
-	[MaxLength(1000)]
-	public string AppliesTo { get; set; } = string.Empty;
+	[MaxLength(200)]
+	public string DisplayName { get; set; } = string.Empty;
 
 	/// <summary>
-	/// The permission
+	/// The module type.
 	/// </summary>
-	[MaxLength(20)]
-	public string Category { get; set; } = string.Empty;
-
-	/// <summary>
-	/// The type
-	/// </summary>
-	[MaxLength(20)]
+	[MaxLength(50)]
 	public string Type { get; set; } = string.Empty;
 
 	/// <summary>
-	/// The collection method
+	/// The model.
 	/// </summary>
-	[MaxLength(20)]
-	public string CollectionMethod { get; set; } = string.Empty;
+	[MaxLength(200)]
+	public string Model { get; set; } = string.Empty;
 
 	/// <summary>
-	/// The description
+	/// The description.
 	/// </summary>
 	[MaxLength(1000)]
 	public string Description { get; set; } = string.Empty;
 
 	/// <summary>
-	/// The group
+	/// The collection method.
 	/// </summary>
 	[MaxLength(50)]
+	public string CollectionMethod { get; set; } = string.Empty;
+
+	/// <summary>
+	/// The group.
+	/// </summary>
+	[MaxLength(200)]
 	public string? Group { get; set; }
 
 	/// <summary>
-	/// The version (installed). This is an epoch timestamp
-	/// </summary>
-	public long Version { get; set; }
-
-	/// <summary>
-	/// The local version. This is an epoch timestamp
-	/// </summary>
-	public long LocalVersion { get; set; }
-
-	/// <summary>
-	/// The audit version. This is an epoch timestamp
-	/// </summary>
-	public long AuditVersion { get; set; }
-
-	/// <summary>
-	/// The rest LM (?)
+	/// The version string.
 	/// </summary>
 	[MaxLength(200)]
-	public string? RestLm { get; set; } = string.Empty;
+	public string Version { get; set; } = string.Empty;
 
 	/// <summary>
-	/// The registryVersion
+	/// The status.
 	/// </summary>
-	[MaxLength(20)]
-	public string RegistryVersion { get; set; } = string.Empty;
+	[MaxLength(200)]
+	public string Status { get; set; } = string.Empty;
 
 	/// <summary>
-	/// The publish time
+	/// The source.
 	/// </summary>
-	public long PublishedAtMilliseconds { get; set; }
+	[MaxLength(200)]
+	public string Source { get; set; } = string.Empty;
 
 	/// <summary>
-	/// The quality
+	/// The locator.
 	/// </summary>
-	[MaxLength(20)]
-	public string Quality { get; set; } = string.Empty;
-
-	/// <summary>
-	/// The locator
-	/// </summary>
-	[MaxLength(20)]
+	[MaxLength(200)]
 	public string Locator { get; set; } = string.Empty;
 
 	/// <summary>
-	/// The currentUuid
+	/// The author portal name.
 	/// </summary>
-	[MaxLength(30)]
-	public string CurrentUuid { get; set; } = string.Empty;
+	[MaxLength(200)]
+	public string AuthorPortalName { get; set; } = string.Empty;
 
 	/// <summary>
-	/// The namespace
+	/// The origin version.
 	/// </summary>
-	[MaxLength(50)]
-	public string Namespace { get; set; } = string.Empty;
+	[MaxLength(200)]
+	public string OriginVersion { get; set; } = string.Empty;
 
 	/// <summary>
-	/// The local version
+	/// The origin name.
 	/// </summary>
-	[MaxLength(50)]
-	public string Local { get; set; } = string.Empty;
+	[MaxLength(200)]
+	public string OriginName { get; set; } = string.Empty;
 
 	/// <summary>
-	/// The remote version
+	/// The origin status.
 	/// </summary>
-	[MaxLength(1000)]
-	public string Remote { get; set; } = string.Empty;
+	[MaxLength(200)]
+	public string OriginStatus { get; set; } = string.Empty;
 
 	/// <summary>
-	/// The last time this was observed in the API
+	/// The origin locator.
+	/// </summary>
+	[MaxLength(200)]
+	public string OriginLocator { get; set; } = string.Empty;
+
+	/// <summary>
+	/// The origin author namespace.
+	/// </summary>
+	[MaxLength(200)]
+	public string OriginAuthorNamespace { get; set; } = string.Empty;
+
+	/// <summary>
+	/// The origin registry ID.
+	/// </summary>
+	[MaxLength(200)]
+	public string OriginRegistryId { get; set; } = string.Empty;
+
+	/// <summary>
+	/// The upgradeable registry ID.
+	/// </summary>
+	[MaxLength(200)]
+	public string UpgradeableRegistryId { get; set; } = string.Empty;
+
+	/// <summary>
+	/// The origin published-at timestamp (milliseconds).
+	/// </summary>
+	public long OriginPublishedAtMs { get; set; }
+
+	/// <summary>
+	/// The updated-at timestamp (milliseconds).
+	/// </summary>
+	public long UpdatedAtMs { get; set; }
+
+	/// <summary>
+	/// Whether an update is available for this module.
+	/// </summary>
+	public bool HasUpdateAvailable { get; set; }
+
+	/// <summary>
+	/// Whether the module is installed.
+	/// </summary>
+	public bool IsInstalled { get; set; }
+
+	/// <summary>
+	/// Whether the module has been customized.
+	/// </summary>
+	public bool IsCustomized { get; set; }
+
+	/// <summary>
+	/// Whether the module is deprecated.
+	/// </summary>
+	public bool IsDeprecated { get; set; }
+
+	/// <summary>
+	/// Whether the module is in use.
+	/// </summary>
+	public bool IsInUse { get; set; }
+
+	/// <summary>
+	/// Whether the module has been changed from the last published target.
+	/// </summary>
+	public bool IsChangedFromTargetLastPublished { get; set; }
+
+	/// <summary>
+	/// The last time this was observed in the API.
 	/// </summary>
 	public DateTime DatamartLastObserved { get; internal set; }
 }

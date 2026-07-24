@@ -559,9 +559,9 @@ public class DatamartClient : LogicMonitorClient
 	{
 		try
 		{
-			logger.LogInformation("Syncing {Type}s...", nameof(LogicModuleUpdate));
+			logger.LogInformation("Syncing {Type}s...", nameof(ExchangeLogicModule));
 			await notificationReceiver
-				.SetStageNameAsync($"Syncing {nameof(LogicModuleUpdate)}s...", cancellationToken)
+				.SetStageNameAsync($"Syncing {nameof(ExchangeLogicModule)}s...", cancellationToken)
 				.ConfigureAwait(false);
 
 			using var context = GetContext();
@@ -571,21 +571,21 @@ public class DatamartClient : LogicMonitorClient
 
 			// Fetch the items from the LogicMonitor API
 			var lastObservedUtc = _timeProviderService.UtcOffsetNow;
-			var apiItems = await GetLogicModuleUpdatesAsync(LogicModuleType.All, cancellationToken: cancellationToken)
+			var apiItems = await GetExchangeLogicModulesAsync(cancellationToken: cancellationToken)
 				.ConfigureAwait(false);
 			logger.LogDebug(
 				"{TypeName}: Loaded {ApiItemsCount} items.",
 				nameof(LogicModuleUpdateStoreItem),
-				apiItems.Items.Count);
+				apiItems.Count);
 
 			await notificationReceiver
-				.SetItemCountAsync(apiItems.Items.Count, cancellationToken)
+				.SetItemCountAsync(apiItems.Count, cancellationToken)
 				.ConfigureAwait(false);
 
 			var itemIndex = 0;
 			var stopwatch = Stopwatch.StartNew();
 			// Add/update all the items
-			foreach (var item in apiItems.Items)
+			foreach (var item in apiItems)
 			{
 				itemIndex++;
 
@@ -593,9 +593,9 @@ public class DatamartClient : LogicMonitorClient
 				{
 					logger.LogInformation(
 						"Syncing {Type}s: {ItemIndex}/{ItemCount}",
-						nameof(LogicModuleUpdate),
+						nameof(ExchangeLogicModule),
 						itemIndex,
-						apiItems.Items.Count);
+						apiItems.Count);
 					await notificationReceiver
 						.SetItemIndexAsync(itemIndex, cancellationToken)
 						.ConfigureAwait(false);
@@ -625,13 +625,13 @@ public class DatamartClient : LogicMonitorClient
 				added,
 				modified);
 
-			logger.LogInformation($"Syncing {nameof(LogicModuleUpdate)}s complete.");
+			logger.LogInformation($"Syncing {nameof(ExchangeLogicModule)}s complete.");
 		}
 		catch (Exception e)
 		{
 			logger.LogError(
 				e,
-				$"Could not sync {nameof(LogicModuleUpdate)}s due to {{Message}}", e.Message
+				$"Could not sync {nameof(ExchangeLogicModule)}s due to {{Message}}", e.Message
 			);
 			if (haltOnError)
 			{

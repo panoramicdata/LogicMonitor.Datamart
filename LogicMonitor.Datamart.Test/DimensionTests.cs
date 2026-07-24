@@ -110,7 +110,7 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 			.ExecuteAsync(default);
 
 	/// <summary>
-	/// Syncs LogicModuleUpdate entities and verifies the operation completes without error.
+	/// Syncs ExchangeLogicModule entities and verifies the operation completes without error.
 	/// </summary>
 	[Fact]
 	[Trait("Long Running Test", "")]
@@ -119,7 +119,7 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 				DatamartClient,
 				Configuration,
 				[
-					nameof(LogicModuleUpdate),
+					nameof(ExchangeLogicModule),
 				],
 				LoggerFactory,
 				TestNotificationReceiver)

@@ -17,7 +17,7 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.0")
+                .HasAnnotation("ProductVersion", "10.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -942,6 +942,9 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool?>("IsInUse")
+                        .HasColumnType("bit");
+
                     b.Property<int>("LogicMonitorId")
                         .HasColumnType("int");
 
@@ -1233,6 +1236,9 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
                     b.Property<string>("InstallationMetadataTargetLineageId")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool?>("IsInUse")
+                        .HasColumnType("bit");
+
                     b.Property<long?>("LastTimeSeriesDataSyncDurationMs")
                         .HasColumnType("bigint");
 
@@ -1339,6 +1345,18 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("AppliesTo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AuditVersion")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Checksum")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTimeOffset>("DatamartCreated")
                         .HasColumnType("datetimeoffset");
 
@@ -1352,10 +1370,21 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Group")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool?>("IsInUse")
+                        .HasColumnType("bit");
+
                     b.Property<int>("LogicMonitorId")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Version")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -1714,28 +1743,15 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("AppliesTo")
+                    b.Property<string>("AuthorPortalName")
                         .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<long>("AuditVersion")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("CollectionMethod")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("CurrentUuid")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTimeOffset>("DatamartCreated")
                         .HasColumnType("datetimeoffset");
@@ -1751,65 +1767,113 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<string>("Group")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("Local")
+                    b.Property<string>("DisplayName")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
-                    b.Property<int>("LocalId")
-                        .HasColumnType("int");
+                    b.Property<string>("ExchangeId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
-                    b.Property<long>("LocalVersion")
-                        .HasColumnType("bigint");
+                    b.Property<string>("Group")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("HasUpdateAvailable")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsChangedFromTargetLastPublished")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsCustomized")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeprecated")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsInUse")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsInstalled")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Locator")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<string>("Namespace")
+                    b.Property<string>("OriginAuthorNamespace")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
-                    b.Property<long>("PublishedAtMilliseconds")
+                    b.Property<string>("OriginLocator")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("OriginName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<long>("OriginPublishedAtMs")
                         .HasColumnType("bigint");
 
-                    b.Property<string>("Quality")
+                    b.Property<string>("OriginRegistryId")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
-                    b.Property<string>("RegistryVersion")
+                    b.Property<string>("OriginStatus")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
-                    b.Property<string>("Remote")
+                    b.Property<string>("OriginVersion")
                         .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
-                    b.Property<string>("RestLm")
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("Type")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
-                    b.Property<long>("Version")
+                    b.Property<long>("UpdatedAtMs")
                         .HasColumnType("bigint");
+
+                    b.Property<string>("UpgradeableRegistryId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Version")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("Id");
 
