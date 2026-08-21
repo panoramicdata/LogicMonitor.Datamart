@@ -1,4 +1,4 @@
-using LogicMonitor.Datamart.Interfaces;
+﻿using LogicMonitor.Datamart.Interfaces;
 using LogicMonitor.Datamart.Services;
 using PanoramicData.NCalcExtensions;
 
@@ -1035,7 +1035,7 @@ public class DatamartClient : LogicMonitorClient
 		int? take,
 		string? id,
 		AckFilter ackFilter,
-		ICollection<string> monitorObjectGroups,
+		ICollection<string>? monitorObjectGroups,
 		string? monitorObjectName,
 		int? monitorObjectId,
 		ICollection<AlertType>? alertTypes,
@@ -1110,7 +1110,11 @@ public class DatamartClient : LogicMonitorClient
 		}
 
 		// Only one is ever passed
-		var monitorObjectGroup = monitorObjectGroups?.First();
+		// FirstOrDefault rather than First: an EMPTY collection means the same as no collection at all -
+		// no device group filter - and First threw InvalidOperationException for it. That matters now the
+		// parameter is declared nullable, because a caller with nowhere to get a group from can say so
+		// either way round.
+		var monitorObjectGroup = monitorObjectGroups?.FirstOrDefault();
 		if (monitorObjectGroup != null)
 		{
 			var likeString = $"{monitorObjectGroup.TrimEnd('*')}%";
