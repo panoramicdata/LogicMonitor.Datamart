@@ -1,4 +1,4 @@
-namespace LogicMonitor.Datamart.Test;
+﻿namespace LogicMonitor.Datamart.Test;
 
 /// <summary>
 /// Exercises alert-related Datamart synchronization and cached retrieval scenarios.
@@ -59,6 +59,48 @@ public class AlertTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iT
 			null,
 			new AckFilter(),
 			["PDL"],
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			Api.Filters.OrderDirection.Asc,
+			new SdtFilter(),
+			null,
+			true
+			).ConfigureAwait(true);
+		result.Should().NotBeNull();
+	}
+
+	/// <summary>
+	/// Retrieves cached alerts with no device group filter, expressed both ways.
+	/// </summary>
+	/// <remarks>
+	/// Issue #44: monitorObjectGroups is optional - it is the "no device group filter" case - and used
+	/// to be declared non-nullable, so a caller passing null (which is what the parameter means when it
+	/// has no group to filter on) got a compiler warning it could not honestly silence. An empty
+	/// collection now means the same thing, where First() previously threw for it.
+	/// </remarks>
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public async Task GetCachedAlertsAsync_WithNoMonitorObjectGroups_Succeeds(bool useEmptyCollectionRatherThanNull)
+	{
+		var startDateTimeUtc = DateTimeOffset.UtcNow.AddDays(-10);
+		var endDateTimeUtc = DateTimeOffset.UtcNow.AddDays(-5);
+		var result = await DatamartClient.GetCachedAlertsAsync(
+			startDateTimeUtc.ToUnixTimeSeconds(),
+			endDateTimeUtc.ToUnixTimeSeconds(),
+			true,
+			null,
+			null,
+			null,
+			new AckFilter(),
+			useEmptyCollectionRatherThanNull ? [] : null,
 			null,
 			null,
 			null,
