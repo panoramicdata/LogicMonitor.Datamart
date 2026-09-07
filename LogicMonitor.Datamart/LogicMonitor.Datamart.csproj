@@ -11,7 +11,15 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>LogicMonitor API Datamart</PackageTags>
 	<PackageReleaseNotes>
-		- Updated LogicMonitor.Api to 3.240.10, adding support for the 'limited' role privilege operation.
+		- Updated LogicMonitor.Api to 3.240.79.
+		- Ignored two new Resource members, DedicatedLogCollectorGroupId and
+		  IsPreferredLogCollectorGroupConfigured, on the ResourceStoreItem to Resource map.
+		  LogicMonitor.Api added them to model fields the portal returns; the Datamart stores a
+		  curated subset and reconstructs partial Api objects, so new live-portal-only members
+		  are ignored in the reverse direction, as the existing collector members already are.
+		  Without this, AssertConfigurationIsValid throws at DatamartClient construction with
+		  "Unmapped members found for ResourceStoreItem -> Resource", which surfaces downstream
+		  as a macro execution failure.
 	</PackageReleaseNotes>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>

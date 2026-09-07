@@ -159,7 +159,13 @@ public class ResourceProfile : Profile
 				dest => dest.CurrentLogCollectorId,
 				opts => opts.Ignore())
 			.ForMember(
+				dest => dest.DedicatedLogCollectorGroupId,
+				opts => opts.Ignore())
+			.ForMember(
 				dest => dest.IsPreferredLogCollectorConfigured,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.IsPreferredLogCollectorGroupConfigured,
 				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.LogCollectorDescription,
