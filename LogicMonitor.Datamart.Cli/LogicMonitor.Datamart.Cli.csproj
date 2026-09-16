@@ -17,9 +17,10 @@
     <PackageIcon>Icon.png</PackageIcon>
     <RepositoryUrl>https://github.com/panoramicdata/LogicMonitor.Datamart</RepositoryUrl>
     <IsPackable>false</IsPackable>
+    <!-- Web SDK enables this warning by default for non-packable web projects; the CLI ships as a container, not a package. -->
+    <WarnOnPackingNonPackableProject>false</WarnOnPackingNonPackableProject>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageId>LogicMonitor.Datamart.Cli</PackageId>
     <NeutralResourcesLanguage>en</NeutralResourcesLanguage>
