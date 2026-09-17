@@ -16,7 +16,7 @@
     <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.12" />
     <PackageVersion Include="Nerdbank.GitVersioning" Version="3.10.94" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
-    <PackageVersion Include="PanoramicData.Mapper" Version="10.0.47" />
+    <PackageVersion Include="PanoramicData.Mapper" Version="10.0.52" />
     <PackageVersion Include="PanoramicData.NCalcExtensions" Version="6.1.39" />
     <!-- LogicMonitor.Datamart.Cli -->
     <PackageVersion Include="AspNetCore.HealthChecks.Network" Version="9.0.0" />
