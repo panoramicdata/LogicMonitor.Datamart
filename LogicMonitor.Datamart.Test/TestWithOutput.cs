@@ -6,6 +6,12 @@ namespace LogicMonitor.Datamart.Test;
 /// <summary>
 /// Provides common setup and shared utilities for integration-style tests that emit xUnit output.
 /// </summary>
+/// <remarks>
+/// Every test deriving from this base needs a LogicMonitor portal and a Datamart database configured
+/// in appsettings.json. CI has neither, so the coverage job excludes them with
+/// --filter "Category!=Integration".
+/// </remarks>
+[Trait("Category", "Integration")]
 public abstract class TestWithOutput
 {
 	/// <summary>
