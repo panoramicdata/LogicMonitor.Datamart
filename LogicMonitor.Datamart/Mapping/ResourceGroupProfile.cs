@@ -140,6 +140,9 @@ public class ResourceGroupProfile : Profile
 			.ForMember(
 				dest => dest.OciTestResult,
 				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.TenantIdentifier,
+				opts => opts.Ignore())
 
 			.IgnoreAllPropertiesWithAnInaccessibleSetter()
 			;

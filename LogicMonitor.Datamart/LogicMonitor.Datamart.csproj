@@ -11,17 +11,14 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>LogicMonitor API Datamart</PackageTags>
 	<PackageReleaseNotes>
-		- Updated LogicMonitor.Api to 3.240.88, which adds the agentic privilege object type and
-		  Role.tenantIdentifier. Neither reaches the mapping profiles, because Role is not a mapped
-		  destination type, so no new Ignore() was required. ValidateAutoMapperProfiles passes
-		  against it.
-		- Restored the VSTest test runner. A governance remediation had moved the repository onto
-		  Microsoft Testing Platform while the test project still targets xunit 2.9.3, which has no
-		  Microsoft Testing Platform entry point, so no test was discoverable. Test infrastructure
-		  only, with no consumer-visible change.
-		- Dependency updates: Microsoft.Data.SqlClient 7.0.3, Microsoft.EntityFrameworkCore 10.0.12,
-		  Microsoft.Extensions.Caching.Memory 10.0.12, Microsoft.Extensions.Configuration.UserSecrets
-		  10.0.12, PanoramicData.Mapper 10.0.47 and PanoramicData.NCalcExtensions 6.1.39.
+		- Updated LogicMonitor.Api to 3.240.93, which models Advanced Metrics reports and adds five
+		  fields to types the datamart maps back to: Collector's archType, cpAgent,
+		  logCollectorGroupId and logCollectorGroupName, and ResourceGroup's tenantIdentifier. The
+		  datamart does not store them, so the reverse maps Ignore() them. Earlier Datamart
+		  versions fail AutoMapper validation, and so cannot construct a DatamartClient, against
+		  LogicMonitor.Api 3.240.90 or later.
+		- Tests: removed AutoMapperTruncateTests' own profile-list validation, a partial copy of
+		  ValidateAutoMapperProfiles that had fallen eight profiles behind.
 	</PackageReleaseNotes>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>

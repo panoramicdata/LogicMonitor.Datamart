@@ -1,41 +1,11 @@
-﻿using LogicMonitor.Datamart.Mapping;
-
-namespace LogicMonitor.Datamart.Test;
+﻿namespace LogicMonitor.Datamart.Test;
 
 /// <summary>
-/// Verifies AutoMapper profile registration and truncation behavior for mapped string fields.
+/// Verifies truncation behavior for mapped string fields.
 /// </summary>
 /// <param name="iTestOutputHelper">xUnit output helper used for test logging.</param>
 public class AutoMapperTruncateTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTestOutputHelper)
 {
-	/// <summary>
-	/// Asserts the selected mapping profiles build a valid AutoMapper configuration.
-	/// </summary>
-	[Fact]
-	public void Test()
-	{
-
-		var config = new MapperConfiguration(cfg =>
-		{
-			cfg.AddProfile<AlertProfile>();
-			cfg.AddProfile<AlertRuleProfile>();
-			cfg.AddProfile<CollectorGroupProfile>();
-			cfg.AddProfile<CollectorProfile>();
-			cfg.AddProfile<ConfigSourceProfile>();
-			cfg.AddProfile<DataSourceProfile>();
-			cfg.AddProfile<ResourceDataSourceInstanceProfile>();
-			cfg.AddProfile<DeviceDataSourceProfile>();
-			cfg.AddProfile<ResourceGroupProfile>();
-			cfg.AddProfile<ResourceProfile>();
-			cfg.AddProfile<EscalationChainProfile>();
-			cfg.AddProfile<EventSourceProfile>();
-			cfg.AddProfile<LogProfile>();
-			cfg.AddProfile<WebsiteGroupProfile>();
-			cfg.AddProfile<WebsiteProfile>();
-		});
-		config.AssertConfigurationIsValid();
-	}
-
 	/// <summary>
 	/// Verifies over-length source fields are truncated to destination schema limits during mapping.
 	/// </summary>

@@ -164,6 +164,18 @@ public class CollectorProfile : Profile
 			.ForMember(
 				dest => dest.OneTimeDowngradeInfo,
 				opts => opts.MapFrom(src => src.OnetimeDowngradeInfo))
+			.ForMember(
+				dest => dest.ArchType,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.CpAgent,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.LogCollectorGroupId,
+				opts => opts.Ignore())
+			.ForMember(
+				dest => dest.LogCollectorGroupName,
+				opts => opts.Ignore())
 			;
 	}
 }
