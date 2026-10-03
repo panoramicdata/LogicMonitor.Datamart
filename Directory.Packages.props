@@ -7,7 +7,7 @@
     <!-- LogicMonitor.Datamart -->
     <PackageVersion Include="EFCore.BulkExtensions.Dotnet10.PostgreSql" Version="10.0.0" />
     <PackageVersion Include="EFCore.BulkExtensions.Dotnet10.SqlServer" Version="10.0.0" />
-    <PackageVersion Include="LogicMonitor.Api" Version="3.240.93" />
+    <PackageVersion Include="LogicMonitor.Api" Version="3.240.97" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.1.1" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.12" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.12" />
@@ -16,8 +16,8 @@
     <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.12" />
     <PackageVersion Include="Nerdbank.GitVersioning" Version="3.10.94" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
-    <PackageVersion Include="PanoramicData.Mapper" Version="10.0.47" />
-    <PackageVersion Include="PanoramicData.NCalcExtensions" Version="6.1.39" />
+    <PackageVersion Include="PanoramicData.Mapper" Version="10.0.52" />
+    <PackageVersion Include="PanoramicData.NCalcExtensions" Version="6.1.45" />
     <!-- LogicMonitor.Datamart.Cli -->
     <PackageVersion Include="AspNetCore.HealthChecks.Network" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.SystemMemory" Version="1.0.1" />
@@ -37,7 +37,7 @@
     <PackageVersion Include="AwesomeAssertions.Analyzers" Version="9.0.8" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
     <PackageVersion Include="xunit.v3" Version="4.0.1" />
