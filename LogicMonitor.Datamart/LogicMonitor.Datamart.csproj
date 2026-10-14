@@ -57,6 +57,8 @@
     </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="PanoramicData.NCalcExtensions" />
+    <!-- CVE-2026-84008, CVE-2026-70162: lifts the Pkcs 9.0.18 that Microsoft.Data.SqlClient brings in. Remove once SqlClient depends on a patched version. -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Icon.png" Pack="true" PackagePath="" />
