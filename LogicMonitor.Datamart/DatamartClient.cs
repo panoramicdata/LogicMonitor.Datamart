@@ -1,5 +1,6 @@
 ﻿using LogicMonitor.Datamart.Interfaces;
 using LogicMonitor.Datamart.Services;
+using Npgsql;
 using PanoramicData.NCalcExtensions;
 
 namespace LogicMonitor.Datamart;
@@ -81,12 +82,16 @@ public class DatamartClient : LogicMonitorClient
 			case DatabaseType.Postgres:
 				dbContextOptionsBuilder
 					.UseNpgsql(
-						$"Server={configuration.DatabaseServerName};" +
-						$"Port={configuration.DatabaseServerPort ?? 5432};" +
-						$"Database={configuration.DatabaseName};" +
-						$"Uid={configuration.DatabaseUsername};" +
-						$"Pwd={configuration.DatabasePassword};" +
-						$"Timezone=UTC",
+						// MS-24748 Built, not concatenated, because a password can contain semicolons, quotes or spaces
+						new NpgsqlConnectionStringBuilder
+						{
+							Host = configuration.DatabaseServerName,
+							Port = configuration.DatabaseServerPort ?? 5432,
+							Database = configuration.DatabaseName,
+							Username = configuration.DatabaseUsername,
+							Password = configuration.DatabasePassword,
+							Timezone = "UTC",
+						}.ConnectionString,
 						options => options
 							.EnableRetryOnFailure(configuration.DatabaseRetryOnFailureCount ?? 5)
 					);
