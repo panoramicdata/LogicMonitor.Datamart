@@ -31,7 +31,7 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 				Configuration,
 				LoggerFactory,
 				default)
-			.ExecuteAsync(default);
+			.ExecuteAsync(TestContext.Current.CancellationToken);
 
 	/// <summary>
 	/// Syncs Resource entities and verifies the operation completes without error.
@@ -46,7 +46,7 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 			],
 			LoggerFactory,
 			TestNotificationReceiver)
-		.ExecuteAsync(default);
+		.ExecuteAsync(TestContext.Current.CancellationToken);
 
 	/// <summary>
 	/// Syncs Integration entities and verifies the operation completes without error.
@@ -61,7 +61,7 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 			],
 			LoggerFactory,
 			TestNotificationReceiver)
-		.ExecuteAsync(default);
+		.ExecuteAsync(TestContext.Current.CancellationToken);
 
 	/// <summary>
 	/// Syncs EscalationChain entities and verifies the operation completes without error.
@@ -76,7 +76,7 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 			],
 			LoggerFactory,
 			TestNotificationReceiver)
-		.ExecuteAsync(default);
+		.ExecuteAsync(TestContext.Current.CancellationToken);
 
 	/// <summary>
 	/// Syncs Website entities and verifies the operation completes without error.
@@ -91,7 +91,7 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 				],
 				LoggerFactory,
 				TestNotificationReceiver)
-			.ExecuteAsync(default);
+			.ExecuteAsync(TestContext.Current.CancellationToken);
 
 	/// <summary>
 	/// Syncs Resource and ResourceDataSourceInstance entities together and verifies the operation completes without error.
@@ -107,7 +107,7 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 				],
 				LoggerFactory,
 				TestNotificationReceiver)
-			.ExecuteAsync(default);
+			.ExecuteAsync(TestContext.Current.CancellationToken);
 
 	/// <summary>
 	/// Syncs ExchangeLogicModule entities and verifies the operation completes without error.
@@ -123,7 +123,7 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 				],
 				LoggerFactory,
 				TestNotificationReceiver)
-			.ExecuteAsync(default);
+			.ExecuteAsync(TestContext.Current.CancellationToken);
 
 	/// <summary>
 	/// Syncs DataSource entities and verifies the operation completes without error.
@@ -138,7 +138,7 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 				],
 				LoggerFactory,
 				TestNotificationReceiver)
-			.ExecuteAsync(default);
+			.ExecuteAsync(TestContext.Current.CancellationToken);
 
 	/// <summary>
 	/// Syncs Resource, ConfigSource, and ResourceDataSourceInstance entities together and verifies the operation completes without error.
@@ -155,5 +155,5 @@ public class DimensionTests(ITestOutputHelper iTestOutputHelper) : TestWithOutpu
 				],
 				LoggerFactory,
 				TestNotificationReceiver)
-			.ExecuteAsync(default);
+			.ExecuteAsync(TestContext.Current.CancellationToken);
 }

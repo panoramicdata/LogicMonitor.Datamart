@@ -56,7 +56,7 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 			startDateTimeUtc,
 			endDateTimeUtc,
 			LoggerFactory.CreateLogger<DataTests>(),
-			default);
+			TestContext.Current.CancellationToken);
 
 		// MS-21395: Create empty SDT cache for test
 		var sdtCache = new Dictionary<string, List<ScheduledDownTimeHistory>>();
@@ -73,7 +73,7 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 			Configuration.ExcludeSdtPeriods,
 			sdtCache,
 			LoggerFactory.CreateLogger<DataTests>(),
-			default
+			TestContext.Current.CancellationToken
 		);
 
 		result.Should().NotBeNull();
@@ -92,7 +92,7 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 				LoggerFactory,
 				TestNotificationReceiver,
 				new TimeProviderService())
-			.ExecuteAsync(default);
+			.ExecuteAsync(TestContext.Current.CancellationToken);
 
 
 	/// <summary>
@@ -111,7 +111,7 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 				LoggerFactory,
 				TestNotificationReceiver,
 				tps)
-			.ExecuteAsync(default)
+			.ExecuteAsync(TestContext.Current.CancellationToken)
 			.ConfigureAwait(true);
 	}
 
@@ -155,7 +155,7 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 			startDateTimeUtc,
 			endDateTimeUtc,
 			LoggerFactory.CreateLogger<DataTests>(),
-			default);
+			TestContext.Current.CancellationToken);
 
 		// Assert: Validate we received approximately hourly resolution
 		var timestampCount = graphData.TimeStamps.Count;
@@ -233,7 +233,7 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 			startDateTimeUtc,
 			endDateTimeUtc,
 			LoggerFactory.CreateLogger<DataTests>(),
-			default);
+			TestContext.Current.CancellationToken);
 
 		// Assert: Validate we observe adaptive aggregation behavior
 		var timestampCount = graphData.TimeStamps.Count;
@@ -319,7 +319,7 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 			startDateTimeUtc,
 			endDateTimeUtc,
 			LoggerFactory.CreateLogger<DataTests>(),
-			default);
+			TestContext.Current.CancellationToken);
 
 		// Act: Check if throttled
 		var isThrottled = LowResolutionDataSync.IsThrottled(
@@ -367,7 +367,7 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 			startDateTimeUtc,
 			endDateTimeUtc,
 			LoggerFactory.CreateLogger<DataTests>(),
-			default);
+			TestContext.Current.CancellationToken);
 
 		// Act: Check if throttled
 		var isThrottled = LowResolutionDataSync.IsThrottled(
@@ -424,7 +424,7 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 		enableAutoChunking: true,
 		chunkSizeDays: 31,
 			LoggerFactory.CreateLogger<DataTests>(),
-			default);
+			TestContext.Current.CancellationToken);
 
 		// Assert: We should now have approximately hourly resolution
 		var timestampCount = graphData.TimeStamps.Count;
@@ -496,7 +496,7 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 			startDateTimeUtc,
 			endDateTimeUtc,
 			LoggerFactory.CreateLogger<DataTests>(),
-			default);
+			TestContext.Current.CancellationToken);
 
 		// Act 2: Fetch WITH chunking (31-day chunks for hourly resolution)
 		var chunkedData = await LowResolutionDataSync.GetGraphDataChunkedAsync(
@@ -506,7 +506,7 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 		endDateTimeUtc,
 		chunkSizeDays: 31,
 			LoggerFactory.CreateLogger<DataTests>(),
-			default);
+			TestContext.Current.CancellationToken);
 
 		// Assert: Document observed behavior
 		var singleCount = singleRequestData.TimeStamps.Count;

@@ -20,7 +20,7 @@ public class DatabaseMigrationTests(ITestOutputHelper testOutputHelper) : TestWi
 
 		// Act
 		using var context = DatamartClient.GetContext();
-		var canConnect = await context.Database.CanConnectAsync();
+		var canConnect = await context.Database.CanConnectAsync(TestContext.Current.CancellationToken);
 
 		// Assert
 		canConnect.Should().BeTrue("Database should be accessible after migrations");
@@ -37,7 +37,7 @@ public class DatabaseMigrationTests(ITestOutputHelper testOutputHelper) : TestWi
 
 		// Act - Try to query the TimeSeriesDataAggregations table
 		// This will fail if the new columns don't exist
-		var hasRecords = await context.TimeSeriesDataAggregations.AnyAsync();
+		var hasRecords = await context.TimeSeriesDataAggregations.AnyAsync(TestContext.Current.CancellationToken);
 
 		// Assert - We don't care about the result, just that the query succeeded
 		// If the migration wasn't applied, this would throw an exception
