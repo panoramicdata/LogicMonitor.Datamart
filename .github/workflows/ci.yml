@@ -92,29 +92,21 @@ jobs:
       with:
         dotnet-version: 10.0.x
 
-    # This test project is still on xunit v2 under VSTest, so Microsoft.Testing.Extensions.CodeCoverage
-    # does not apply. It already references coverlet.collector, whose "XPlat Code Coverage" collector
-    # writes Cobertura by default, so that is used instead.
-    #
     # CI runs only the tests that need no credentials. Everything deriving from TestWithOutput needs a
     # LogicMonitor portal and a Datamart database configured in appsettings.json, which CI does not
     # have, and xunit.runner.json sets failSkips: true, so those tests are tagged Category=Integration
     # and filtered out here.
+    #
+    # The tests run on xunit v3 under Microsoft.Testing.Platform (global.json), so coverage comes from
+    # Microsoft.Testing.Extensions.CodeCoverage, which writes Cobertura to the path given.
     - name: Run tests with coverage
       run: >-
         dotnet test LogicMonitor.Datamart.Test/LogicMonitor.Datamart.Test.csproj
         --configuration Debug
         --filter "Category!=Integration"
-        --collect "XPlat Code Coverage"
-        --results-directory "$GITHUB_WORKSPACE/TestResults/Coverage"
-
-    # coverlet writes the report under a per-run GUID directory; give it a fixed path to upload.
-    - name: Locate coverage report
-      run: |
-        report=$(find TestResults/Coverage -name coverage.cobertura.xml | head -n 1)
-        if [ -z "$report" ]; then echo "No coverage report was produced." >&2; exit 1; fi
-        cp "$report" TestResults/coverage.cobertura.xml
-
+        --coverage
+        --coverage-output-format cobertura
+        --coverage-output "$GITHUB_WORKSPACE/TestResults/coverage.cobertura.xml"
     # continue-on-error: a Codacy outage must not turn a passing test run red. The trade-off is that
     # an expired project token fails silently, so check the log for "Coverage received successfully".
     - name: Upload coverage to Codacy

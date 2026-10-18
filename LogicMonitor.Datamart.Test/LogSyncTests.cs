@@ -19,7 +19,7 @@ public class LogSyncTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(
 				DatamartClient,
 				startDateTimeUtc,
 				LoggerFactory)
-			.ExecuteAsync(default)
+			.ExecuteAsync(TestContext.Current.CancellationToken)
 			.ConfigureAwait(true);
 	}
 }

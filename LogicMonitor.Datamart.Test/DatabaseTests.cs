@@ -18,12 +18,12 @@ public class DatabaseTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput
 		var database = DatamartClient.GetContext().Database;
 		database.Should().NotBeNull();
 
-		await database.EnsureCreatedAsync()
+		await database.EnsureCreatedAsync(TestContext.Current.CancellationToken)
 			.ConfigureAwait(true);
 
 		// Ensure the database is created
 		var pendingMigrations = await database
-			.GetPendingMigrationsAsync()
+			.GetPendingMigrationsAsync(TestContext.Current.CancellationToken)
 			.ConfigureAwait(true);
 
 		pendingMigrations.Should().BeEmpty();

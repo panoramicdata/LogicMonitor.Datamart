@@ -17,7 +17,7 @@ public class AgingTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iT
 				DatamartClient,
 				5,
 				LoggerFactory)
-			.ExecuteAsync(default)
+			.ExecuteAsync(TestContext.Current.CancellationToken)
 			.ConfigureAwait(true);
 
 	/// <summary>

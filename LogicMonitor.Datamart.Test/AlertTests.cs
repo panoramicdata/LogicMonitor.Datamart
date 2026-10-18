@@ -20,7 +20,7 @@ public class AlertTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iT
 				true,
 				LoggerFactory.CreateLogger(nameof(AlertTests)),
 				TestNotificationReceiver,
-				default)
+				TestContext.Current.CancellationToken)
 			.ConfigureAwait(true);
 	}
 
@@ -36,7 +36,7 @@ public class AlertTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iT
 				DatamartClient,
 				startDateTimeUtc,
 				LoggerFactory)
-			.DifferentialLoopTaskAsync(default)
+			.DifferentialLoopTaskAsync(TestContext.Current.CancellationToken)
 			.ConfigureAwait(true);
 
 		updatedAlertStats.Should().NotBeNull();

@@ -1,6 +1,6 @@
 ﻿global using PanoramicData.Mapper;
 global using AwesomeAssertions;
-global using Divergic.Logging.Xunit;
+global using Neovolve.Logging.Xunit;
 global using LogicMonitor.Api.Alerts;
 global using LogicMonitor.Api.Resources;
 global using LogicMonitor.Datamart.Config;
@@ -18,4 +18,3 @@ global using System.IO;
 global using System.Reflection;
 global using System.Threading.Tasks;
 global using Xunit;
-global using Xunit.Abstractions;
