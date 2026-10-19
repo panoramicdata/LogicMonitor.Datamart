@@ -42,8 +42,8 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="PanoramicData.Mapper" />
-    <PackageReference Include="EFCore.BulkExtensions.Dotnet10.PostgreSql" />
-    <PackageReference Include="EFCore.BulkExtensions.Dotnet10.SqlServer" />
+    <PackageReference Include="EFCore.BulkExtensions.PostgreSql" />
+    <PackageReference Include="EFCore.BulkExtensions.SqlServer" />
     <PackageReference Include="LogicMonitor.Api" />
     <PackageReference Include="Microsoft.Data.SqlClient" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
