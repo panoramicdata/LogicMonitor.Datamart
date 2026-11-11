@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Panoramic Data Limited</Authors>
     <Copyright>Copyright © Panoramic Data Limited 2021-2026</Copyright>
@@ -10,7 +10,7 @@
     <Description>LogicMonitor Datamart</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>LogicMonitor API Datamart</PackageTags>
-	<PackageReleaseNotes>
+    <PackageReleaseNotes>
 		- Postgres: the connection string is now built with NpgsqlConnectionStringBuilder instead of
 		  being joined together by hand, so a database password containing a semicolon, a quote or
 		  leading or trailing spaces reaches Postgres unchanged. A semicolon previously split the
