@@ -8,7 +8,7 @@
     <PackageVersion Include="EFCore.BulkExtensions.PostgreSql" Version="10.0.1" />
     <PackageVersion Include="EFCore.BulkExtensions.SqlServer" Version="10.0.1" />
     <PackageVersion Include="LogicMonitor.Api" Version="3.240.131" />
-    <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.1.1" />
+    <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.1.2" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.14" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.14" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.14" />
@@ -16,15 +16,15 @@
     <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="11.0.0" />
     <PackageVersion Include="Nerdbank.GitVersioning" Version="3.10.94" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
-    <PackageVersion Include="PanoramicData.Mapper" Version="10.0.52" />
+    <PackageVersion Include="PanoramicData.Mapper" Version="10.0.83" />
     <PackageVersion Include="PanoramicData.NCalcExtensions" Version="6.1.45" />
     <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="11.0.0" />
     <!-- LogicMonitor.Datamart.Cli -->
     <PackageVersion Include="AspNetCore.HealthChecks.Network" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.SystemMemory" Version="1.0.1" />
     <PackageVersion Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
-    <PackageVersion Include="PanoramicData.HealthChecks.Core" Version="10.0.84" />
-    <PackageVersion Include="PanoramicData.HealthChecks.Versions" Version="10.0.84" />
+    <PackageVersion Include="PanoramicData.HealthChecks.Core" Version="10.0.89" />
+    <PackageVersion Include="PanoramicData.HealthChecks.Versions" Version="10.0.89" />
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageVersion Include="Serilog.Extensions.Hosting" Version="10.0.0" />
     <PackageVersion Include="Serilog.Settings.Configuration" Version="10.0.1" />
