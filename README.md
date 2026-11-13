@@ -4,6 +4,9 @@
 
 # Introduction
 
+
+Supports .NET 11.0.
+
 ## Purpose
 
 The LogicMonitor Datamart creates a copy of major aspects of your LogicMonitor system in a SQL Server or PostgreSQL database, including:
@@ -14,7 +17,7 @@ The LogicMonitor Datamart creates a copy of major aspects of your LogicMonitor s
 
 ## Requirements
 
-- **.NET 10.0** or later
+- **.NET 11.0** or later
 - **LogicMonitor Account** with API access
 - **Database Server** (PostgreSQL or SQL Server)
 - **Docker** (for containerized deployment)
@@ -126,7 +129,7 @@ dotnet add package LogicMonitor.Datamart
 
 ## Version Information
 
-- **Current Version**: Targets .NET 10.0
+- **Current Version**: Targets .NET 11.0
 - Uses Entity Framework Core 10.0 (RC)
 - Supports both SQL Server and PostgreSQL databases
 
