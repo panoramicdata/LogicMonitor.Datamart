@@ -171,6 +171,18 @@ public class Configuration
 	/// </summary>
 	public void Validate()
 	{
+		ValidateIdentity();
+		ValidateDatabase();
+		ValidateRanges();
+
+		foreach (var dataSource in DataSources)
+		{
+			dataSource.Validate();
+		}
+	}
+
+	private void ValidateIdentity()
+	{
 		if (string.IsNullOrWhiteSpace(Name))
 		{
 			throw new ConfigurationException($"Configuration {nameof(Name)} not set.");
@@ -190,7 +202,10 @@ public class Configuration
 		{
 			throw new ConfigurationException($"{nameof(LogicMonitorClientOptions)} not set.");
 		}
+	}
 
+	private void ValidateDatabase()
+	{
 		if (DatabaseType == DatabaseType.Unknown)
 		{
 			throw new ConfigurationException($"{nameof(DatabaseType)} not set.");
@@ -210,7 +225,10 @@ public class Configuration
 		{
 			throw new ConfigurationException($"{nameof(DatabaseName)} not set.");
 		}
+	}
 
+	private void ValidateRanges()
+	{
 		if (DeviceDataSourceInstanceBatchSize is < 1 or > 100)
 		{
 			// Do not exceed 100 for BatchSize as limited by the LogicMonitor DataFetch endpoint
@@ -227,13 +245,7 @@ public class Configuration
 		{
 			throw new ConfigurationException($"{nameof(AutoChunkSizeDays)} should be in the range 1..31 days.");
 		}
-
-		foreach (var dataSource in DataSources)
-		{
-			dataSource.Validate();
-		}
 	}
-
 	/// <inheritdoc />
 	public override string ToString()
 		=> $"{Name} ({DatabaseType} {DatabaseServerName}:{DatabaseServerPort}/{DatabaseName} password: {new string('*', DatabasePassword.Length)})";
