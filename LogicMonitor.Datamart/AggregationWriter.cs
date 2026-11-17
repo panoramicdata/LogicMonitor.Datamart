@@ -9,25 +9,6 @@ internal static partial class AggregationWriter
 
 	internal const int SqlTimeoutSeconds = 100;
 
-	private const string CreateTableSql = @"
-DECLARE @Sql nvarchar(max) = N'CREATE TABLE ' + QUOTENAME(@TableName) + N'(
-		[Id][int] IDENTITY(1, 1) NOT NULL,
-		[PeriodStart] [smalldatetime] NOT NULL,
-		[PeriodEnd] [smalldatetime] NOT NULL,
-		[DeviceDataSourceInstanceId] [int] NOT NULL,
-		[DataPointId] [int] NOT NULL,
-		[Min] [float] NULL,
-		[Max] [float] NULL,
-		[Sum] [float] NOT NULL,
-		[SumSquared] [float] NOT NULL,
-		[DataCount] [int] NOT NULL,
-		[NoDataCount] [int] NOT NULL,
-		CONSTRAINT ' + QUOTENAME(N'PK_' + @TableName) + N' PRIMARY KEY CLUSTERED ( [Id] ASC )
-		WITH ( PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON ) ON[PRIMARY]
-	) ON[PRIMARY]';
-IF NOT EXISTS (SELECT * FROM sysobjects WHERE name=@TableName and xtype='U')
-	EXEC sys.sp_executesql @Sql;";
-
 	private const string DropTableSql = @"
 DECLARE @Sql nvarchar(max) = N'DROP TABLE ' + QUOTENAME(@TableName);
 EXEC sys.sp_executesql @Sql;";
@@ -57,7 +38,24 @@ EXEC sys.sp_executesql @Sql;";
 		ArgumentNullException.ThrowIfNull(sqlConnection);
 
 		var tableName = ValidateTableName(GetTableName(start));
-		using (var command = new SqlCommand(CreateTableSql, sqlConnection))
+		using (var command = new SqlCommand(@"
+DECLARE @Sql nvarchar(max) = N'CREATE TABLE ' + QUOTENAME(@TableName) + N'(
+		[Id][int] IDENTITY(1, 1) NOT NULL,
+		[PeriodStart] [smalldatetime] NOT NULL,
+		[PeriodEnd] [smalldatetime] NOT NULL,
+		[DeviceDataSourceInstanceId] [int] NOT NULL,
+		[DataPointId] [int] NOT NULL,
+		[Min] [float] NULL,
+		[Max] [float] NULL,
+		[Sum] [float] NOT NULL,
+		[SumSquared] [float] NOT NULL,
+		[DataCount] [int] NOT NULL,
+		[NoDataCount] [int] NOT NULL,
+		CONSTRAINT ' + QUOTENAME(N'PK_' + @TableName) + N' PRIMARY KEY CLUSTERED ( [Id] ASC )
+		WITH ( PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON ) ON[PRIMARY]
+	) ON[PRIMARY]';
+IF NOT EXISTS (SELECT * FROM sysobjects WHERE name=@TableName and xtype='U')
+	EXEC sys.sp_executesql @Sql;", sqlConnection))
 		{
 			command.Parameters.AddWithValue("@TableName", tableName);
 			command.CommandTimeout = SqlTimeoutSeconds;
@@ -141,21 +139,15 @@ EXEC sys.sp_executesql @Sql;";
 		if (tablesToRemove.Count > 0)
 		{
 			using var context = new Context(dbContextOptions);
-			using var dbConnection = context.Database.GetDbConnection();
-			using var sqlConnection = new SqlConnection(dbConnection.ConnectionString);
-			await sqlConnection
-				.OpenAsync()
-				.ConfigureAwait(false);
-			using var command = new SqlCommand(string.Empty, sqlConnection);
-			command.CommandTimeout = SqlTimeoutSeconds;
+			context.Database.SetCommandTimeout(SqlTimeoutSeconds);
 			foreach (var tableName in tablesToRemove)
 			{
 				var validatedName = ValidateTableName(tableName);
 				logger.LogInformation("Aging out table {TableName}", validatedName);
-				command.CommandText = DropTableSql;
-				command.Parameters.Clear();
-				_ = command.Parameters.AddWithValue("@TableName", validatedName);
-				await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+				await context
+					.Database
+					.ExecuteSqlRawAsync(DropTableSql, new SqlParameter("@TableName", validatedName))
+					.ConfigureAwait(false);
 			}
 		}
 	}
