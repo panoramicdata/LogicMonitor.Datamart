@@ -12,32 +12,6 @@ public partial class InitialMigration : Migration
 	/// <inheritdoc />
 	protected override void Up(MigrationBuilder migrationBuilder)
 	{
-		UpPart1(migrationBuilder);
-		UpPart2(migrationBuilder);
-		UpPart3(migrationBuilder);
-		UpPart4(migrationBuilder);
-		UpPart5(migrationBuilder);
-		UpPart6(migrationBuilder);
-		UpPart7(migrationBuilder);
-		UpPart8(migrationBuilder);
-		UpPart9(migrationBuilder);
-		UpPart10(migrationBuilder);
-		UpPart11(migrationBuilder);
-		UpPart12(migrationBuilder);
-		UpPart13(migrationBuilder);
-		UpPart14(migrationBuilder);
-		UpPart15(migrationBuilder);
-		UpPart16(migrationBuilder);
-		UpPart17(migrationBuilder);
-		UpPart18(migrationBuilder);
-		UpPart19(migrationBuilder);
-		UpPart20(migrationBuilder);
-		UpPart21(migrationBuilder);
-		UpPart22(migrationBuilder);
-	}
-
-	private static void UpPart1(MigrationBuilder migrationBuilder)
-	{
 		migrationBuilder.CreateTable(
 			name: "CollectorGroups",
 			columns: table => new
@@ -73,10 +47,7 @@ public partial class InitialMigration : Migration
 			{
 				table.PrimaryKey("PK_ConfigSources", x => x.Id);
 			});
-	}
 
-	private static void UpPart2(MigrationBuilder migrationBuilder)
-	{
 		migrationBuilder.CreateTable(
 			name: "DataSources",
 			columns: table => new
@@ -126,10 +97,7 @@ public partial class InitialMigration : Migration
 			{
 				table.PrimaryKey("PK_DataSources", x => x.Id);
 			});
-	}
 
-	private static void UpPart3(MigrationBuilder migrationBuilder)
-	{
 		migrationBuilder.CreateTable(
 			name: "DeviceGroups",
 			columns: table => new
@@ -183,10 +151,7 @@ public partial class InitialMigration : Migration
 			{
 				table.PrimaryKey("PK_DeviceGroups", x => x.Id);
 			});
-	}
 
-	private static void UpPart4(MigrationBuilder migrationBuilder)
-	{
 		migrationBuilder.CreateTable(
 			name: "EscalationChains",
 			columns: table => new
@@ -224,10 +189,7 @@ public partial class InitialMigration : Migration
 			{
 				table.PrimaryKey("PK_EventSources", x => x.Id);
 			});
-	}
 
-	private static void UpPart5(MigrationBuilder migrationBuilder)
-	{
 		migrationBuilder.CreateTable(
 			name: "LogicModuleUpdates",
 			columns: table => new
@@ -261,10 +223,7 @@ public partial class InitialMigration : Migration
 			{
 				table.PrimaryKey("PK_LogicModuleUpdates", x => x.Id);
 			});
-	}
 
-	private static void UpPart6(MigrationBuilder migrationBuilder)
-	{
 		migrationBuilder.CreateTable(
 			name: "LogItems",
 			columns: table => new
@@ -298,10 +257,7 @@ public partial class InitialMigration : Migration
 			{
 				table.PrimaryKey("PK_MonitorObjectGroups", x => x.Id);
 			});
-	}
 
-	private static void UpPart7(MigrationBuilder migrationBuilder)
-	{
 		migrationBuilder.CreateTable(
 			name: "WebsiteGroups",
 			columns: table => new
@@ -332,10 +288,7 @@ public partial class InitialMigration : Migration
 			{
 				table.PrimaryKey("PK_WebsiteGroups", x => x.Id);
 			});
-	}
 
-	private static void UpPart8(MigrationBuilder migrationBuilder)
-	{
 		migrationBuilder.CreateTable(
 			name: "Collectors",
 			columns: table => new
@@ -420,10 +373,7 @@ public partial class InitialMigration : Migration
 					principalColumn: "Id",
 					onDelete: ReferentialAction.Restrict);
 			});
-	}
 
-	private static void UpPart9(MigrationBuilder migrationBuilder)
-	{
 		migrationBuilder.CreateTable(
 			name: "DataSourceDataPoints",
 			columns: table => new
@@ -463,10 +413,7 @@ public partial class InitialMigration : Migration
 					principalColumn: "Id",
 					onDelete: ReferentialAction.Cascade);
 			});
-	}
 
-	private static void UpPart10(MigrationBuilder migrationBuilder)
-	{
 		migrationBuilder.CreateTable(
 			name: "AlertRules",
 			columns: table => new
@@ -498,10 +445,7 @@ public partial class InitialMigration : Migration
 					principalColumn: "Id",
 					onDelete: ReferentialAction.Cascade);
 			});
-	}
 
-	private static void UpPart11(MigrationBuilder migrationBuilder)
-	{
 		migrationBuilder.CreateTable(
 			name: "Websites",
 			columns: table => new
@@ -557,10 +501,7 @@ public partial class InitialMigration : Migration
 					principalColumn: "Id",
 					onDelete: ReferentialAction.Restrict);
 			});
-	}
 
-	private static void UpPart12(MigrationBuilder migrationBuilder)
-	{
 		migrationBuilder.CreateTable(
 			name: "Devices",
 			columns: table => new
@@ -643,10 +584,7 @@ public partial class InitialMigration : Migration
 					principalTable: "Collectors",
 					principalColumn: "Id");
 			});
-	}
 
-	private static void UpPart13(MigrationBuilder migrationBuilder)
-	{
 		migrationBuilder.CreateTable(
 			name: "Alerts",
 			columns: table => new
@@ -786,10 +724,7 @@ public partial class InitialMigration : Migration
 					principalColumn: "Id",
 					onDelete: ReferentialAction.Restrict);
 			});
-	}
 
-	private static void UpPart14(MigrationBuilder migrationBuilder)
-	{
 		migrationBuilder.CreateTable(
 			name: "DeviceDataSources",
 			columns: table => new
@@ -821,10 +756,7 @@ public partial class InitialMigration : Migration
 					principalColumn: "Id",
 					onDelete: ReferentialAction.Restrict);
 			});
-	}
 
-	private static void UpPart15(MigrationBuilder migrationBuilder)
-	{
 		migrationBuilder.CreateTable(
 			name: "DeviceDataSourceInstances",
 			columns: table => new
@@ -874,10 +806,7 @@ public partial class InitialMigration : Migration
 					principalColumn: "Id",
 					onDelete: ReferentialAction.Restrict);
 			});
-	}
 
-	private static void UpPart16(MigrationBuilder migrationBuilder)
-	{
 		migrationBuilder.CreateTable(
 			name: "DeviceDataSourceInstanceDataPoints",
 			columns: table => new
@@ -923,10 +852,7 @@ public partial class InitialMigration : Migration
 					principalColumn: "Id",
 					onDelete: ReferentialAction.Cascade);
 			});
-	}
 
-	private static void UpPart17(MigrationBuilder migrationBuilder)
-	{
 		migrationBuilder.CreateTable(
 			name: "TimeSeriesDataAggregations",
 			columns: table => new
@@ -968,10 +894,7 @@ public partial class InitialMigration : Migration
 					principalColumn: "Id",
 					onDelete: ReferentialAction.Cascade);
 			});
-	}
 
-	private static void UpPart18(MigrationBuilder migrationBuilder)
-	{
 		migrationBuilder.CreateIndex(
 			name: "IX_AlertRules_EscalationChainId",
 			table: "AlertRules",
@@ -1017,10 +940,7 @@ public partial class InitialMigration : Migration
 			name: "IX_Alerts_InstanceName",
 			table: "Alerts",
 			column: "InstanceName");
-	}
 
-	private static void UpPart19(MigrationBuilder migrationBuilder)
-	{
 		migrationBuilder.CreateIndex(
 			name: "IX_Alerts_InternalId",
 			table: "Alerts",
@@ -1065,10 +985,7 @@ public partial class InitialMigration : Migration
 			name: "IX_Alerts_MonitorObjectGroup6Id",
 			table: "Alerts",
 			column: "MonitorObjectGroup6Id");
-	}
 
-	private static void UpPart20(MigrationBuilder migrationBuilder)
-	{
 		migrationBuilder.CreateIndex(
 			name: "IX_Alerts_MonitorObjectGroup7Id",
 			table: "Alerts",
@@ -1113,10 +1030,7 @@ public partial class InitialMigration : Migration
 			name: "IX_Alerts_ResourceTemplateName",
 			table: "Alerts",
 			column: "ResourceTemplateName");
-	}
 
-	private static void UpPart21(MigrationBuilder migrationBuilder)
-	{
 		migrationBuilder.CreateIndex(
 			name: "IX_Alerts_ResourceTemplateType",
 			table: "Alerts",
@@ -1161,10 +1075,7 @@ public partial class InitialMigration : Migration
 			name: "IX_DeviceDataSourceInstances_DeviceDataSourceId",
 			table: "DeviceDataSourceInstances",
 			column: "DeviceDataSourceId");
-	}
 
-	private static void UpPart22(MigrationBuilder migrationBuilder)
-	{
 		migrationBuilder.CreateIndex(
 			name: "IX_DeviceDataSourceInstances_LastWentMissing",
 			table: "DeviceDataSourceInstances",
