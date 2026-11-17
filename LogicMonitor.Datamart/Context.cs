@@ -156,6 +156,15 @@ public class Context : DbContext
 	/// <inheritdoc />
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
+		ConfigureAlertSingleColumnIndexes(modelBuilder);
+		ConfigureAlertCoveringIndex(modelBuilder);
+		ConfigureDimensionRelationships(modelBuilder);
+		ConfigureAlertGroupRelationships(modelBuilder);
+		ConfigureOtherRelationships(modelBuilder);
+	}
+
+	private static void ConfigureAlertSingleColumnIndexes(ModelBuilder modelBuilder)
+	{
 		// MonitorObjectGroup indexes
 		var monitorObjectGroups = modelBuilder.Entity<MonitorObjectGroupStoreItem>();
 		monitorObjectGroups.HasIndex(g => new { g.FullPath, g.MonitoredObjectType });
@@ -189,7 +198,11 @@ public class Context : DbContext
 		alerts.HasIndex(a => a.ResourceTemplateType);
 		alerts.HasIndex(a => a.StartOnSeconds);
 		alerts.HasIndex(a => a.EndOnSeconds);
+	}
 
+	private void ConfigureAlertCoveringIndex(ModelBuilder modelBuilder)
+	{
+		var alerts = modelBuilder.Entity<AlertStoreItem>();
 		var alertIndexBuilder = alerts
 			.HasIndex(a => new
 			{
@@ -236,7 +249,10 @@ public class Context : DbContext
 				)
 			.HasDatabaseName($"IX_{nameof(Alerts)}_FasterPercentageAvailability");
 		}
+	}
 
+	private static void ConfigureDimensionRelationships(ModelBuilder modelBuilder)
+	{
 		modelBuilder.Entity<AlertStoreItem>()
 			.HasOne(a => a.AlertRule)
 			.WithMany(ar => ar.AlertStoreItems)
@@ -275,6 +291,10 @@ public class Context : DbContext
 			.WithMany(d => d.DeviceDataSources)
 			.OnDelete(DeleteBehavior.Restrict);
 
+	}
+
+	private static void ConfigureAlertGroupRelationships(ModelBuilder modelBuilder)
+	{
 		modelBuilder.Entity<AlertStoreItem>()
 			.HasOne(a => a.MonitorObjectGroup0)
 			.WithMany(mog => mog.AlertsFromGroup0)
@@ -315,7 +335,10 @@ public class Context : DbContext
 			.HasOne(a => a.MonitorObjectGroup9)
 			.WithMany(mog => mog.AlertsFromGroup9)
 			.OnDelete(DeleteBehavior.Restrict);
+	}
 
+	private static void ConfigureOtherRelationships(ModelBuilder modelBuilder)
+	{
 		modelBuilder.Entity<CollectorStoreItem>()
 			.HasOne(c => c.CollectorGroup)
 			.WithMany(cg => cg.Collectors)
