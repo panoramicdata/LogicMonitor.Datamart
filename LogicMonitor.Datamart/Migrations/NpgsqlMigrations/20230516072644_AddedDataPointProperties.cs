@@ -8,6 +8,12 @@ public partial class AddedDataPointProperties : Migration
 	/// <inheritdoc />
 	protected override void Up(MigrationBuilder migrationBuilder)
 	{
+		UpPart1(migrationBuilder);
+		UpPart2(migrationBuilder);
+	}
+
+	private static void UpPart1(MigrationBuilder migrationBuilder)
+	{
 		migrationBuilder.AddColumn<string>(
 			name: "Property1",
 			table: "DataSourceDataPoints",
@@ -49,7 +55,10 @@ public partial class AddedDataPointProperties : Migration
 			type: "text",
 			nullable: false,
 			defaultValue: "");
+	}
 
+	private static void UpPart2(MigrationBuilder migrationBuilder)
+	{
 		migrationBuilder.AddColumn<string>(
 			name: "Property6",
 			table: "DataSourceDataPoints",

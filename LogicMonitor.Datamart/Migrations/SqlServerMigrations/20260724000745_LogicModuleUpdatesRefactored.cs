@@ -10,6 +10,18 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            UpPart1(migrationBuilder);
+            UpPart2(migrationBuilder);
+            UpPart3(migrationBuilder);
+            UpPart4(migrationBuilder);
+            UpPart5(migrationBuilder);
+            UpPart6(migrationBuilder);
+            UpPart7(migrationBuilder);
+            UpPart8(migrationBuilder);
+        }
+
+        private static void UpPart1(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.DropColumn(
                 name: "AppliesTo",
                 table: "LogicModuleUpdates");
@@ -58,7 +70,10 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
                 name: "PublishedAtMilliseconds",
                 table: "LogicModuleUpdates",
                 newName: "UpdatedAtMs");
+        }
 
+        private static void UpPart2(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.RenameColumn(
                 name: "LocalVersion",
                 table: "LogicModuleUpdates",
@@ -92,7 +107,10 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
                 oldClrType: typeof(string),
                 oldType: "nvarchar(20)",
                 oldMaxLength: 20);
+        }
 
+        private static void UpPart3(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AlterColumn<string>(
                 name: "Group",
                 table: "LogicModuleUpdates",
@@ -129,7 +147,10 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
                 maxLength: 200,
                 nullable: false,
                 defaultValue: "");
+        }
 
+        private static void UpPart4(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AddColumn<string>(
                 name: "ExchangeId",
                 table: "LogicModuleUpdates",
@@ -172,7 +193,10 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
                 type: "bit",
                 nullable: false,
                 defaultValue: false);
+        }
 
+        private static void UpPart5(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AddColumn<bool>(
                 name: "IsInstalled",
                 table: "LogicModuleUpdates",
@@ -211,7 +235,10 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
                 maxLength: 200,
                 nullable: false,
                 defaultValue: "");
+        }
 
+        private static void UpPart6(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AddColumn<string>(
                 name: "OriginRegistryId",
                 table: "LogicModuleUpdates",
@@ -251,7 +278,10 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
                 maxLength: 200,
                 nullable: false,
                 defaultValue: "");
+        }
 
+        private static void UpPart7(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AddColumn<string>(
                 name: "UpgradeableRegistryId",
                 table: "LogicModuleUpdates",
@@ -293,7 +323,10 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
                 table: "EventSources",
                 type: "bit",
                 nullable: true);
+        }
 
+        private static void UpPart8(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AddColumn<string>(
                 name: "Version",
                 table: "EventSources",
@@ -316,6 +349,16 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            DownPart1(migrationBuilder);
+            DownPart2(migrationBuilder);
+            DownPart3(migrationBuilder);
+            DownPart4(migrationBuilder);
+            DownPart5(migrationBuilder);
+            DownPart6(migrationBuilder);
+        }
+
+        private static void DownPart1(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
                 name: "AuthorPortalName",
@@ -364,7 +407,10 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
             migrationBuilder.DropColumn(
                 name: "OriginLocator",
                 table: "LogicModuleUpdates");
+        }
 
+        private static void DownPart2(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.DropColumn(
                 name: "OriginName",
                 table: "LogicModuleUpdates");
@@ -412,7 +458,10 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
             migrationBuilder.DropColumn(
                 name: "IsInUse",
                 table: "EventSources");
+        }
 
+        private static void DownPart3(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.DropColumn(
                 name: "Version",
                 table: "EventSources");
@@ -453,7 +502,10 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
                 oldClrType: typeof(string),
                 oldType: "nvarchar(50)",
                 oldMaxLength: 50);
+        }
 
+        private static void DownPart4(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AlterColumn<string>(
                 name: "Locator",
                 table: "LogicModuleUpdates",
@@ -492,7 +544,10 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
                 maxLength: 1000,
                 nullable: false,
                 defaultValue: "");
+        }
 
+        private static void DownPart5(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AddColumn<long>(
                 name: "AuditVersion",
                 table: "LogicModuleUpdates",
@@ -530,7 +585,10 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
                 type: "int",
                 nullable: false,
                 defaultValue: 0);
+        }
 
+        private static void DownPart6(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AddColumn<string>(
                 name: "Namespace",
                 table: "LogicModuleUpdates",
