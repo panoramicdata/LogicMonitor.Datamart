@@ -29,8 +29,6 @@ public abstract class TestWithOutput
 	/// </summary>
 	protected static readonly Configuration Configuration = new()
 	{
-		//AggregationReset = true,
-		//ExcludeSdtPeriods = true,	// To test MS-22557
 		Name = "Test",
 		// MS-22557: Use a historical start date to ensure there are completed months to aggregate
 		// This allows testing the new ExcludingSdt columns with actual data
@@ -59,7 +57,6 @@ public abstract class TestWithOutput
 		[
 			new DataSourceConfigurationItem
 			{
-				//AppliesTo = "system.displayname == \"BON-APP-CHESS-03\"",
 				Name = "WinCPU",
 				DataPoints =
 				[
@@ -76,67 +73,13 @@ public abstract class TestWithOutput
 					}
 				]
 			},
-			//new DataSourceConfigurationItem{
-			//	Name = "SNMP_Network_Interfaces",
-			//	InstanceInclusionExpression = "Description != ''",
-			//	DataPoints = new List<DataPointConfigurationItem>
-			//	{
-			//		new DataPointConfigurationItem
-			//			{
-			//				Name = "InMbps",
-			//				MeasurementUnit = "MBps",
-			//			},
-			//		new DataPointConfigurationItem
-			//			{
-			//				Name = "OutMbps",
-			//				MeasurementUnit = "MBps",
-			//			},
-			//		new DataPointConfigurationItem
-			//			{
-			//				Name = "OutGbps",
-			//				Calculation = "OutMbps / 1024",
-			//				GlobalAlertExpression = "> 1 2 3",
-			//				MeasurementUnit = "GBps",
-			//				Tags = "Calculated",
-			//				Property1 = "Value1",
-			//				Property2 = "Value2",
-			//				Property3 = "Value3",
-			//				Property4 = "Value4",
-			//				Property5 = "Value5",
-			//				Property6 = "Value6",
-			//				Property7 = "Value7",
-			//				Property8 = "Value8",
-			//				Property9 = "Value9",
-			//				Property10 = "Value10",
-			//				Description = "We calculate the Outbound bandwidth in Gbps as: OutMbps / 1024",
-			//			}
-			//	},
-			//},
-			//new DataSourceConfigurationItem{
-			//	Name = "Non_Existent",
-			//	DataPoints =
-			//	[
-			//		new DataPointConfigurationItem
-			//		{
-			//			Name = "Blah",
-			//			MeasurementUnit = "Grains",
-			//		},
-			//		new DataPointConfigurationItem
-			//		{
-			//			Name = "Foo",
-			//			MeasurementUnit = "Chains",
-			//		}
-			//	]
-			//},
 			new DataSourceConfigurationItem
 			{
-				//AppliesTo = "system.displayname == \"BON-APP-CHESS-03\"",
 				Name = "HostStatus",
 				DataPoints =
 				[
 					new DataPointConfigurationItem
 					{
-						//Condition = "isSet('xxx')",
 						Name = "idleInterval",
 						MeasurementUnit = "Seconds",
 					}
@@ -144,7 +87,6 @@ public abstract class TestWithOutput
 			},
 			new DataSourceConfigurationItem
 			{
-				//AppliesTo = "system.displayname == \"BON-APP-CHESS-03\"",
 				Name = "SNMP_Host_Uptime",
 				DataPoints =
 				[
@@ -158,7 +100,6 @@ public abstract class TestWithOutput
 			},
 			new DataSourceConfigurationItem
 			{
-				//AppliesTo = "system.displayname == \"BON-APP-CHESS-03\"",
 				Name = "WinSystemUptime",
 				DataPoints =
 				[

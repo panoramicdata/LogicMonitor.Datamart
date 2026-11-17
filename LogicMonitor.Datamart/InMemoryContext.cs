@@ -8,7 +8,7 @@ public class InMemoryContext : Context
 	/// <summary>
 	/// Initializes a new instance of the <see cref="InMemoryContext"/> class.
 	/// </summary>
-	public InMemoryContext() : base()
+	public InMemoryContext()
 	{
 	}
 

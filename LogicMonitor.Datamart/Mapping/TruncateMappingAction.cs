@@ -6,7 +6,6 @@ internal class TruncateMappingAction<TSource, TDestination> : IMappingAction<TSo
 	{
 		// Loop over all the destination properties and truncate any strings if required
 		var destType = typeof(TDestination);
-		var sourceType = typeof(TSource);
 
 		foreach (var property in destType.GetProperties())
 		{

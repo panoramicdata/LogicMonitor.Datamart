@@ -33,5 +33,8 @@ FROM base AS final
 WORKDIR /app
 COPY --from=build /app/publish .
 
+# Run as the non-root user built into the aspnet image
+USER $APP_UID
+
 # Set the entrypoint for the application
 ENTRYPOINT ["dotnet", "LogicMonitor.Datamart.Cli.dll"]

@@ -205,14 +205,14 @@ public static class DbSetExtension
 					websiteStoreItem.WebsiteGroupId = websiteGroupStoreItem.Id;
 					return;
 				}
-			case (CollectorGroup collectorGroup, CollectorGroupStoreItem collectorGroupStoreItem2):
-			case (ConfigSource configSource, ConfigSourceStoreItem configSourceStoreItem):
-			case (DataSource dataSource, DataSourceStoreItem dataSourceStoreItem):
-			case (ResourceGroup deviceGroup, ResourceGroupStoreItem deviceGroupStoreItem):
-			case (EscalationChain escalationChain, EscalationChainStoreItem escalationChainStoreItem):
-			case (EventSource eventSource, EventSourceStoreItem eventSourceStoreItem):
-			case (WebsiteGroup websiteGroup, WebsiteGroupStoreItem websiteGroupStoreItem2):
-			case (Integration integration, IntegrationStoreItem integrationStoreItem):
+			case (CollectorGroup, CollectorGroupStoreItem):
+			case (ConfigSource, ConfigSourceStoreItem):
+			case (DataSource, DataSourceStoreItem):
+			case (ResourceGroup, ResourceGroupStoreItem):
+			case (EscalationChain, EscalationChainStoreItem):
+			case (EventSource, EventSourceStoreItem):
+			case (WebsiteGroup, WebsiteGroupStoreItem):
+			case (Integration, IntegrationStoreItem):
 				return;
 			default:
 				throw new NotSupportedException($"Unsupported TApi/TStore combination: {typeof(TApi).Name}/{typeof(TStore).Name}");

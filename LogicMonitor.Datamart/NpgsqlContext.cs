@@ -10,7 +10,7 @@ public class NpgsqlContext : Context
 	/// <summary>
 	/// Initializes a new instance of the <see cref="NpgsqlContext"/> class.
 	/// </summary>
-	public NpgsqlContext() : base()
+	public NpgsqlContext()
 	{
 	}
 

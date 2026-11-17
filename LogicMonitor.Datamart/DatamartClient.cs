@@ -28,7 +28,7 @@ public class DatamartClient : LogicMonitorClient
 
 	private static readonly MapperConfiguration _mapperConfig = new(cfg => cfg.AddMaps(typeof(DatamartClient).Assembly));
 
-	internal static IMapper MapperInstance = new Mapper(_mapperConfig);
+	internal static readonly IMapper MapperInstance = new Mapper(_mapperConfig);
 
 	private readonly TimeProviderService _timeProviderService = new();
 
@@ -507,7 +507,7 @@ public class DatamartClient : LogicMonitorClient
 			var added = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Added);
 			var modified = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Modified);
 			var total = context.ChangeTracker.Entries().Count();
-			var affectedRowCount = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+			_ = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 			logger.LogInformation(
 				"{TypeName}: Total {Total}; Added {Added}; Modified {Modified}.",
 				typeof(TApi).Name,
@@ -622,7 +622,7 @@ public class DatamartClient : LogicMonitorClient
 			var added = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Added);
 			var modified = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Modified);
 			var total = context.ChangeTracker.Entries().Count();
-			var affectedRowCount = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+			_ = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 			logger.LogInformation(
 				"{TypeName}: Total {Total}; Added {Added}; Modified {Modified}.",
 				nameof(LogicModuleUpdateStoreItem),
@@ -962,7 +962,7 @@ public class DatamartClient : LogicMonitorClient
 						dataSourceName,
 						configDataPoint.Name);
 
-					var dataSourceDataPointStoreItem = context.DataSourceDataPoints.Add(new DataSourceDataPointStoreItem
+					_ = context.DataSourceDataPoints.Add(new DataSourceDataPointStoreItem
 					{
 						DataSource = databaseDataSource,
 						Name = configDataPoint.Name,
@@ -1475,7 +1475,7 @@ public class DatamartClient : LogicMonitorClient
 			var added = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Added);
 			var modified = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Modified);
 			var total = context.ChangeTracker.Entries().Count();
-			var rowsAffected = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+			_ = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
 			logger.LogInformation(
 				"Sync completed for {LogicModuleName}; Total {Total}; Added {Added}; Modified {Modified} ({MarkedMissing:N0} MarkedMissing).",
@@ -2040,7 +2040,7 @@ public class DatamartClient : LogicMonitorClient
 		var mostRecentFilter = new Filter<ResourceDataSourceInstanceConfig>
 		{
 			Take = 1,
-			Order = new Order<ResourceDataSourceInstanceConfig>()
+			Order = new Order<ResourceDataSourceInstanceConfig>
 			{
 				Property = nameof(ResourceDataSourceInstanceConfig.PollTimestampUtc),
 				Direction = OrderDirection.Desc
@@ -2145,7 +2145,7 @@ public class DatamartClient : LogicMonitorClient
 				break;
 			case DateTimeOffset oldestDateTimeOffset:
 				// Remove all configs older than the oldestDateTimeOffset
-				var configIdsToDelete = await context
+				_ = await context
 					.DeviceConfigSourceInstanceConfigs
 					.Where(ddsic =>
 						// Must be for this instance

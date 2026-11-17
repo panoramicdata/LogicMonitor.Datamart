@@ -16,8 +16,6 @@ internal class LogSync(
 		long timeCursor;
 		const int pageSize = 300;
 
-		var stopwatch = new Stopwatch();
-
 		long mostRecentTimestamp;
 
 		// Get the latest timestamp from the database
@@ -34,8 +32,6 @@ internal class LogSync(
 
 		// Only go as far back as the configured StartDateTimeUtc
 		timeCursor = Math.Max(mostRecentTimestamp, startDateTimeUtc.ToUnixTimeSeconds());
-		var initialTimeCursor = timeCursor;
-		var timeCursorLastTime = timeCursor;
 		var totalLogEntriesStored = 0;
 		while (timeCursor <= nowSecondsSinceEpoch)
 		{
@@ -85,8 +81,6 @@ internal class LogSync(
 			Logger.LogDebug(
 				"Processing log items for {DatamartClientAccountName}",
 				datamartClient.AccountName);
-			var dataProcessingStopwatch = Stopwatch.StartNew();
-			var sqlSave = new Stopwatch();
 
 			// The raw record
 			context.LogItems.AddRange(apiEntriesThisTime.Select(DatamartClient.MapperInstance.Map<LogItem, LogStoreItem>));
