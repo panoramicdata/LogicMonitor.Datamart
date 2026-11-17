@@ -264,10 +264,9 @@ public class DatamartClient : LogicMonitorClient
 		var deviceStoreItem = await context
 			.Devices
 			.SingleOrDefaultAsync(i => i.LogicMonitorId == id, cancellationToken)
-			.ConfigureAwait(false);
-		var result = deviceStoreItem == null
-			? throw new KeyNotFoundException($"Device with id {id} not found")
-			: MapperInstance.Map<ResourceStoreItem, Resource>(deviceStoreItem) as TApi;
+			.ConfigureAwait(false)
+			?? throw new KeyNotFoundException($"Device with id {id} not found");
+		var result = MapperInstance.Map<ResourceStoreItem, Resource>(deviceStoreItem) as TApi;
 
 		return result ?? throw new InvalidOperationException($"Could not convert {nameof(ResourceStoreItem)} to {nameof(Resource)}");
 	}
