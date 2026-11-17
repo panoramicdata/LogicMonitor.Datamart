@@ -12,8 +12,6 @@ public class AlertTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iT
 	[Fact]
 	public async Task UpdateDevices()
 	{
-		var utcNow = DateTime.UtcNow;
-
 		await DatamartClient
 			.AddOrUpdate<Resource, ResourceStoreItem>(
 				context => context.Devices,

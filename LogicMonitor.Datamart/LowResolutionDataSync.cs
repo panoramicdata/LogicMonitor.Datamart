@@ -477,7 +477,7 @@ internal class LowResolutionDataSync(
 		var index = n / 100.0 * (values.Length - 1);
 
 		// check if the index is an integer
-		if (index % 1 == 0)
+		if (Math.Abs(index % 1) < double.Epsilon)
 		{
 			// if the index is an integer, return the corresponding value
 			return values[(int)index];
@@ -1566,7 +1566,7 @@ internal class LowResolutionDataSync(
 			databaseDeviceDataSourceInstanceDataPoint.DataCompleteTo = null;
 
 			// Remove any related aggregations
-			var aggregationStoreItemsToRemove = await context
+			_ = await context
 				.TimeSeriesDataAggregations
 				.Where(tsda => tsda.DeviceDataSourceInstanceDataPointId == databaseDeviceDataSourceInstanceDataPoint.Id)
 				.ExecuteDeleteAsync(cancellationToken)
@@ -1601,7 +1601,6 @@ internal class LowResolutionDataSync(
 
 		var reversedValues = values.ToArray();
 		Array.Reverse(reversedValues);
-		//var previousButOneDoubleValue = double.NaN;
 		var previousDoubleValue = double.NaN;
 		var upTimeCount = 0;
 		var downTimeCount = 0;
@@ -1620,10 +1619,6 @@ internal class LowResolutionDataSync(
 			}
 			else
 			{
-				//double projectedValue = !double.IsNaN(previousDoubleValue) && !double.IsNaN(previousButOneDoubleValue)
-				//	? previousDoubleValue + (previousDoubleValue - previousButOneDoubleValue)
-				//	: double.NaN;
-
 				if (
 					double.IsNaN(previousDoubleValue)
 					|| previousDoubleValue < DeviceDownTimeWindowSeconds
@@ -1646,16 +1641,13 @@ internal class LowResolutionDataSync(
 			}
 		}
 
-		// This should be a double, var would incorrectly infer int
-		double totalCount = upTimeCount + downTimeCount;
-
-		if (totalCount == 0)
+		if (upTimeCount + downTimeCount == 0)
 		{
 			// If there aren't any values, return null.
 			return null;
 		}
 
-		return 100 * upTimeCount / totalCount;
+		return 100d * upTimeCount / (upTimeCount + downTimeCount);
 	}
 
 	// MS-21394 DataMagic: PercentUpTime availability calculation should calculate downtime based on up-time after no data
@@ -1748,7 +1740,7 @@ internal class LowResolutionDataSync(
 			return 100;
 		}
 
-		return 100 * upTimeCount / totalCount;
+		return 100d * upTimeCount / (upTimeCount + downTimeCount);
 	}
 
 	/// <summary>

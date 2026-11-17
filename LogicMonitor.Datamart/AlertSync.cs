@@ -431,6 +431,10 @@ internal class AlertSync(
 		"FasterPercentageAvailability"
 	];
 
+	private const string RebuildIndexSql = "DECLARE @Sql nvarchar(max) = N'ALTER INDEX ' + QUOTENAME(@IndexName) + N' ON [Alerts] REBUILD'; EXEC sys.sp_executesql @Sql;";
+
+	private const string DisableIndexSql = "DECLARE @Sql nvarchar(max) = N'ALTER INDEX ' + QUOTENAME(@IndexName) + N' ON [Alerts] DISABLE'; EXEC sys.sp_executesql @Sql;";
+
 	private async Task AlterIndexes(Context context, bool enabled)
 	{
 		var stopwatch = Stopwatch.StartNew();
@@ -438,10 +442,9 @@ internal class AlertSync(
 		Logger.LogDebug("Alert index {IndexAction}...", indexAction);
 		foreach (var column in _validIndexColumns)
 		{
-			var sql = $"ALTER INDEX [IX_Alerts_{column}] ON [Alerts] {indexAction}";
 			await context
 			  .Database
-			  .ExecuteSqlRawAsync(sql)
+			  .ExecuteSqlRawAsync(enabled ? RebuildIndexSql : DisableIndexSql, new SqlParameter("@IndexName", $"IX_Alerts_{column}"))
 			  .ConfigureAwait(false);
 		}
 

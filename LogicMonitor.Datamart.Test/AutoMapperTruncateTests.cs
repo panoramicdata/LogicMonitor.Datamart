@@ -12,7 +12,7 @@ public class AutoMapperTruncateTests(ITestOutputHelper iTestOutputHelper) : Test
 	[Fact]
 	public void ResolveAndTruncate_LongValue_TruncatedValue()
 	{
-		var source = new Alert()
+		var source = new Alert
 		{
 			Id = "111111111122222222223333333333444444444455555555556666666666",
 			AckedBy = "111111111122222222223333333333444444444455555555556666666666",

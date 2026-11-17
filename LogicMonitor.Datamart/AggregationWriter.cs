@@ -5,10 +5,32 @@ namespace LogicMonitor.Datamart;
 
 internal static partial class AggregationWriter
 {
-	internal static string TableNamePrefix = "DeviceDataSourceInstanceAggregatedData";
+	internal const string TableNamePrefix = "DeviceDataSourceInstanceAggregatedData";
 
-	internal static int SqlTimeoutSeconds = 100;
+	internal const int SqlTimeoutSeconds = 100;
 
+	private const string CreateTableSql = @"
+DECLARE @Sql nvarchar(max) = N'CREATE TABLE ' + QUOTENAME(@TableName) + N'(
+		[Id][int] IDENTITY(1, 1) NOT NULL,
+		[PeriodStart] [smalldatetime] NOT NULL,
+		[PeriodEnd] [smalldatetime] NOT NULL,
+		[DeviceDataSourceInstanceId] [int] NOT NULL,
+		[DataPointId] [int] NOT NULL,
+		[Min] [float] NULL,
+		[Max] [float] NULL,
+		[Sum] [float] NOT NULL,
+		[SumSquared] [float] NOT NULL,
+		[DataCount] [int] NOT NULL,
+		[NoDataCount] [int] NOT NULL,
+		CONSTRAINT ' + QUOTENAME(N'PK_' + @TableName) + N' PRIMARY KEY CLUSTERED ( [Id] ASC )
+		WITH ( PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON ) ON[PRIMARY]
+	) ON[PRIMARY]';
+IF NOT EXISTS (SELECT * FROM sysobjects WHERE name=@TableName and xtype='U')
+	EXEC sys.sp_executesql @Sql;";
+
+	private const string DropTableSql = @"
+DECLARE @Sql nvarchar(max) = N'DROP TABLE ' + QUOTENAME(@TableName);
+EXEC sys.sp_executesql @Sql;";
 	[GeneratedRegex(@"^DeviceDataSourceInstanceAggregatedData_\d{8}$")]
 	private static partial Regex SafeTableNameRegex();
 
@@ -35,25 +57,7 @@ internal static partial class AggregationWriter
 		ArgumentNullException.ThrowIfNull(sqlConnection);
 
 		var tableName = ValidateTableName(GetTableName(start));
-		var tableCreationSql = @$"
-IF NOT EXISTS (SELECT * FROM sysobjects WHERE name=@TableName and xtype='U')
-	CREATE TABLE [{tableName}](
-		[Id][int] IDENTITY(1, 1) NOT NULL,
-		[PeriodStart] [smalldatetime] NOT NULL,
-		[PeriodEnd] [smalldatetime] NOT NULL,
-		[DeviceDataSourceInstanceId] [int] NOT NULL,
-		[DataPointId] [int] NOT NULL,
-		[Min] [float] NULL,
-		[Max] [float] NULL,
-		[Sum] [float] NOT NULL,
-		[SumSquared] [float] NOT NULL,
-		[DataCount] [int] NOT NULL,
-		[NoDataCount] [int] NOT NULL,
-		CONSTRAINT[PK_{tableName}] PRIMARY KEY CLUSTERED ( [Id] ASC )
-		WITH ( PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON ) ON[PRIMARY]
-	) ON[PRIMARY]";
-
-		using (var command = new SqlCommand(tableCreationSql, sqlConnection))
+		using (var command = new SqlCommand(CreateTableSql, sqlConnection))
 		{
 			command.Parameters.AddWithValue("@TableName", tableName);
 			command.CommandTimeout = SqlTimeoutSeconds;
@@ -78,12 +82,10 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name=@TableName and xtype='U')
 		using var dbContext = new Context(dbContextOptions);
 		var tableName = ValidateTableName(GetTableName(start));
 		logger.LogDebug("Dropping table {TableName}", tableName);
-#pragma warning disable EF1003 // Table name is validated against a safe regex pattern
 		await dbContext
 			.Database
-			.ExecuteSqlRawAsync("DROP TABLE [" + tableName + "]")
+			.ExecuteSqlRawAsync(DropTableSql, new SqlParameter("@TableName", tableName))
 			.ConfigureAwait(false);
-#pragma warning restore EF1003
 	}
 
 	/// <summary>
@@ -150,7 +152,9 @@ IF NOT EXISTS (SELECT * FROM sysobjects WHERE name=@TableName and xtype='U')
 			{
 				var validatedName = ValidateTableName(tableName);
 				logger.LogInformation("Aging out table {TableName}", validatedName);
-				command.CommandText = $"DROP TABLE [{validatedName}]";
+				command.CommandText = DropTableSql;
+				command.Parameters.Clear();
+				_ = command.Parameters.AddWithValue("@TableName", validatedName);
 				await command.ExecuteNonQueryAsync().ConfigureAwait(false);
 			}
 		}

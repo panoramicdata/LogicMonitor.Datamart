@@ -10,7 +10,7 @@ public class SqlServerContext : Context
 	/// <summary>
 	/// Initializes a new instance of the <see cref="SqlServerContext"/> class.
 	/// </summary>
-	public SqlServerContext() : base()
+	public SqlServerContext()
 	{
 	}
 
