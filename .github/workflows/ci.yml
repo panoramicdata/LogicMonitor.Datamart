@@ -98,7 +98,8 @@ jobs:
     # and filtered out here.
     #
     # The tests run on xunit v3 under Microsoft.Testing.Platform (global.json), so coverage comes from
-    # Microsoft.Testing.Extensions.CodeCoverage, which writes Cobertura to the path given.
+    # Microsoft.Testing.Extensions.CodeCoverage, which writes Cobertura to the path given. The settings file keeps generated
+    # EF Core migrations and model snapshots out of the figure.
     - name: Run tests with coverage
       run: >-
         dotnet test LogicMonitor.Datamart.Test/LogicMonitor.Datamart.Test.csproj
@@ -107,6 +108,7 @@ jobs:
         --coverage
         --coverage-output-format cobertura
         --coverage-output "$GITHUB_WORKSPACE/TestResults/coverage.cobertura.xml"
+        --coverage-settings "$GITHUB_WORKSPACE/LogicMonitor.Datamart.Test/coverage.settings.xml"
     # continue-on-error: a Codacy outage must not turn a passing test run red. The trade-off is that
     # an expired project token fails silently, so check the log for "Coverage received successfully".
     - name: Upload coverage to Codacy
