@@ -10,112 +10,34 @@ public class WebsiteProfile : Profile
 	/// </summary>
 	public WebsiteProfile()
 	{
+		CreateWebsiteToWebsiteStoreItemMap();
+		CreateWebsiteStoreItemToWebsiteMap();
+	}
+
+	private void CreateWebsiteToWebsiteStoreItemMap()
+	{
 		CreateMap<Website, WebsiteStoreItem>()
-			.ForMember(
-				dest => dest.Id,
-				opts => opts.Ignore())
+			.IgnoreMembers(
+				dest => dest.Id, dest => dest.DatamartCreated, dest => dest.DatamartLastModified, dest => dest.DatamartLastObserved,
+				dest => dest.WebsiteGroup, dest => dest.HostName, dest => dest.IsAlertingDisabled, dest => dest.WebsiteMethod,
+				dest => dest.PageLoadAlertTimeInMs, dest => dest.PercentPacketsNotReceiveInTime, dest => dest.PacketsNotReceivedTimeoutMs, dest => dest.Schema,
+				dest => dest.Script, dest => dest.WebsiteGroupId, dest => dest.StopMonitoringByWebsiteGroup)
 			.ForMember(
 				dest => dest.LogicMonitorId,
-				opts => opts.MapFrom(src => src.Id))
-				.ForMember(
-				dest => dest.DatamartCreated,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartLastModified,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartLastObserved,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.WebsiteGroup,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.HostName,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.IsAlertingDisabled,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.WebsiteMethod,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.PageLoadAlertTimeInMs,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.PercentPacketsNotReceiveInTime,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.PacketsNotReceivedTimeoutMs,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Schema,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Script,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.WebsiteGroupId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.StopMonitoringByWebsiteGroup,
-				opts => opts.Ignore())
-			;
+				opts => opts.MapFrom(src => src.Id));
+	}
 
+	private void CreateWebsiteStoreItemToWebsiteMap()
+	{
 		CreateMap<WebsiteStoreItem, Website>()
+			.IgnoreMembers(
+				dest => dest.Collectors, dest => dest.Checkpoints, dest => dest.Steps, dest => dest.Template,
+				dest => dest.TestLocation, dest => dest.CustomProperties, dest => dest.UpdatedOnSeconds, dest => dest.RolePrivileges,
+				dest => dest.GroupId, dest => dest.DisableAlerting, dest => dest.StopMonitoringByFolder, dest => dest.PacketsLossThresholdPercent,
+				dest => dest.PacketsLossTimeoutMs, dest => dest.Host, dest => dest.PageLoadAlertTimeMs, dest => dest.HttpSchema,
+				dest => dest.AlertingDisabledOn)
 			.ForMember(
 				dest => dest.Id,
-				opts => opts.MapFrom(src => src.LogicMonitorId))
-			.ForMember(
-				dest => dest.Collectors,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Checkpoints,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Steps,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Template,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.TestLocation,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.CustomProperties,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.UpdatedOnSeconds,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.RolePrivileges,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.GroupId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DisableAlerting,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.StopMonitoringByFolder,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.PacketsLossThresholdPercent,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.PacketsLossTimeoutMs,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Host,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.PageLoadAlertTimeMs,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.HttpSchema,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.AlertingDisabledOn,
-				opts => opts.Ignore())
-			;
+				opts => opts.MapFrom(src => src.LogicMonitorId));
 	}
 }

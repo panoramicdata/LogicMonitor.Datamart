@@ -10,10 +10,14 @@ public class ConfigSourceProfile : Profile
 	/// </summary>
 	public ConfigSourceProfile()
 	{
+		CreateConfigSourceToConfigSourceStoreItemMap();
+		CreateConfigSourceStoreItemToConfigSourceMap();
+	}
+
+	private void CreateConfigSourceToConfigSourceStoreItemMap()
+	{
 		CreateMap<ConfigSource, ConfigSourceStoreItem>()
-			.ForMember(
-				dest => dest.Id,
-				opts => opts.Ignore())
+			.IgnoreMembers(dest => dest.Id, dest => dest.DatamartCreated, dest => dest.DatamartLastModified, dest => dest.DatamartLastObserved)
 			.ForMember(
 				dest => dest.LogicMonitorId,
 				opts => opts.MapFrom(src => src.Id))
@@ -25,72 +29,21 @@ public class ConfigSourceProfile : Profile
 				opts => opts.MapFrom(src => src.Version.ToString(CultureInfo.InvariantCulture)))
 			.ForMember(
 				dest => dest.CollectionMethod,
-				opts => opts.MapFrom(src => src.CollectionMethod.ToString()))
-			.ForMember(
-				dest => dest.DatamartCreated,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartLastModified,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartLastObserved,
-				opts => opts.Ignore())
-			;
+				opts => opts.MapFrom(src => src.CollectionMethod.ToString()));
+	}
+
+	private void CreateConfigSourceStoreItemToConfigSourceMap()
+	{
 		CreateMap<ConfigSourceStoreItem, ConfigSource>()
+			.IgnoreMembers(
+				dest => dest.AuditVersion, dest => dest.Version, dest => dest.CollectionMethod, dest => dest.ConfigChecks,
+				dest => dest.AutoDiscoveryConfig, dest => dest.CollectionIntervalSeconds, dest => dest.CollectorAttribute, dest => dest.EnableAutoDiscovery,
+				dest => dest.FileFormat, dest => dest.HasMultiInstances, dest => dest.Tags, dest => dest.Technology,
+				dest => dest.TimestampFormat, dest => dest.LineageId, dest => dest.InstallationMetadata, dest => dest.AccessGroupIds,
+				dest => dest.AccessGroups)
 			.ForMember(
 				dest => dest.Id,
 				opts => opts.MapFrom(src => src.LogicMonitorId))
-			.ForMember(
-				dest => dest.AuditVersion,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Version,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.CollectionMethod,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.ConfigChecks,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.AutoDiscoveryConfig,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.CollectionIntervalSeconds,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.CollectorAttribute,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.EnableAutoDiscovery,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.FileFormat,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.HasMultiInstances,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Tags,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Technology,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.TimestampFormat,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.LineageId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.InstallationMetadata,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.AccessGroupIds,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.AccessGroups,
-				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.IsInUse,
 				opts => opts.Ignore());

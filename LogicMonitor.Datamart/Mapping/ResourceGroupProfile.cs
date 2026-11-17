@@ -10,10 +10,16 @@ public class ResourceGroupProfile : Profile
 	/// </summary>
 	public ResourceGroupProfile()
 	{
+		CreateResourceGroupToResourceGroupStoreItemMap();
+		CreateResourceGroupStoreItemToResourceGroupMap();
+	}
+
+	private void CreateResourceGroupToResourceGroupStoreItemMap()
+	{
 		CreateMap<ResourceGroup, ResourceGroupStoreItem>()
-			.ForMember(
-				dest => dest.Id,
-				opts => opts.Ignore())
+			.IgnoreMembers(
+				dest => dest.Id, dest => dest.DatamartCreated, dest => dest.DatamartLastModified, dest => dest.DatamartLastObserved,
+				dest => dest.AlertEnable)
 			.ForMember(
 				dest => dest.LogicMonitorId,
 				opts => opts.MapFrom(src => src.Id))
@@ -40,111 +46,23 @@ public class ResourceGroupProfile : Profile
 				opts => opts.MapFrom(src => (int)src.AzureTestResultCode))
 			.ForMember(
 				dest => dest.DirectSubGroupCount,
-				opts => opts.MapFrom(src => (int)src.DirectSubGroupCount))
-			.ForMember(
-				dest => dest.DatamartCreated,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartLastModified,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartLastObserved,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.AlertEnable,
-				opts => opts.Ignore())
-			;
+				opts => opts.MapFrom(src => (int)src.DirectSubGroupCount));
+	}
+
+	private void CreateResourceGroupStoreItemToResourceGroupMap()
+	{
 		CreateMap<ResourceGroupStoreItem, ResourceGroup>()
+			.IgnoreMembers(
+				dest => dest.AwsTestResult, dest => dest.CustomProperties, dest => dest.DefaultCollectorGroupId, dest => dest.DefaultCollectorGroupDescription,
+				dest => dest.DefaultLoadBalanceCollectorGroupId, dest => dest.Resources, dest => dest.Extra, dest => dest.AlertingDisabledOn,
+				dest => dest.SubGroups, dest => dest.DefaultAutoBalancedCollectorGroupId, dest => dest.KubernetesResourceCount, dest => dest.RolePrivileges,
+				dest => dest.SaasTestResult, dest => dest.SaasTestResultCode, dest => dest.ServicesTemplatesId, dest => dest.IsAlertingEnabled,
+				dest => dest.ResourceGroupType, dest => dest.DirectResourceCount, dest => dest.PropertyChangeWarningMessage, dest => dest.AwsResourceCount,
+				dest => dest.AzureResourceCount, dest => dest.GcpResourceCount, dest => dest.ResourceCount, dest => dest.OciResourceCount,
+				dest => dest.OciRegionsInfo, dest => dest.OciTestResultCode, dest => dest.OciTestResult, dest => dest.TenantIdentifier)
 			.ForMember(
 				dest => dest.Id,
 				opts => opts.MapFrom(src => src.LogicMonitorId))
-			.ForMember(
-				dest => dest.AwsTestResult,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.CustomProperties,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DefaultCollectorGroupId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DefaultCollectorGroupDescription,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DefaultLoadBalanceCollectorGroupId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Resources,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Extra,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.AlertingDisabledOn,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.SubGroups,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DefaultAutoBalancedCollectorGroupId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.KubernetesResourceCount,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.RolePrivileges,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.SaasTestResult,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.SaasTestResultCode,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.ServicesTemplatesId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.IsAlertingEnabled,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.ResourceGroupType,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DirectResourceCount,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.PropertyChangeWarningMessage,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.AwsResourceCount,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.AzureResourceCount,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.GcpResourceCount,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.ResourceCount,
-				opts => opts.Ignore())
-
-			.ForMember(
-				dest => dest.OciResourceCount,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.OciRegionsInfo,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.OciTestResultCode,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.OciTestResult,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.TenantIdentifier,
-				opts => opts.Ignore())
-
-			.IgnoreAllPropertiesWithAnInaccessibleSetter()
-			;
+			.IgnoreAllPropertiesWithAnInaccessibleSetter();
 	}
 }

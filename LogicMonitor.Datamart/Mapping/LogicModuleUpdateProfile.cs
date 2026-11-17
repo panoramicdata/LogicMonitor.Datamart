@@ -10,19 +10,13 @@ public class LogicModuleUpdateProfile : Profile
 	/// </summary>
 	public LogicModuleUpdateProfile()
 	{
+		CreateExchangeLogicModuleToLogicModuleUpdateStoreItemMap();
+	}
+
+	private void CreateExchangeLogicModuleToLogicModuleUpdateStoreItemMap()
+	{
 		CreateMap<ExchangeLogicModule, LogicModuleUpdateStoreItem>()
-			.ForMember(
-				dest => dest.Id,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartCreated,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartLastModified,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartLastObserved,
-				opts => opts.Ignore())
+			.IgnoreMembers(dest => dest.Id, dest => dest.DatamartCreated, dest => dest.DatamartLastModified, dest => dest.DatamartLastObserved)
 			.ForMember(
 				dest => dest.ExchangeId,
 				opts => opts.MapFrom(src => src.Id))

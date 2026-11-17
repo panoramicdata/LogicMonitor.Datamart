@@ -12,19 +12,16 @@ public class AuditEventProfile : Profile
 	/// </summary>
 	public AuditEventProfile()
 	{
+		CreateAuditEventToAuditEventStoreItemMap();
+	}
+
+	private void CreateAuditEventToAuditEventStoreItemMap()
+	{
 		CreateMap<AuditEvent, AuditEventStoreItem>()
-			.ForMember(
-				dest => dest.Id,
-				opts => opts.Ignore())
+			.IgnoreMembers(dest => dest.Id, dest => dest.DatamartCreated, dest => dest.DatamartLastModified)
 			.ForMember(
 				dest => dest.LogicMonitorId,
 				opts => opts.MapFrom(src => src.Id))
-			.ForMember(
-				dest => dest.DatamartCreated,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartLastModified,
-				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.DeviceDataSourceId,
 				opts => opts.MapFrom(src => src.ResourceDataSourceId))

@@ -10,37 +10,18 @@ public class DataPointProfile : Profile
 	/// </summary>
 	public DataPointProfile()
 	{
+		CreateDataPointConfigurationItemToDataSourceDataPointStoreItemMap();
+	}
+
+	private void CreateDataPointConfigurationItemToDataSourceDataPointStoreItemMap()
+	{
 		CreateMap<DataPointConfigurationItem, DataSourceDataPointStoreItem>()
-			.ForMember(
-				dest => dest.Id,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DataSourceId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DataSource,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DeviceDataSourceInstanceDataPoints,
-				opts => opts.Ignore())
+			.IgnoreMembers(
+				dest => dest.Id, dest => dest.DataSourceId, dest => dest.DataSource, dest => dest.DeviceDataSourceInstanceDataPoints,
+				dest => dest.DatamartCreated, dest => dest.DatamartLastModified, dest => dest.DatamartLastObserved, dest => dest.GlobalAlertExpression,
+				dest => dest.DataSourceGraphId)
 			.ForMember(
 				dest => dest.LogicMonitorId,
-				opts => opts.MapFrom(src => 0))
-			.ForMember(
-				dest => dest.DatamartCreated,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartLastModified,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartLastObserved,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.GlobalAlertExpression,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DataSourceGraphId,
-				opts => opts.Ignore())
-			;
+				opts => opts.MapFrom(src => 0));
 	}
 }

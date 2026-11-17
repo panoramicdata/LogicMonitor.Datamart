@@ -10,58 +10,27 @@ public class AlertRuleProfile : Profile
 	/// </summary>
 	public AlertRuleProfile()
 	{
+		CreateAlertRuleToAlertRuleStoreItemMap();
+		CreateAlertRuleStoreItemToAlertRuleMap();
+	}
+
+	private void CreateAlertRuleToAlertRuleStoreItemMap()
+	{
 		CreateMap<AlertRule, AlertRuleStoreItem>()
-			.ForMember(
-				dest => dest.Id,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.EscalationChainId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.EscalationChain,
-				opts => opts.Ignore())
+			.IgnoreMembers(
+				dest => dest.Id, dest => dest.EscalationChainId, dest => dest.EscalationChain, dest => dest.DatamartCreated,
+				dest => dest.DatamartLastModified, dest => dest.DatamartLastObserved, dest => dest.AlertStoreItems)
 			.ForMember(
 				dest => dest.LogicMonitorId,
-				opts => opts.MapFrom(src => src.Id))
-			.ForMember(
-				dest => dest.DatamartCreated,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartLastModified,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartLastObserved,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.AlertStoreItems,
-				opts => opts.Ignore())
-			;
+				opts => opts.MapFrom(src => src.Id));
+	}
+
+	private void CreateAlertRuleStoreItemToAlertRuleMap()
+	{
 		CreateMap<AlertRuleStoreItem, AlertRule>()
-			.ForMember(
-				dest => dest.Id,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.EscalationChain,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.EscalationChainId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Resources,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.ResourceGroups,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.EscalationChain,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.ResourceProperties,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.SendAnomalySuppressedAlert,
-				opts => opts.Ignore())
-			.IgnoreAllPropertiesWithAnInaccessibleSetter()
-			;
+			.IgnoreMembers(
+				dest => dest.Id, dest => dest.EscalationChain, dest => dest.EscalationChainId, dest => dest.Resources,
+				dest => dest.ResourceGroups, dest => dest.EscalationChain, dest => dest.ResourceProperties, dest => dest.SendAnomalySuppressedAlert)
+			.IgnoreAllPropertiesWithAnInaccessibleSetter();
 	}
 }

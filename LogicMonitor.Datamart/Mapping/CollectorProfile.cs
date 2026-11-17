@@ -10,19 +10,19 @@ public class CollectorProfile : Profile
 	/// </summary>
 	public CollectorProfile()
 	{
+		CreateCollectorToCollectorStoreItemMap();
+		CreateCollectorStoreItemToCollectorMap();
+	}
+
+	private void CreateCollectorToCollectorStoreItemMap()
+	{
 		CreateMap<Collector, CollectorStoreItem>()
-			.ForMember(
-				dest => dest.Id,
-				opts => opts.Ignore())
+			.IgnoreMembers(
+				dest => dest.Id, dest => dest.CollectorGroupId, dest => dest.Devices, dest => dest.DatamartCreated,
+				dest => dest.DatamartLastModified, dest => dest.DatamartLastObserved, dest => dest.Name, dest => dest.CollectorGroup)
 			.ForMember(
 				dest => dest.LogicMonitorId,
 				opts => opts.MapFrom(src => src.Id))
-			.ForMember(
-				dest => dest.CollectorGroupId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Devices,
-				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.DeviceCount,
 				opts => opts.MapFrom(src => src.ResourceCount))
@@ -45,26 +45,22 @@ public class CollectorProfile : Profile
 				dest => dest.LogicMonitorDeviceId,
 				opts => opts.MapFrom(src => src.ResourceId))
 			.ForMember(
-				dest => dest.DatamartCreated,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartLastModified,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartLastObserved,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Name,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.CollectorGroup,
-				opts => opts.Ignore())
-			.ForMember(
 				dest => dest.OnetimeDowngradeInfo,
-				opts => opts.MapFrom(src => src.OneTimeDowngradeInfo))
-			;
+				opts => opts.MapFrom(src => src.OneTimeDowngradeInfo));
+	}
 
+	private void CreateCollectorStoreItemToCollectorMap()
+	{
 		CreateMap<CollectorStoreItem, Collector>()
+			.IgnoreMembers(
+				dest => dest.IsAdminAccount, dest => dest.GroupId, dest => dest.GroupName, dest => dest.AutomaticUpgradeInfo,
+				dest => dest.CustomProperties, dest => dest.EscalationChain, dest => dest.NextUpgradeInfo, dest => dest.OneTimeUpgradeInfo,
+				dest => dest.PredefinedConfiguration, dest => dest.InstanceCount, dest => dest.BearerToken, dest => dest.Type,
+				dest => dest.ConfigurationFields, dest => dest.CopyUrl, dest => dest.DownloadUrl, dest => dest.EncodedConfigData,
+				dest => dest.Format, dest => dest.IsEncoded, dest => dest.IsLmLogsEnabled, dest => dest.OtelId,
+				dest => dest.OtelVersion, dest => dest.IsSyntheticsEnables, dest => dest.SdtCount, dest => dest.SpecifiedCollectorResourceGroupId,
+				dest => dest.CalculatedThreshold, dest => dest.ArchType, dest => dest.CpAgent, dest => dest.LogCollectorGroupId,
+				dest => dest.LogCollectorGroupName)
 			.ForMember(
 				dest => dest.Id,
 				opts => opts.MapFrom(src => src.LogicMonitorId))
@@ -81,101 +77,13 @@ public class CollectorProfile : Profile
 				dest => dest.HasFailOverResource,
 				opts => opts.MapFrom(src => src.HasFailOverDevice))
 			.ForMember(
-				dest => dest.IsAdminAccount,
-				opts => opts.Ignore())
-			.ForMember(
 				dest => dest.NeedAutoCreateCollectorResource,
 				opts => opts.MapFrom(src => src.NeedAutoCreateCollectorDevice))
 			.ForMember(
 				dest => dest.UserVisibleResourceCount,
 				opts => opts.MapFrom(src => src.UserVisibleDeviceCount))
 			.ForMember(
-				dest => dest.GroupId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.GroupName,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.AutomaticUpgradeInfo,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.CustomProperties,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.EscalationChain,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.NextUpgradeInfo,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.OneTimeUpgradeInfo,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.PredefinedConfiguration,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.InstanceCount,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.BearerToken,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Type,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.ConfigurationFields,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.CopyUrl,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DownloadUrl,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.EncodedConfigData,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Format,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.IsEncoded,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.IsLmLogsEnabled,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.OtelId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.OtelVersion,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.IsSyntheticsEnables,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.SdtCount,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.SpecifiedCollectorResourceGroupId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.CalculatedThreshold,
-				opts => opts.Ignore())
-			.ForMember(
 				dest => dest.OneTimeDowngradeInfo,
-				opts => opts.MapFrom(src => src.OnetimeDowngradeInfo))
-			.ForMember(
-				dest => dest.ArchType,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.CpAgent,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.LogCollectorGroupId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.LogCollectorGroupName,
-				opts => opts.Ignore())
-			;
+				opts => opts.MapFrom(src => src.OnetimeDowngradeInfo));
 	}
 }

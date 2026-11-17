@@ -10,115 +10,34 @@ public class ResourceDataSourceInstanceProfile : Profile
 	/// </summary>
 	public ResourceDataSourceInstanceProfile()
 	{
+		CreateResourceDataSourceInstanceToResourceDataSourceInstanceStoreItemMap();
+		CreateResourceDataSourceInstanceStoreItemToResourceDataSourceInstanceMap();
+	}
+
+	private void CreateResourceDataSourceInstanceToResourceDataSourceInstanceStoreItemMap()
+	{
 		CreateMap<ResourceDataSourceInstance, ResourceDataSourceInstanceStoreItem>()
-			.ForMember(
-				dest => dest.Id,
-				opts => opts.Ignore())
+			.IgnoreMembers(
+				dest => dest.Id, dest => dest.DeviceDataSourceId, dest => dest.DatamartCreated, dest => dest.DatamartLastModified,
+				dest => dest.DatamartLastObserved, dest => dest.DeviceDataSource, dest => dest.DeviceDataSourceInstanceDataPoints, dest => dest.LastWentMissing,
+				dest => dest.SdtAt, dest => dest.SdtStatus, dest => dest.InstanceProperty1, dest => dest.InstanceProperty2,
+				dest => dest.InstanceProperty3, dest => dest.InstanceProperty4, dest => dest.InstanceProperty5, dest => dest.InstanceProperty6,
+				dest => dest.InstanceProperty7, dest => dest.InstanceProperty8, dest => dest.InstanceProperty9, dest => dest.InstanceProperty10)
 			.ForMember(
 				dest => dest.LogicMonitorId,
-				opts => opts.MapFrom(src => src.Id))
-			.ForMember(
-				dest => dest.DeviceDataSourceId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartCreated,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartLastModified,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartLastObserved,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DeviceDataSource,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DeviceDataSourceInstanceDataPoints,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.LastWentMissing,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.SdtAt,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.SdtStatus,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.InstanceProperty1,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.InstanceProperty2,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.InstanceProperty3,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.InstanceProperty4,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.InstanceProperty5,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.InstanceProperty6,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.InstanceProperty7,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.InstanceProperty8,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.InstanceProperty9,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.InstanceProperty10,
-				opts => opts.Ignore())
-			;
+				opts => opts.MapFrom(src => src.Id));
+	}
 
+	private void CreateResourceDataSourceInstanceStoreItemToResourceDataSourceInstanceMap()
+	{
 		CreateMap<ResourceDataSourceInstanceStoreItem, ResourceDataSourceInstance>()
+			.IgnoreMembers(
+				dest => dest.AlertDisabledOn, dest => dest.CustomProperties, dest => dest.DataSourceId, dest => dest.ResourceDataSourceId,
+				dest => dest.ResourceDisplayName, dest => dest.ResourceId, dest => dest.SystemProperties, dest => dest.IsUncInstance,
+				dest => dest.AutoProperties, dest => dest.CollectorId, dest => dest.DataSourceName, dest => dest.DataSourceType,
+				dest => dest.GroupsDisabledThisSource)
 			.ForMember(
 				dest => dest.Id,
-				opts => opts.MapFrom(src => src.LogicMonitorId))
-			.ForMember(
-				dest => dest.AlertDisabledOn,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.CustomProperties,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DataSourceId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.ResourceDataSourceId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.ResourceDisplayName,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.ResourceId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.SystemProperties,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.IsUncInstance,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.AutoProperties,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.CollectorId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DataSourceName,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DataSourceType,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.GroupsDisabledThisSource,
-				opts => opts.Ignore())
-		;
+				opts => opts.MapFrom(src => src.LogicMonitorId));
 	}
 }

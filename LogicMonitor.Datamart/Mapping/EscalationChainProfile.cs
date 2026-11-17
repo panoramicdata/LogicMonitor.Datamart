@@ -14,25 +14,19 @@ public class EscalationChainProfile : Profile
 	/// </summary>
 	public EscalationChainProfile()
 	{
+		CreateEscalationChainToEscalationChainStoreItemMap();
+		CreateEscalationChainStoreItemToEscalationChainMap();
+	}
+
+	private void CreateEscalationChainToEscalationChainStoreItemMap()
+	{
 		CreateMap<EscalationChain, EscalationChainStoreItem>()
-			.ForMember(
-				dest => dest.Id,
-				opts => opts.Ignore())
+			.IgnoreMembers(
+				dest => dest.Id, dest => dest.AlertRules, dest => dest.DatamartCreated, dest => dest.DatamartLastModified,
+				dest => dest.DatamartLastObserved)
 			.ForMember(
 				dest => dest.LogicMonitorId,
 				opts => opts.MapFrom(src => src.Id))
-			.ForMember(
-				dest => dest.AlertRules,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartCreated,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartLastModified,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartLastObserved,
-				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.Destination,
 				opts => opts.MapFrom(src => JsonSerializer.Serialize(src.Destination, _jsonSerializerOptions)))
@@ -44,24 +38,15 @@ public class EscalationChainProfile : Profile
 				opts => opts.MapFrom(src => JsonSerializer.Serialize(src.CcDestination, _jsonSerializerOptions)))
 			.ForMember(
 				dest => dest.CcDestinations,
-				opts => opts.MapFrom(src => JsonSerializer.Serialize(src.CcDestinations, _jsonSerializerOptions)))
-			;
+				opts => opts.MapFrom(src => JsonSerializer.Serialize(src.CcDestinations, _jsonSerializerOptions)));
+	}
+
+	private void CreateEscalationChainStoreItemToEscalationChainMap()
+	{
 		CreateMap<EscalationChainStoreItem, EscalationChain>()
+			.IgnoreMembers(dest => dest.CcDestination, dest => dest.CcDestinations, dest => dest.Destination, dest => dest.Destinations)
 			.ForMember(
 				dest => dest.Id,
-				opts => opts.MapFrom(src => src.LogicMonitorId))
-			.ForMember(
-				dest => dest.CcDestination,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.CcDestinations,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Destination,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Destinations,
-				opts => opts.Ignore())
-			;
+				opts => opts.MapFrom(src => src.LogicMonitorId));
 	}
 }
