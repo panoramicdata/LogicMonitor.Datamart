@@ -10,45 +10,29 @@ public class WebsiteGroupProfile : Profile
 	/// </summary>
 	public WebsiteGroupProfile()
 	{
+		CreateWebsiteGroupToWebsiteGroupStoreItemMap();
+		CreateWebsiteGroupStoreItemToWebsiteGroupMap();
+	}
+
+	private void CreateWebsiteGroupToWebsiteGroupStoreItemMap()
+	{
 		CreateMap<WebsiteGroup, WebsiteGroupStoreItem>()
-			.ForMember(
-				dest => dest.Id,
-				opts => opts.Ignore())
+			.IgnoreMembers(
+				dest => dest.Id, dest => dest.DatamartCreated, dest => dest.DatamartLastModified, dest => dest.DatamartLastObserved,
+				dest => dest.Websites)
 			.ForMember(
 				dest => dest.LogicMonitorId,
-				opts => opts.MapFrom(src => src.Id))
-			.ForMember(
-				dest => dest.DatamartCreated,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartLastModified,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartLastObserved,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Websites,
-				opts => opts.Ignore())
-			;
+				opts => opts.MapFrom(src => src.Id));
+	}
+
+	private void CreateWebsiteGroupStoreItemToWebsiteGroupMap()
+	{
 		CreateMap<WebsiteGroupStoreItem, WebsiteGroup>()
+			.IgnoreMembers(
+				dest => dest.CustomProperties, dest => dest.ChildWebsiteGroups, dest => dest.TestLocation, dest => dest.RolePrivileges,
+				dest => dest.AlertingDisabledOn)
 			.ForMember(
 				dest => dest.Id,
-				opts => opts.MapFrom(src => src.LogicMonitorId))
-			.ForMember(
-				dest => dest.CustomProperties,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.ChildWebsiteGroups,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.TestLocation,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.RolePrivileges,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.AlertingDisabledOn,
-				opts => opts.Ignore())
-			;
+				opts => opts.MapFrom(src => src.LogicMonitorId));
 	}
 }

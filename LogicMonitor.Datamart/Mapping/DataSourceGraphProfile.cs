@@ -10,16 +10,16 @@ public class DataSourceGraphProfile : Profile
 	/// </summary>
 	public DataSourceGraphProfile()
 	{
+		CreateDataSourceGraphToDataSourceGraphStoreItemMap();
+		CreateDataSourceGraphStoreItemToDataSourceGraphMap();
+	}
+
+	private void CreateDataSourceGraphToDataSourceGraphStoreItemMap()
+	{
 		CreateMap<DataSourceGraph, DataSourceGraphStoreItem>()
-			.ForMember(
-				dest => dest.Id,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DataSource,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.IsOverview,
-				opts => opts.Ignore())
+			.IgnoreMembers(
+				dest => dest.Id, dest => dest.DataSource, dest => dest.IsOverview, dest => dest.DatamartCreated,
+				dest => dest.DatamartLastModified, dest => dest.DatamartLastObserved, dest => dest.DataPoints)
 			.ForMember(
 				dest => dest.DataSourceId,
 				opts => opts.MapFrom(src => Guid.Empty))
@@ -33,18 +33,6 @@ public class DataSourceGraphProfile : Profile
 				dest => dest.IsRigid,
 				opts => opts.MapFrom(src => src.Rigid))
 			.ForMember(
-				dest => dest.DatamartCreated,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartLastModified,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartLastObserved,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DataPoints,
-				opts => opts.Ignore())
-			.ForMember(
 				dest => dest.MaxValue,
 				opts => opts.MapFrom(src => GetDouble(src.MaxValue)))
 			.ForMember(
@@ -52,10 +40,15 @@ public class DataSourceGraphProfile : Profile
 				opts => opts.MapFrom(src => GetDouble(src.MinValue)))
 			.ForMember(
 				dest => dest.Timescale,
-				opts => opts.MapFrom(src => src.TimeScale))
-		;
+				opts => opts.MapFrom(src => src.TimeScale));
+	}
 
+	private void CreateDataSourceGraphStoreItemToDataSourceGraphMap()
+	{
 		CreateMap<DataSourceGraphStoreItem, DataSourceGraph>()
+			.IgnoreMembers(
+				dest => dest.Lines, dest => dest.Aggregated, dest => dest.DataPoints, dest => dest.DataSourceId,
+				dest => dest.VirtualDataPoints)
 			.ForMember(
 				dest => dest.Id,
 				opts => opts.MapFrom(src => src.LogicMonitorId))
@@ -72,24 +65,8 @@ public class DataSourceGraphProfile : Profile
 				dest => dest.MinValue,
 				opts => opts.MapFrom(src => src.MinValue == null ? "NaN" : src.MinValue.Value.ToString("N0", CultureInfo.InvariantCulture)))
 			.ForMember(
-				dest => dest.Lines,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Aggregated,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DataPoints,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DataSourceId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.VirtualDataPoints,
-				opts => opts.Ignore())
-			.ForMember(
 				dest => dest.TimeScale,
-				opts => opts.MapFrom(src => src.Timescale))
-			;
+				opts => opts.MapFrom(src => src.Timescale));
 	}
 
 	private static double? GetDouble(string text)

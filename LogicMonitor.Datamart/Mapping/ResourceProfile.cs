@@ -10,34 +10,20 @@ public class ResourceProfile : Profile
 	/// </summary>
 	public ResourceProfile()
 	{
-		CreateMap<Resource, ResourceStoreItem>()
-			.ForMember(
-				dest => dest.Id,
-				opts => opts.Ignore())
+		CreateResourceToResourceStoreItemMap();
+		CreateResourceStoreItemToResourceMap();
+	}
+
+	private void CreateResourceToResourceStoreItemMap()
+	{
+		var map = CreateMap<Resource, ResourceStoreItem>()
+			.IgnoreMembers(
+				dest => dest.Id, dest => dest.PreferredCollector, dest => dest.PreferredCollectorId, dest => dest.DeviceDataSources,
+				dest => dest.DatamartCreated, dest => dest.DatamartLastModified, dest => dest.DatamartLastObserved, dest => dest.LastAlertClosedTimeSeconds,
+				dest => dest.LastTimeSeriesDataSyncDurationMs)
 			.ForMember(
 				dest => dest.LogicMonitorId,
 				opts => opts.MapFrom(src => src.Id))
-			.ForMember(
-				dest => dest.PreferredCollector,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.PreferredCollectorId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DeviceDataSources,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartCreated,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartLastModified,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DatamartLastObserved,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.LastAlertClosedTimeSeconds,
-				opts => opts.Ignore())
 			.ForMember(
 				dest => dest.DeviceType,
 				opts => opts.MapFrom(src => src.ResourceType))
@@ -49,273 +35,42 @@ public class ResourceProfile : Profile
 				opts => opts.MapFrom(src => src.ResourceStatus))
 			.ForMember(
 				dest => dest.RelatedDeviceId,
-				opts => opts.MapFrom(src => src.RelatedResourceId))
-			.ForMember(
-				dest => dest.Property1,
-				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 1)))
-			.ForMember(
-				dest => dest.Property2,
-				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 2)))
-			.ForMember(
-				dest => dest.Property3,
-				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 3)))
-			.ForMember(
-				dest => dest.Property4,
-				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 4)))
-			.ForMember(
-				dest => dest.Property5,
-				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 5)))
-			.ForMember(
-				dest => dest.Property6,
-				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 6)))
-			.ForMember(
-				dest => dest.Property7,
-				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 7)))
-			.ForMember(
-				dest => dest.Property8,
-				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 8)))
-			.ForMember(
-				dest => dest.Property9,
-				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 9)))
-			.ForMember(
-				dest => dest.Property10,
-				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 10)))
-			.ForMember(
-				dest => dest.Property11,
-				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 11)))
-			.ForMember(
-				dest => dest.Property12,
-				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 12)))
-			.ForMember(
-				dest => dest.Property13,
-				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 13)))
-			.ForMember(
-				dest => dest.Property14,
-				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 14)))
-			.ForMember(
-				dest => dest.Property15,
-				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 15)))
-			.ForMember(
-				dest => dest.Property16,
-				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 16)))
-			.ForMember(
-				dest => dest.Property17,
-				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 17)))
-			.ForMember(
-				dest => dest.Property18,
-				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 18)))
-			.ForMember(
-				dest => dest.Property19,
-				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 19)))
-			.ForMember(
-				dest => dest.Property20,
-				opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, 20)))
-			.ForMember(
-				dest => dest.LastTimeSeriesDataSyncDurationMs,
-				opts => opts.Ignore())
-			;
+				opts => opts.MapFrom(src => src.RelatedResourceId));
+		MapCustomProperties(map);
+	}
 
+	private static void MapCustomProperties(IMappingExpression<Resource, ResourceStoreItem> map)
+	{
+		for (var i = 1; i <= 20; i++)
+		{
+			var index = i;
+			_ = map.ForMember($"Property{index}", opts => opts.MapFrom(src => CustomPropertyHandler.Get(src, index)));
+		}
+	}
+
+	private void CreateResourceStoreItemToResourceMap()
+	{
 		CreateMap<ResourceStoreItem, Resource>()
+			.IgnoreMembers(
+				dest => dest.AlertingDisabledOn, dest => dest.AutoProperties, dest => dest.CustomProperties, dest => dest.InheritedProperties,
+				dest => dest.Instances, dest => dest.ManualDiscoveryFlags, dest => dest.PreferredCollectorGroupId, dest => dest.PreferredCollectorGroupName,
+				dest => dest.PreferredCollectorId, dest => dest.SystemProperties, dest => dest.LoadBalanceCollectorGroupId, dest => dest.AutoBalancedCollectorGroupId,
+				dest => dest.CurrentLogCollectorId, dest => dest.DedicatedLogCollectorGroupId, dest => dest.IsPreferredLogCollectorConfigured, dest => dest.IsPreferredLogCollectorGroupConfigured,
+				dest => dest.LogCollectorDescription, dest => dest.LogCollectorGroupId, dest => dest.LogCollectorGroupName, dest => dest.LogCollectorId,
+				dest => dest.AwsTestResult, dest => dest.AwsTestResultCode, dest => dest.AzureTestResult, dest => dest.AzureTestResultCode,
+				dest => dest.GcpTestResult, dest => dest.GcpTestResultCode, dest => dest.SaasTestResult, dest => dest.SaasTestResultCode,
+				dest => dest.AutoVisualResult, dest => dest.ResourceIds, dest => dest.SyntheticsCollectorIds, dest => dest.RolePrivileges,
+				dest => dest.Op, dest => dest.ContainsMultiValue, dest => dest.ResourceGroupIdsString, dest => dest.RelatedResourceId,
+				dest => dest.ResourceStatus, dest => dest.ResourceType, dest => dest.Type, dest => dest.ClonedFromHostId,
+				dest => dest.StopMonitoring, dest => dest.StopMonitoringByFolder, dest => dest.IndividualSmAlertEnable, dest => dest.IndividualAlertLevel,
+				dest => dest.OverallAlertLevel, dest => dest.PollingInterval, dest => dest.Transition, dest => dest.GlobalSmAlertCond,
+				dest => dest.UseDefaultLocationSetting, dest => dest.UseDefaultAlertSetting, dest => dest.Checkpoints, dest => dest.IsInternal,
+				dest => dest.Collectors, dest => dest.TestLocation, dest => dest.GroupIds, dest => dest.Properties,
+				dest => dest.Status, dest => dest.Template, dest => dest.LastUpdated, dest => dest.Steps,
+				dest => dest.Domain, dest => dest.Count, dest => dest.Host, dest => dest.PercentPktsNotReceiveInTime,
+				dest => dest.TimeoutInMSPktsNotReceive)
 			.ForMember(
 				dest => dest.Id,
-				opts => opts.MapFrom(src => src.LogicMonitorId))
-			.ForMember(
-				dest => dest.AlertingDisabledOn,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.AutoProperties,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.CustomProperties,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.InheritedProperties,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Instances,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.ManualDiscoveryFlags,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.PreferredCollectorGroupId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.PreferredCollectorGroupName,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.PreferredCollectorId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.SystemProperties,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.LoadBalanceCollectorGroupId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.AutoBalancedCollectorGroupId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.CurrentLogCollectorId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.DedicatedLogCollectorGroupId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.IsPreferredLogCollectorConfigured,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.IsPreferredLogCollectorGroupConfigured,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.LogCollectorDescription,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.LogCollectorGroupId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.LogCollectorGroupName,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.LogCollectorId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.AwsTestResult,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.AwsTestResultCode,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.AzureTestResult,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.AzureTestResultCode,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.GcpTestResult,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.GcpTestResultCode,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.SaasTestResult,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.SaasTestResultCode,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.AutoVisualResult,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.ResourceIds,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.SyntheticsCollectorIds,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.RolePrivileges,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Op,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.ContainsMultiValue,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.ResourceGroupIdsString,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.RelatedResourceId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.ResourceStatus,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.ResourceType,
-				opts => opts.Ignore())
-
-			.ForMember(
-				dest => dest.Type,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.ClonedFromHostId,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.StopMonitoring,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.StopMonitoringByFolder,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.IndividualSmAlertEnable,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.IndividualAlertLevel,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.OverallAlertLevel,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.PollingInterval,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Transition,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.GlobalSmAlertCond,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.UseDefaultLocationSetting,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.UseDefaultAlertSetting,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Checkpoints,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.IsInternal,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Collectors,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.TestLocation,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.GroupIds,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Properties,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Status,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Template,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.LastUpdated,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Steps,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Domain,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Count,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.Host,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.PercentPktsNotReceiveInTime,
-				opts => opts.Ignore())
-			.ForMember(
-				dest => dest.TimeoutInMSPktsNotReceive,
-				opts => opts.Ignore())
-
-			;
+				opts => opts.MapFrom(src => src.LogicMonitorId));
 	}
 }
