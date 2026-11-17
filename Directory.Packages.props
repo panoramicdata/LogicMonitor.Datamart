@@ -31,7 +31,7 @@
     <PackageVersion Include="Serilog.Sinks.ApplicationInsights" Version="5.0.1" />
     <PackageVersion Include="Serilog.Sinks.AzureAnalytics" Version="2019.1.20" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
-    <PackageVersion Include="Serilog.Sinks.ElasticSearch" Version="10.0.0" />
+    <PackageVersion Include="Elastic.Serilog.Sinks" Version="9.0.0" />
     <!-- LogicMonitor.Datamart.Test -->
     <PackageVersion Include="AwesomeAssertions" Version="9.6.0" />
     <PackageVersion Include="Neovolve.Logging.Xunit.v3" Version="7.2.0" />
