@@ -8,6 +8,13 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
 		/// <inheritdoc />
 		protected override void Up(MigrationBuilder migrationBuilder)
 		{
+			UpPart1(migrationBuilder);
+			UpPart2(migrationBuilder);
+			UpPart3(migrationBuilder);
+		}
+
+		private static void UpPart1(MigrationBuilder migrationBuilder)
+		{
 			migrationBuilder.CreateTable(
 				name: "DeviceConfigSources",
 				columns: table => new
@@ -39,7 +46,10 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
 						principalColumn: "Id",
 						onDelete: ReferentialAction.Cascade);
 				});
+		}
 
+		private static void UpPart2(MigrationBuilder migrationBuilder)
+		{
 			migrationBuilder.CreateTable(
 				name: "DeviceConfigSourceInstances",
 				columns: table => new
@@ -89,7 +99,10 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
 						principalColumn: "Id",
 						onDelete: ReferentialAction.Cascade);
 				});
+		}
 
+		private static void UpPart3(MigrationBuilder migrationBuilder)
+		{
 			migrationBuilder.CreateIndex(
 				name: "IX_DeviceConfigSourceInstances_DeviceConfigSourceId",
 				table: "DeviceConfigSourceInstances",

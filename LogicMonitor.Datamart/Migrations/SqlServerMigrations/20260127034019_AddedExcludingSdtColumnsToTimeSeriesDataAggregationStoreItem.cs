@@ -10,6 +10,13 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            UpPart1(migrationBuilder);
+            UpPart2(migrationBuilder);
+            UpPart3(migrationBuilder);
+        }
+
+        private static void UpPart1(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AddColumn<double>(
                 name: "AvailabilityPercent2ExcludingSdt",
                 table: "TimeSeriesDataAggregations",
@@ -51,7 +58,10 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
                 table: "TimeSeriesDataAggregations",
                 type: "float",
                 nullable: true);
+        }
 
+        private static void UpPart2(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AddColumn<double>(
                 name: "Centile90ExcludingSdt",
                 table: "TimeSeriesDataAggregations",
@@ -93,7 +103,10 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
                 table: "TimeSeriesDataAggregations",
                 type: "float",
                 nullable: true);
+        }
 
+        private static void UpPart3(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.AddColumn<double>(
                 name: "MaxExcludingSdt",
                 table: "TimeSeriesDataAggregations",
@@ -127,6 +140,12 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            DownPart1(migrationBuilder);
+            DownPart2(migrationBuilder);
+        }
+
+        private static void DownPart1(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
                 name: "AvailabilityPercent2ExcludingSdt",
@@ -175,7 +194,10 @@ namespace LogicMonitor.Datamart.Migrations.SqlServerMigrations
             migrationBuilder.DropColumn(
                 name: "FirstWithDataExcludingSdt",
                 table: "TimeSeriesDataAggregations");
+        }
 
+        private static void DownPart2(MigrationBuilder migrationBuilder)
+        {
             migrationBuilder.DropColumn(
                 name: "LastExcludingSdt",
                 table: "TimeSeriesDataAggregations");

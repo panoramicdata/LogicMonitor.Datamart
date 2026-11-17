@@ -8,6 +8,13 @@ public partial class AddedDataSourceGraphs : Migration
 	/// <inheritdoc />
 	protected override void Up(MigrationBuilder migrationBuilder)
 	{
+		UpPart1(migrationBuilder);
+		UpPart2(migrationBuilder);
+		UpPart3(migrationBuilder);
+	}
+
+	private static void UpPart1(MigrationBuilder migrationBuilder)
+	{
 		migrationBuilder.AddColumn<Guid>(
 			name: "DataSourceGraphId",
 			table: "DataSourceDataPoints",
@@ -19,7 +26,10 @@ public partial class AddedDataSourceGraphs : Migration
 			table: "DataSourceDataPoints",
 			type: "uniqueidentifier",
 			nullable: true);
+	}
 
+	private static void UpPart2(MigrationBuilder migrationBuilder)
+	{
 		migrationBuilder.CreateTable(
 			name: "DataSourceGraphs",
 			columns: table => new
@@ -57,7 +67,10 @@ public partial class AddedDataSourceGraphs : Migration
 			name: "IX_DataSourceDataPoints_DataSourceGraphStoreItemId",
 			table: "DataSourceDataPoints",
 			column: "DataSourceGraphStoreItemId");
+	}
 
+	private static void UpPart3(MigrationBuilder migrationBuilder)
+	{
 		migrationBuilder.CreateIndex(
 			name: "IX_DataSourceGraphs_DataSourceStoreItemId",
 			table: "DataSourceGraphs",

@@ -8,6 +8,12 @@ public partial class AddedAutoTaskIntegration : Migration
 	/// <inheritdoc />
 	protected override void Up(MigrationBuilder migrationBuilder)
 	{
+		UpPart1(migrationBuilder);
+		UpPart2(migrationBuilder);
+	}
+
+	private static void UpPart1(MigrationBuilder migrationBuilder)
+	{
 		migrationBuilder.AddColumn<int>(
 			name: "AccountId",
 			table: "Integrations",
@@ -49,7 +55,10 @@ public partial class AddedAutoTaskIntegration : Migration
 			table: "Integrations",
 			type: "integer",
 			nullable: true);
+	}
 
+	private static void UpPart2(MigrationBuilder migrationBuilder)
+	{
 		migrationBuilder.AddColumn<int>(
 			name: "StatusNewTicket",
 			table: "Integrations",

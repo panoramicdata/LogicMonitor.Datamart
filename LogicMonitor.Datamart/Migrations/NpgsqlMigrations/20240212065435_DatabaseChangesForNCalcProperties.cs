@@ -8,6 +8,14 @@ public partial class DatabaseChangesForNCalcProperties : Migration
 	/// <inheritdoc />
 	protected override void Up(MigrationBuilder migrationBuilder)
 	{
+		UpPart1(migrationBuilder);
+		UpPart2(migrationBuilder);
+		UpPart3(migrationBuilder);
+		UpPart4(migrationBuilder);
+	}
+
+	private static void UpPart1(MigrationBuilder migrationBuilder)
+	{
 		migrationBuilder.DropColumn(
 			name: "Condition",
 			table: "DataSourceDataPoints");
@@ -46,7 +54,10 @@ public partial class DatabaseChangesForNCalcProperties : Migration
 			type: "text",
 			nullable: false,
 			defaultValue: "");
+	}
 
+	private static void UpPart2(MigrationBuilder migrationBuilder)
+	{
 		migrationBuilder.AddColumn<string>(
 			name: "InstanceProperty5",
 			table: "DeviceDataSourceInstances",
@@ -88,7 +99,10 @@ public partial class DatabaseChangesForNCalcProperties : Migration
 			type: "text",
 			nullable: false,
 			defaultValue: "");
+	}
 
+	private static void UpPart3(MigrationBuilder migrationBuilder)
+	{
 		migrationBuilder.AddColumn<string>(
 			name: "InstanceDatapointProperty10",
 			table: "DeviceDataSourceInstanceDataPoints",
@@ -130,7 +144,10 @@ public partial class DatabaseChangesForNCalcProperties : Migration
 			type: "text",
 			nullable: false,
 			defaultValue: "");
+	}
 
+	private static void UpPart4(MigrationBuilder migrationBuilder)
+	{
 		migrationBuilder.AddColumn<string>(
 			name: "InstanceDatapointProperty7",
 			table: "DeviceDataSourceInstanceDataPoints",
@@ -155,6 +172,12 @@ public partial class DatabaseChangesForNCalcProperties : Migration
 
 	/// <inheritdoc />
 	protected override void Down(MigrationBuilder migrationBuilder)
+	{
+		DownPart1(migrationBuilder);
+		DownPart2(migrationBuilder);
+	}
+
+	private static void DownPart1(MigrationBuilder migrationBuilder)
 	{
 		migrationBuilder.DropColumn(
 			name: "InstanceProperty1",
@@ -203,7 +226,10 @@ public partial class DatabaseChangesForNCalcProperties : Migration
 		migrationBuilder.DropColumn(
 			name: "InstanceDatapointProperty10",
 			table: "DeviceDataSourceInstanceDataPoints");
+	}
 
+	private static void DownPart2(MigrationBuilder migrationBuilder)
+	{
 		migrationBuilder.DropColumn(
 			name: "InstanceDatapointProperty2",
 			table: "DeviceDataSourceInstanceDataPoints");

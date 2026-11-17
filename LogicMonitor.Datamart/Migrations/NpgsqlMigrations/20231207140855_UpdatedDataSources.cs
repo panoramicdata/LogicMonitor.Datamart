@@ -8,6 +8,14 @@ public partial class UpdatedDataSources : Migration
 	/// <inheritdoc />
 	protected override void Up(MigrationBuilder migrationBuilder)
 	{
+		UpPart1(migrationBuilder);
+		UpPart2(migrationBuilder);
+		UpPart3(migrationBuilder);
+		UpPart4(migrationBuilder);
+	}
+
+	private static void UpPart1(MigrationBuilder migrationBuilder)
+	{
 		migrationBuilder.AddColumn<string>(
 			name: "Checksum",
 			table: "DataSources",
@@ -47,7 +55,10 @@ public partial class UpdatedDataSources : Migration
 			table: "DataSources",
 			type: "text",
 			nullable: true);
+	}
 
+	private static void UpPart2(MigrationBuilder migrationBuilder)
+	{
 		migrationBuilder.AddColumn<bool>(
 			name: "InstallationMetadataIsChangedFromOrigin",
 			table: "DataSources",
@@ -89,7 +100,10 @@ public partial class UpdatedDataSources : Migration
 			table: "DataSources",
 			type: "text",
 			nullable: true);
+	}
 
+	private static void UpPart3(MigrationBuilder migrationBuilder)
+	{
 		migrationBuilder.AddColumn<string>(
 			name: "InstallationMetadataOriginLineageId",
 			table: "DataSources",
@@ -131,7 +145,10 @@ public partial class UpdatedDataSources : Migration
 			table: "DataSources",
 			type: "text",
 			nullable: true);
+	}
 
+	private static void UpPart4(MigrationBuilder migrationBuilder)
+	{
 		migrationBuilder.AddColumn<string>(
 			name: "LineageId",
 			table: "DataSources",
@@ -163,6 +180,12 @@ public partial class UpdatedDataSources : Migration
 
 	/// <inheritdoc />
 	protected override void Down(MigrationBuilder migrationBuilder)
+	{
+		DownPart1(migrationBuilder);
+		DownPart2(migrationBuilder);
+	}
+
+	private static void DownPart1(MigrationBuilder migrationBuilder)
 	{
 		migrationBuilder.DropColumn(
 			name: "Checksum",
@@ -211,7 +234,10 @@ public partial class UpdatedDataSources : Migration
 		migrationBuilder.DropColumn(
 			name: "InstallationMetadataOriginAuthorNamespace",
 			table: "DataSources");
+	}
 
+	private static void DownPart2(MigrationBuilder migrationBuilder)
+	{
 		migrationBuilder.DropColumn(
 			name: "InstallationMetadataOriginChecksum",
 			table: "DataSources");
