@@ -177,6 +177,7 @@ public class OfflineUnitTests
 
 		public override Task ExecuteAsync(CancellationToken cancellationToken)
 		{
+			cancellationToken.ThrowIfCancellationRequested();
 			Runs++;
 			if (Source is not null && Runs >= StopAfter)
 			{
