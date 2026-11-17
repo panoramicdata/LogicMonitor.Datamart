@@ -35,22 +35,7 @@ public static class Program
 
 			var builder = WebApplication.CreateBuilder(args);
 
-			var configFileFromEnvironmentVariables = Environment.GetEnvironmentVariable(ConfigFileEnvironmentVariable);
-
-			if (!string.IsNullOrWhiteSpace(configFileFromEnvironmentVariables))
-			{
-				builder.Configuration.AddJsonFile(configFileFromEnvironmentVariables);
-			}
-
-			builder.Configuration
-#if DEBUG
-				.AddJsonFile("../../../appsettings.json", true)
-#else
-				.AddJsonFile("appsettings.json", true)
-#endif
-				.AddEnvironmentVariables()
-				.AddCommandLine(args)
-				.AddUserSecrets<Configuration>();
+			AddConfiguration(builder, args);
 
 			builder.Services
 				.Configure<Configuration>(builder.Configuration.GetSection("Configuration"));
@@ -62,29 +47,7 @@ public static class Program
 					.Configuration(hostingContext.Configuration)
 				);
 
-			// Add the desired health checks
-			_ = builder
-				.Services
-				.AddHealthChecks()
-				.AddVersions(
-					"versions",
-					HealthStatus.Unhealthy,
-					["application", "versions"],
-					TimeSpan.FromSeconds(5))
-				.AddSystemMemory(
-					1000,
-					name: "System Memory",
-					HealthStatus.Unhealthy,
-					["system", "memory"],
-					timeout: TimeSpan.FromSeconds(5)
-				)
-				.AddAssemblies(
-					"assemblies",
-					HealthStatus.Unhealthy,
-					["application", "assemblies"],
-					TimeSpan.FromSeconds(5)
-				)
-				;
+			AddHealthChecks(builder.Services);
 
 			builder.Services
 				.AddSingleton<Application>()
@@ -125,5 +88,50 @@ public static class Program
 				.ConfigureAwait(false);
 			return (int)ExitCode.UnexpectedException;
 		}
+	}
+
+	private static void AddConfiguration(WebApplicationBuilder builder, string[] args)
+	{
+		var configFileFromEnvironmentVariables = Environment.GetEnvironmentVariable(ConfigFileEnvironmentVariable);
+
+		if (!string.IsNullOrWhiteSpace(configFileFromEnvironmentVariables))
+		{
+			builder.Configuration.AddJsonFile(configFileFromEnvironmentVariables);
+		}
+
+		builder.Configuration
+#if DEBUG
+			.AddJsonFile("../../../appsettings.json", true)
+#else
+			.AddJsonFile("appsettings.json", true)
+#endif
+			.AddEnvironmentVariables()
+			.AddCommandLine(args)
+			.AddUserSecrets<Configuration>();
+	}
+
+	private static void AddHealthChecks(IServiceCollection services)
+	{
+		_ = services
+			.AddHealthChecks()
+			.AddVersions(
+				"versions",
+				HealthStatus.Unhealthy,
+				["application", "versions"],
+				TimeSpan.FromSeconds(5))
+			.AddSystemMemory(
+				1000,
+				name: "System Memory",
+				HealthStatus.Unhealthy,
+				["system", "memory"],
+				timeout: TimeSpan.FromSeconds(5)
+			)
+			.AddAssemblies(
+				"assemblies",
+				HealthStatus.Unhealthy,
+				["application", "assemblies"],
+				TimeSpan.FromSeconds(5)
+			)
+			;
 	}
 }

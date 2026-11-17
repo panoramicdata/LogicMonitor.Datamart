@@ -27,8 +27,6 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 				LogicMonitorId = 78121413
 			},
 			DataSourceDataPoint = new()
-			{
-			}
 		};
 		var utcNow = DateTimeOffset.UtcNow;
 		var endDateTimeUtc = new DateTimeOffset(
