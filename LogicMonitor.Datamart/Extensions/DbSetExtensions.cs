@@ -139,6 +139,21 @@ public static class DbSetExtension
 		dbSet.Add(storeItem);
 	}
 
+	private static readonly (Type Api, Type Store)[] _itemsWithoutForeignKeys =
+	[
+		(typeof(CollectorGroup), typeof(CollectorGroupStoreItem)),
+		(typeof(ConfigSource), typeof(ConfigSourceStoreItem)),
+		(typeof(DataSource), typeof(DataSourceStoreItem)),
+		(typeof(ResourceGroup), typeof(ResourceGroupStoreItem)),
+		(typeof(EscalationChain), typeof(EscalationChainStoreItem)),
+		(typeof(EventSource), typeof(EventSourceStoreItem)),
+		(typeof(WebsiteGroup), typeof(WebsiteGroupStoreItem)),
+		(typeof(Integration), typeof(IntegrationStoreItem)),
+	];
+
+	private static bool HasNoForeignKeys(object apiItem, object storeItem)
+		=> _itemsWithoutForeignKeys.Any(pair => pair.Api.IsInstanceOfType(apiItem) && pair.Store.IsInstanceOfType(storeItem));
+
 	private static async Task UpdateForeignKeysAsync<TApi, TStore>(
 		Context dbContext,
 		TApi apiItem,
@@ -147,75 +162,79 @@ public static class DbSetExtension
 		where TApi : IdentifiedItem
 		where TStore : IdentifiedStoreItem
 	{
+		if (HasNoForeignKeys(apiItem, storeItem))
+		{
+			return;
+		}
+
 		switch (apiItem, storeItem)
 		{
 			case (AlertRule alertRule, AlertRuleStoreItem alertRuleStoreItem):
-				{
-					var escalationChainStoreItem = await dbContext
-					.EscalationChains
-						.FirstOrDefaultAsync(ar => ar.LogicMonitorId == alertRule.EscalationChainId, cancellationToken)
-						.ConfigureAwait(false)
-						?? throw new InvalidOperationException("EscalationChain not found");
-
-					alertRuleStoreItem.EscalationChainId = escalationChainStoreItem.Id;
-					return;
-				}
+				await UpdateAlertRuleAsync(dbContext, alertRule, alertRuleStoreItem, cancellationToken).ConfigureAwait(false);
+				return;
 			case (Alert alert, AlertStoreItem alertStoreItem):
-				{
-					var alertRuleStoreItem = await dbContext
-						.AlertRules
-						.FirstOrDefaultAsync(ar => ar.LogicMonitorId == alert.AlertRuleId, cancellationToken)
-						.ConfigureAwait(false)
-						?? throw new InvalidOperationException("AlertRule not found");
-
-					alertStoreItem.AlertRuleId = alertRuleStoreItem.Id;
-					return;
-				}
+				await UpdateAlertAsync(dbContext, alert, alertStoreItem, cancellationToken).ConfigureAwait(false);
+				return;
 			case (Collector collector, CollectorStoreItem collectorStoreItem):
-				{
-					var collectorGroupStoreItem = await dbContext
-						.CollectorGroups
-						.FirstOrDefaultAsync(ar => ar.LogicMonitorId == collector.GroupId, cancellationToken)
-						.ConfigureAwait(false)
-					?? throw new InvalidOperationException("CollectorGroup not found");
-
-
-					collectorStoreItem.CollectorGroupId = collectorGroupStoreItem.Id;
-					return;
-				}
+				await UpdateCollectorAsync(dbContext, collector, collectorStoreItem, cancellationToken).ConfigureAwait(false);
+				return;
 			case (Resource device, ResourceStoreItem deviceStoreItem):
-				{
-					var collectorStoreItem = await dbContext
-					.Collectors
-						.FirstOrDefaultAsync(ar => ar.LogicMonitorId == device.PreferredCollectorId, cancellationToken)
-					.ConfigureAwait(false);
-
-					deviceStoreItem.PreferredCollectorId = collectorStoreItem?.Id;
-					return;
-				}
+				await UpdateResourceAsync(dbContext, device, deviceStoreItem, cancellationToken).ConfigureAwait(false);
+				return;
 			case (Website website, WebsiteStoreItem websiteStoreItem):
-				{
-					var websiteGroupStoreItem = await dbContext
-					.WebsiteGroups
-						.FirstOrDefaultAsync(ar => ar.LogicMonitorId == website.GroupId, cancellationToken)
-					.ConfigureAwait(false)
-					?? throw new InvalidOperationException("WebsiteGroup not found");
-
-
-					websiteStoreItem.WebsiteGroupId = websiteGroupStoreItem.Id;
-					return;
-				}
-			case (CollectorGroup, CollectorGroupStoreItem):
-			case (ConfigSource, ConfigSourceStoreItem):
-			case (DataSource, DataSourceStoreItem):
-			case (ResourceGroup, ResourceGroupStoreItem):
-			case (EscalationChain, EscalationChainStoreItem):
-			case (EventSource, EventSourceStoreItem):
-			case (WebsiteGroup, WebsiteGroupStoreItem):
-			case (Integration, IntegrationStoreItem):
+				await UpdateWebsiteAsync(dbContext, website, websiteStoreItem, cancellationToken).ConfigureAwait(false);
 				return;
 			default:
 				throw new NotSupportedException($"Unsupported TApi/TStore combination: {typeof(TApi).Name}/{typeof(TStore).Name}");
 		}
+	}
+
+	private static async Task UpdateAlertRuleAsync(Context dbContext, AlertRule alertRule, AlertRuleStoreItem alertRuleStoreItem, CancellationToken cancellationToken)
+	{
+		var escalationChainStoreItem = await dbContext
+			.EscalationChains
+			.FirstOrDefaultAsync(ar => ar.LogicMonitorId == alertRule.EscalationChainId, cancellationToken)
+			.ConfigureAwait(false)
+			?? throw new InvalidOperationException("EscalationChain not found");
+		alertRuleStoreItem.EscalationChainId = escalationChainStoreItem.Id;
+	}
+
+	private static async Task UpdateAlertAsync(Context dbContext, Alert alert, AlertStoreItem alertStoreItem, CancellationToken cancellationToken)
+	{
+		var alertRuleStoreItem = await dbContext
+			.AlertRules
+			.FirstOrDefaultAsync(ar => ar.LogicMonitorId == alert.AlertRuleId, cancellationToken)
+			.ConfigureAwait(false)
+			?? throw new InvalidOperationException("AlertRule not found");
+		alertStoreItem.AlertRuleId = alertRuleStoreItem.Id;
+	}
+
+	private static async Task UpdateCollectorAsync(Context dbContext, Collector collector, CollectorStoreItem collectorStoreItem, CancellationToken cancellationToken)
+	{
+		var collectorGroupStoreItem = await dbContext
+			.CollectorGroups
+			.FirstOrDefaultAsync(ar => ar.LogicMonitorId == collector.GroupId, cancellationToken)
+			.ConfigureAwait(false)
+			?? throw new InvalidOperationException("CollectorGroup not found");
+		collectorStoreItem.CollectorGroupId = collectorGroupStoreItem.Id;
+	}
+
+	private static async Task UpdateResourceAsync(Context dbContext, Resource device, ResourceStoreItem deviceStoreItem, CancellationToken cancellationToken)
+	{
+		var preferredCollector = await dbContext
+			.Collectors
+			.FirstOrDefaultAsync(ar => ar.LogicMonitorId == device.PreferredCollectorId, cancellationToken)
+			.ConfigureAwait(false);
+		deviceStoreItem.PreferredCollectorId = preferredCollector?.Id;
+	}
+
+	private static async Task UpdateWebsiteAsync(Context dbContext, Website website, WebsiteStoreItem websiteStoreItem, CancellationToken cancellationToken)
+	{
+		var websiteGroupStoreItem = await dbContext
+			.WebsiteGroups
+			.FirstOrDefaultAsync(ar => ar.LogicMonitorId == website.GroupId, cancellationToken)
+			.ConfigureAwait(false)
+			?? throw new InvalidOperationException("WebsiteGroup not found");
+		websiteStoreItem.WebsiteGroupId = websiteGroupStoreItem.Id;
 	}
 }
