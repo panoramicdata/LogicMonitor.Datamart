@@ -256,21 +256,19 @@ public class DatamartClient : LogicMonitorClient
 	{
 		using var context = GetContext();
 		var typeName = typeof(TApi).Name;
-		switch (typeName)
+		if (typeName != nameof(Resource))
 		{
-			case nameof(Resource):
-				var deviceStoreItem = await context
-					.Devices
-					.SingleOrDefaultAsync(i => i.LogicMonitorId == id, cancellationToken)
-					.ConfigureAwait(false);
-				var result = deviceStoreItem == null
-					? throw new KeyNotFoundException($"Device with id {id} not found")
-					: MapperInstance.Map<ResourceStoreItem, Resource>(deviceStoreItem) as TApi;
-
-				return result ?? throw new InvalidOperationException($"Could not convert {nameof(ResourceStoreItem)} to {nameof(Resource)}");
-			default:
-				throw new NotSupportedException($"Getting cached {typeName} is not supported");
+			throw new NotSupportedException($"Getting cached {typeName} is not supported");
 		}
+
+		var deviceStoreItem = await context
+			.Devices
+			.SingleOrDefaultAsync(i => i.LogicMonitorId == id, cancellationToken)
+			.ConfigureAwait(false)
+			?? throw new KeyNotFoundException($"Device with id {id} not found");
+		var result = MapperInstance.Map<ResourceStoreItem, Resource>(deviceStoreItem) as TApi;
+
+		return result ?? throw new InvalidOperationException($"Could not convert {nameof(ResourceStoreItem)} to {nameof(Resource)}");
 	}
 
 	/// <summary>
@@ -517,15 +515,13 @@ public class DatamartClient : LogicMonitorClient
 
 			// For DataPoints, the information from LogicMonitor is present on the DataSources.
 			// So, after fetching the DataSources, we should also update the DataPoints in the database
-			switch (typeof(TStore).Name)
+			if (typeof(TStore).Name == nameof(DataSourceStoreItem))
 			{
-				case nameof(DataSourceStoreItem):
-						await UpdateGraphsAsync(context, [.. apiItems.Cast<DataSource>()], notificationReceiver, cancellationToken)
-							.ConfigureAwait(false);
+				await UpdateGraphsAsync(context, [.. apiItems.Cast<DataSource>()], notificationReceiver, cancellationToken)
+					.ConfigureAwait(false);
 
-						await UpdateDataPointsAsync(context, [.. apiItems.Cast<DataSource>()], cancellationToken)
-							.ConfigureAwait(false);
-						break;
+				await UpdateDataPointsAsync(context, [.. apiItems.Cast<DataSource>()], cancellationToken)
+					.ConfigureAwait(false);
 			}
 
 			logger.LogInformation(
@@ -2129,34 +2125,33 @@ public class DatamartClient : LogicMonitorClient
 		}
 
 		// Remove old ones
-		switch (oldestUtc)
+		if (oldestUtc is { } oldestDateTimeOffset)
 		{
-			case null:
-				// Remove all but the mostRecentResourceDataSourceInstanceConfig
-				await context
-					.DeviceConfigSourceInstanceConfigs
-					.Where(ddsic =>
-						// Must be for this instance
-						ddsic.DeviceConfigSourceInstanceId == databaseDeviceConfigSourceInstance.Id
-						// Don't delete the most recent one
-						&& ddsic.LogicMonitorStringId != mostRecentResourceDataSourceInstanceConfig.Id)
-					.ExecuteDeleteAsync(cancellationToken: cancellationToken)
-					.ConfigureAwait(false);
-				break;
-			case DateTimeOffset oldestDateTimeOffset:
-				// Remove all configs older than the oldestDateTimeOffset
-				_ = await context
-					.DeviceConfigSourceInstanceConfigs
-					.Where(ddsic =>
-						// Must be for this instance
-						ddsic.DeviceConfigSourceInstanceId == databaseDeviceConfigSourceInstance.Id
-						// Don't delete the most recent one
-						&& ddsic.LogicMonitorStringId != mostRecentResourceDataSourceInstanceConfig.Id
-						// The older ones
-						&& ddsic.PollUtc < oldestDateTimeOffset)
-					.ExecuteDeleteAsync(cancellationToken: cancellationToken)
-					.ConfigureAwait(false);
-				break;
+			// Remove all configs older than the oldestDateTimeOffset
+			_ = await context
+				.DeviceConfigSourceInstanceConfigs
+				.Where(ddsic =>
+					// Must be for this instance
+					ddsic.DeviceConfigSourceInstanceId == databaseDeviceConfigSourceInstance.Id
+					// Don't delete the most recent one
+					&& ddsic.LogicMonitorStringId != mostRecentResourceDataSourceInstanceConfig.Id
+					// The older ones
+					&& ddsic.PollUtc < oldestDateTimeOffset)
+				.ExecuteDeleteAsync(cancellationToken: cancellationToken)
+				.ConfigureAwait(false);
+		}
+		else
+		{
+			// Remove all but the mostRecentResourceDataSourceInstanceConfig
+			await context
+				.DeviceConfigSourceInstanceConfigs
+				.Where(ddsic =>
+					// Must be for this instance
+					ddsic.DeviceConfigSourceInstanceId == databaseDeviceConfigSourceInstance.Id
+					// Don't delete the most recent one
+					&& ddsic.LogicMonitorStringId != mostRecentResourceDataSourceInstanceConfig.Id)
+				.ExecuteDeleteAsync(cancellationToken: cancellationToken)
+				.ConfigureAwait(false);
 		}
 	}
 

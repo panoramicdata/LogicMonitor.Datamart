@@ -182,7 +182,7 @@ public class ExcludeSdtPeriodsConfigurationTests(ITestOutputHelper testOutputHel
 			(5000L, 7000L)   // SDT period 2
 		};
 
-		var timestamps = new long[] { 500L, 1000L, 2000L, 3000L, 4000L, 5000L, 6000L, 8000L };
+		long[] timestamps = [500L, 1000L, 2000L, 3000L, 4000L, 5000L, 6000L, 8000L];
 
 		// Act
 		var results = timestamps.Select(ts => new

@@ -295,74 +295,27 @@ internal class AlertSync(
 		return updateAlertStats;
 	}
 
+	private static readonly Action<AlertStoreItem, Guid?>[] _monitorObjectGroupSetters =
+	[
+		(alert, id) => alert.MonitorObjectGroup0Id = id,
+		(alert, id) => alert.MonitorObjectGroup1Id = id,
+		(alert, id) => alert.MonitorObjectGroup2Id = id,
+		(alert, id) => alert.MonitorObjectGroup3Id = id,
+		(alert, id) => alert.MonitorObjectGroup4Id = id,
+		(alert, id) => alert.MonitorObjectGroup5Id = id,
+		(alert, id) => alert.MonitorObjectGroup6Id = id,
+		(alert, id) => alert.MonitorObjectGroup7Id = id,
+		(alert, id) => alert.MonitorObjectGroup8Id = id,
+		(alert, id) => alert.MonitorObjectGroup9Id = id,
+	];
+
 	private async Task SetMonitorObjectGroupIdsAsync(Context monitorObjectGroupContext, Alert networkAlert, AlertStoreItem alertStoreItem, MemoryCache cache)
 	{
-		//var monitorObjectGroups = new[] {
-		//	alertStoreItem.MonitorObjectGroup0Id,
-		//	alertStoreItem.MonitorObjectGroup1Id,
-		//	alertStoreItem.MonitorObjectGroup2Id,
-		//	alertStoreItem.MonitorObjectGroup3Id,
-		//	alertStoreItem.MonitorObjectGroup4Id,
-		//	alertStoreItem.MonitorObjectGroup5Id,
-		//	alertStoreItem.MonitorObjectGroup6Id,
-		//	alertStoreItem.MonitorObjectGroup7Id,
-		//	alertStoreItem.MonitorObjectGroup8Id,
-		//	alertStoreItem.MonitorObjectGroup9Id
-		//};
-
-		//for (var i = 0; i < networkAlert.MonitorObjectGroups.Count; i++)
-		//{
-		//	monitorObjectGroups[i] = await GetMonitorObjectGroupIdAsync(monitorObjectGroupContext, networkAlert, i).ConfigureAwait(false);
-		//}
-
-		if (networkAlert.MonitorObjectGroups.Count > 0)
+		var groupCount = Math.Min(networkAlert.MonitorObjectGroups.Count, _monitorObjectGroupSetters.Length);
+		for (var index = 0; index < groupCount; index++)
 		{
-			alertStoreItem.MonitorObjectGroup0Id = await GetMonitorObjectGroupIdAsync(cache, monitorObjectGroupContext, networkAlert, 0).ConfigureAwait(false);
-		}
-
-		if (networkAlert.MonitorObjectGroups.Count > 1)
-		{
-			alertStoreItem.MonitorObjectGroup1Id = await GetMonitorObjectGroupIdAsync(cache, monitorObjectGroupContext, networkAlert, 1).ConfigureAwait(false);
-		}
-
-		if (networkAlert.MonitorObjectGroups.Count > 2)
-		{
-			alertStoreItem.MonitorObjectGroup2Id = await GetMonitorObjectGroupIdAsync(cache, monitorObjectGroupContext, networkAlert, 2).ConfigureAwait(false);
-		}
-
-		if (networkAlert.MonitorObjectGroups.Count > 3)
-		{
-			alertStoreItem.MonitorObjectGroup3Id = await GetMonitorObjectGroupIdAsync(cache, monitorObjectGroupContext, networkAlert, 3).ConfigureAwait(false);
-		}
-
-		if (networkAlert.MonitorObjectGroups.Count > 4)
-		{
-			alertStoreItem.MonitorObjectGroup4Id = await GetMonitorObjectGroupIdAsync(cache, monitorObjectGroupContext, networkAlert, 4).ConfigureAwait(false);
-		}
-
-		if (networkAlert.MonitorObjectGroups.Count > 5)
-		{
-			alertStoreItem.MonitorObjectGroup5Id = await GetMonitorObjectGroupIdAsync(cache, monitorObjectGroupContext, networkAlert, 5).ConfigureAwait(false);
-		}
-
-		if (networkAlert.MonitorObjectGroups.Count > 6)
-		{
-			alertStoreItem.MonitorObjectGroup6Id = await GetMonitorObjectGroupIdAsync(cache, monitorObjectGroupContext, networkAlert, 6).ConfigureAwait(false);
-		}
-
-		if (networkAlert.MonitorObjectGroups.Count > 7)
-		{
-			alertStoreItem.MonitorObjectGroup7Id = await GetMonitorObjectGroupIdAsync(cache, monitorObjectGroupContext, networkAlert, 7).ConfigureAwait(false);
-		}
-
-		if (networkAlert.MonitorObjectGroups.Count > 8)
-		{
-			alertStoreItem.MonitorObjectGroup8Id = await GetMonitorObjectGroupIdAsync(cache, monitorObjectGroupContext, networkAlert, 8).ConfigureAwait(false);
-		}
-
-		if (networkAlert.MonitorObjectGroups.Count > 9)
-		{
-			alertStoreItem.MonitorObjectGroup9Id = await GetMonitorObjectGroupIdAsync(cache, monitorObjectGroupContext, networkAlert, 9).ConfigureAwait(false);
+			var groupId = await GetMonitorObjectGroupIdAsync(cache, monitorObjectGroupContext, networkAlert, index).ConfigureAwait(false);
+			_monitorObjectGroupSetters[index](alertStoreItem, groupId);
 		}
 	}
 

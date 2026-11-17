@@ -326,11 +326,9 @@ internal class LowResolutionDataSync(
 				_configuration.DatabaseName,
 				dataSourceName,
 				failedDeviceDisplayNames.Count,
-				failedDeviceDisplayNames.Count switch
-				{
-					1 => failedDeviceDisplayNames[0],
-					_ => $"{string.Join(", ", failedDeviceDisplayNames.Take(10))}"
-				}
+				failedDeviceDisplayNames.Count == 1
+					? failedDeviceDisplayNames[0]
+					: string.Join(", ", failedDeviceDisplayNames.Take(10))
 			);
 		}
 	}
@@ -512,8 +510,6 @@ internal class LowResolutionDataSync(
 		var utcNow = _timeProviderService.UtcOffsetNow;
 
 		var aggregationsToWrite = new List<TimeSeriesDataAggregationStoreItem>();
-
-		var stopwatch = new Stopwatch();
 
 		var dataSourceDataPointStoreItemsNotTracked = await context
 			.DataSourceDataPoints
@@ -1266,7 +1262,7 @@ internal class LowResolutionDataSync(
 			{
 				graphDataLine.Data =
 					[.. graphDataLine.Data
-						.Where((dp, index) =>
+						.Where((_, index) =>
 						{
 							return graphData.TimeStamps[index] >= deviceNotTracked.CreatedOnSeconds * 1000;
 						})
@@ -1610,7 +1606,6 @@ internal class LowResolutionDataSync(
 		{
 			if (value is double doubleValue)
 			{
-				//previousButOneDoubleValue = previousDoubleValue;
 				previousDoubleValue = doubleValue;
 				upTimeCount += ambiguousCount;
 				ambiguousCount = 0;

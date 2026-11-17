@@ -433,16 +433,14 @@ public class Context : DbContext
 		{
 			if (changedEntity.Entity is StoreItem entity)
 			{
-				switch (changedEntity.State)
+				if (changedEntity.State == EntityState.Added)
 				{
-					case EntityState.Added:
-						entity.DatamartCreated = utcNow;
-						entity.DatamartLastModified = utcNow;
-						break;
-
-					case EntityState.Modified:
-						entity.DatamartLastModified = utcNow;
-						break;
+					entity.DatamartCreated = utcNow;
+					entity.DatamartLastModified = utcNow;
+				}
+				else if (changedEntity.State == EntityState.Modified)
+				{
+					entity.DatamartLastModified = utcNow;
 				}
 			}
 		}
