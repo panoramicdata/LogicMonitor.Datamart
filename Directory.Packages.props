@@ -7,7 +7,7 @@
     <!-- LogicMonitor.Datamart -->
     <PackageVersion Include="EFCore.BulkExtensions.PostgreSql" Version="10.0.1" />
     <PackageVersion Include="EFCore.BulkExtensions.SqlServer" Version="10.0.1" />
-    <PackageVersion Include="LogicMonitor.Api" Version="3.240.131" />
+    <PackageVersion Include="LogicMonitor.Api" Version="3.240.144" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.1.2" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.14" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.14" />
@@ -25,9 +25,9 @@
     <PackageVersion Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
     <PackageVersion Include="PanoramicData.HealthChecks.Core" Version="10.0.90" />
     <PackageVersion Include="PanoramicData.HealthChecks.Versions" Version="10.0.90" />
-    <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
-    <PackageVersion Include="Serilog.Extensions.Hosting" Version="10.0.0" />
-    <PackageVersion Include="Serilog.Settings.Configuration" Version="10.0.1" />
+    <PackageVersion Include="Serilog.AspNetCore" Version="11.0.0" />
+    <PackageVersion Include="Serilog.Extensions.Hosting" Version="11.0.0" />
+    <PackageVersion Include="Serilog.Settings.Configuration" Version="11.0.0" />
     <PackageVersion Include="Serilog.Sinks.ApplicationInsights" Version="5.0.1" />
     <PackageVersion Include="Serilog.Sinks.AzureAnalytics" Version="2019.1.20" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
