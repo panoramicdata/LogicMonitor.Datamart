@@ -647,17 +647,20 @@ internal class LowResolutionDataSync(
 
 							var bulkWriteModel =
 								await GetTimeSeriesDataAggregationStoreItem(
-									datamartClient,
-									deviceNotTracked,
-									databaseDeviceDataSourceInstanceDataPoint,
-									dataPointName,
-									dataSourceDataPointStoreItemNotTracked,
-									startDateTimeUtc,
-									endDateTimeUtc,
+									new TimeSeriesAggregationRequest
+									{
+										DatamartClient = datamartClient,
+										Device = deviceNotTracked,
+										InstanceDataPoint = databaseDeviceDataSourceInstanceDataPoint,
+										DataPointName = dataPointName,
+										DataPoint = dataSourceDataPointStoreItemNotTracked,
+										StartDateTimeUtc = startDateTimeUtc,
+										EndDateTimeUtc = endDateTimeUtc,
+										ExcludeSdtPeriods = configuration.ExcludeSdtPeriods,
+										SdtCache = sdtCache,
+										Logger = Logger,
+									},
 									graphData,
-									configuration.ExcludeSdtPeriods,
-									sdtCache,
-									Logger,
 									cancellationToken)
 								.ConfigureAwait(false);
 
@@ -1234,275 +1237,38 @@ internal class LowResolutionDataSync(
 	}
 
 	/// <summary>
-	/// Creates a TimeSeriesDataAggregationStoreItem from graph data.
-	/// MS-22557: When excludeSdtPeriods is true, retrieves SDT data and populates:
-	/// - Main aggregation columns use ALL data points
-	/// - ExcludingSdt columns use data points excluding SDT periods
-	/// - SDT count columns (NormalOrSdtCount, WarningSdtCount, etc.)
-	/// When excludeSdtPeriods is false, SDT API calls are skipped for performance.
+	/// MS-22557: SDT periods are only retrieved when ExcludeSdtPeriods is set, to avoid the extra API calls.
 	/// </summary>
 	internal static async Task<TimeSeriesDataAggregationStoreItem?> GetTimeSeriesDataAggregationStoreItem(
-		DatamartClient datamartClient,
-		ResourceStoreItem deviceNotTracked,
-		ResourceDataSourceInstanceDataPointStoreItem databaseDeviceDataSourceInstanceDataPoint,
-		string dataPointName,
-		DataSourceDataPointStoreItem dataPointStoreItemNotTracked,
-		DateTimeOffset startDateTimeUtc,
-		DateTimeOffset endDateTimeUtc,
+		TimeSeriesAggregationRequest request,
 		GraphData graphData,
-		bool excludeStdPeriods,
-		Dictionary<string, List<ScheduledDownTimeHistory>> sdtCache,
-		ILogger logger,
 		CancellationToken cancellationToken)
 	{
+		var logger = request.Logger;
+		var instanceDataPoint = request.InstanceDataPoint;
+
 		try
 		{
-			// Remove all DataPoint values before the device was added to LogicMonitor
-			foreach (var graphDataLine in graphData.Lines)
-			{
-				graphDataLine.Data =
-					[.. graphDataLine.Data
-						.Where((_, index) =>
-						{
-							return graphData.TimeStamps[index] >= deviceNotTracked.CreatedOnSeconds * 1000;
-						})
-					];
-			}
+			var pairedData = TimeSeriesAggregationBuilder.BuildPairedData(
+				graphData,
+				request.Device,
+				instanceDataPoint,
+				request.DataPointName,
+				request.DataPoint);
 
-			graphData.TimeStamps = [.. graphData.TimeStamps.Where(ts => ts >= deviceNotTracked.CreatedOnSeconds * 1000)];
+			var sdtPeriods = request.ExcludeSdtPeriods
+				? await GetSdtPeriodsForAggregationAsync(request, cancellationToken).ConfigureAwait(false)
+				: null;
 
-			// MS-21395: Create paired timestamp/value data to ensure synchronization
-			List<(long timestamp, double? value)> pairedData;
-
-			if (string.IsNullOrWhiteSpace(databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint!.Calculation))
-			{
-				// No calculation - get data directly from the graph
-				var line = graphData
-					.Lines
-					.SingleOrDefault(dp => dp.Legend == dataPointName);
-
-				if (line is null || dataPointStoreItemNotTracked is null)
-				{
-					throw new FormatException($"Could not find DataPoint '{dataPointName}' for DataSource '{databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint.DataSource.Name}'");
-				}
-
-				// Pair timestamps with values
-				pairedData = [.. graphData.TimeStamps.Select((ts, index) => (ts, line.Data[index]))];
-			}
-			else
-			{
-				// Calculation exists - evaluate expression for each timestamp
-				var expression = new ExtendedExpression(databaseDeviceDataSourceInstanceDataPoint.DataSourceDataPoint.Calculation);
-
-				pairedData = [.. graphData.TimeStamps
-					.Select((ts, index) =>
-					{
-						expression.Parameters.Clear();
-						foreach (var line in graphData.Lines)
-						{
-							expression.Parameters.Add(line.Legend, line.Data[index]);
-						}
-
-						var calculatedValue = expression.Evaluate() as double?;
-
-						// MS-22318 Prevent infinite and NaN values from being included
-						if (calculatedValue.HasValue && (double.IsInfinity(calculatedValue.Value) || double.IsNaN(calculatedValue.Value)))
-						{
-							calculatedValue = null;
-						}
-
-						return (ts, calculatedValue);
-					})];
-			}
-
-			// MS-22557: Only get SDT data when excludeSdtPeriods is true (for performance)
-			// When false, skip SDT API calls entirely to reduce sync time
-			List<(long StartTimestampMs, long EndTimestampMs)>? sdtPeriods = null;
-
-			if (excludeStdPeriods)
-			{
-				logger.LogDebug(
-					"Retrieving SDT periods for DeviceDataSourceInstanceDataPointId {DeviceDataSourceInstanceDataPointId} ({Start:yyyy-MM-dd HH:mm:ss} .. {End:yyyy-MM-dd HH:mm:ss})...",
-					databaseDeviceDataSourceInstanceDataPoint.Id,
-					startDateTimeUtc,
-					endDateTimeUtc);
-
-				sdtPeriods =
-					await GetHistoricalSdtPeriodsAsync(
-						datamartClient,
-						deviceNotTracked,
-						databaseDeviceDataSourceInstanceDataPoint.DeviceDataSourceInstance,
-						startDateTimeUtc,
-						endDateTimeUtc,
-						sdtCache,
-						logger,
-						cancellationToken)
-					.ConfigureAwait(false);
-
-				if (sdtPeriods == null)
-				{
-					logger.LogWarning(
-						"SDT retrieval failed for DeviceDataSourceInstanceDataPointId {DeviceDataSourceInstanceDataPointId}. " +
-						"ExcludingSdt columns will be set to null.",
-						databaseDeviceDataSourceInstanceDataPoint.Id);
-				}
-			}
-			else
+			if (!request.ExcludeSdtPeriods)
 			{
 				logger.LogDebug(
 					"Skipping SDT retrieval for DeviceDataSourceInstanceDataPointId {DeviceDataSourceInstanceDataPointId} " +
 					"because ExcludeSdtPeriods is false (performance optimization).",
-					databaseDeviceDataSourceInstanceDataPoint.Id);
+					instanceDataPoint.Id);
 			}
 
-			// MS-22557: Build timeSeriesDataPoints with SDT information (only when SDT data is available)
-			var timeSeriesDataPoints = new List<TimeSeriesDataPoint>();
-
-			foreach (var (timestamp, value) in pairedData)
-			{
-				// Check if timestamp falls within any SDT period (only if we have SDT data)
-				var isInSdt = sdtPeriods?.Any(sdt =>
-					timestamp >= sdt.StartTimestampMs &&
-					timestamp <= sdt.EndTimestampMs) ?? false;
-
-				timeSeriesDataPoints.Add(new TimeSeriesDataPoint
-				{
-					IsInSdt = isInSdt,
-					Timestamp = timestamp,
-					Value = value
-				});
-			}
-
-			// MS-22557: All data points (for main aggregations - always use all data)
-			var allValues = timeSeriesDataPoints.Select(dp => dp.Value).ToList();
-
-			// Calculate and sort non-null values for percentile calculations (using all data)
-			var sortedNonNullValues = allValues
-				.Where(v => v.HasValue)
-				.Select(v => v!.Value)
-				.OrderBy(v => v)
-				.ToArray();
-
-			// MS-22557: Filtered data points excluding SDT periods (only when SDT data is available)
-			List<double?>? excludingSdtValues = null;
-			double[]? sortedNonNullValuesExcludingSdt = null;
-
-			if (sdtPeriods != null)
-			{
-				var excludingSdtDataPoints = timeSeriesDataPoints.Where(dp => !dp.IsInSdt).ToList();
-				excludingSdtValues = [.. excludingSdtDataPoints.Select(dp => dp.Value)];
-
-				sortedNonNullValuesExcludingSdt =
-				[.. excludingSdtValues
-					.Where(v => v.HasValue)
-					.Select(v => v!.Value)
-					.OrderBy(v => v)
-				];
-			}
-
-			var bulkWriteModel = new TimeSeriesDataAggregationStoreItem
-			{
-				Id = Guid.NewGuid(),
-				DeviceDataSourceInstanceDataPointId = databaseDeviceDataSourceInstanceDataPoint.Id,
-				PeriodStart = startDateTimeUtc.UtcDateTime,
-				PeriodEnd = endDateTimeUtc.UtcDateTime,
-
-				// MS-22557: Main aggregation columns use ALL data points
-				DataCount = allValues.Count(d => d.HasValue),
-				NoDataCount = allValues.Count(d => !d.HasValue),
-				Sum = allValues.Sum(d => d ?? 0),
-				SumSquared = allValues.Sum(d => d.HasValue ? d.Value * d.Value : 0),
-				Max = allValues.Where(d => d != null).DefaultIfEmpty(null).Max(),
-				Min = allValues.Where(d => d != null).DefaultIfEmpty(null).Min(),
-				First = allValues.DefaultIfEmpty(null).First(),
-				Last = allValues.DefaultIfEmpty(null).Last(),
-				FirstWithData = allValues.Where(d => d != null).DefaultIfEmpty(null).First(),
-				LastWithData = allValues.Where(d => d != null).DefaultIfEmpty(null).Last(),
-				Centile05 = CalculatePercentile(sortedNonNullValues, 5),
-				Centile10 = CalculatePercentile(sortedNonNullValues, 10),
-				Centile25 = CalculatePercentile(sortedNonNullValues, 25),
-				Centile50 = CalculatePercentile(sortedNonNullValues, 50),
-				Centile75 = CalculatePercentile(sortedNonNullValues, 75),
-				Centile90 = CalculatePercentile(sortedNonNullValues, 90),
-				Centile95 = CalculatePercentile(sortedNonNullValues, 95),
-				NormalCount = CountAtAlertLevel(
-					allValues,
-					dataPointStoreItemNotTracked.GlobalAlertExpression,
-					CountAlertLevel.Normal
-				),
-				WarningCount = CountAtAlertLevel(
-					allValues,
-					dataPointStoreItemNotTracked.GlobalAlertExpression,
-					CountAlertLevel.Warning
-				),
-				ErrorCount = CountAtAlertLevel(
-					allValues,
-					dataPointStoreItemNotTracked.GlobalAlertExpression,
-					CountAlertLevel.Error
-				),
-				CriticalCount = CountAtAlertLevel(
-					allValues,
-					dataPointStoreItemNotTracked.GlobalAlertExpression,
-					CountAlertLevel.Critical
-				),
-				AvailabilityPercent2 = CalculatePercentageAvailabilityNew(
-					allValues,
-					dataPointStoreItemNotTracked.PercentageAvailabilityCalculation
-				),
-
-				// MS-22557: SDT count columns (only populated when ExcludeSdtPeriods = true and SDT data available)
-				NormalOrSdtCount = sdtPeriods == null ? null : CountAtAlertLevelUseSdt(
-					timeSeriesDataPoints,
-					dataPointStoreItemNotTracked.GlobalAlertExpression,
-					CountAlertLevel.Normal),
-				WarningSdtCount = sdtPeriods == null ? null : CountAtAlertLevelUseSdt(
-					timeSeriesDataPoints,
-					dataPointStoreItemNotTracked.GlobalAlertExpression,
-					CountAlertLevel.Warning),
-				ErrorSdtCount = sdtPeriods == null ? null : CountAtAlertLevelUseSdt(
-					timeSeriesDataPoints,
-					dataPointStoreItemNotTracked.GlobalAlertExpression,
-					CountAlertLevel.Error),
-				CriticalSdtCount = sdtPeriods == null ? null : CountAtAlertLevelUseSdt(
-					timeSeriesDataPoints,
-					dataPointStoreItemNotTracked.GlobalAlertExpression,
-					CountAlertLevel.Critical),
-
-				// MS-22557: ExcludingSdt columns (only populated when ExcludeSdtPeriods = true and SDT data available)
-				DataCountExcludingSdt = excludingSdtValues?.Count(d => d.HasValue),
-				NoDataCountExcludingSdt = excludingSdtValues?.Count(d => !d.HasValue),
-				SumExcludingSdt = excludingSdtValues?.Sum(d => d ?? 0),
-				SumSquaredExcludingSdt = excludingSdtValues?.Sum(d => d.HasValue ? d.Value * d.Value : 0),
-				MaxExcludingSdt = excludingSdtValues?.Where(d => d != null).DefaultIfEmpty(null).Max(),
-				MinExcludingSdt = excludingSdtValues?.Where(d => d != null).DefaultIfEmpty(null).Min(),
-				FirstExcludingSdt = excludingSdtValues?.DefaultIfEmpty(null).First(),
-				LastExcludingSdt = excludingSdtValues?.DefaultIfEmpty(null).Last(),
-				FirstWithDataExcludingSdt = excludingSdtValues?.Where(d => d != null).DefaultIfEmpty(null).First(),
-				LastWithDataExcludingSdt = excludingSdtValues?.Where(d => d != null).DefaultIfEmpty(null).Last(),
-				Centile05ExcludingSdt = sortedNonNullValuesExcludingSdt == null ? null : CalculatePercentile(sortedNonNullValuesExcludingSdt, 5),
-				Centile10ExcludingSdt = sortedNonNullValuesExcludingSdt == null ? null : CalculatePercentile(sortedNonNullValuesExcludingSdt, 10),
-				Centile25ExcludingSdt = sortedNonNullValuesExcludingSdt == null ? null : CalculatePercentile(sortedNonNullValuesExcludingSdt, 25),
-				Centile50ExcludingSdt = sortedNonNullValuesExcludingSdt == null ? null : CalculatePercentile(sortedNonNullValuesExcludingSdt, 50),
-				Centile75ExcludingSdt = sortedNonNullValuesExcludingSdt == null ? null : CalculatePercentile(sortedNonNullValuesExcludingSdt, 75),
-				Centile90ExcludingSdt = sortedNonNullValuesExcludingSdt == null ? null : CalculatePercentile(sortedNonNullValuesExcludingSdt, 90),
-				Centile95ExcludingSdt = sortedNonNullValuesExcludingSdt == null ? null : CalculatePercentile(sortedNonNullValuesExcludingSdt, 95),
-				AvailabilityPercent2ExcludingSdt = excludingSdtValues == null ? null : CalculatePercentageAvailabilityNew(
-					excludingSdtValues,
-					dataPointStoreItemNotTracked.PercentageAvailabilityCalculation
-				),
-				AvailabilityPercentExcludingSdt = excludingSdtValues == null ? null : CalculatePercentageAvailability(
-					excludingSdtValues,
-					dataPointStoreItemNotTracked.PercentageAvailabilityCalculation
-				),
-
-				// IMPORTANT! This must be calculated last as this process can reverse the array.
-				AvailabilityPercent = CalculatePercentageAvailability(
-					allValues,
-					dataPointStoreItemNotTracked.PercentageAvailabilityCalculation
-				)
-			};
-
-			return bulkWriteModel;
+			return TimeSeriesAggregationBuilder.Build(request, pairedData, sdtPeriods);
 		}
 		catch (Exception exception)
 		{
@@ -1512,12 +1278,47 @@ internal class LowResolutionDataSync(
 				"Data point name: {DataPointName}. " +
 				"DataSourceDataPointStoreItem Id: {DataSourceDataPointStoreItemId}. " +
 				"The error was due to: {Message}",
-				dataPointStoreItemNotTracked.Id.ToString(),
-				dataPointName,
+				request.DataPoint.Id.ToString(),
+				request.DataPointName,
 				exception.Message);
 
 			throw;
 		}
+	}
+
+	private static async Task<List<(long StartTimestampMs, long EndTimestampMs)>?> GetSdtPeriodsForAggregationAsync(
+		TimeSeriesAggregationRequest request,
+		CancellationToken cancellationToken)
+	{
+		var logger = request.Logger;
+		var instanceDataPoint = request.InstanceDataPoint;
+
+		logger.LogDebug(
+			"Retrieving SDT periods for DeviceDataSourceInstanceDataPointId {DeviceDataSourceInstanceDataPointId} ({Start:yyyy-MM-dd HH:mm:ss} .. {End:yyyy-MM-dd HH:mm:ss})...",
+			instanceDataPoint.Id,
+			request.StartDateTimeUtc,
+			request.EndDateTimeUtc);
+
+		var sdtPeriods = await GetHistoricalSdtPeriodsAsync(
+			request.DatamartClient,
+			request.Device,
+			instanceDataPoint.DeviceDataSourceInstance,
+			request.StartDateTimeUtc,
+			request.EndDateTimeUtc,
+			request.SdtCache,
+			logger,
+			cancellationToken)
+			.ConfigureAwait(false);
+
+		if (sdtPeriods == null)
+		{
+			logger.LogWarning(
+				"SDT retrieval failed for DeviceDataSourceInstanceDataPointId {DeviceDataSourceInstanceDataPointId}. " +
+				"ExcludingSdt columns will be set to null.",
+				instanceDataPoint.Id);
+		}
+
+		return sdtPeriods;
 	}
 
 	private static async Task ResetForResyncAsync(
@@ -1738,319 +1539,17 @@ internal class LowResolutionDataSync(
 		return 100d * upTimeCount / (upTimeCount + downTimeCount);
 	}
 
-	/// <summary>
-	/// Counts the number of data points at a specific alert level, considering SDT periods.
-	/// </summary>
-	/// <param name="timeSeriesDataPoints">The time series data points including SDT information.</param>
-	/// <param name="effectiveAlertExpression">The effective alert expression.</param>
-	/// <param name="countAtAlertLevel">The alert level to count.</param>
-	/// <returns>The count of data points at the specified alert level.</returns>
-	/// <exception cref="ArgumentException">Thrown when the alert expression is invalid.</exception>
 	private static int? CountAtAlertLevelUseSdt(
 		List<TimeSeriesDataPoint> timeSeriesDataPoints,
 		string effectiveAlertExpression,
 		CountAlertLevel countAtAlertLevel)
-	{
-		// Handle empty or null alert expression
-		if (string.IsNullOrEmpty(effectiveAlertExpression))
-		{
-			// For Normal: count all points with values OR in SDT
-			// For other levels: return 0 (no thresholds defined)
-			return countAtAlertLevel == CountAlertLevel.Normal
-				? timeSeriesDataPoints.Count(dp => dp.Value.HasValue || dp.IsInSdt)
-				: 0;
-		}
+		=> AlertLevelCounter.CountUseSdt(timeSeriesDataPoints, effectiveAlertExpression, countAtAlertLevel);
 
-		// Parse the alert expression - same format as CountAtAlertLevel
-		// Format: "> 1 2 3" where operator, warning, error (optional), critical (optional)
-		var parts = effectiveAlertExpression.Split(' ');
-		if (parts.Length == 0)
-		{
-			return countAtAlertLevel == CountAlertLevel.Normal
-				? timeSeriesDataPoints.Count(dp => dp.Value.HasValue || dp.IsInSdt)
-				: 0;
-		}
-
-		var symbol = parts[0];
-
-		var alertLevels = parts
-			.Skip(1)
-			.Where(x => double.TryParse(x, out var _))
-			.Select(double.Parse)
-			.ToArray();
-
-		// Extract threshold levels
-		var criticalLevel = alertLevels.Length == 3 ? alertLevels[2] : (double?)null;
-		var errorLevel = alertLevels.Length >= 2 ? alertLevels[1] : (double?)null;
-		var warningLevel = alertLevels.Length >= 1 ? alertLevels[0] : (double?)null;
-
-		// Count based on alert level
-		switch (countAtAlertLevel)
-		{
-			case CountAlertLevel.Critical:
-				// Count points that are at Critical level AND in SDT
-				if (criticalLevel == null)
-				{
-					return 0;
-				}
-
-				return symbol switch
-				{
-					">" => timeSeriesDataPoints.Count(dp => dp.Value.HasValue && dp.IsInSdt && dp.Value.Value > criticalLevel),
-					">=" => timeSeriesDataPoints.Count(dp => dp.Value.HasValue && dp.IsInSdt && dp.Value.Value >= criticalLevel),
-					"<" => timeSeriesDataPoints.Count(dp => dp.Value.HasValue && dp.IsInSdt && dp.Value.Value < criticalLevel),
-					"<=" => timeSeriesDataPoints.Count(dp => dp.Value.HasValue && dp.IsInSdt && dp.Value.Value <= criticalLevel),
-					"=" => timeSeriesDataPoints.Count(dp => dp.Value.HasValue && dp.IsInSdt && dp.Value.Value == criticalLevel),
-					"!=" => timeSeriesDataPoints.Count(dp => dp.Value.HasValue && dp.IsInSdt && dp.Value.Value != criticalLevel),
-					_ => null,
-				};
-
-			case CountAlertLevel.Error:
-				// Count points that are at Error level (not Critical) AND in SDT
-				if (errorLevel == null)
-				{
-					return 0;
-				}
-
-				return symbol switch
-				{
-					">" => timeSeriesDataPoints.Count(dp =>
-						dp.Value.HasValue &&
-						dp.IsInSdt &&
-						(criticalLevel == null || dp.Value.Value <= criticalLevel) &&
-						dp.Value.Value > errorLevel),
-					">=" => timeSeriesDataPoints.Count(dp =>
-						dp.Value.HasValue &&
-						dp.IsInSdt &&
-						(criticalLevel == null || dp.Value.Value < criticalLevel) &&
-						dp.Value.Value >= errorLevel),
-					"<" => timeSeriesDataPoints.Count(dp =>
-						dp.Value.HasValue &&
-						dp.IsInSdt &&
-						(criticalLevel == null || dp.Value.Value >= criticalLevel) &&
-						dp.Value.Value < errorLevel),
-					"<=" => timeSeriesDataPoints.Count(dp =>
-						dp.Value.HasValue &&
-						dp.IsInSdt &&
-						(criticalLevel == null || dp.Value.Value > criticalLevel) &&
-						dp.Value.Value <= errorLevel),
-					"=" => timeSeriesDataPoints.Count(dp =>
-						dp.Value.HasValue &&
-						dp.IsInSdt &&
-						(criticalLevel == null || dp.Value.Value != criticalLevel) &&
-						dp.Value.Value == errorLevel),
-					"!=" => timeSeriesDataPoints.Count(dp =>
-						dp.Value.HasValue &&
-						dp.IsInSdt &&
-						(criticalLevel == null || dp.Value.Value == criticalLevel) &&
-						dp.Value.Value != errorLevel),
-					_ => null,
-				};
-			case CountAlertLevel.Warning:
-				// Count points that are at Warning level (not Error or Critical) AND in SDT
-				if (warningLevel == null)
-				{
-					return 0;
-				}
-
-				return symbol switch
-				{
-					">" => timeSeriesDataPoints.Count(dp =>
-						dp.Value.HasValue &&
-						dp.IsInSdt &&
-						(criticalLevel == null || dp.Value.Value <= criticalLevel) &&
-						(errorLevel == null || dp.Value.Value <= errorLevel) &&
-						dp.Value.Value > warningLevel),
-					">=" => timeSeriesDataPoints.Count(dp =>
-						dp.Value.HasValue &&
-						dp.IsInSdt &&
-						(criticalLevel == null || dp.Value.Value < criticalLevel) &&
-						(errorLevel == null || dp.Value.Value < errorLevel) &&
-						dp.Value.Value >= warningLevel),
-					"<" => timeSeriesDataPoints.Count(dp =>
-						dp.Value.HasValue &&
-						dp.IsInSdt &&
-						(criticalLevel == null || dp.Value.Value >= criticalLevel) &&
-						(errorLevel == null || dp.Value.Value >= errorLevel) &&
-						dp.Value.Value < warningLevel),
-					"<=" => timeSeriesDataPoints.Count(dp =>
-						dp.Value.HasValue &&
-						dp.IsInSdt &&
-						(criticalLevel == null || dp.Value.Value > criticalLevel) &&
-						(errorLevel == null || dp.Value.Value > errorLevel) &&
-						dp.Value.Value <= warningLevel),
-					"=" => timeSeriesDataPoints.Count(dp =>
-						dp.Value.HasValue &&
-						dp.IsInSdt &&
-						(criticalLevel == null || dp.Value.Value != criticalLevel) &&
-						(errorLevel == null || dp.Value.Value != errorLevel) &&
-						dp.Value.Value == warningLevel),
-					"!=" => timeSeriesDataPoints.Count(dp =>
-						dp.Value.HasValue &&
-						dp.IsInSdt &&
-						(criticalLevel == null || dp.Value.Value == criticalLevel) &&
-						(errorLevel == null || dp.Value.Value == errorLevel) &&
-						dp.Value.Value != warningLevel),
-					_ => null,
-				};
-
-			case CountAlertLevel.Normal:
-				// Special case: Count points that are Normal (not alerting) OR in SDT
-				// This provides a "healthy or maintained" count
-				if (alertLevels.Length == 0)
-				{
-					// No thresholds defined - all points with values or in SDT are considered normal
-					return timeSeriesDataPoints.Count(dp => dp.Value.HasValue || dp.IsInSdt);
-				}
-
-				return symbol switch
-				{
-					">" => timeSeriesDataPoints.Count(dp =>
-						// Point is in SDT (regardless of value) OR is Normal (has value and not alerting)
-						dp.IsInSdt ||
-						(dp.Value.HasValue &&
-						 (criticalLevel == null || dp.Value.Value <= criticalLevel) &&
-						 (errorLevel == null || dp.Value.Value <= errorLevel) &&
-						 (warningLevel == null || dp.Value.Value <= warningLevel))),
-					">=" => timeSeriesDataPoints.Count(dp =>
-						dp.IsInSdt ||
-						(dp.Value.HasValue &&
-						 (criticalLevel == null || dp.Value.Value < criticalLevel) &&
-						 (errorLevel == null || dp.Value.Value < errorLevel) &&
-						 (warningLevel == null || dp.Value.Value < warningLevel))),
-					"<" => timeSeriesDataPoints.Count(dp =>
-						dp.IsInSdt ||
-						(dp.Value.HasValue &&
-						 (criticalLevel == null || dp.Value.Value >= criticalLevel) &&
-						 (errorLevel == null || dp.Value.Value >= errorLevel) &&
-						 (warningLevel == null || dp.Value.Value >= warningLevel))),
-					"<=" => timeSeriesDataPoints.Count(dp =>
-						dp.IsInSdt ||
-						(dp.Value.HasValue &&
-						 (criticalLevel == null || dp.Value.Value > criticalLevel) &&
-						 (errorLevel == null || dp.Value.Value > errorLevel) &&
-						 (warningLevel == null || dp.Value.Value > warningLevel))),
-					"=" => timeSeriesDataPoints.Count(dp =>
-						dp.IsInSdt ||
-						(dp.Value.HasValue &&
-						 (criticalLevel == null || dp.Value.Value != criticalLevel) &&
-						 (errorLevel == null || dp.Value.Value != errorLevel) &&
-						 (warningLevel == null || dp.Value.Value != warningLevel))),
-					"!=" => timeSeriesDataPoints.Count(dp =>
-						dp.IsInSdt ||
-						(dp.Value.HasValue &&
-						 (criticalLevel == null || dp.Value.Value == criticalLevel) &&
-						 (errorLevel == null || dp.Value.Value == errorLevel) &&
-						 (warningLevel == null || dp.Value.Value == warningLevel))),
-					_ => null,
-				};
-
-			default:
-				throw new ArgumentException($"Unexpected {nameof(CountAlertLevel)} '{countAtAlertLevel}'");
-		}
-	}
-
-	/// <summary>
-	/// TODO - implement this
-	/// </summary>
-	/// <param name="data"></param>
-	/// <param name="effectiveAlertExpression"></param>
-	/// <param name="countAlertLevel"></param>
-	/// <returns></returns>
 	private static int? CountAtAlertLevel(
 		List<double?> data,
 		string effectiveAlertExpression,
-		CountAlertLevel countAlertLevel
-	)
-	{
-		if (string.IsNullOrEmpty(effectiveAlertExpression))
-		{
-			return countAlertLevel == CountAlertLevel.Normal ? data.Count(d => d.HasValue) : 0;
-		}
-
-		// The alert expression is in the form "> 1 2 3", where the first symbol represents the
-		// type of the inequality, the first value represents the warning level, the optional next value
-		// represents the error level, and the optional next value represents the critical level.
-		// Count the data values that meet the expression at the count alert level
-
-		var symbol = effectiveAlertExpression.Split(' ')[0];
-
-		var alertLevels = effectiveAlertExpression
-			.Split(' ')
-			.Skip(1)
-			.Where(x => double.TryParse(x, out var _))
-			.Select(double.Parse)
-			.ToArray();
-
-		var criticalLevel = alertLevels.Length == 3 ? alertLevels[2] : (double?)null;
-		var errorLevel = alertLevels.Length >= 2 ? alertLevels[1] : (double?)null;
-		var warningLevel = alertLevels.Length >= 1 ? alertLevels[0] : (double?)null;
-
-		switch (countAlertLevel)
-		{
-			case CountAlertLevel.Critical:
-				if (criticalLevel == null)
-				{
-					return 0;
-				}
-
-				return symbol switch
-				{
-					">" => data.Count(d => d.HasValue && d.Value > criticalLevel),
-					">=" => data.Count(d => d.HasValue && d.Value >= criticalLevel),
-					"<" => data.Count(d => d.HasValue && d.Value < criticalLevel),
-					"<=" => data.Count(d => d.HasValue && d.Value <= criticalLevel),
-					"=" => data.Count(d => d.HasValue && d.Value == criticalLevel),
-					"!=" => data.Count(d => d.HasValue && d.Value != criticalLevel),
-					_ => null,
-				};
-			case CountAlertLevel.Error:
-				return symbol switch
-				{
-					">" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value <= criticalLevel) && d.Value > errorLevel),
-					">=" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value < criticalLevel) && d.Value >= errorLevel),
-					"<" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value >= criticalLevel) && d.Value < errorLevel),
-					"<=" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value > criticalLevel) && d.Value <= errorLevel),
-					"=" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value != criticalLevel) && d.Value == errorLevel),
-					"!=" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value == criticalLevel) && d.Value != errorLevel),
-					_ => null,
-				};
-			case CountAlertLevel.Warning:
-				if (alertLevels.Length == 0)
-				{
-					return 0;
-				}
-
-				return symbol switch
-				{
-					">" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value <= criticalLevel) && (errorLevel == null || d.Value <= errorLevel) && d.Value > warningLevel),
-					">=" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value < criticalLevel) && (errorLevel == null || d.Value < errorLevel) && d.Value >= warningLevel),
-					"<" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value >= criticalLevel) && (errorLevel == null || d.Value >= errorLevel) && d.Value < warningLevel),
-					"<=" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value > criticalLevel) && (errorLevel == null || d.Value > errorLevel) && d.Value <= warningLevel),
-					"=" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value != criticalLevel) && (errorLevel == null || d.Value != errorLevel) && d.Value == warningLevel),
-					"!=" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value == criticalLevel) && (errorLevel == null || d.Value == errorLevel) && d.Value != warningLevel),
-					_ => null,
-				};
-			case CountAlertLevel.Normal:
-				if (alertLevels.Length == 0)
-				{
-					return data.Count(d => d.HasValue);
-				}
-
-				return symbol switch
-				{
-					">" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value <= criticalLevel) && (errorLevel == null || d.Value <= errorLevel) && (warningLevel == null || d.Value <= warningLevel)),
-					">=" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value < criticalLevel) && (errorLevel == null || d.Value < errorLevel) && (errorLevel == null || d.Value < warningLevel)),
-					"<" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value >= criticalLevel) && (errorLevel == null || d.Value >= errorLevel) && (errorLevel == null || d.Value >= warningLevel)),
-					"<=" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value > criticalLevel) && (errorLevel == null || d.Value > errorLevel) && (errorLevel == null || d.Value > warningLevel)),
-					"=" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value != criticalLevel) && (errorLevel == null || d.Value != errorLevel) && (errorLevel == null || d.Value != warningLevel)),
-					"!=" => data.Count(d => d.HasValue && (criticalLevel == null || d.Value == criticalLevel) && (errorLevel == null || d.Value == errorLevel) && (errorLevel == null || d.Value == warningLevel)),
-					_ => null,
-				};
-			default:
-				throw new ArgumentException($"Unexpected {nameof(CountAlertLevel)} '{countAlertLevel}'");
-		}
-	}
+		CountAlertLevel countAlertLevel)
+		=> AlertLevelCounter.Count(data, effectiveAlertExpression, countAlertLevel);
 
 	private static double CalculatePercentUptimeGradient(List<double?> values)
 	{
