@@ -48,18 +48,23 @@ internal static class AlertLevelCounter
 
 	internal static int? CountUseSdt(List<TimeSeriesDataPoint> points, string expression, CountAlertLevel level)
 	{
-		var thresholds = string.IsNullOrEmpty(expression) ? null : Parse(expression);
-		if (thresholds is null || (level == CountAlertLevel.Normal && thresholds.LevelCount == 0))
+		if (string.IsNullOrEmpty(expression))
 		{
-			return level == CountAlertLevel.Normal || thresholds is not null
-				? points.Count(dp => dp.Value.HasValue || dp.IsInSdt)
-				: 0;
+			return level == CountAlertLevel.Normal ? CountValueOrSdt(points) : 0;
+		}
+
+		var thresholds = Parse(expression);
+		if (level == CountAlertLevel.Normal && thresholds.LevelCount == 0)
+		{
+			return CountValueOrSdt(points);
 		}
 
 		var predicate = BuildPredicate(thresholds, level, guardMissingError: true, warningOnlyTerm: true, out var fixedResult);
 		return predicate is null ? fixedResult : CountMatchingSdt(points, level, predicate);
 	}
 
+	private static int CountValueOrSdt(List<TimeSeriesDataPoint> points)
+		=> points.Count(dp => dp.Value.HasValue || dp.IsInSdt);
 	private static int CountMatchingSdt(List<TimeSeriesDataPoint> points, CountAlertLevel level, Func<double, bool> predicate)
 		=> level == CountAlertLevel.Normal
 			? points.Count(dp => dp.IsInSdt || (dp.Value.HasValue && predicate(dp.Value.Value)))
