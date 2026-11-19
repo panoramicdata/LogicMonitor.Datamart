@@ -60,19 +60,21 @@ public class DataTests(ITestOutputHelper iTestOutputHelper) : TestWithOutput(iTe
 		var sdtCache = new Dictionary<string, List<ScheduledDownTimeHistory>>();
 
 		var result = await LowResolutionDataSync.GetTimeSeriesDataAggregationStoreItem(
-			DatamartClient,
-			device,
-			deviceDataSourceInstanceDataPoint,
-			dataPointName,
-			dataPointStoreItem,
-			startDateTimeUtc,
-			endDateTimeUtc,
+			new TimeSeriesAggregationRequest
+			{
+				DatamartClient = DatamartClient,
+				Device = device,
+				InstanceDataPoint = deviceDataSourceInstanceDataPoint,
+				DataPointName = dataPointName,
+				DataPoint = dataPointStoreItem,
+				StartDateTimeUtc = startDateTimeUtc,
+				EndDateTimeUtc = endDateTimeUtc,
+				ExcludeSdtPeriods = Configuration.ExcludeSdtPeriods,
+				SdtCache = sdtCache,
+				Logger = LoggerFactory.CreateLogger<DataTests>(),
+			},
 			graphData,
-			Configuration.ExcludeSdtPeriods,
-			sdtCache,
-			LoggerFactory.CreateLogger<DataTests>(),
-			TestContext.Current.CancellationToken
-		);
+			TestContext.Current.CancellationToken);
 
 		result.Should().NotBeNull();
 		result!.PeriodStart.Should().Be(startDateTimeUtc);
