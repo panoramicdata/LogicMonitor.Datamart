@@ -486,18 +486,9 @@ public class DatamartClient : LogicMonitorClient
 			{
 				itemIndex++;
 
-				if (stopwatch.ElapsedMilliseconds > 10_000)
-				{
-					logger.LogInformation(
-						"Syncing {Type}s: {ItemIndex}/{ItemCount}",
-						typeof(TApi).Name,
-						itemIndex,
-						apiItems.Count);
-					await notificationReceiver
-						.SetItemIndexAsync(itemIndex, cancellationToken)
-						.ConfigureAwait(false);
-					stopwatch.Restart();
-				}
+				await ReportSlowProgressAsync(stopwatch, typeof(TApi).Name, itemIndex, apiItems.Count, logger, notificationReceiver, cancellationToken)
+					.ConfigureAwait(false);
+
 
 				await dbSet.AddOrUpdateIdentifiedItemAsync(
 					context,
@@ -511,17 +502,9 @@ public class DatamartClient : LogicMonitorClient
 				.SetItemIndexAsync(itemIndex, cancellationToken)
 				.ConfigureAwait(false);
 
-			// Calculate and log the stats
-			var added = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Added);
-			var modified = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Modified);
-			var total = context.ChangeTracker.Entries().Count();
-			_ = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-			logger.LogInformation(
-				"{TypeName}: Total {Total}; Added {Added}; Modified {Modified}.",
-				typeof(TApi).Name,
-				total,
-				added,
-				modified);
+			await SaveChangesAndLogStatsAsync(context, typeof(TApi).Name, logger, cancellationToken)
+				.ConfigureAwait(false);
+
 
 			// For DataPoints, the information from LogicMonitor is present on the DataSources.
 			// So, after fetching the DataSources, we should also update the DataPoints in the database
@@ -595,23 +578,11 @@ public class DatamartClient : LogicMonitorClient
 
 			var itemIndex = 0;
 			var stopwatch = Stopwatch.StartNew();
-			// Add/update all the items
 			foreach (var item in apiItems)
 			{
 				itemIndex++;
-
-				if (stopwatch.ElapsedMilliseconds > 10_000)
-				{
-					logger.LogInformation(
-						"Syncing {Type}s: {ItemIndex}/{ItemCount}",
-						nameof(ExchangeLogicModule),
-						itemIndex,
-						apiItems.Count);
-					await notificationReceiver
-						.SetItemIndexAsync(itemIndex, cancellationToken)
-						.ConfigureAwait(false);
-					stopwatch.Restart();
-				}
+				await ReportSlowProgressAsync(stopwatch, nameof(ExchangeLogicModule), itemIndex, apiItems.Count, logger, notificationReceiver, cancellationToken)
+					.ConfigureAwait(false);
 
 				dbSet.AddOrUpdateLogicModuleUpdate(
 					item,
@@ -624,17 +595,8 @@ public class DatamartClient : LogicMonitorClient
 				.SetItemIndexAsync(itemIndex, cancellationToken)
 				.ConfigureAwait(false);
 
-			// Calculate and log the stats
-			var added = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Added);
-			var modified = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Modified);
-			var total = context.ChangeTracker.Entries().Count();
-			_ = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-			logger.LogInformation(
-				"{TypeName}: Total {Total}; Added {Added}; Modified {Modified}.",
-				nameof(LogicModuleUpdateStoreItem),
-				total,
-				added,
-				modified);
+			await SaveChangesAndLogStatsAsync(context, nameof(LogicModuleUpdateStoreItem), logger, cancellationToken)
+				.ConfigureAwait(false);
 
 			logger.LogInformation($"Syncing {nameof(ExchangeLogicModule)}s complete.");
 		}
@@ -649,6 +611,45 @@ public class DatamartClient : LogicMonitorClient
 				throw;
 			}
 		}
+	}
+
+	private static async Task ReportSlowProgressAsync(
+		Stopwatch stopwatch,
+		string typeName,
+		int itemIndex,
+		int itemCount,
+		ILogger logger,
+		INotificationReceiver notificationReceiver,
+		CancellationToken cancellationToken)
+	{
+		if (stopwatch.ElapsedMilliseconds <= 10_000)
+		{
+			return;
+		}
+
+		logger.LogInformation(
+			"Syncing {Type}s: {ItemIndex}/{ItemCount}",
+			typeName,
+			itemIndex,
+			itemCount);
+		await notificationReceiver
+			.SetItemIndexAsync(itemIndex, cancellationToken)
+			.ConfigureAwait(false);
+		stopwatch.Restart();
+	}
+
+	private static async Task SaveChangesAndLogStatsAsync(Context context, string typeName, ILogger logger, CancellationToken cancellationToken)
+	{
+		var added = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Added);
+		var modified = context.ChangeTracker.Entries().Count(e => e.State == EntityState.Modified);
+		var total = context.ChangeTracker.Entries().Count();
+		_ = await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+		logger.LogInformation(
+			"{TypeName}: Total {Total}; Added {Added}; Modified {Modified}.",
+			typeName,
+			total,
+			added,
+			modified);
 	}
 	/// <summary>
 	/// Update Graphs, given a list of DataSources just retrieved from the LogicMonitor API
@@ -689,56 +690,66 @@ public class DatamartClient : LogicMonitorClient
 				graphsStopwatch.Restart();
 			}
 
-			try
-			{
-				var apiGraphs = await GetDataSourceGraphsAsync(apiDataSource.Id, cancellationToken).ConfigureAwait(false);
-				var apiOverviewGraphs = (await GetDataSourceOverviewGraphsPageAsync(apiDataSource.Id, null, cancellationToken).ConfigureAwait(false)).Items;
-
-				// FirstOrDefaultAsync because the database can contain duplicate DataSource names.
-				// SingleOrDefaultAsync would throw and abort the entire graph sync.
-				var databaseDataSource = await context
-					.DataSources
-					.FirstOrDefaultAsync(ds => ds.Name == apiDataSource.Name, cancellationToken)
-					.ConfigureAwait(false);
-
-				if (databaseDataSource is null)
-				{
-					_logger.LogError(
-						"For LogicMonitor instance {LogicMonitorAccount}, expected to find Database DataSource called '{DataSourceName}', but it was missing.",
-						_configuration.LogicMonitorClientOptions.Account,
-						apiDataSource.Name);
-					continue;
-				}
-
-				var databaseGraphs = await context
-					.DataSourceGraphs
-					.Where(g => g.DataSource!.LogicMonitorId == apiDataSource.Id)
-					.ToListAsync(cancellationToken)
-					.ConfigureAwait(false);
-
-				UpdateGraphs(context, apiGraphs, databaseDataSource.Id, databaseGraphs, false);
-				UpdateGraphs(context, apiOverviewGraphs, databaseDataSource.Id, databaseGraphs, true);
-
-				await context
-					.SaveChangesAsync(cancellationToken)
-					.ConfigureAwait(false);
-			}
-			catch (Exception e) when (e is not OperationCanceledException and not TaskCanceledException)
-			{
-				// Log and continue - a single DataSource's graph failure should not abort the entire graph sync
-				_logger.LogError(
-					e,
-					"Error updating graphs for DataSource '{DataSourceName}' ({DataSourceIndex}/{DataSourceCount}): {Message}",
-					apiDataSource.Name,
-					dataSourceIndex,
-					dataSourceCount,
-					e.Message);
-			}
+			await UpdateGraphsForDataSourceAsync(context, apiDataSource, dataSourceIndex, dataSourceCount, cancellationToken)
+				.ConfigureAwait(false);
 		}
 
 		_logger.LogInformation("Updating DataSource Graphs done.");
 	}
 
+	private async Task UpdateGraphsForDataSourceAsync(
+		Context context,
+		DataSource apiDataSource,
+		int dataSourceIndex,
+		int dataSourceCount,
+		CancellationToken cancellationToken)
+	{
+		try
+		{
+			var apiGraphs = await GetDataSourceGraphsAsync(apiDataSource.Id, cancellationToken).ConfigureAwait(false);
+			var apiOverviewGraphs = (await GetDataSourceOverviewGraphsPageAsync(apiDataSource.Id, null, cancellationToken).ConfigureAwait(false)).Items;
+
+			// FirstOrDefaultAsync because the database can contain duplicate DataSource names.
+			// SingleOrDefaultAsync would throw and abort the entire graph sync.
+			var databaseDataSource = await context
+				.DataSources
+				.FirstOrDefaultAsync(ds => ds.Name == apiDataSource.Name, cancellationToken)
+				.ConfigureAwait(false);
+
+			if (databaseDataSource is null)
+			{
+				_logger.LogError(
+					"For LogicMonitor instance {LogicMonitorAccount}, expected to find Database DataSource called '{DataSourceName}', but it was missing.",
+					_configuration.LogicMonitorClientOptions.Account,
+					apiDataSource.Name);
+				return;
+			}
+
+			var databaseGraphs = await context
+				.DataSourceGraphs
+				.Where(g => g.DataSource!.LogicMonitorId == apiDataSource.Id)
+				.ToListAsync(cancellationToken)
+				.ConfigureAwait(false);
+
+			UpdateGraphs(context, apiGraphs, databaseDataSource.Id, databaseGraphs, false);
+			UpdateGraphs(context, apiOverviewGraphs, databaseDataSource.Id, databaseGraphs, true);
+
+			await context
+				.SaveChangesAsync(cancellationToken)
+				.ConfigureAwait(false);
+		}
+		catch (Exception e) when (e is not OperationCanceledException and not TaskCanceledException)
+		{
+			// Log and continue - a single DataSource's graph failure should not abort the entire graph sync
+			_logger.LogError(
+				e,
+				"Error updating graphs for DataSource '{DataSourceName}' ({DataSourceIndex}/{DataSourceCount}): {Message}",
+				apiDataSource.Name,
+				dataSourceIndex,
+				dataSourceCount,
+				e.Message);
+		}
+	}
 	internal static void UpdateGraphs(
 		Context context,
 		List<DataSourceGraph> apiGraphs,
