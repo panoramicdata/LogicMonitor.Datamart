@@ -1,4 +1,5 @@
-﻿using LogicMonitor.Api.Alerts;
+﻿using System.Linq.Expressions;
+using LogicMonitor.Api.Alerts;
 using LogicMonitor.Api.Filters;
 
 namespace LogicMonitor.Datamart;
@@ -65,15 +66,14 @@ internal sealed class CachedAlertQuery
 	}
 
 	private IQueryable<AlertStoreItem> ApplyEqualityFilters(IQueryable<AlertStoreItem> queryable)
+		=> ApplyDetailFilters(ApplyIdentityFilters(queryable));
+
+	private IQueryable<AlertStoreItem> ApplyIdentityFilters(IQueryable<AlertStoreItem> queryable)
 	{
 		var id = Id;
 		var problemSignature = ProblemSignature;
 		var monitorObjectId = MonitorObjectId;
 		var monitorObjectName = MonitorObjectName;
-		var resourceTemplateId = ResourceTemplateId;
-		var resourceTemplateDisplayName = ResourceTemplateDisplayName;
-		var instanceName = InstanceName;
-		var dataPointName = DataPointName;
 
 		if (id != null)
 		{
@@ -90,10 +90,17 @@ internal sealed class CachedAlertQuery
 			queryable = queryable.Where(a => a.MonitorObjectId == monitorObjectId);
 		}
 
-		if (monitorObjectName != null)
-		{
-			queryable = queryable.Where(a => a.MonitorObjectName == monitorObjectName);
-		}
+		return monitorObjectName != null
+			? queryable.Where(a => a.MonitorObjectName == monitorObjectName)
+			: queryable;
+	}
+
+	private IQueryable<AlertStoreItem> ApplyDetailFilters(IQueryable<AlertStoreItem> queryable)
+	{
+		var resourceTemplateId = ResourceTemplateId;
+		var resourceTemplateDisplayName = ResourceTemplateDisplayName;
+		var instanceName = InstanceName;
+		var dataPointName = DataPointName;
 
 		if (resourceTemplateId != null)
 		{
@@ -110,14 +117,10 @@ internal sealed class CachedAlertQuery
 			queryable = queryable.Where(a => a.InstanceName == instanceName);
 		}
 
-		if (dataPointName != null)
-		{
-			queryable = queryable.Where(a => a.DataPointName == dataPointName);
-		}
-
-		return queryable;
+		return dataPointName != null
+			? queryable.Where(a => a.DataPointName == dataPointName)
+			: queryable;
 	}
-
 	private IQueryable<AlertStoreItem> ApplyLevelAndTypeFilters(IQueryable<AlertStoreItem> queryable)
 	{
 		var alertLevels = AlertLevels;
@@ -136,6 +139,11 @@ internal sealed class CachedAlertQuery
 		return IncludeInactive ? queryable : queryable.Where(a => !a.IsCleared);
 	}
 
+	private sealed class LikeParameter
+	{
+		public required string Pattern { get; init; }
+	}
+
 	// An empty collection means the same as no collection: no device group filter.
 	private IQueryable<AlertStoreItem> ApplyGroupFilter(IQueryable<AlertStoreItem> queryable)
 	{
@@ -145,22 +153,35 @@ internal sealed class CachedAlertQuery
 			return queryable;
 		}
 
-		var likeString = $"{monitorObjectGroup.TrimEnd('*')}%";
-		return queryable
-			.Where(a =>
-			   (a.MonitorObjectGroup0 != null && a.MonitorObjectGroup0.MonitoredObjectType == a.MonitorObjectType && EF.Functions.Like(a.MonitorObjectGroup0.FullPath, likeString))
-			|| (a.MonitorObjectGroup1 != null && a.MonitorObjectGroup1.MonitoredObjectType == a.MonitorObjectType && EF.Functions.Like(a.MonitorObjectGroup1.FullPath, likeString))
-			|| (a.MonitorObjectGroup2 != null && a.MonitorObjectGroup2.MonitoredObjectType == a.MonitorObjectType && EF.Functions.Like(a.MonitorObjectGroup2.FullPath, likeString))
-			|| (a.MonitorObjectGroup3 != null && a.MonitorObjectGroup3.MonitoredObjectType == a.MonitorObjectType && EF.Functions.Like(a.MonitorObjectGroup3.FullPath, likeString))
-			|| (a.MonitorObjectGroup4 != null && a.MonitorObjectGroup4.MonitoredObjectType == a.MonitorObjectType && EF.Functions.Like(a.MonitorObjectGroup4.FullPath, likeString))
-			|| (a.MonitorObjectGroup5 != null && a.MonitorObjectGroup5.MonitoredObjectType == a.MonitorObjectType && EF.Functions.Like(a.MonitorObjectGroup5.FullPath, likeString))
-			|| (a.MonitorObjectGroup6 != null && a.MonitorObjectGroup6.MonitoredObjectType == a.MonitorObjectType && EF.Functions.Like(a.MonitorObjectGroup6.FullPath, likeString))
-			|| (a.MonitorObjectGroup7 != null && a.MonitorObjectGroup7.MonitoredObjectType == a.MonitorObjectType && EF.Functions.Like(a.MonitorObjectGroup7.FullPath, likeString))
-			|| (a.MonitorObjectGroup8 != null && a.MonitorObjectGroup8.MonitoredObjectType == a.MonitorObjectType && EF.Functions.Like(a.MonitorObjectGroup8.FullPath, likeString))
-			|| (a.MonitorObjectGroup9 != null && a.MonitorObjectGroup9.MonitoredObjectType == a.MonitorObjectType && EF.Functions.Like(a.MonitorObjectGroup9.FullPath, likeString))
-			);
+		var like = new LikeParameter { Pattern = $"{monitorObjectGroup.TrimEnd('*')}%" };
+		var alert = Expression.Parameter(typeof(AlertStoreItem), "a");
+		var anySlotMatches = Enumerable
+			.Range(0, 10)
+			.Select(slot => GroupSlotMatches(alert, slot, like))
+			.Aggregate(Expression.OrElse);
+
+		return queryable.Where(Expression.Lambda<Func<AlertStoreItem, bool>>(anySlotMatches, alert));
 	}
 
+	private static BinaryExpression GroupSlotMatches(ParameterExpression alert, int slot, LikeParameter like)
+	{
+		var group = Expression.Property(alert, $"MonitorObjectGroup{slot}");
+		var likeCall = Expression.Call(
+			typeof(DbFunctionsExtensions),
+			nameof(DbFunctionsExtensions.Like),
+			Type.EmptyTypes,
+			Expression.Property(null, typeof(EF), nameof(EF.Functions)),
+			Expression.Property(group, nameof(MonitorObjectGroupStoreItem.FullPath)),
+			Expression.Property(Expression.Constant(like), nameof(LikeParameter.Pattern)));
+
+		return Expression.AndAlso(
+			Expression.AndAlso(
+				Expression.NotEqual(group, Expression.Constant(null, typeof(MonitorObjectGroupStoreItem))),
+				Expression.Equal(
+					Expression.Property(group, nameof(MonitorObjectGroupStoreItem.MonitoredObjectType)),
+					Expression.Property(alert, nameof(AlertStoreItem.MonitorObjectType)))),
+			likeCall);
+	}
 	private IQueryable<AlertStoreItem> ApplySdtFilter(IQueryable<AlertStoreItem> queryable)
 		=> SdtFilter switch
 		{
