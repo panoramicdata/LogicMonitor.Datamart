@@ -54,47 +54,22 @@ public class DatamartClient : LogicMonitorClient
 		// Check Mapper
 		_mapperConfig.AssertConfigurationIsValid();
 
+		DbContextOptions = BuildDbContextOptions(configuration);
+
+		_loggerFactory = loggerFactory;
+		_logger = loggerFactory.CreateLogger<DatamartClient>();
+	}
+
+	private static DbContextOptions<Context> BuildDbContextOptions(Configuration configuration)
+	{
 		var dbContextOptionsBuilder = new DbContextOptionsBuilder<Context>();
 		switch (configuration.DatabaseType)
 		{
 			case DatabaseType.SqlServer:
-				dbContextOptionsBuilder
-					.UseSqlServer(new DbConnectionStringBuilder
-					{
-						ConnectionString = new SqlConnectionStringBuilder
-						{
-							TrustServerCertificate = true,
-							Encrypt = true,
-							ConnectTimeout = 30,
-							DataSource = $"{configuration.DatabaseServerName},{configuration.DatabaseServerPort ?? 1433}",
-							InitialCatalog = configuration.DatabaseName,
-							UserID = configuration.DatabaseUsername,
-							Password = configuration.DatabasePassword,
-							ApplicationName = ConnectionStringApplicationName,
-							Authentication = configuration.SqlServerAuthenticationMethod ?? SqlAuthenticationMethod.NotSpecified
-						}.ToString()
-					}.ConnectionString,
-					options => options
-						.CommandTimeout(configuration.SqlCommandTimeoutSeconds)
-						.EnableRetryOnFailure(configuration.DatabaseRetryOnFailureCount ?? 5)
-					);
+				ConfigureSqlServer(dbContextOptionsBuilder, configuration);
 				break;
 			case DatabaseType.Postgres:
-				dbContextOptionsBuilder
-					.UseNpgsql(
-						// MS-24748 Built, not concatenated, because a password can contain semicolons, quotes or spaces
-						new NpgsqlConnectionStringBuilder
-						{
-							Host = configuration.DatabaseServerName,
-							Port = configuration.DatabaseServerPort ?? 5432,
-							Database = configuration.DatabaseName,
-							Username = configuration.DatabaseUsername,
-							Password = configuration.DatabasePassword,
-							Timezone = "UTC",
-						}.ConnectionString,
-						options => options
-							.EnableRetryOnFailure(configuration.DatabaseRetryOnFailureCount ?? 5)
-					);
+				ConfigurePostgres(dbContextOptionsBuilder, configuration);
 				break;
 			case DatabaseType.InMemory:
 				dbContextOptionsBuilder
@@ -111,12 +86,47 @@ public class DatamartClient : LogicMonitorClient
 			dbContextOptionsBuilder.EnableSensitiveDataLogging();
 		}
 
-		DbContextOptions = dbContextOptionsBuilder.Options;
-
-		_loggerFactory = loggerFactory;
-		_logger = loggerFactory.CreateLogger<DatamartClient>();
+		return dbContextOptionsBuilder.Options;
 	}
 
+	private static void ConfigureSqlServer(DbContextOptionsBuilder<Context> dbContextOptionsBuilder, Configuration configuration)
+		=> dbContextOptionsBuilder
+			.UseSqlServer(new DbConnectionStringBuilder
+			{
+				ConnectionString = new SqlConnectionStringBuilder
+				{
+					TrustServerCertificate = true,
+					Encrypt = true,
+					ConnectTimeout = 30,
+					DataSource = $"{configuration.DatabaseServerName},{configuration.DatabaseServerPort ?? 1433}",
+					InitialCatalog = configuration.DatabaseName,
+					UserID = configuration.DatabaseUsername,
+					Password = configuration.DatabasePassword,
+					ApplicationName = ConnectionStringApplicationName,
+					Authentication = configuration.SqlServerAuthenticationMethod ?? SqlAuthenticationMethod.NotSpecified
+				}.ToString()
+			}.ConnectionString,
+			options => options
+				.CommandTimeout(configuration.SqlCommandTimeoutSeconds)
+				.EnableRetryOnFailure(configuration.DatabaseRetryOnFailureCount ?? 5)
+			);
+
+	private static void ConfigurePostgres(DbContextOptionsBuilder<Context> dbContextOptionsBuilder, Configuration configuration)
+		=> dbContextOptionsBuilder
+			.UseNpgsql(
+				// MS-24748 Built, not concatenated, because a password can contain semicolons, quotes or spaces
+				new NpgsqlConnectionStringBuilder
+				{
+					Host = configuration.DatabaseServerName,
+					Port = configuration.DatabaseServerPort ?? 5432,
+					Database = configuration.DatabaseName,
+					Username = configuration.DatabaseUsername,
+					Password = configuration.DatabasePassword,
+					Timezone = "UTC",
+				}.ConnectionString,
+				options => options
+					.EnableRetryOnFailure(configuration.DatabaseRetryOnFailureCount ?? 5)
+			);
 	/// <summary>
 	/// Checks whether the database has been created.
 	/// </summary>
@@ -729,7 +739,7 @@ public class DatamartClient : LogicMonitorClient
 		_logger.LogInformation("Updating DataSource Graphs done.");
 	}
 
-	private static void UpdateGraphs(
+	internal static void UpdateGraphs(
 		Context context,
 		List<DataSourceGraph> apiGraphs,
 		Guid databaseDataSourceId,
@@ -784,7 +794,7 @@ public class DatamartClient : LogicMonitorClient
 	///   <item><term>Both</term><description>Queries by ID and validates the stored name matches; returns null and logs an error on mismatch.</description></item>
 	/// </list>
 	/// </summary>
-	private async Task<DataSourceStoreItem?> ResolveDataSourceStoreItemAsync(
+	internal async Task<DataSourceStoreItem?> ResolveDataSourceStoreItemAsync(
 		Context context,
 		DataSourceConfigurationItem config,
 		ILogger logger,
@@ -856,7 +866,7 @@ public class DatamartClient : LogicMonitorClient
 	/// <param name="context">The database context</param>
 	/// <param name="apiDataSources">The list of API DataSources</param>
 	/// <param name="cancellationToken">A cancellation token.</param>
-	private async Task UpdateDataPointsAsync(Context context, List<DataSource> apiDataSources, CancellationToken cancellationToken)
+	internal async Task UpdateDataPointsAsync(Context context, List<DataSource> apiDataSources, CancellationToken cancellationToken)
 	{
 		_logger.LogInformation("Updating DataSource DataPoints...");
 
@@ -876,146 +886,8 @@ public class DatamartClient : LogicMonitorClient
 				dataPointsStopwatch.Restart();
 			}
 
-			// The DataSource name from the config
-			var dataSourceName = configDataSourceSpecification.Name;
-
-			// The DataSource from the API: resolve by ID when available, fall back to name.
-			DataSource? apiDataSource;
-			if (configDataSourceSpecification.LogicMonitorId.HasValue)
-			{
-				apiDataSource = apiDataSources
-					.FirstOrDefault(ds => ds.Id == configDataSourceSpecification.LogicMonitorId.Value);
-			}
-			else
-			{
-				apiDataSource = apiDataSources
-					.SingleOrDefault(ds => ds.Name == dataSourceName);
-			}
-
-			if (apiDataSource is null)
-			{
-				// May not happen if the config references a non-existent DataSource
-				_logger.LogWarning(
-					"For LogicMonitor instance {LogicMonitorAccount}, expected to find LogicMonitor API DataSource called '{DataSourceName}', but it was missing.",
-					_configuration.LogicMonitorClientOptions.Account,
-					dataSourceName);
-				continue;
-			}
-
-			// Resolve the database DataSource via the shared helper (supports ID, name, or both).
-			var databaseDataSource = await ResolveDataSourceStoreItemAsync(
-				context,
-				configDataSourceSpecification,
-				_logger,
-				cancellationToken)
+			await UpdateDataSourceDataPointsAsync(context, apiDataSources, configDataSourceSpecification, cancellationToken)
 				.ConfigureAwait(false);
-			if (databaseDataSource is null)
-			{
-				// Error already logged inside the helper.
-				continue;
-			}
-			// We have a matching DataSource from both the API and the database.
-
-			// Consider each DataPoint in the config
-			foreach (var configDataPoint in configDataSourceSpecification.DataPoints)
-			{
-				// Is it present in the API DataSource?
-				var apiDataPoint = apiDataSource
-					.DataSourceDataPoints
-					.SingleOrDefault(dp => dp.Name == configDataPoint.Name);
-				if (apiDataPoint == null && string.IsNullOrWhiteSpace(configDataPoint.Calculation))
-				{
-					_logger.LogWarning(
-						"For LogicMonitor instance '{LogicMonitorAccount}', DataSource '{DataSourceName}': could not find configured DataPoint '{ConfigDataPointName}' when not using calculations. Either specify a calculation, or use one of the following available DataPoints: {DataPoints}",
-						_configuration.LogicMonitorClientOptions.Account,
-						dataSourceName,
-						configDataPoint.Name,
-						string.Join(", ", apiDataSource.DataSourceDataPoints.Select(dp => dp.Name).OrderBy(dp => dp))
-						);
-					continue;
-				}
-
-				var globalAlertExpression = string.IsNullOrWhiteSpace(configDataPoint.GlobalAlertExpression)
-					? apiDataPoint?.AlertExpression ?? string.Empty
-					: configDataPoint.GlobalAlertExpression;
-
-				var description = string.IsNullOrWhiteSpace(configDataPoint.Description)
-					? apiDataPoint?.Description ?? string.Empty
-					: configDataPoint.Description;
-
-				// Is it in the database?
-				var databaseDataSourceDataPointModel = await context
-					.DataSourceDataPoints
-					.SingleOrDefaultAsync(dsdp => dsdp.DataSource.Name == apiDataSource.Name && dsdp.Name == configDataPoint.Name, cancellationToken)
-					.ConfigureAwait(false);
-
-				if (databaseDataSourceDataPointModel is null)
-				{
-					// No. Add it to the database
-					_logger.LogInformation(
-						"For LogicMonitor instance {LogicMonitorAccount}, for {DataSourceName}, added datapoint {ConfigDataPointName} to database.",
-						_configuration.LogicMonitorClientOptions.Account,
-						dataSourceName,
-						configDataPoint.Name);
-
-					_ = context.DataSourceDataPoints.Add(new DataSourceDataPointStoreItem
-					{
-						DataSource = databaseDataSource,
-						Name = configDataPoint.Name,
-						LogicMonitorId = apiDataPoint?.Id ?? 0,
-
-						// API/Config
-						Description = description,
-						GlobalAlertExpression = globalAlertExpression,
-
-						// Config only
-						MeasurementUnit = configDataPoint.MeasurementUnit,
-						Calculation = configDataPoint.Calculation,
-						PercentageAvailabilityCalculation = configDataPoint.PercentageAvailabilityCalculation,
-						Tags = configDataPoint.Tags,
-						Property1 = configDataPoint.Property1,
-						Property2 = configDataPoint.Property2,
-						Property3 = configDataPoint.Property3,
-						Property4 = configDataPoint.Property4,
-						Property5 = configDataPoint.Property5,
-						Property6 = configDataPoint.Property6,
-						Property7 = configDataPoint.Property7,
-						Property8 = configDataPoint.Property8,
-						Property9 = configDataPoint.Property9,
-						Property10 = configDataPoint.Property10,
-						ResyncTimeSeriesData = configDataPoint.ResyncTimeSeriesData,
-					});
-				}
-				else
-				{
-					// Update everything, even if it hasn't changed
-
-					// API/Config
-					databaseDataSourceDataPointModel.Description = description;
-					databaseDataSourceDataPointModel.GlobalAlertExpression = globalAlertExpression;
-
-					// Config only
-					databaseDataSourceDataPointModel.MeasurementUnit = configDataPoint.MeasurementUnit;
-					databaseDataSourceDataPointModel.Calculation = configDataPoint.Calculation;
-					databaseDataSourceDataPointModel.PercentageAvailabilityCalculation = configDataPoint.PercentageAvailabilityCalculation;
-					databaseDataSourceDataPointModel.Tags = configDataPoint.Tags;
-					databaseDataSourceDataPointModel.Property1 = configDataPoint.Property1;
-					databaseDataSourceDataPointModel.Property2 = configDataPoint.Property2;
-					databaseDataSourceDataPointModel.Property3 = configDataPoint.Property3;
-					databaseDataSourceDataPointModel.Property4 = configDataPoint.Property4;
-					databaseDataSourceDataPointModel.Property5 = configDataPoint.Property5;
-					databaseDataSourceDataPointModel.Property6 = configDataPoint.Property6;
-					databaseDataSourceDataPointModel.Property7 = configDataPoint.Property7;
-					databaseDataSourceDataPointModel.Property8 = configDataPoint.Property8;
-					databaseDataSourceDataPointModel.Property9 = configDataPoint.Property9;
-					databaseDataSourceDataPointModel.Property10 = configDataPoint.Property10;
-					databaseDataSourceDataPointModel.ResyncTimeSeriesData = configDataPoint.ResyncTimeSeriesData;
-				}
-
-				await context
-					.SaveChangesAsync(cancellationToken)
-					.ConfigureAwait(false);
-			}
 
 			// TODO - remove old DataPoints and associated data.
 			// This will cascade delete, so may take a long time.
@@ -1025,6 +897,129 @@ public class DatamartClient : LogicMonitorClient
 		_logger.LogInformation("Updating DataSource DataPoints done.");
 	}
 
+	private async Task UpdateDataSourceDataPointsAsync(
+		Context context,
+		List<DataSource> apiDataSources,
+		DataSourceConfigurationItem configDataSourceSpecification,
+		CancellationToken cancellationToken)
+	{
+		// The DataSource from the API: resolve by ID when available, fall back to name.
+		var apiDataSource = configDataSourceSpecification.LogicMonitorId.HasValue
+			? apiDataSources.FirstOrDefault(ds => ds.Id == configDataSourceSpecification.LogicMonitorId.Value)
+			: apiDataSources.SingleOrDefault(ds => ds.Name == configDataSourceSpecification.Name);
+
+		if (apiDataSource is null)
+		{
+			// May not happen if the config references a non-existent DataSource
+			_logger.LogWarning(
+				"For LogicMonitor instance {LogicMonitorAccount}, expected to find LogicMonitor API DataSource called '{DataSourceName}', but it was missing.",
+				_configuration.LogicMonitorClientOptions.Account,
+				configDataSourceSpecification.Name);
+			return;
+		}
+
+		// Resolve the database DataSource via the shared helper (supports ID, name, or both).
+		var databaseDataSource = await ResolveDataSourceStoreItemAsync(
+			context,
+			configDataSourceSpecification,
+			_logger,
+			cancellationToken)
+			.ConfigureAwait(false);
+		if (databaseDataSource is null)
+		{
+			// Error already logged inside the helper.
+			return;
+		}
+
+		foreach (var configDataPoint in configDataSourceSpecification.DataPoints)
+		{
+			await UpsertDataPointAsync(context, databaseDataSource, apiDataSource, configDataSourceSpecification.Name, configDataPoint, cancellationToken)
+				.ConfigureAwait(false);
+		}
+	}
+
+	private async Task UpsertDataPointAsync(
+		Context context,
+		DataSourceStoreItem databaseDataSource,
+		DataSource apiDataSource,
+		string dataSourceName,
+		DataPointConfigurationItem configDataPoint,
+		CancellationToken cancellationToken)
+	{
+		var apiDataPoint = apiDataSource
+			.DataSourceDataPoints
+			.SingleOrDefault(dp => dp.Name == configDataPoint.Name);
+		if (apiDataPoint == null && string.IsNullOrWhiteSpace(configDataPoint.Calculation))
+		{
+			_logger.LogWarning(
+				"For LogicMonitor instance '{LogicMonitorAccount}', DataSource '{DataSourceName}': could not find configured DataPoint '{ConfigDataPointName}' when not using calculations. Either specify a calculation, or use one of the following available DataPoints: {DataPoints}",
+				_configuration.LogicMonitorClientOptions.Account,
+				dataSourceName,
+				configDataPoint.Name,
+				string.Join(", ", apiDataSource.DataSourceDataPoints.Select(dp => dp.Name).OrderBy(dp => dp))
+				);
+			return;
+		}
+
+		var databaseDataPoint = await context
+			.DataSourceDataPoints
+			.SingleOrDefaultAsync(dsdp => dsdp.DataSource.Name == apiDataSource.Name && dsdp.Name == configDataPoint.Name, cancellationToken)
+			.ConfigureAwait(false);
+
+		if (databaseDataPoint is null)
+		{
+			_logger.LogInformation(
+				"For LogicMonitor instance {LogicMonitorAccount}, for {DataSourceName}, added datapoint {ConfigDataPointName} to database.",
+				_configuration.LogicMonitorClientOptions.Account,
+				dataSourceName,
+				configDataPoint.Name);
+
+			databaseDataPoint = new DataSourceDataPointStoreItem
+			{
+				DataSource = databaseDataSource,
+				Name = configDataPoint.Name,
+				LogicMonitorId = apiDataPoint?.Id ?? 0,
+			};
+			_ = context.DataSourceDataPoints.Add(databaseDataPoint);
+		}
+
+		CopyConfigToDataPoint(databaseDataPoint, configDataPoint, apiDataPoint);
+
+		await context
+			.SaveChangesAsync(cancellationToken)
+			.ConfigureAwait(false);
+	}
+
+	private static void CopyConfigToDataPoint(
+		DataSourceDataPointStoreItem target,
+		DataPointConfigurationItem config,
+		DataPoint? apiDataPoint)
+	{
+		// API/Config
+		target.Description = string.IsNullOrWhiteSpace(config.Description)
+			? apiDataPoint?.Description ?? string.Empty
+			: config.Description;
+		target.GlobalAlertExpression = string.IsNullOrWhiteSpace(config.GlobalAlertExpression)
+			? apiDataPoint?.AlertExpression ?? string.Empty
+			: config.GlobalAlertExpression;
+
+		// Config only
+		target.MeasurementUnit = config.MeasurementUnit;
+		target.Calculation = config.Calculation;
+		target.PercentageAvailabilityCalculation = config.PercentageAvailabilityCalculation;
+		target.Tags = config.Tags;
+		target.Property1 = config.Property1;
+		target.Property2 = config.Property2;
+		target.Property3 = config.Property3;
+		target.Property4 = config.Property4;
+		target.Property5 = config.Property5;
+		target.Property6 = config.Property6;
+		target.Property7 = config.Property7;
+		target.Property8 = config.Property8;
+		target.Property9 = config.Property9;
+		target.Property10 = config.Property10;
+		target.ResyncTimeSeriesData = config.ResyncTimeSeriesData;
+	}
 	/// <summary>
 	/// Retrieves cached alerts from the datamart with filtering and pagination support.
 	/// </summary>
@@ -1053,167 +1048,32 @@ public class DatamartClient : LogicMonitorClient
 		)
 	{
 		using var context = GetContext();
-		var queryable = context.Alerts.AsQueryable();
-
-		if (id != null)
+		var query = new CachedAlertQuery
 		{
-			queryable = queryable.Where(a => a.LogicMonitorId == id);
-		}
+			StartSeconds = startSeconds,
+			EndSeconds = endSeconds,
+			IncludeInactive = includeInactive,
+			Skip = skip,
+			Take = take,
+			Id = id,
+			AckFilter = ackFilter,
+			MonitorObjectGroups = monitorObjectGroups,
+			MonitorObjectName = monitorObjectName,
+			MonitorObjectId = monitorObjectId,
+			AlertTypes = alertTypes,
+			ResourceTemplateDisplayName = resourceTemplateDisplayName,
+			ResourceTemplateId = resourceTemplateId,
+			InstanceName = instanceName,
+			DataPointName = dataPointName,
+			AlertLevels = alertLevels,
+			OrderBy = orderBy,
+			OrderDirection = orderDirection,
+			SdtFilter = sdtFilter,
+			ProblemSignature = problemSignature,
+			IsPercentageAvailability = isPercentageAvailability,
+		};
 
-		if (problemSignature != null)
-		{
-			queryable = queryable.Where(a => a.InternalId == problemSignature);
-		}
-
-		if (monitorObjectId != null)
-		{
-			queryable = queryable.Where(a => a.MonitorObjectId == monitorObjectId);
-		}
-
-		if (monitorObjectName != null)
-		{
-			queryable = queryable.Where(a => a.MonitorObjectName == monitorObjectName);
-		}
-
-		if (resourceTemplateId != null)
-		{
-			queryable = queryable.Where(a => a.ResourceTemplateId == resourceTemplateId);
-		}
-
-		if (resourceTemplateDisplayName != null)
-		{
-			queryable = queryable.Where(a => a.ResourceTemplateName == resourceTemplateDisplayName);
-		}
-
-		if (instanceName != null)
-		{
-			queryable = queryable.Where(a => a.InstanceName == instanceName);
-		}
-
-		if (dataPointName != null)
-		{
-			queryable = queryable.Where(a => a.DataPointName == dataPointName);
-		}
-
-		if (alertLevels != null)
-		{
-			queryable = queryable.Where(a => alertLevels.Select(al => (int)al).Contains(a.Severity));
-		}
-
-		if (alertTypes != null)
-		{
-			queryable = queryable.Where(a => alertTypes.Contains(a.AlertType));
-		}
-
-		if (!includeInactive)
-		{
-			queryable = queryable.Where(a => !a.IsCleared);
-		}
-
-		// Only one is ever passed
-		// FirstOrDefault rather than First: an EMPTY collection means the same as no collection at all -
-		// no device group filter - and First threw InvalidOperationException for it. That matters now the
-		// parameter is declared nullable, because a caller with nowhere to get a group from can say so
-		// either way round.
-		var monitorObjectGroup = monitorObjectGroups?.FirstOrDefault();
-		if (monitorObjectGroup != null)
-		{
-			var likeString = $"{monitorObjectGroup.TrimEnd('*')}%";
-			queryable = queryable
-				.Where(a =>
-				   (a.MonitorObjectGroup0 != null && a.MonitorObjectGroup0.MonitoredObjectType == a.MonitorObjectType && EF.Functions.Like(a.MonitorObjectGroup0.FullPath, likeString))
-				|| (a.MonitorObjectGroup1 != null && a.MonitorObjectGroup1.MonitoredObjectType == a.MonitorObjectType && EF.Functions.Like(a.MonitorObjectGroup1.FullPath, likeString))
-				|| (a.MonitorObjectGroup2 != null && a.MonitorObjectGroup2.MonitoredObjectType == a.MonitorObjectType && EF.Functions.Like(a.MonitorObjectGroup2.FullPath, likeString))
-				|| (a.MonitorObjectGroup3 != null && a.MonitorObjectGroup3.MonitoredObjectType == a.MonitorObjectType && EF.Functions.Like(a.MonitorObjectGroup3.FullPath, likeString))
-				|| (a.MonitorObjectGroup4 != null && a.MonitorObjectGroup4.MonitoredObjectType == a.MonitorObjectType && EF.Functions.Like(a.MonitorObjectGroup4.FullPath, likeString))
-				|| (a.MonitorObjectGroup5 != null && a.MonitorObjectGroup5.MonitoredObjectType == a.MonitorObjectType && EF.Functions.Like(a.MonitorObjectGroup5.FullPath, likeString))
-				|| (a.MonitorObjectGroup6 != null && a.MonitorObjectGroup6.MonitoredObjectType == a.MonitorObjectType && EF.Functions.Like(a.MonitorObjectGroup6.FullPath, likeString))
-				|| (a.MonitorObjectGroup7 != null && a.MonitorObjectGroup7.MonitoredObjectType == a.MonitorObjectType && EF.Functions.Like(a.MonitorObjectGroup7.FullPath, likeString))
-				|| (a.MonitorObjectGroup8 != null && a.MonitorObjectGroup8.MonitoredObjectType == a.MonitorObjectType && EF.Functions.Like(a.MonitorObjectGroup8.FullPath, likeString))
-				|| (a.MonitorObjectGroup9 != null && a.MonitorObjectGroup9.MonitoredObjectType == a.MonitorObjectType && EF.Functions.Like(a.MonitorObjectGroup9.FullPath, likeString))
-				);
-		}
-
-		switch (sdtFilter)
-		{
-			case SdtFilter.All:
-				// No constraint
-				break;
-			case SdtFilter.Sdt:
-				queryable = queryable.Where(a => a.InScheduledDownTime);
-				break;
-			case SdtFilter.NonSdt:
-				queryable = queryable.Where(a => !a.InScheduledDownTime);
-				break;
-			default:
-				throw new NotSupportedException($"Unsupported SDT filter {sdtFilter}");
-		}
-
-		switch (ackFilter)
-		{
-			case AckFilter.All:
-				// No constraint
-				break;
-			case AckFilter.Acked:
-				queryable = queryable.Where(a => a.Acked);
-				break;
-			case AckFilter.Nonacked:
-				queryable = queryable.Where(a => !a.Acked);
-				break;
-			default:
-				throw new NotSupportedException($"Unsupported SDT filter {sdtFilter}");
-		}
-
-		queryable = queryable.Where(a =>
-			// Alert is not cleared and it started before the end of the period
-			(a.StartOnSeconds <= endSeconds && !a.IsCleared)
-			// Or it starts within the period
-			|| (a.StartOnSeconds > startSeconds && a.StartOnSeconds <= endSeconds)
-			// Or it ends within the period
-			|| (a.EndOnSeconds > startSeconds && a.EndOnSeconds <= endSeconds)
-			// Or it covers the entire period
-			|| (a.StartOnSeconds <= startSeconds && a.EndOnSeconds > endSeconds)
-		);
-
-		if (orderBy != null)
-		{
-			queryable = $"{orderBy}/{orderDirection}" switch
-			{
-				"StartOnSeconds/Asc" => queryable.OrderBy(a => a.StartOnSeconds),
-				"StartOnSeconds/Desc" => queryable.OrderByDescending(a => a.StartOnSeconds),
-				_ => throw new NotSupportedException("Only orderBy=StartOnSeconds currently supported."),
-			};
-		}
-
-		if (skip.HasValue)
-		{
-			queryable = queryable.Skip(skip.Value);
-		}
-
-		if (take.HasValue)
-		{
-			queryable = queryable.Take(take.Value);
-		}
-
-		// Use only the needed fields
-		if (isPercentageAvailability)
-		{
-			queryable = queryable.Select(a => new AlertStoreItem
-			{
-				Id = a.Id,
-				StartOnSeconds = a.StartOnSeconds,
-				EndOnSeconds = a.EndOnSeconds,
-				IsCleared = a.IsCleared,
-				ClearValue = a.ClearValue,
-				Severity = a.Severity,
-				MonitorObjectId = a.MonitorObjectId,
-				InstanceId = a.InstanceId,
-				InstanceName = a.InstanceName,
-				ResourceTemplateName = a.ResourceTemplateName
-			});
-		}
-
-		return (await queryable.ToListAsync().ConfigureAwait(false))
+		return (await query.Apply(context.Alerts.AsQueryable()).ToListAsync().ConfigureAwait(false))
 			.ConvertAll(MapperInstance.Map<AlertStoreItem, Alert>);
 	}
 
