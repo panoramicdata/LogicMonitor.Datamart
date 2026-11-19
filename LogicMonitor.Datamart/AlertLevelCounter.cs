@@ -48,27 +48,22 @@ internal static class AlertLevelCounter
 
 	internal static int? CountUseSdt(List<TimeSeriesDataPoint> points, string expression, CountAlertLevel level)
 	{
-		if (string.IsNullOrEmpty(expression))
+		var thresholds = string.IsNullOrEmpty(expression) ? null : Parse(expression);
+		if (thresholds is null || (level == CountAlertLevel.Normal && thresholds.LevelCount == 0))
 		{
-			return level == CountAlertLevel.Normal ? points.Count(dp => dp.Value.HasValue || dp.IsInSdt) : 0;
-		}
-
-		var thresholds = Parse(expression);
-		if (level == CountAlertLevel.Normal && thresholds.LevelCount == 0)
-		{
-			return points.Count(dp => dp.Value.HasValue || dp.IsInSdt);
+			return level == CountAlertLevel.Normal || thresholds is not null
+				? points.Count(dp => dp.Value.HasValue || dp.IsInSdt)
+				: 0;
 		}
 
 		var predicate = BuildPredicate(thresholds, level, guardMissingError: true, warningOnlyTerm: true, out var fixedResult);
-		if (predicate is null)
-		{
-			return fixedResult;
-		}
+		return predicate is null ? fixedResult : CountMatchingSdt(points, level, predicate);
+	}
 
-		return level == CountAlertLevel.Normal
+	private static int CountMatchingSdt(List<TimeSeriesDataPoint> points, CountAlertLevel level, Func<double, bool> predicate)
+		=> level == CountAlertLevel.Normal
 			? points.Count(dp => dp.IsInSdt || (dp.Value.HasValue && predicate(dp.Value.Value)))
 			: points.Count(dp => dp.Value.HasValue && dp.IsInSdt && predicate(dp.Value.Value));
-	}
 
 	private static Thresholds Parse(string expression)
 	{
@@ -87,15 +82,8 @@ internal static class AlertLevelCounter
 			levels.Length == 3 ? levels[2] : null);
 	}
 
-	private static Func<double, bool>? BuildPredicate(
-		Thresholds t,
-		CountAlertLevel level,
-		bool guardMissingError,
-		bool warningOnlyTerm,
-		out int? fixedResult)
-	{
-		fixedResult = 0;
-		var guardedOut = level switch
+	private static bool IsGuardedOut(Thresholds t, CountAlertLevel level, bool guardMissingError)
+		=> level switch
 		{
 			CountAlertLevel.Critical => t.Critical is null,
 			CountAlertLevel.Error => guardMissingError && t.Error is null,
@@ -104,7 +92,15 @@ internal static class AlertLevelCounter
 			_ => throw new ArgumentException($"Unexpected {nameof(CountAlertLevel)} '{level}'"),
 		};
 
-		if (guardedOut)
+	private static Func<double, bool>? BuildPredicate(
+		Thresholds t,
+		CountAlertLevel level,
+		bool guardMissingError,
+		bool warningOnlyTerm,
+		out int? fixedResult)
+	{
+		fixedResult = 0;
+		if (IsGuardedOut(t, level, guardMissingError))
 		{
 			return null;
 		}
@@ -115,7 +111,16 @@ internal static class AlertLevelCounter
 			return null;
 		}
 
-		var notBeyond = _notBeyond[t.Symbol];
+		return LevelPredicate(t, level, beyond, _notBeyond[t.Symbol], warningOnlyTerm);
+	}
+
+	private static Func<double, bool> LevelPredicate(
+		Thresholds t,
+		CountAlertLevel level,
+		Func<double, double?, bool> beyond,
+		Func<double, double?, bool> notBeyond,
+		bool warningOnlyTerm)
+	{
 		bool Below(double v, double? limit) => limit is null || notBeyond(v, limit);
 
 		return level switch
@@ -123,9 +128,16 @@ internal static class AlertLevelCounter
 			CountAlertLevel.Critical => v => beyond(v, t.Critical),
 			CountAlertLevel.Error => v => Below(v, t.Critical) && beyond(v, t.Error),
 			CountAlertLevel.Warning => v => Below(v, t.Critical) && Below(v, t.Error) && beyond(v, t.Warning),
-			_ => v => Below(v, t.Critical)
-				&& Below(v, t.Error)
-				&& (warningOnlyTerm || t.Symbol == ">" ? Below(v, t.Warning) : t.Error is null || notBeyond(v, t.Warning)),
+			_ => v => Below(v, t.Critical) && Below(v, t.Error) && NormalWarningTerm(t, v, warningOnlyTerm, Below, notBeyond),
 		};
 	}
+
+	// Without warningOnlyTerm, every symbol except ">" tests the warning level only when the error level is null.
+	private static bool NormalWarningTerm(
+		Thresholds t,
+		double v,
+		bool warningOnlyTerm,
+		Func<double, double?, bool> below,
+		Func<double, double?, bool> notBeyond)
+		=> warningOnlyTerm || t.Symbol == ">" ? below(v, t.Warning) : t.Error is null || notBeyond(v, t.Warning);
 }

@@ -19,13 +19,13 @@ public class AlertLevelCountingCharacterizationTests
 	private static TimeSeriesDataPoint Point(double? value, bool isInSdt)
 		=> new() { Value = value, IsInSdt = isInSdt, Timestamp = 0 };
 
-	private static CountAlertLevel Level(string level) => Enum.Parse<CountAlertLevel>(level);
+	private static CountAlertLevel ToLevel(string name) => Enum.Parse<CountAlertLevel>(name);
 
 	private static int? Count(string expression, string level)
-		=> (int?)InvokePrivate("CountAtAlertLevel", _values, expression, Level(level));
+		=> (int?)InvokePrivate("CountAtAlertLevel", _values, expression, ToLevel(level));
 
 	private static int? CountSdt(string expression, string level)
-		=> (int?)InvokePrivate("CountAtAlertLevelUseSdt", _points, expression, Level(level));
+		=> (int?)InvokePrivate("CountAtAlertLevelUseSdt", _points, expression, ToLevel(level));
 
 	private static object? InvokePrivate(string name, params object?[] args)
 	{
