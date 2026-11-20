@@ -15,7 +15,6 @@ internal class LowResolutionDataSync(
 	INotificationReceiver? notificationReceiver,
 	ITimeProviderService timeProviderService) : LoopInterval(nameof(LowResolutionDataSync), loggerFactory)
 {
-	private const int DeviceDownTimeWindowSeconds = 3000;
 
 	/// <summary>
 	/// Expected data points per day for hourly resolution (3600s step).
@@ -1380,165 +1379,20 @@ internal class LowResolutionDataSync(
 		List<double?> values,
 		string percentageAvailabilityCalculation
 	)
-	{
-		if (string.IsNullOrWhiteSpace(percentageAvailabilityCalculation))
-		{
-			return null;
-		}
-
-		if (percentageAvailabilityCalculation != "PercentUpTime")
-		{
-			return null;
-		}
-
-		if (values.Count == 0)
-		{
-			return null;
-		}
-
-		var reversedValues = values.ToArray();
-		Array.Reverse(reversedValues);
-		var previousDoubleValue = double.NaN;
-		var upTimeCount = 0;
-		var downTimeCount = 0;
-		var ambiguousCount = 0;
-		var isAmbiguous = true;
-		foreach (var value in reversedValues)
-		{
-			if (value is double doubleValue)
-			{
-				previousDoubleValue = doubleValue;
-				upTimeCount += ambiguousCount;
-				ambiguousCount = 0;
-				upTimeCount++;
-				isAmbiguous = false;
-			}
-			else
-			{
-				if (
-					double.IsNaN(previousDoubleValue)
-					|| previousDoubleValue < DeviceDownTimeWindowSeconds
-					//|| projectedValue < DeviceDownTimeWindowSeconds
-					)
-				{
-					if (isAmbiguous)
-					{
-						ambiguousCount++;
-					}
-					else
-					{
-						downTimeCount++;
-					}
-				}
-				else
-				{
-					upTimeCount++;
-				}
-			}
-		}
-
-		if (upTimeCount + downTimeCount == 0)
-		{
-			// If there aren't any values, return null.
-			return null;
-		}
-
-		return 100d * upTimeCount / (upTimeCount + downTimeCount);
-	}
+		=> AvailabilityCalculator.Calculate(values, percentageAvailabilityCalculation);
 
 	// MS-21394 DataMagic: PercentUpTime availability calculation should calculate downtime based on up-time after no data
 	public static double? CalculatePercentageAvailabilityNew(
 		List<double?> values,
 		string percentageAvailabilityCalculation
 	)
-	{
-		if (string.IsNullOrWhiteSpace(percentageAvailabilityCalculation))
-		{
-			return null;
-		}
-
-		if (percentageAvailabilityCalculation != "PercentUpTime")
-		{
-			return null;
-		}
-
-		if (values.Count == 0 || values.All(v => v is null))
-		{
-			return null;
-		}
-
-		var doubleValues = values.Select(v => v as double?).ToList();
-		var gradient = CalculatePercentUptimeGradient(doubleValues);
-
-		if (Math.Abs(gradient) < 1e-6)
-		{
-			return null;
-		}
-
-		var (totalDowntime, totalExpectedDataPoints) = CalculateDowntime(doubleValues, gradient);
-		var totalTime = totalExpectedDataPoints;
-		var uptime = totalTime - totalDowntime;
-
-		if (totalTime == 0)
-		{
-			return 0d;
-		}
-
-		return 100d * uptime / totalTime;
-	}
+		=> AvailabilityCalculator.CalculateGradientBased(values, percentageAvailabilityCalculation);
 
 	public static double? CalculatePercentageAvailabilityOld(
 		double?[] values,
 		string percentageAvailabilityCalculation
 	)
-	{
-		if (string.IsNullOrWhiteSpace(percentageAvailabilityCalculation))
-		{
-			return null;
-		}
-
-		if (percentageAvailabilityCalculation != "PercentUpTime")
-		{
-			return null;
-		}
-
-		// Reverse the array to process from oldest to newest
-		Array.Reverse(values);
-
-		var previousDoubleValue = double.NaN;
-		var upTimeCount = 0;
-		var downTimeCount = 0;
-		foreach (var value in values)
-		{
-			if (value is double doubleValue)
-			{
-				previousDoubleValue = doubleValue;
-				upTimeCount++;
-			}
-			else
-			{
-				if (double.IsNaN(previousDoubleValue) || previousDoubleValue < DeviceDownTimeWindowSeconds)
-				{
-					downTimeCount++;
-				}
-				else
-				{
-					upTimeCount++;
-				}
-			}
-		}
-
-		var totalCount = upTimeCount + downTimeCount;
-
-		if (totalCount == 0)
-		{
-			// If there aren't any values, return 100%.
-			return 100;
-		}
-
-		return 100d * upTimeCount / (upTimeCount + downTimeCount);
-	}
-
+		=> AvailabilityCalculator.CalculateLegacy(values, percentageAvailabilityCalculation);
 	private static int? CountAtAlertLevelUseSdt(
 		List<TimeSeriesDataPoint> timeSeriesDataPoints,
 		string effectiveAlertExpression,
@@ -1550,77 +1404,6 @@ internal class LowResolutionDataSync(
 		string effectiveAlertExpression,
 		CountAlertLevel countAlertLevel)
 		=> AlertLevelCounter.Count(data, effectiveAlertExpression, countAlertLevel);
-
-	private static double CalculatePercentUptimeGradient(List<double?> values)
-	{
-		double gradientSum = 0;
-		var gradientCount = 0;
-		double? prev = null;
-		for (var i = 0; i < values.Count; i++)
-		{
-			if (values[i] is double v)
-			{
-				if (prev.HasValue && v > prev.Value)
-				{
-					gradientSum += v - prev.Value;
-					gradientCount++;
-				}
-
-				prev = v;
-			}
-		}
-
-		return gradientCount > 0 ? gradientSum / gradientCount : 0;
-	}
-
-	private static (int totalDowntime, int totalExpectedDataPoints) CalculateDowntime(List<double?> values, double gradient)
-	{
-		var totalDowntime = 0;
-		var totalExpectedDataPoints = 0;
-		double? previousValue = null;
-
-		for (var i = 0; i < values.Count; i++)
-		{
-			var value = values[i];
-			if (value is double doubleValue)
-			{
-				if (previousValue.HasValue)
-				{
-					// Explicitly handle counter resets
-					if (doubleValue < previousValue.Value)
-					{
-						// Counter reset detected, skip gap/downtime calculation for this pair
-						previousValue = doubleValue;
-						continue;
-					}
-
-					var expectedNext = previousValue.Value + gradient;
-					// Use a tolerance for floating-point comparison
-					if (doubleValue > previousValue.Value && Math.Abs(doubleValue - expectedNext) > gradient * 1.1)
-					{
-						var gap = (int)Math.Round((doubleValue - previousValue.Value) / gradient) - 1;
-						if (gap > 0)
-						{
-							var projectedStart = doubleValue - gap * gradient - gradient;
-							var downtimeForGap = gap + (int)Math.Round((previousValue.Value - projectedStart) / gradient);
-							totalDowntime += downtimeForGap;
-							totalExpectedDataPoints += gap;
-						}
-					}
-				}
-
-				previousValue = doubleValue;
-			}
-			else
-			{
-				totalDowntime++;
-				totalExpectedDataPoints++;
-			}
-		}
-		// Add actual data points to total expected
-		totalExpectedDataPoints += values.Count(v => v is double);
-		return (totalDowntime, totalExpectedDataPoints);
-	}
 
 	/// <summary>
 	/// Merges multiple GraphData objects into a single GraphData, handling:
