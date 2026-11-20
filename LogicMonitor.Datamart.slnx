@@ -25,6 +25,7 @@
     <File Path="CONTRIBUTING.md" />
     <File Path="Directory.Packages.props" />
     <File Path="SECURITY.md" />
+    <File Path=".codacy.yml" />
   </Folder>
   <Project Path="LogicMonitor.Datamart.Cli/LogicMonitor.Datamart.Cli.csproj" />
   <Project Path="LogicMonitor.Datamart.Test/LogicMonitor.Datamart.Test.csproj" />
