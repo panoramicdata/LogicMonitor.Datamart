@@ -863,22 +863,7 @@ internal class LowResolutionDataSync(
 			return graphData;
 		}
 
-		// Aggregation/throttling detected
-		logger.LogWarning(
-			"LogicMonitor API returned aggregated data for DeviceDataSourceInstance {DeviceDataSourceInstanceId}. " +
-			"Expected ~{ExpectedPointsPerDay} points/day with {ExpectedStep}s step, " +
-			"but received {ActualPointsPerDay:F1} points/day with {ActualStep}s step. " +
-			"Date range: {Start:yyyy-MM-dd} to {End:yyyy-MM-dd} ({Days:F0} days). " +
-			"This is expected for >42 days, or may indicate server load throttling.",
-			resourceDataSourceInstanceId,
-			ExpectedPointsPerDayHourly,
-			ExpectedHourlyStepSeconds,
-			actualPointsPerDay,
-			actualStepSeconds,
-			startDateTimeOffset,
-			endDateTimeOffset,
-			daysInPeriod);
-
+		LogAggregatedResponse(resourceDataSourceInstanceId, startDateTimeOffset, endDateTimeOffset, daysInPeriod, actualStepSeconds, actualPointsPerDay, logger);
 		if (!enableAutoChunking)
 		{
 			logger.LogInformation(
@@ -919,14 +904,8 @@ internal class LowResolutionDataSync(
 		CancellationToken cancellationToken)
 	{
 		// Build list of chunk sizes to try, starting with preferred
-		var chunkSizesToTry = new List<int> { preferredChunkSizeDays };
-		foreach (var size in _adaptiveChunkSizes)
-		{
-			if (size < preferredChunkSizeDays && !chunkSizesToTry.Contains(size))
-			{
-				chunkSizesToTry.Add(size);
-			}
-		}
+		var chunkSizesToTry = BuildChunkSizes(preferredChunkSizeDays);
+
 
 		var allTimestamps = new List<long>();
 		var allLineData = new Dictionary<string, List<double?>>();
@@ -939,11 +918,7 @@ internal class LowResolutionDataSync(
 
 		while (currentStart < endDateTimeOffset)
 		{
-			var currentEnd = currentStart.AddDays(currentChunkSize);
-			if (currentEnd > endDateTimeOffset)
-			{
-				currentEnd = endDateTimeOffset;
-			}
+			var currentEnd = Earlier(currentStart.AddDays(currentChunkSize), endDateTimeOffset);
 
 			var chunkDays = (currentEnd - currentStart).TotalDays;
 
@@ -1001,33 +976,15 @@ internal class LowResolutionDataSync(
 				}
 				else
 				{
-					// Already at smallest chunk size - log warning and use what we got
-					logger.LogWarning(
-						"Chunk {ChunkNumber} throttled even at {ChunkSize}-day size ({PointsPerDay:F1} pts/day). " +
-						"Using available data. Data quality may be reduced.",
-						chunkCount,
-						currentChunkSize,
-						chunkPointsPerDay);
+					LogSmallestChunkThrottled(chunkCount, currentChunkSize, chunkPointsPerDay, logger);
 				}
 			}
 
 			// Track granularity for consistency checking
 			chunkGranularities.Add((currentStart, currentEnd, chunkStepSeconds, chunkPointsPerDay));
 
-			// Merge timestamps
-			allTimestamps.AddRange(chunkData.TimeStamps);
+			AppendChunk(chunkData, allTimestamps, allLineData);
 
-			// Merge line data
-			foreach (var line in chunkData.Lines)
-			{
-				if (!allLineData.TryGetValue(line.Legend, out var lineValues))
-				{
-					lineValues = [];
-					allLineData[line.Legend] = lineValues;
-				}
-
-				lineValues.AddRange(line.Data);
-			}
 
 			currentStart = currentEnd;
 		}
@@ -1058,6 +1015,61 @@ internal class LowResolutionDataSync(
 	/// <summary>
 	/// Logs warnings if chunks have inconsistent granularity (mixed resolutions).
 	/// </summary>
+	private static void LogAggregatedResponse(
+		int resourceDataSourceInstanceId,
+		DateTimeOffset start,
+		DateTimeOffset end,
+		double daysInPeriod,
+		long actualStepSeconds,
+		double actualPointsPerDay,
+		ILogger logger)
+		=> logger.LogWarning(
+			"LogicMonitor API returned aggregated data for DeviceDataSourceInstance {DeviceDataSourceInstanceId}. " +
+			"Expected ~{ExpectedPointsPerDay} points/day with {ExpectedStep}s step, " +
+			"but received {ActualPointsPerDay:F1} points/day with {ActualStep}s step. " +
+			"Date range: {Start:yyyy-MM-dd} to {End:yyyy-MM-dd} ({Days:F0} days). " +
+			"This is expected for >42 days, or may indicate server load throttling.",
+			resourceDataSourceInstanceId,
+			ExpectedPointsPerDayHourly,
+			ExpectedHourlyStepSeconds,
+			actualPointsPerDay,
+			actualStepSeconds,
+			start,
+			end,
+			daysInPeriod);
+	private static List<int> BuildChunkSizes(int preferredChunkSizeDays)
+	{
+		var chunkSizesToTry = new List<int> { preferredChunkSizeDays };
+		chunkSizesToTry.AddRange(_adaptiveChunkSizes.Where(size => size < preferredChunkSizeDays && !chunkSizesToTry.Contains(size)));
+		return chunkSizesToTry;
+	}
+
+	private static DateTimeOffset Earlier(DateTimeOffset a, DateTimeOffset b) => a > b ? b : a;
+
+	private static void AppendChunk(GraphData chunkData, List<long> allTimestamps, Dictionary<string, List<double?>> allLineData)
+	{
+		allTimestamps.AddRange(chunkData.TimeStamps);
+
+		foreach (var line in chunkData.Lines)
+		{
+			if (!allLineData.TryGetValue(line.Legend, out var lineValues))
+			{
+				lineValues = [];
+				allLineData[line.Legend] = lineValues;
+			}
+
+			lineValues.AddRange(line.Data);
+		}
+	}
+
+	private static void LogSmallestChunkThrottled(int chunkCount, int chunkSize, double pointsPerDay, ILogger logger)
+		=> logger.LogWarning(
+			"Chunk {ChunkNumber} throttled even at {ChunkSize}-day size ({PointsPerDay:F1} pts/day). " +
+			"Using available data. Data quality may be reduced.",
+			chunkCount,
+			chunkSize,
+			pointsPerDay);
+
 	private static void LogGranularityConsistency(
 		List<(DateTimeOffset Start, DateTimeOffset End, long StepSeconds, double PointsPerDay)> chunkGranularities,
 		int resourceDataSourceInstanceId,
@@ -1121,11 +1133,7 @@ internal class LowResolutionDataSync(
 
 		while (currentStart < endDateTimeOffset)
 		{
-			var currentEnd = currentStart.AddDays(chunkSizeDays);
-			if (currentEnd > endDateTimeOffset)
-			{
-				currentEnd = endDateTimeOffset;
-			}
+			var currentEnd = Earlier(currentStart.AddDays(chunkSizeDays), endDateTimeOffset);
 
 			chunkCount++;
 			logger.LogDebug(
@@ -1144,20 +1152,8 @@ internal class LowResolutionDataSync(
 				cancellationToken)
 				.ConfigureAwait(false);
 
-			// Merge timestamps
-			allTimestamps.AddRange(chunkData.TimeStamps);
+			AppendChunk(chunkData, allTimestamps, allLineData);
 
-			// Merge line data
-			foreach (var line in chunkData.Lines)
-			{
-				if (!allLineData.TryGetValue(line.Legend, out var lineValues))
-				{
-					lineValues = [];
-					allLineData[line.Legend] = lineValues;
-				}
-
-				lineValues.AddRange(line.Data);
-			}
 
 			currentStart = currentEnd;
 		}
