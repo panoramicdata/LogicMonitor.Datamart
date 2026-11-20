@@ -9,7 +9,7 @@ namespace LogicMonitor.Datamart.Test;
 /// </summary>
 public class DimensionAddOrUpdateCharacterizationTests
 {
-	private static async Task<DatamartClient> SyncCollectorGroupsAsync(string pageJson, bool haltOnError = true)
+	private static async Task<DatamartClient> SyncCollectorGroupsAsync(string pageJson, bool haltOnError)
 	{
 		var client = InMemoryDatamart.CreateClient();
 		_ = StubbedLogicMonitor.Install(client, _ => pageJson);
@@ -30,7 +30,7 @@ public class DimensionAddOrUpdateCharacterizationTests
 	[Fact]
 	public async Task AddOrUpdate_PortalItems_AreStored()
 	{
-		var client = await SyncCollectorGroupsAsync(StubbedLogicMonitor.Page(
+		var client = await SyncCollectorGroupsAsync(haltOnError: true, pageJson: StubbedLogicMonitor.Page(
 			"""{"id":3,"name":"Group three"}""",
 			"""{"id":4,"name":"Group four"}"""));
 

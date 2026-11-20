@@ -26,6 +26,7 @@ internal static class StubbedLogicMonitor
 	{
 		protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
 		{
+			cancellationToken.ThrowIfCancellationRequested();
 			var path = request.RequestUri!.PathAndQuery;
 			requests.Add(path);
 			var body = responder(path);
