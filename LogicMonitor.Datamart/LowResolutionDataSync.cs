@@ -1580,36 +1580,30 @@ internal class LowResolutionDataSync(
 		}
 		catch (LogicMonitorApiException ex)
 		{
-			logger.LogError(
-				ex,
-				"LogicMonitor API error retrieving SDTs for device ID {DeviceId}. Returning null. Failure: {Message}",
-				deviceId,
-				ex.Message);
-
-			return null;    // Indicates failure
+			return LogSdtFailure(logger, ex, "LogicMonitor API error", deviceId);
 		}
 		catch (TimeoutException ex)
 		{
-			logger.LogError(
-				ex,
-				"Timeout error retrieving SDTs for device ID {DeviceId}. Returning null. Failure: {Message}",
-				deviceId,
-				ex.Message);
-
-			return null;    // Indicates failure
+			return LogSdtFailure(logger, ex, "Timeout error", deviceId);
 		}
 		catch (Exception ex)
 		{
-			logger.LogError(
-				ex,
-				"Error retrieving SDTs for device ID {DeviceId}. Returning null. Failure: {Message}",
-				deviceId,
-				ex.Message);
-
-			return null;    // Indicates failure
+			return LogSdtFailure(logger, ex, "Error", deviceId);
 		}
 	}
 
+	// Null indicates failure
+	private static List<(long StartTimestampMs, long EndTimestampMs)>? LogSdtFailure(ILogger logger, Exception ex, string kind, int deviceId)
+	{
+		logger.LogError(
+			ex,
+			"{Kind} retrieving SDTs for device ID {DeviceId}. Returning null. Failure: {Message}",
+			kind,
+			deviceId,
+			ex.Message);
+
+		return null;
+	}
 	// Null means the instance or its DataSource is unknown and SDT retrieval is skipped.
 	private async static Task<List<ScheduledDownTimeHistory>?> CollectSdtHistoriesAsync(
 		DatamartClient datamartClient,
