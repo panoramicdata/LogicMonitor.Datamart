@@ -1545,7 +1545,7 @@ internal class LowResolutionDataSync(
 	/// <param name="logger">The logger instance.</param>
 	/// <param name="cancellationToken">Cancellation token</param>
 	/// <returns>List of merged, non-overlapping SDT periods as (start timestamp in ms, end timestamp in ms) tuples</returns>
-	private async static Task<List<(long StartTimestampMs, long EndTimestampMs)>?> GetHistoricalSdtPeriodsAsync(
+	internal async static Task<List<(long StartTimestampMs, long EndTimestampMs)>?> GetHistoricalSdtPeriodsAsync(
 		DatamartClient datamartClient,
 		ResourceStoreItem deviceNotTracked,
 		ResourceDataSourceInstanceStoreItem? resourceDataSourceInstanceStoreItem,
@@ -1561,143 +1561,22 @@ internal class LowResolutionDataSync(
 			startDateTimeUtc,
 			endDateTimeUtc);
 
-		// MS-21395 - Retrieve all historical SDT periods that overlap with the time range
-		var allSdtHistories = new List<ScheduledDownTimeHistory>();
 		var deviceId = deviceNotTracked.LogicMonitorId;
 
 		try
 		{
-			using var context = datamartClient.GetContext();
-
-			if (resourceDataSourceInstanceStoreItem is null)
-			{
-				// Log a warning to help with logging / issues...
-				logger.LogWarning(
-					"ResourceDataSourceInstance (DeviceDataSourceInstance) is null for Device ID {DeviceId}. Skipping SDT retrieval.",
-					deviceId);
-
-				return [];
-			}
-
-			// Find the ResourceDataSourceStoreItem (DeviceDataSource)
-			if (await context.
-					DeviceDataSources.
-					SingleOrDefaultAsync(dds => dds.Id == resourceDataSourceInstanceStoreItem.DeviceDataSourceId, cancellationToken)
-				.ConfigureAwait(false)
-				is not ResourceDataSourceStoreItem resourceDataSource)
-			{
-				// Log a warning to help with logging / issues...
-				logger.LogWarning(
-					"Could not find ResourceDataSource (DeviceDataSource) for DeviceDataSourceInstance ID {DeviceDataSourceInstanceId}. Skipping SDT retrieval.",
-					resourceDataSourceInstanceStoreItem.Id);
-
-				return [];
-			}
-
-			var resourceDataSourceInstanceLmId = resourceDataSourceInstanceStoreItem.LogicMonitorId;
-			var resourceDataSourceLmId = resourceDataSource.LogicMonitorId;
-
-			// Device Data Source Instance historical SDTs (not cached - instance-specific)
-			var deviceDataSourceInstanceSdts =
-				await GetHistoricSdtsForDeviceDataSourceInstance(
-					datamartClient,
-					deviceId,
-					resourceDataSourceLmId,
-					resourceDataSourceInstanceLmId,
-					cancellationToken)
+			var allSdtHistories = await CollectSdtHistoriesAsync(
+				datamartClient,
+				deviceNotTracked,
+				resourceDataSourceInstanceStoreItem,
+				sdtCache,
+				logger,
+				cancellationToken)
 				.ConfigureAwait(false);
 
-			// Add them
-			allSdtHistories.AddRange(deviceDataSourceInstanceSdts);
-
-			// Device Data Source historical SDTs (not cached - data source-specific)
-			var deviceDataSourceSdts =
-				await GetHistoricSdtsForDeviceDataSource(
-					datamartClient,
-					deviceId,
-					resourceDataSourceLmId,
-					cancellationToken)
-				.ConfigureAwait(false);
-
-			// Add them
-			allSdtHistories.AddRange(deviceDataSourceSdts);
-
-			// Device historical SDTs (cached)
-			var deviceCacheKey = $"Device_{deviceId}";
-			if (!sdtCache.TryGetValue(deviceCacheKey, out var deviceSdts))
-			{
-				deviceSdts = await datamartClient
-					.GetResourceHistorySdtsAsync(
-						deviceId,
-						cancellationToken)
-					.ConfigureAwait(false);
-
-				sdtCache[deviceCacheKey] = deviceSdts;
-
-				logger.LogDebug(
-					"Retrieved and cached Device SDTs for Device ID {DeviceId} (cache miss)",
-					deviceId);
-			}
-			else
-			{
-				logger.LogDebug(
-					"Using cached Device SDTs for Device ID {DeviceId} (cache hit)",
-					deviceId);
-			}
-
-			// Add them
-			allSdtHistories.AddRange(deviceSdts);
-
-			// Device Group level SDTs (up to root) - cached
-			if (!string.IsNullOrWhiteSpace(deviceNotTracked.DeviceGroupIdsString))
-			{
-				var deviceGroupIds = deviceNotTracked.DeviceGroupIdsString
-					.Split(',')
-					.Select(id => int.TryParse(id, out var parsed) ? parsed : 0)
-					.Where(id => id > 0);
-
-				foreach (var deviceGroupId in deviceGroupIds)
-				{
-					var groupSdts =
-						await GetHistoricSdtsForDeviceGroupToRootAsync(
-							datamartClient,
-							deviceGroupId,
-							sdtCache,
-							logger,
-							cancellationToken)
-						.ConfigureAwait(false);
-
-					// Add them
-					allSdtHistories.AddRange(groupSdts);
-				}
-			}
-
-			// Processing - convert SDT histories to timestamp tuples, filtering by date range
-			var sEpochSeconds = startDateTimeUtc.ToUnixTimeSeconds();
-			var eEpochSeconds = endDateTimeUtc.ToUnixTimeSeconds();
-
-			var sdtPeriods = allSdtHistories
-				.Where(sdt =>
-					// SDT overlaps with our time range
-					sdt.ApproximateStartEpoch < eEpochSeconds &&
-					sdt.ApproximateEndEpoch > sEpochSeconds)
-				.Select(sdt => (
-					StartTimestampMs: sdt.ApproximateStartEpoch * 1000L,
-					EndTimestampMs: sdt.ApproximateEndEpoch * 1000L
-				))
-				.Distinct()
-				.ToList();
-
-			// MS-21395: Merge overlapping SDT periods from different levels
-			var mergedSdtPeriods = MergeSdtPeriods(sdtPeriods, logger);
-
-			logger.LogDebug(
-				"Retrieved {OriginalCount} SDT periods for Device ID {DeviceId}, merged into {MergedCount} non-overlapping periods",
-				sdtPeriods.Count,
-				deviceId,
-				mergedSdtPeriods.Count);
-
-			return mergedSdtPeriods;
+			return allSdtHistories is null
+				? []
+				: ToMergedSdtPeriods(allSdtHistories, startDateTimeUtc, endDateTimeUtc, deviceId, logger);
 		}
 		catch (LogicMonitorApiException ex)
 		{
@@ -1731,16 +1610,162 @@ internal class LowResolutionDataSync(
 		}
 	}
 
-	/// <summary>
-	/// Gets historical SDTs for a device group and all parent groups up to root.
-	/// MS-21395: Helper method to traverse the device group hierarchy with caching.
-	/// </summary>
-	/// <param name="datamartClient">The datamart client for API calls.</param>
-	/// <param name="deviceGroupId">The device group ID to start from</param>
-	/// <param name="sdtCache">Cache for DeviceGroup SDTs</param>
-	/// <param name="logger">The logger instance.</param>
-	/// <param name="cancellationToken">Cancellation token</param>
-	/// <returns>List of SDT histories for the group and all parent groups</returns>
+	// Null means the instance or its DataSource is unknown and SDT retrieval is skipped.
+	private async static Task<List<ScheduledDownTimeHistory>?> CollectSdtHistoriesAsync(
+		DatamartClient datamartClient,
+		ResourceStoreItem deviceNotTracked,
+		ResourceDataSourceInstanceStoreItem? resourceDataSourceInstanceStoreItem,
+		Dictionary<string, List<ScheduledDownTimeHistory>> sdtCache,
+		ILogger logger,
+		CancellationToken cancellationToken)
+	{
+		var deviceId = deviceNotTracked.LogicMonitorId;
+		using var context = datamartClient.GetContext();
+
+		if (resourceDataSourceInstanceStoreItem is null)
+		{
+			logger.LogWarning(
+				"ResourceDataSourceInstance (DeviceDataSourceInstance) is null for Device ID {DeviceId}. Skipping SDT retrieval.",
+				deviceId);
+
+			return null;
+		}
+
+		if (await context.
+				DeviceDataSources.
+				SingleOrDefaultAsync(dds => dds.Id == resourceDataSourceInstanceStoreItem.DeviceDataSourceId, cancellationToken)
+			.ConfigureAwait(false)
+			is not ResourceDataSourceStoreItem resourceDataSource)
+		{
+			logger.LogWarning(
+				"Could not find ResourceDataSource (DeviceDataSource) for DeviceDataSourceInstance ID {DeviceDataSourceInstanceId}. Skipping SDT retrieval.",
+				resourceDataSourceInstanceStoreItem.Id);
+
+			return null;
+		}
+
+		var allSdtHistories = new List<ScheduledDownTimeHistory>();
+
+		// Instance and DataSource level SDTs are not cached
+		allSdtHistories.AddRange(await GetHistoricSdtsForDeviceDataSourceInstance(
+			datamartClient,
+			deviceId,
+			resourceDataSource.LogicMonitorId,
+			resourceDataSourceInstanceStoreItem.LogicMonitorId,
+			cancellationToken)
+			.ConfigureAwait(false));
+		allSdtHistories.AddRange(await GetHistoricSdtsForDeviceDataSource(
+			datamartClient,
+			deviceId,
+			resourceDataSource.LogicMonitorId,
+			cancellationToken)
+			.ConfigureAwait(false));
+
+		allSdtHistories.AddRange(await GetCachedDeviceSdtsAsync(datamartClient, deviceId, sdtCache, logger, cancellationToken)
+			.ConfigureAwait(false));
+		allSdtHistories.AddRange(await GetDeviceGroupSdtsAsync(datamartClient, deviceNotTracked, sdtCache, logger, cancellationToken)
+			.ConfigureAwait(false));
+
+		return allSdtHistories;
+	}
+
+	private async static Task<List<ScheduledDownTimeHistory>> GetCachedDeviceSdtsAsync(
+		DatamartClient datamartClient,
+		int deviceId,
+		Dictionary<string, List<ScheduledDownTimeHistory>> sdtCache,
+		ILogger logger,
+		CancellationToken cancellationToken)
+	{
+		var deviceCacheKey = $"Device_{deviceId}";
+		if (sdtCache.TryGetValue(deviceCacheKey, out var deviceSdts))
+		{
+			logger.LogDebug(
+				"Using cached Device SDTs for Device ID {DeviceId} (cache hit)",
+				deviceId);
+
+			return deviceSdts;
+		}
+
+		deviceSdts = await datamartClient
+			.GetResourceHistorySdtsAsync(
+				deviceId,
+				cancellationToken)
+			.ConfigureAwait(false);
+
+		sdtCache[deviceCacheKey] = deviceSdts;
+
+		logger.LogDebug(
+			"Retrieved and cached Device SDTs for Device ID {DeviceId} (cache miss)",
+			deviceId);
+
+		return deviceSdts;
+	}
+
+	private async static Task<List<ScheduledDownTimeHistory>> GetDeviceGroupSdtsAsync(
+		DatamartClient datamartClient,
+		ResourceStoreItem deviceNotTracked,
+		Dictionary<string, List<ScheduledDownTimeHistory>> sdtCache,
+		ILogger logger,
+		CancellationToken cancellationToken)
+	{
+		var sdts = new List<ScheduledDownTimeHistory>();
+		if (string.IsNullOrWhiteSpace(deviceNotTracked.DeviceGroupIdsString))
+		{
+			return sdts;
+		}
+
+		var deviceGroupIds = deviceNotTracked.DeviceGroupIdsString
+			.Split(',')
+			.Select(id => int.TryParse(id, out var parsed) ? parsed : 0)
+			.Where(id => id > 0);
+
+		foreach (var deviceGroupId in deviceGroupIds)
+		{
+			sdts.AddRange(await GetHistoricSdtsForDeviceGroupToRootAsync(
+				datamartClient,
+				deviceGroupId,
+				sdtCache,
+				logger,
+				cancellationToken)
+				.ConfigureAwait(false));
+		}
+
+		return sdts;
+	}
+
+	private static List<(long StartTimestampMs, long EndTimestampMs)> ToMergedSdtPeriods(
+		List<ScheduledDownTimeHistory> allSdtHistories,
+		DateTimeOffset startDateTimeUtc,
+		DateTimeOffset endDateTimeUtc,
+		int deviceId,
+		ILogger logger)
+	{
+		var sEpochSeconds = startDateTimeUtc.ToUnixTimeSeconds();
+		var eEpochSeconds = endDateTimeUtc.ToUnixTimeSeconds();
+
+		var sdtPeriods = allSdtHistories
+			.Where(sdt =>
+				// SDT overlaps with our time range
+				sdt.ApproximateStartEpoch < eEpochSeconds &&
+				sdt.ApproximateEndEpoch > sEpochSeconds)
+			.Select(sdt => (
+				StartTimestampMs: sdt.ApproximateStartEpoch * 1000L,
+				EndTimestampMs: sdt.ApproximateEndEpoch * 1000L
+			))
+			.Distinct()
+			.ToList();
+
+		// MS-21395: Merge overlapping SDT periods from different levels
+		var mergedSdtPeriods = MergeSdtPeriods(sdtPeriods, logger);
+
+		logger.LogDebug(
+			"Retrieved {OriginalCount} SDT periods for Device ID {DeviceId}, merged into {MergedCount} non-overlapping periods",
+			sdtPeriods.Count,
+			deviceId,
+			mergedSdtPeriods.Count);
+
+		return mergedSdtPeriods;
+	}
 	private async static Task<List<ScheduledDownTimeHistory>> GetHistoricSdtsForDeviceGroupToRootAsync(
 		DatamartClient datamartClient,
 		int deviceGroupId,
