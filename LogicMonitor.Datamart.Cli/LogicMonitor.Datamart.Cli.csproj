@@ -4,7 +4,6 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net11.0</TargetFramework>
     <Authors>Panoramic Data Limited</Authors>
-    <Copyright>Copyright © Panoramic Data Limited 2023-2024</Copyright>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
