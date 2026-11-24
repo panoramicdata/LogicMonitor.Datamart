@@ -24,7 +24,8 @@ public class AggregationTableNamingTests
 	[Fact]
 	public void DetermineTablesToAge_ReturnsOnlyTablesOlderThanRetention()
 	{
-		var today = DateTimeOffset.UtcNow.Date;
+		// A DateTime from .Date would take the local offset when converted, moving the dates east of UTC
+		var today = new DateTimeOffset(DateTime.UtcNow.Date, TimeSpan.Zero);
 		var tables = new List<string>
 		{
 			AggregationWriter.GetTableName(today.AddDays(-10)),
