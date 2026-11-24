@@ -3,8 +3,6 @@ using LogicMonitor.Api.ScheduledDownTimes;
 using LogicMonitor.Api.Time;
 using LogicMonitor.Datamart.Interfaces;
 using LogicMonitor.Datamart.Notifications;
-using PanoramicData.NCalcExtensions;
-using System.Globalization;
 
 namespace LogicMonitor.Datamart;
 
@@ -59,19 +57,14 @@ internal class LowResolutionDataSync(
 		using (var contextForReferenceDataNotTracked = _datamartClient.GetContext())
 		{
 			// Use the database as a reference for what should be loaded in to ensure referential integrity between the data and the DeviceDataSourceInstance
-			// Get the configured DataSource names
 			Logger.LogInformation(
 				"Getting reference data for {DatabaseName}: DataSources...",
 				_configuration.DatabaseName);
 
-			var configurationDataSourceNames = _configuration.DataSources.ConvertAll(ds => ds.Name);
-
-			// Get the database DataSources for those that are configured
-			matchingDatabaseDataSourcesNotTracked = await contextForReferenceDataNotTracked
-				.DataSources
-				.AsNoTracking()
-				.Where(ds => configurationDataSourceNames.Contains(ds.Name))
-				.ToListAsync(cancellationToken: cancellationToken)
+			// Each configured DataSource resolved by ID, name or both, so an ID-only configuration is synced and a recreated
+			// DataSource's predecessor of the same name is not (MS-24125)
+			matchingDatabaseDataSourcesNotTracked = await _datamartClient
+				.ResolveConfiguredDataSourcesAsync(contextForReferenceDataNotTracked, Logger, _notificationReceiver, cancellationToken)
 				.ConfigureAwait(false);
 
 			Logger.LogInformation(

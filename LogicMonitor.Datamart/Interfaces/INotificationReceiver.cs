@@ -25,4 +25,12 @@ public interface INotificationReceiver
 	/// <param name="itemIndex">The zero-based item index.</param>
 	/// <param name="cancellationToken">A cancellation token.</param>
 	public Task SetItemIndexAsync(int itemIndex, CancellationToken cancellationToken);
+
+	/// <summary>
+	/// Reports a problem the sync found and carried on past, such as a DataSource configuration it could not use, so that the caller
+	/// can show it; the default ignores it.
+	/// </summary>
+	/// <param name="message">The problem, written for the person who owns the configuration.</param>
+	/// <param name="cancellationToken">A cancellation token.</param>
+	public Task ReportWarningAsync(string message, CancellationToken cancellationToken) => Task.CompletedTask;
 }

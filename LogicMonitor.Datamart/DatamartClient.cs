@@ -513,7 +513,7 @@ public class DatamartClient : LogicMonitorClient
 				await UpdateGraphsAsync(context, [.. apiItems.Cast<DataSource>()], notificationReceiver, cancellationToken)
 					.ConfigureAwait(false);
 
-				await UpdateDataPointsAsync(context, [.. apiItems.Cast<DataSource>()], cancellationToken)
+				await UpdateDataPointsAsync(context, [.. apiItems.Cast<DataSource>()], notificationReceiver, cancellationToken)
 					.ConfigureAwait(false);
 			}
 
@@ -709,19 +709,19 @@ public class DatamartClient : LogicMonitorClient
 			var apiGraphs = await GetDataSourceGraphsAsync(apiDataSource.Id, cancellationToken).ConfigureAwait(false);
 			var apiOverviewGraphs = (await GetDataSourceOverviewGraphsPageAsync(apiDataSource.Id, null, cancellationToken).ConfigureAwait(false)).Items;
 
-			// FirstOrDefaultAsync because the database can contain duplicate DataSource names.
-			// SingleOrDefaultAsync would throw and abort the entire graph sync.
+			// By LogicMonitor ID: a DataSource recreated under the same name has its own row (MS-24125)
 			var databaseDataSource = await context
 				.DataSources
-				.FirstOrDefaultAsync(ds => ds.Name == apiDataSource.Name, cancellationToken)
+				.FirstOrDefaultAsync(ds => ds.LogicMonitorId == apiDataSource.Id, cancellationToken)
 				.ConfigureAwait(false);
 
 			if (databaseDataSource is null)
 			{
 				_logger.LogError(
-					"For LogicMonitor instance {LogicMonitorAccount}, expected to find Database DataSource called '{DataSourceName}', but it was missing.",
+					"For LogicMonitor instance {LogicMonitorAccount}, expected to find Database DataSource called '{DataSourceName}' with LogicMonitorId {LogicMonitorId}, but it was missing.",
 					_configuration.LogicMonitorClientOptions.Account,
-					apiDataSource.Name);
+					apiDataSource.Name,
+					apiDataSource.Id);
 				return;
 			}
 
@@ -801,24 +801,60 @@ public class DatamartClient : LogicMonitorClient
 	/// <see cref="DataSourceConfigurationItem"/>.
 	/// <list type="bullet">
 	///   <item><term>ID only</term><description>Queries by <c>LogicMonitorId</c>.</description></item>
-	///   <item><term>Name only</term><description>Queries by name; logs a warning when duplicates are found.</description></item>
+	///   <item><term>Name only</term><description>Queries by name; of several with the name, uses the one LogicMonitor returned most recently.</description></item>
 	///   <item><term>Both</term><description>Queries by ID and validates the stored name matches; returns null and logs an error on mismatch.</description></item>
 	/// </list>
+	/// </summary>
+	internal Task<DataSourceStoreItem?> ResolveDataSourceStoreItemAsync(
+		Context context,
+		DataSourceConfigurationItem config,
+		ILogger logger,
+		CancellationToken cancellationToken)
+		=> ResolveDataSourceStoreItemAsync(context, config, logger, null, cancellationToken);
+
+	/// <summary>
+	/// Resolves a <see cref="DataSourceStoreItem"/> as the overload without a receiver does, and also reports to
+	/// <paramref name="notificationReceiver"/> a DataSource it skips and a name that has moved to a new LogicMonitor ID (MS-24125).
 	/// </summary>
 	internal async Task<DataSourceStoreItem?> ResolveDataSourceStoreItemAsync(
 		Context context,
 		DataSourceConfigurationItem config,
 		ILogger logger,
+		INotificationReceiver? notificationReceiver,
 		CancellationToken cancellationToken)
 		=> config.LogicMonitorId.HasValue
-			? await ResolveDataSourceByIdAsync(context, config, config.LogicMonitorId.Value, logger, cancellationToken).ConfigureAwait(false)
-			: await ResolveDataSourceByNameAsync(context, config, logger, cancellationToken).ConfigureAwait(false);
+			? await ResolveDataSourceByIdAsync(context, config, config.LogicMonitorId.Value, logger, notificationReceiver, cancellationToken).ConfigureAwait(false)
+			: await ResolveDataSourceByNameAsync(context, config, logger, notificationReceiver, cancellationToken).ConfigureAwait(false);
+
+	/// <summary>
+	/// Resolves each configured DataSource to its datamart DataSource, once each, leaving out any that cannot be resolved (MS-24125).
+	/// </summary>
+	internal async Task<List<DataSourceStoreItem>> ResolveConfiguredDataSourcesAsync(
+		Context context,
+		ILogger logger,
+		INotificationReceiver? notificationReceiver,
+		CancellationToken cancellationToken)
+	{
+		var resolved = new List<DataSourceStoreItem>();
+		foreach (var configDataSource in _configuration.DataSources)
+		{
+			var dataSource = await ResolveDataSourceStoreItemAsync(context, configDataSource, logger, notificationReceiver, cancellationToken)
+				.ConfigureAwait(false);
+			if (dataSource is not null && resolved.TrueForAll(existing => existing.Id != dataSource.Id))
+			{
+				resolved.Add(dataSource);
+			}
+		}
+
+		return resolved;
+	}
 
 	private async Task<DataSourceStoreItem?> ResolveDataSourceByIdAsync(
 		Context context,
 		DataSourceConfigurationItem config,
 		int logicMonitorId,
 		ILogger logger,
+		INotificationReceiver? notificationReceiver,
 		CancellationToken cancellationToken)
 	{
 		var byId = await context
@@ -832,6 +868,11 @@ public class DatamartClient : LogicMonitorClient
 				"For LogicMonitor instance {LogicMonitorAccount}, expected to find Database DataSource with LogicMonitorId {LogicMonitorId}, but it was missing.",
 				_configuration.LogicMonitorClientOptions.Account,
 				logicMonitorId);
+			await ReportAsync(
+				notificationReceiver,
+				$"The DataSource with LogicMonitor ID {logicMonitorId} is not in the datamart, so it was skipped. Check the ID in the configuration.",
+				cancellationToken)
+				.ConfigureAwait(false);
 			return null;
 		}
 
@@ -844,6 +885,11 @@ public class DatamartClient : LogicMonitorClient
 				logicMonitorId,
 				byId.Name,
 				config.Name);
+			await ReportAsync(
+				notificationReceiver,
+				$"The DataSource with LogicMonitor ID {logicMonitorId} is named '{byId.Name}', but the configuration names it '{config.Name}', so it was skipped. Correct the name or the ID.",
+				cancellationToken)
+				.ConfigureAwait(false);
 			return null;
 		}
 
@@ -854,11 +900,15 @@ public class DatamartClient : LogicMonitorClient
 		Context context,
 		DataSourceConfigurationItem config,
 		ILogger logger,
+		INotificationReceiver? notificationReceiver,
 		CancellationToken cancellationToken)
 	{
+		// Newest first: a DataSource recreated in LogicMonitor under the same name is the one the API still returns (MS-24125)
 		var matches = await context
 			.DataSources
 			.Where(ds => ds.Name == config.Name)
+			.OrderByDescending(ds => ds.DatamartLastObserved)
+			.ThenByDescending(ds => ds.LogicMonitorId)
 			.ToListAsync(cancellationToken)
 			.ConfigureAwait(false);
 
@@ -873,23 +923,59 @@ public class DatamartClient : LogicMonitorClient
 
 		if (matches.Count > 1)
 		{
-			logger.LogWarning(
-				"For LogicMonitor instance {LogicMonitorAccount}, found {Count} DataSources with name '{DataSourceName}' (LogicMonitorIds: {Ids}). Using the first. Consider adding LogicMonitorId to the configuration to resolve ambiguity.",
-				_configuration.LogicMonitorClientOptions.Account,
-				matches.Count,
-				config.Name,
-				string.Join(", ", matches.Select(ds => ds.LogicMonitorId)));
+			await ReportNameNowHasNewIdAsync(config.Name, matches, logger, notificationReceiver, cancellationToken)
+				.ConfigureAwait(false);
 		}
 
 		return matches[0];
 	}
+
+	private async Task ReportNameNowHasNewIdAsync(
+		string dataSourceName,
+		List<DataSourceStoreItem> matchesNewestFirst,
+		ILogger logger,
+		INotificationReceiver? notificationReceiver,
+		CancellationToken cancellationToken)
+	{
+		var currentId = matchesNewestFirst[0].LogicMonitorId;
+		var earlierIds = string.Join(", ", matchesNewestFirst.Skip(1).Select(ds => ds.LogicMonitorId));
+		logger.LogWarning(
+			"For LogicMonitor instance {LogicMonitorAccount}, DataSource '{DataSourceName}' is now LogicMonitorId {CurrentId}; earlier DataSources with that name are held under LogicMonitorIds {EarlierIds}.",
+			_configuration.LogicMonitorClientOptions.Account,
+			dataSourceName,
+			currentId,
+			earlierIds);
+		await ReportAsync(
+			notificationReceiver,
+			$"The DataSource '{dataSourceName}' is now LogicMonitor ID {currentId}, and data is collected under that ID. Earlier data stays under LogicMonitor ID {earlierIds}. Add LogicMonitorId {currentId} to the configuration to make the choice explicit.",
+			cancellationToken)
+			.ConfigureAwait(false);
+	}
+
+	private static Task ReportAsync(INotificationReceiver? notificationReceiver, string message, CancellationToken cancellationToken)
+		=> notificationReceiver?.ReportWarningAsync(message, cancellationToken) ?? Task.CompletedTask;
 	/// <summary>
 	/// Update DataPoints, given a list of DataSources just retrieved from the LogicMonitor API
 	/// </summary>
 	/// <param name="context">The database context</param>
 	/// <param name="apiDataSources">The list of API DataSources</param>
 	/// <param name="cancellationToken">A cancellation token.</param>
-	internal async Task UpdateDataPointsAsync(Context context, List<DataSource> apiDataSources, CancellationToken cancellationToken)
+	internal Task UpdateDataPointsAsync(Context context, List<DataSource> apiDataSources, CancellationToken cancellationToken)
+		=> UpdateDataPointsAsync(context, apiDataSources, null, cancellationToken);
+
+	/// <summary>
+	/// Update DataPoints, given a list of DataSources just retrieved from the LogicMonitor API, reporting configured DataSources that
+	/// cannot be used to <paramref name="notificationReceiver"/>
+	/// </summary>
+	/// <param name="context">The database context</param>
+	/// <param name="apiDataSources">The list of API DataSources</param>
+	/// <param name="notificationReceiver">Receives the problems found, or null to only log them.</param>
+	/// <param name="cancellationToken">A cancellation token.</param>
+	internal async Task UpdateDataPointsAsync(
+		Context context,
+		List<DataSource> apiDataSources,
+		INotificationReceiver? notificationReceiver,
+		CancellationToken cancellationToken)
 	{
 		_logger.LogInformation("Updating DataSource DataPoints...");
 
@@ -909,7 +995,7 @@ public class DatamartClient : LogicMonitorClient
 				dataPointsStopwatch.Restart();
 			}
 
-			await UpdateDataSourceDataPointsAsync(context, apiDataSources, configDataSourceSpecification, cancellationToken)
+			await UpdateDataSourceDataPointsAsync(context, apiDataSources, configDataSourceSpecification, notificationReceiver, cancellationToken)
 				.ConfigureAwait(false);
 
 			// TODO - remove old DataPoints and associated data.
@@ -924,6 +1010,7 @@ public class DatamartClient : LogicMonitorClient
 		Context context,
 		List<DataSource> apiDataSources,
 		DataSourceConfigurationItem configDataSourceSpecification,
+		INotificationReceiver? notificationReceiver,
 		CancellationToken cancellationToken)
 	{
 		// The DataSource from the API: resolve by ID when available, fall back to name.
@@ -946,11 +1033,12 @@ public class DatamartClient : LogicMonitorClient
 			context,
 			configDataSourceSpecification,
 			_logger,
+			notificationReceiver,
 			cancellationToken)
 			.ConfigureAwait(false);
 		if (databaseDataSource is null)
 		{
-			// Error already logged inside the helper.
+			// Error already logged and reported inside the helper.
 			return;
 		}
 
@@ -984,9 +1072,10 @@ public class DatamartClient : LogicMonitorClient
 			return;
 		}
 
+		// Keyed on the DataSource row, not its name, which a recreated DataSource shares with the original (MS-24125)
 		var databaseDataPoint = await context
 			.DataSourceDataPoints
-			.SingleOrDefaultAsync(dsdp => dsdp.DataSource.Name == apiDataSource.Name && dsdp.Name == configDataPoint.Name, cancellationToken)
+			.SingleOrDefaultAsync(dsdp => dsdp.DataSourceId == databaseDataSource.Id && dsdp.Name == configDataPoint.Name, cancellationToken)
 			.ConfigureAwait(false);
 
 		if (databaseDataPoint is null)
@@ -2110,11 +2199,11 @@ public class DatamartClient : LogicMonitorClient
 		// Make sure that they are present in the database
 		foreach (var configDataSourceDataPoint in configDataSourceDataPoints)
 		{
-			// Ensure that this DataPoint exists in the database
+			// Ensure that this DataPoint exists in the database, on this DataSource row rather than any of the same name (MS-24125)
 			var databaseDataPoint = await context
 				.DataSourceDataPoints
 				.SingleOrDefaultAsync(
-					dp => dp.DataSource.Name == dataSource.Name
+					dp => dp.DataSourceId == dataSource.Id
 						  && dp.Name == configDataSourceDataPoint.Name,
 					cancellationToken: cancellationToken)
 				.ConfigureAwait(false);
