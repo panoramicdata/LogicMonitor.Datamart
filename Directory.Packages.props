@@ -5,8 +5,8 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- LogicMonitor.Datamart -->
-    <PackageVersion Include="EFCore.BulkExtensions.PostgreSql" Version="10.0.1" />
-    <PackageVersion Include="EFCore.BulkExtensions.SqlServer" Version="10.0.1" />
+    <PackageVersion Include="EFCore.BulkExtensions.PostgreSql" Version="11.0.0" />
+    <PackageVersion Include="EFCore.BulkExtensions.SqlServer" Version="11.0.0" />
     <PackageVersion Include="LogicMonitor.Api" Version="3.240.144" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.1.2" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="11.0.0" />
@@ -16,7 +16,7 @@
     <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="11.0.0" />
     <PackageVersion Include="Nerdbank.GitVersioning" Version="3.10.94" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="11.0.0" />
-    <PackageVersion Include="PanoramicData.Mapper" Version="10.0.85" />
+    <PackageVersion Include="PanoramicData.Mapper" Version="10.0.88" />
     <PackageVersion Include="PanoramicData.NCalcExtensions" Version="6.1.73" />
     <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="11.0.0" />
     <!-- LogicMonitor.Datamart.Cli -->
